@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { fetchPrograms, fetchIssues, Program, Issue } from '../lib/supabase'
-import { formatRupiahShort, formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
-import EditIsuModal from './EditIsuModal'
-import AddIsuModal from './AddIsuModal'
+import { fetchPrograms, Program } from '../lib/supabase'
+import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
 
 interface BerandaProps {
@@ -45,17 +43,13 @@ const MetricIcon = ({ type }: { type: string }) => {
 
 export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
-  const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
-  const [addingIsu, setAddingIsu] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [pRes, iRes] = await Promise.all([fetchPrograms(), fetchIssues()])
-      if (pRes.data) setPrograms(pRes.data)
-      if (iRes.data) setIssues(iRes.data)
+      const { data } = await fetchPrograms()
+      if (data) setPrograms(data)
       setLoading(false)
     }
     load()
@@ -195,141 +189,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
         ))}
       </div>
 
-      {/* Middle Row */}
+      {/* Status Pekerjaan */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14, marginBottom: 20 }}>
-        {/* Isu Lapangan */}
-        <div
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: 14,
-            border: '1px solid rgba(15,23,42,0.07)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Isu Lapangan</span>
-              {issues.length > 0 && (
-                <span
-                  style={{
-                    backgroundColor: 'rgba(239,68,68,0.1)',
-                    color: '#DC2626',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: 20,
-                    letterSpacing: '0.01em',
-                  }}
-                >
-                  {issues.length}
-                </span>
-              )}
-            </div>
-            {isAdmin && (
-              <button
-                onClick={() => setAddingIsu(true)}
-                style={{
-                  background: 'none',
-                  border: '1px solid rgba(15,23,42,0.12)',
-                  borderRadius: 7,
-                  padding: '4px 10px',
-                  cursor: 'pointer',
-                  color: '#5C6B82',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A6FE8'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8'
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(15,23,42,0.12)'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = '#5C6B82'
-                }}
-              >
-                + Tambah
-              </button>
-            )}
-          </div>
-
-          <div style={{ padding: '12px 16px', maxHeight: 300, overflowY: 'auto' }}>
-            {issues.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: '#9CAABB', fontSize: 13 }}>
-                Tidak ada isu lapangan.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {issues.slice(0, 10).map(issue => {
-                  const borderColor = issue.status_isu === 'Selesai' ? '#059669' : issue.status_isu === 'Proses' ? '#1A6FE8' : '#D97706'
-                  const badgeBg = issue.status_isu === 'Selesai' ? 'rgba(5,150,105,0.08)' : issue.status_isu === 'Proses' ? 'rgba(26,111,232,0.08)' : 'rgba(217,119,6,0.08)'
-                  const badgeColor = issue.status_isu === 'Selesai' ? '#059669' : issue.status_isu === 'Proses' ? '#1A6FE8' : '#D97706'
-                  return (
-                    <div
-                      key={issue.id}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: 9,
-                        backgroundColor: '#F8FAFC',
-                        borderLeft: `2.5px solid ${borderColor}`,
-                        transition: 'background 0.12s',
-                      }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#F1F5F9' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#F8FAFC' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F1C2E', marginBottom: 3, letterSpacing: '-0.01em' }}>
-                            {issue.nama_pekerjaan}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#5C6B82', lineHeight: 1.4 }}>{issue.isu_kendala}</div>
-                          {issue.tindak_lanjut && (
-                            <div style={{ marginTop: 6, fontSize: 11, color: badgeColor, backgroundColor: badgeBg, display: 'inline-block', padding: '2px 8px', borderRadius: 5, fontWeight: 500 }}>
-                              {issue.tindak_lanjut}
-                            </div>
-                          )}
-                        </div>
-                        {isAdmin && (
-                          <button
-                            onClick={() => setEditingIssue(issue)}
-                            style={{
-                              flexShrink: 0,
-                              background: 'none',
-                              border: '1px solid rgba(15,23,42,0.1)',
-                              borderRadius: 6,
-                              padding: '4px 6px',
-                              cursor: 'pointer',
-                              color: '#9CAABB',
-                              display: 'flex',
-                              alignItems: 'center',
-                              transition: 'all 0.12s',
-                            }}
-                            onMouseEnter={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A6FE8'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8'
-                            }}
-                            onMouseLeave={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(15,23,42,0.1)'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = '#9CAABB'
-                            }}
-                          >
-                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Status Pie Chart */}
         <div
           style={{
             backgroundColor: '#fff',
@@ -347,7 +208,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
             {pieData.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CAABB', fontSize: 13 }}>Belum ada data program.</div>
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -393,26 +254,6 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       {/* Laporan Pekanan */}
       <LaporanPekananCard isAdmin={isAdmin} programs={programs} />
 
-      {editingIssue && (
-        <EditIsuModal
-          issue={editingIssue}
-          onClose={() => setEditingIssue(null)}
-          onSuccess={async () => {
-            const { data } = await fetchIssues()
-            if (data) setIssues(data)
-          }}
-        />
-      )}
-
-      {addingIsu && (
-        <AddIsuModal
-          onClose={() => setAddingIsu(false)}
-          onSuccess={async () => {
-            const { data } = await fetchIssues()
-            if (data) setIssues(data)
-          }}
-        />
-      )}
     </div>
   )
 }
