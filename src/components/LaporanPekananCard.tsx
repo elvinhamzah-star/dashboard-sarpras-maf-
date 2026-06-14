@@ -136,7 +136,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
     setSaving(false)
   }
 
-  const activePrograms = programs.filter(p => p.status !== 'Selesai' && p.status !== 'selesai')
+  const activePrograms = programs.filter(p => p.status === 'On Going')
 
   const sections = [
     {
