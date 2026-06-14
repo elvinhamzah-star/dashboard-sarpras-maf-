@@ -61,53 +61,61 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
   const start = (page - 1) * itemsPerPage
   const paged = filtered.slice(start, start + itemsPerPage)
 
-  const summaryCards = [
+  const heroCards = [
     {
       title: 'Dana Masuk',
       value: formatRupiah(totalMasuk),
-      subtitle: `${masukList.length} transaksi`,
+      subtitle: `${masukList.length} transaksi diterima`,
       color: '#059669',
-      bg: 'rgba(5,150,105,0.08)',
-      iconBg: 'rgba(5,150,105,0.1)',
-      sign: '+',
-    },
-    {
-      title: 'Dana Keluar',
-      value: formatRupiah(totalKeluar),
-      subtitle: `${keluarList.length} transaksi`,
-      color: '#DC2626',
-      bg: 'rgba(220,38,38,0.08)',
-      iconBg: 'rgba(220,38,38,0.08)',
-      sign: '-',
-    },
-    {
-      title: 'Keluar PBB',
-      value: formatRupiah(totalKeluarPBB),
-      subtitle: `${keluarPBBList.length} transaksi`,
-      color: '#D97706',
-      bg: 'rgba(217,119,6,0.08)',
-      iconBg: 'rgba(217,119,6,0.08)',
-      sign: '-',
-    },
-    {
-      title: 'Total Deployment',
-      value: formatRupiah(totalDeployment),
-      subtitle: 'Seluruh pengeluaran PBB',
-      color: '#1A6FE8',
-      bg: 'rgba(26,111,232,0.08)',
-      iconBg: 'rgba(26,111,232,0.08)',
-      sign: '',
+      borderColor: '#059669',
     },
     {
       title: 'Saldo Kas',
       value: formatRupiah(saldoKas),
       subtitle: 'Sisa saldo kas Sarpras',
       color: saldoKas >= 0 ? '#059669' : '#DC2626',
-      bg: saldoKas >= 0 ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.08)',
-      iconBg: 'rgba(15,23,42,0.05)',
-      sign: '',
+      borderColor: saldoKas >= 0 ? '#059669' : '#DC2626',
     },
   ]
+
+  const smallCards = [
+    {
+      title: 'Dana Keluar',
+      value: formatRupiah(totalKeluar),
+      subtitle: `${keluarList.length} transaksi`,
+      color: '#DC2626',
+    },
+    {
+      title: 'Keluar PBB',
+      value: formatRupiah(totalKeluarPBB),
+      subtitle: `${keluarPBBList.length} transaksi`,
+      color: '#D97706',
+    },
+    {
+      title: 'Total Deployment',
+      value: formatRupiah(totalDeployment),
+      subtitle: 'Masuk + Keluar PBB',
+      color: '#1A6FE8',
+    },
+  ]
+
+  const serapanBulanan = (() => {
+    const map: Record<string, { keluar: number; keluarPBB: number }> = {}
+    transactions.forEach(t => {
+      if (t.jenis_transaksi === 'Masuk') return
+      const ym = t.tanggal.slice(0, 7)
+      if (!map[ym]) map[ym] = { keluar: 0, keluarPBB: 0 }
+      if (t.jenis_transaksi === 'Keluar') map[ym].keluar += t.nominal || 0
+      else if (t.jenis_transaksi === 'Keluar PBB') map[ym].keluarPBB += t.nominal || 0
+    })
+    const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    return Object.entries(map)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([ym, v]) => {
+        const [y, m] = ym.split('-')
+        return { label: `${MONTHS[parseInt(m) - 1]} ${y}`, keluar: v.keluar, keluarPBB: v.keluarPBB, total: v.keluar + v.keluarPBB }
+      })
+  })()
 
   const JENIS_TABS = ['Semua', 'Masuk', 'Keluar', 'Keluar PBB']
 
@@ -149,15 +157,51 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
         )}
       </div>
 
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14, marginBottom: 22 }}>
-        {summaryCards.map(card => (
+      {/* Hero Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+        {heroCards.map(card => (
           <div
             key={card.title}
             style={{
               backgroundColor: '#fff',
               borderRadius: 14,
-              padding: '18px 18px',
+              padding: '22px 24px',
+              border: '1px solid rgba(15,23,42,0.07)',
+              borderLeft: `3px solid ${card.borderColor}`,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              transition: 'box-shadow 0.18s, transform 0.18s',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'
+              el.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
+              el.style.transform = 'translateY(0)'
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+              {card.title}
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+              {card.value}
+            </div>
+            <div style={{ fontSize: 12, color: '#9CAABB' }}>{card.subtitle}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Small Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 22 }}>
+        {smallCards.map(card => (
+          <div
+            key={card.title}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 14,
+              padding: '16px 18px',
               border: '1px solid rgba(15,23,42,0.07)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s, transform 0.18s',
@@ -173,16 +217,63 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {card.title}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 750, color: card.color, marginBottom: 8, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
               {card.value}
             </div>
             <div style={{ fontSize: 11, color: '#9CAABB' }}>{card.subtitle}</div>
           </div>
         ))}
       </div>
+
+      {/* Serapan per Bulan */}
+      {serapanBulanan.length > 0 && (
+        <div
+          style={{
+            backgroundColor: '#fff',
+            borderRadius: 14,
+            border: '1px solid rgba(15,23,42,0.07)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            overflow: 'hidden',
+            marginBottom: 22,
+          }}
+        >
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
+            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
+              <thead>
+                <tr>
+                  {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
+                    <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(15,23,42,0.06)', backgroundColor: '#FAFBFC', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {serapanBulanan.map((row, i) => (
+                  <tr
+                    key={row.label}
+                    style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none', transition: 'background 0.1s' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                  >
+                    <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#0F1C2E' }}>{row.label}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 13, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 13, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: '#0F1C2E', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Transactions Table */}
       <div
