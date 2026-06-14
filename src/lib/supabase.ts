@@ -1,0 +1,93 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://sgslsiyoompzuhuwzgyi.supabase.co'
+const supabaseKey = 'sb_publishable_3wYZACfd-9wKcx92loJWPg_jjF76A_7'
+
+export const supabase = createClient(supabaseUrl, supabaseKey)
+
+export interface Program {
+  id: string
+  program: string
+  nama_pekerjaan: string
+  jenis_pekerjaan: string
+  status: string
+  progress_percent: number
+  total_anggaran: number
+  realisasi_terkini: number
+  sisa_anggaran: number
+  vendor: string
+  isu_utama: string
+  link_rab_detail?: string
+  link_dokumentasi?: string
+  link_bukti_transaksi?: string
+  created_at: string
+}
+
+export interface SubProgram {
+  id: string
+  program_id: string
+  nama_gedung: string
+  progress_percent: number
+  total_anggaran: number
+  realisasi_terkini: number
+  sisa_anggaran: number
+  status: string
+  created_at: string
+}
+
+export interface Transaction {
+  id: string
+  tanggal: string
+  jenis_transaksi: string
+  nominal: number
+  nama_pekerjaan: string
+  deskripsi: string
+  link_bukti?: string
+  created_at: string
+}
+
+export interface Issue {
+  id: string
+  program_id: string
+  nama_pekerjaan: string
+  isu_kendala: string
+  status_isu: string
+  tindak_lanjut?: string
+  created_at: string
+}
+
+export interface Documentation {
+  id: string
+  program_id: string
+  nama_pekerjaan?: string
+  fase?: string
+  link_foto: string
+  drive_link?: string
+  caption?: string
+  deskripsi?: string
+  tanggal: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface Activity {
+  id: string
+  content: string
+  tanggal?: string
+  created_at: string
+}
+
+export interface WorkNote {
+  id: string
+  kategori: 'Isu Pekerjaan' | 'Catatan' | 'Reminder'
+  content: string
+  created_at: string
+}
+
+export const fetchPrograms = () => supabase.from('programs').select('*').order('id', { ascending: true })
+export const fetchSubPrograms = (parentId: string) => supabase.from('sub_programs').select('*').eq('program_id', parentId).order('id', { ascending: true })
+export const fetchTransactions = () => supabase.from('transactions').select('*').order('tanggal', { ascending: false })
+export const fetchIssues = () => supabase.from('issues').select('*').order('created_at', { ascending: false })
+export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
+export const fetchActivities = () => supabase.from('activities').select('*').order('created_at', { ascending: false })
+export const fetchWorkNotes = () => supabase.from('work_notes').select('*').order('created_at', { ascending: false })

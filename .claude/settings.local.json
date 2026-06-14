@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f \"vite\")",
+      "Bash(node -e ' *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npx tsc *)",
+      "mcp__e5cb8625-dbfd-4f3e-a3b5-89afe45e6df5__execute_sql",
+      "Bash(pkill -f \"npm run dev\")",
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "Bash(node update-subpekerjaan.js)",
+      "Bash(cp \"/Users/mac/Downloads/Draft Logo PBB.svg\" /Users/mac/dashboard-sarpras-maf-v2/public/LogoPBB.svg && ls -lh /Users/mac/dashboard-sarpras-maf-v2/public/LogoPBB*)",
+      "Bash(\n# Extract struktur SVG tanpa base64\nsed 's/xlink:href=\"data:[^\"]*\"/xlink:href=\"REMOVED\"/g' \"/Users/mac/Downloads/Draft Logo PBB.svg\" > /tmp/svg_structure.svg\n\n# Cari semua tag dan attributes\ngrep -o '<[^>]*>' /tmp/svg_structure.svg | head -50\n)",
+      "Bash(pkill -f \"vite\\\\|node\\\\|npm run dev\")",
+      "Bash(pkill -f \"vite\\\\|node.*dev\")",
+      "Bash(kill -9 85412)",
+      "Bash(pkill -9 -f \"node\\\\|vite\")",
+      "Bash(kill -9 85591)",
+      "Bash(kill 87507)",
+      "Bash(gh auth *)",
+      "Bash(echo \"=== TSC DONE \\(exit $?\\) ===\")",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git commit -q -m ' *)"
+    ]
+  }
+}
