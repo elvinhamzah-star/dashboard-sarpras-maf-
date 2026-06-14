@@ -5,6 +5,7 @@ import { formatRupiahShort, formatRupiah, getTodayFormatted, STATUS_COLORS } fro
 import EditIsuModal from './EditIsuModal'
 import AddIsuModal from './AddIsuModal'
 import PekerjaanTerbaruCard from './PekerjaanTerbaruCard'
+import CatatanPekanCard from './CatatanPekanCard'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -460,6 +461,9 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           })()}
         </div>
       </div>
+
+      {/* Catatan Pekan */}
+      <CatatanPekanCard isAdmin={isAdmin} />
 
       {/* Pekerjaan Terbaru */}
       <PekerjaanTerbaruCard isAdmin={isAdmin} />

@@ -3,6 +3,8 @@ import { supabase, SubProgram, Program } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal } from '../lib/data'
 import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
+import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
+import EditDokumenModal from './EditDokumenModal'
 
 interface PekerjaanDetailProps {
   programId: string
@@ -18,6 +20,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('Ringkasan')
   const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [showEditCatatan, setShowEditCatatan] = useState(false)
+  const [showEditDokumen, setShowEditDokumen] = useState(false)
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
 
   const load = async () => {
@@ -113,21 +117,35 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             <h1 style={{ fontSize: 20, fontWeight: 750, color: '#0F1C2E', margin: '0 0 10px', lineHeight: 1.3, letterSpacing: '-0.03em' }}>
               {program.nama_pekerjaan}
             </h1>
-            {program.isu_utama && (
-              <div
-                style={{
-                  backgroundColor: 'rgba(217,119,6,0.07)',
-                  borderLeft: '2.5px solid #D97706',
-                  borderRadius: 7,
-                  padding: '8px 12px',
-                  fontSize: 12.5,
-                  color: '#92400e',
-                  fontWeight: 500,
-                }}
-              >
-                ⚠ {program.isu_utama}
-              </div>
-            )}
+            <div
+              onClick={() => isAdmin && setShowEditCatatan(true)}
+              style={{
+                backgroundColor: program.isu_utama ? 'rgba(217,119,6,0.07)' : 'rgba(15,23,42,0.03)',
+                borderLeft: program.isu_utama ? '2.5px solid #D97706' : '2.5px solid #C8D2E0',
+                borderRadius: 7,
+                padding: '8px 12px',
+                fontSize: 12.5,
+                color: program.isu_utama ? '#92400e' : '#9CAABB',
+                fontWeight: 500,
+                cursor: isAdmin ? 'pointer' : 'default',
+                transition: 'all 0.15s',
+                minHeight: 32,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onMouseEnter={e => {
+                if (isAdmin && program.isu_utama) {
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(217,119,6,0.12)'
+                }
+              }}
+              onMouseLeave={e => {
+                if (isAdmin && program.isu_utama) {
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(217,119,6,0.07)'
+                }
+              }}
+            >
+              {program.isu_utama ? `⚠ ${program.isu_utama}` : (isAdmin ? '+ Tambah catatan...' : 'Tidak ada catatan')}
+            </div>
           </div>
           {isAdmin && (
             <button
@@ -304,7 +322,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ['Realisasi Terkini', formatRupiah(program.realisasi_terkini || 0)],
                     ['Sisa Anggaran', formatRupiah(program.sisa_anggaran || 0)],
                     ['Vendor', program.vendor || '-'],
-                    ['Isu Utama', program.isu_utama || '-'],
+                    ['Catatan Pekerjaan', program.isu_utama || '-'],
                     ['Dibuat', formatTanggal(program.created_at)],
                   ].map(([label, value], i, arr) => (
                     <tr key={label} style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
@@ -320,7 +338,29 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
 
         {activeTab === 'Dokumen' && (
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowEditDokumen(true)}
+                  style={{
+                    backgroundColor: '#1A6FE8',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { label: 'RAB Detail', url: program.link_rab_detail },
@@ -510,6 +550,34 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
           onClose={() => setEditingSubProgram(null)}
           onSuccess={() => {
             setEditingSubProgram(null)
+            load()
+          }}
+        />
+      )}
+
+      {showEditCatatan && program && (
+        <EditCatatanPekerjaanModal
+          programId={program.id}
+          currentNotes={program.isu_utama || ''}
+          onClose={() => setShowEditCatatan(false)}
+          onSuccess={() => {
+            setShowEditCatatan(false)
+            load()
+          }}
+        />
+      )}
+
+      {showEditDokumen && program && (
+        <EditDokumenModal
+          programId={program.id}
+          links={{
+            rabDetail: program.link_rab_detail,
+            dokumentasi: program.link_dokumentasi,
+            buktiTransaksi: program.link_bukti_transaksi,
+          }}
+          onClose={() => setShowEditDokumen(false)}
+          onSuccess={() => {
+            setShowEditDokumen(false)
             load()
           }}
         />
