@@ -70,11 +70,11 @@ export default function CatatanPekanCard({ isAdmin }: CatatanPekanCardProps) {
     const existing = notes.find(n => n.week_start === currentWeek.start)
 
     if (existing) {
-      const { error: err } = await adminUpdate('weekly_notes', existing.id, {
+      const { error: err } = await adminUpdate('weekly_notes', {
         content: currentNote,
         week_start: currentWeek.start,
         week_end: currentWeek.end,
-      })
+      }, existing.id)
       if (err) {
         setError(err.message || 'Gagal menyimpan')
       } else {

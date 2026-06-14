@@ -16,9 +16,9 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
   const handleSave = async () => {
     setSaving(true)
     setError('')
-    const { error: err } = await adminUpdate('programs', programId, {
+    const { error: err } = await adminUpdate('programs', {
       isu_utama: notes.trim() || null,
-    })
+    }, programId)
     setSaving(false)
     if (err) {
       setError(err.message || 'Gagal menyimpan')

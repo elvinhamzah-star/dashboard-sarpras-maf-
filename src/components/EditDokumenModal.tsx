@@ -22,11 +22,11 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
   const handleSave = async () => {
     setSaving(true)
     setError('')
-    const { error: err } = await adminUpdate('programs', programId, {
+    const { error: err } = await adminUpdate('programs', {
       link_rab_detail: rabDetail.trim() || null,
       link_dokumentasi: dokumentasi.trim() || null,
       link_bukti_transaksi: buktiTransaksi.trim() || null,
-    })
+    }, programId)
     setSaving(false)
     if (err) {
       setError(err.message || 'Gagal menyimpan')

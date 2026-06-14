@@ -571,9 +571,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
         <EditDokumenModal
           programId={program.id}
           links={{
-            rabDetail: program.link_rab_detail,
-            dokumentasi: program.link_dokumentasi,
-            buktiTransaksi: program.link_bukti_transaksi,
+            rabDetail: program.link_rab_detail ?? null,
+            dokumentasi: program.link_dokumentasi ?? null,
+            buktiTransaksi: program.link_bukti_transaksi ?? null,
           }}
           onClose={() => setShowEditDokumen(false)}
           onSuccess={() => {
