@@ -119,7 +119,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   const week = getWeekDates(weekOffset)
   const isCurrentWeek = weekOffset === 0
-  const activePrograms = programs.filter(p => p.status === 'On Going')
+  const activePrograms = programs.filter(p => p.status === 'On Going' && p.jenis_pekerjaan !== 'Operasional')
 
   const setField = (programId: string, field: keyof LaporanPerProgram, items: string[]) => {
     setPerProgram(prev => ({
