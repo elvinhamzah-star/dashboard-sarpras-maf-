@@ -131,7 +131,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 transition: 'all 0.15s',
                 minHeight: 32,
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: program.isu_utama ? 'flex-start' : 'center',
+                gap: 8,
               }}
               onMouseEnter={e => {
                 if (isAdmin && program.isu_utama) {
@@ -144,7 +145,22 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 }
               }}
             >
-              {program.isu_utama ? `⚠ ${program.isu_utama}` : (isAdmin ? '+ Tambah catatan...' : 'Tidak ada catatan')}
+              {program.isu_utama ? (
+                <>
+                  <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24" style={{ marginTop: 2, flexShrink: 0 }}>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {program.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#92400e', flexShrink: 0, marginTop: 5 }} />
+                        <span>{line}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (isAdmin ? '+ Tambah catatan...' : 'Tidak ada catatan')}
             </div>
           </div>
           {isAdmin && (
@@ -322,10 +338,17 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ['Realisasi Terkini', formatRupiah(program.realisasi_terkini || 0)],
                     ['Sisa Anggaran', formatRupiah(program.sisa_anggaran || 0)],
                     ['Vendor', program.vendor || '-'],
-                    ['Catatan Pekerjaan', program.isu_utama || '-'],
+                    ['Catatan Pekerjaan', program.isu_utama
+                      ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: idx > 0 ? 3 : 0 }}>
+                            <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#5C6B82', flexShrink: 0, marginTop: 5 }} />
+                            <span>{line}</span>
+                          </div>
+                        ))
+                      : '-'],
                     ['Dibuat', formatTanggal(program.created_at)],
                   ].map(([label, value], i, arr) => (
-                    <tr key={label} style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
+                    <tr key={String(label)} style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
                       <td style={{ padding: '10px 0', color: '#9CAABB', fontWeight: 600, width: '40%', minWidth: 140, verticalAlign: 'top', fontSize: 12 }}>{label}</td>
                       <td style={{ padding: '10px 0', color: '#0F1C2E', fontSize: 13 }}>{value}</td>
                     </tr>
