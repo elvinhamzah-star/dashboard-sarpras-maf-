@@ -67,7 +67,7 @@ export default function App() {
 
     switch (currentPage) {
       case 'beranda':
-        return <Beranda isAdmin={isAdmin} onAddPekerjaan={handleAddPekerjaan} />
+        return <Beranda isAdmin={isAdmin} />
       case 'pekerjaan':
         return (
           <Pekerjaan

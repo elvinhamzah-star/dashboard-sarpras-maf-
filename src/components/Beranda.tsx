@@ -8,7 +8,6 @@ import PekerjaanTerbaruCard from './PekerjaanTerbaruCard'
 
 interface BerandaProps {
   isAdmin: boolean
-  onAddPekerjaan: () => void
 }
 
 const PIE_COLORS = ['#1A6FE8', '#059669', '#DC2626', '#D97706']
@@ -45,7 +44,7 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-export default function Beranda({ isAdmin, onAddPekerjaan }: BerandaProps) {
+export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [issues, setIssues] = useState<Issue[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -146,41 +145,6 @@ export default function Beranda({ isAdmin, onAddPekerjaan }: BerandaProps) {
           </h1>
           <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5, fontWeight: 400 }}>{getTodayFormatted()}</p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={onAddPekerjaan}
-            style={{
-              backgroundColor: '#1A6FE8',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              padding: '9px 18px',
-              fontWeight: 600,
-              fontSize: 13.5,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 7,
-              letterSpacing: '-0.01em',
-              boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(26,111,232,0.35), 0 6px 18px rgba(26,111,232,0.25)'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8'
-              ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)'
-            }}
-          >
-            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Tambah Pekerjaan
-          </button>
-        )}
       </div>
 
       {/* Metric Cards */}
@@ -498,7 +462,7 @@ export default function Beranda({ isAdmin, onAddPekerjaan }: BerandaProps) {
       </div>
 
       {/* Pekerjaan Terbaru */}
-      <PekerjaanTerbaruCard isAdmin={isAdmin} onSelectProgram={onAddPekerjaan} />
+      <PekerjaanTerbaruCard isAdmin={isAdmin} />
 
       {editingIssue && (
         <EditIsuModal

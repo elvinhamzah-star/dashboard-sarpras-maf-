@@ -10,6 +10,7 @@ const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
 export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModalProps) {
   const [form, setForm] = useState({
+    id: '',
     program: '',
     nama_pekerjaan: '',
     jenis_pekerjaan: '',
@@ -29,6 +30,10 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
   const handleSave = async () => {
+    if (!form.id.trim()) {
+      setError('ID wajib diisi.')
+      return
+    }
     if (!form.nama_pekerjaan.trim()) {
       setError('Nama pekerjaan wajib diisi.')
       return
@@ -38,6 +43,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     const totalAnggaran = parseFloat(form.total_anggaran) || 0
     const realisasi = parseFloat(form.realisasi_terkini) || 0
     const { error: err } = await adminInsert('programs', {
+      id: form.id,
       program: form.program,
       nama_pekerjaan: form.nama_pekerjaan,
       jenis_pekerjaan: form.jenis_pekerjaan,
@@ -82,6 +88,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
   }
 
   const fields: { key: string; label: string; type?: string; options?: string[] }[] = [
+    { key: 'id', label: 'ID (e.g., P-001)' },
     { key: 'program', label: 'Program' },
     { key: 'nama_pekerjaan', label: 'Nama Pekerjaan' },
     { key: 'jenis_pekerjaan', label: 'Jenis Pekerjaan' },
@@ -142,7 +149,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {fields.map(f => (
-            <div key={f.key} style={{ gridColumn: ['program','nama_pekerjaan','isu_utama','link_rab_detail','link_dokumentasi','link_bukti_transaksi'].includes(f.key) ? 'span 2' : 'span 1' }}>
+            <div key={f.key} style={{ gridColumn: ['program','nama_pekerjaan','isu_utama','link_rab_detail','link_dokumentasi','link_bukti_transaksi'].includes(f.key) ? 'span 2' : f.key === 'id' ? 'span 1' : 'span 1' }}>
               <label style={labelStyle}>{f.label}</label>
               {f.options ? (
                 <select
