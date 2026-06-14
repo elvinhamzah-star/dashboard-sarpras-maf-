@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { adminInsert, adminUpdate } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
@@ -51,12 +51,15 @@ const formatWeekRange = (start: string, end: string) => {
 
 const empty = (): LaporanPerProgram => ({ dikerjakan: [], kendala: [], rencana: [] })
 
-const parseContent = (content: string): Record<string, LaporanPerProgram> => {
+const parseContent = (content: string): { programs: Record<string, LaporanPerProgram>; pinnedPlanning: string[] } => {
   try {
     const p = JSON.parse(content)
-    if (p.v === 2 && p.programs) return p.programs
+    if (p.v === 2) return {
+      programs: p.programs || {},
+      pinnedPlanning: p.pinned_planning || [],
+    }
   } catch {}
-  return {}
+  return { programs: {}, pinnedPlanning: [] }
 }
 
 const hasAnyData = (d: LaporanPerProgram) =>
@@ -96,6 +99,18 @@ const SectionDots = ({ data }: { data: LaporanPerProgram }) => (
       <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: d.filled ? d.color : 'rgba(15,23,42,0.1)' }} />
     ))}
   </div>
+)
+
+const IconPrev = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+)
+
+const IconNext = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
 )
 
 const SECTIONS = [
@@ -148,11 +163,16 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [error, setError] = useState('')
   const [perProgram, setPerProgram] = useState<Record<string, LaporanPerProgram>>({})
   const [expandedPrograms, setExpandedPrograms] = useState<Set<string>>(new Set())
+  const [pinnedPlanningIds, setPinnedPlanningIds] = useState<string[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const week = getWeekDates(weekOffset)
   const activePrograms = programs.filter(p => p.status === 'On Going' && p.jenis_pekerjaan !== 'Operasional')
   const planningPrograms = programs.filter(p => p.status === 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
-  const hasAnyPrograms = activePrograms.length > 0 || planningPrograms.length > 0
+  const availablePlanning = planningPrograms.filter(p => !pinnedPlanningIds.includes(p.id))
+  const pinnedPrograms = pinnedPlanningIds.map(id => planningPrograms.find(p => p.id === id)).filter(Boolean) as Program[]
+  const showPlanningSection = isAdmin ? planningPrograms.length > 0 : pinnedPlanningIds.length > 0
 
   const setField = (programId: string, field: keyof LaporanPerProgram, items: string[]) => {
     setPerProgram(prev => ({
@@ -170,6 +190,29 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
     })
   }
 
+  const pinProgram = (id: string) => {
+    setPinnedPlanningIds(prev => [...prev, id])
+    setShowDropdown(false)
+    setExpandedPrograms(prev => new Set([...prev, id]))
+  }
+
+  const unpinProgram = (id: string) => {
+    setPinnedPlanningIds(prev => prev.filter(x => x !== id))
+    setPerProgram(prev => { const n = { ...prev }; delete n[id]; return n })
+    setExpandedPrograms(prev => { const n = new Set(prev); n.delete(id); return n })
+  }
+
+  useEffect(() => {
+    if (!showDropdown) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showDropdown])
+
   const load = async () => {
     setLoading(true)
     const { data } = await supabase
@@ -180,8 +223,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
     if (data) {
       setNote(data as WeeklyNote)
-      const parsed = parseContent(data.content)
+      const { programs: parsed, pinnedPlanning } = parseContent(data.content)
       setPerProgram(parsed)
+      setPinnedPlanningIds(pinnedPlanning)
       const expanded = new Set<string>()
       Object.entries(parsed).forEach(([id, d]) => {
         if (hasAnyData(d)) expanded.add(id)
@@ -190,6 +234,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
     } else {
       setNote(null)
       setPerProgram({})
+      setPinnedPlanningIds([])
       setExpandedPrograms(new Set())
     }
     setLoading(false)
@@ -210,7 +255,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       }
     })
 
-    const content = JSON.stringify({ v: 2, programs: cleaned })
+    const content = JSON.stringify({ v: 2, programs: cleaned, pinned_planning: pinnedPlanningIds })
     const payload = { week_start: week.start, week_end: week.end, content }
     const result = note
       ? await adminUpdate('weekly_notes', payload, note.id)
@@ -223,6 +268,14 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   if (loading) return null
 
+  const navBtnBase: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '8px 16px', borderRadius: 8,
+    border: '1px solid rgba(15,23,42,0.12)',
+    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+    fontFamily: 'inherit',
+  }
+
   return (
     <div style={{
       backgroundColor: '#fff',
@@ -231,57 +284,81 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       overflow: 'hidden',
     }}>
-      {/* Header */}
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Laporan Pekanan</div>
-          <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>{formatWeekRange(week.start, week.end)}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button
-            onClick={() => setWeekOffset(w => w - 1)}
-            style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.1)', background: '#fff', color: '#5C6B82', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-          >
-            ← Sebelumnya
-          </button>
+      {/* Title */}
+      <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Laporan Pekanan</div>
+      </div>
+
+      {/* Navigation row */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+        alignItems: 'center', gap: 10,
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(15,23,42,0.06)',
+        backgroundColor: 'rgba(15,23,42,0.01)',
+      }}>
+        <button
+          onClick={() => setWeekOffset(w => w - 1)}
+          style={{ ...navBtnBase, backgroundColor: '#fff', color: '#5C6B82', justifyContent: 'flex-start' }}
+        >
+          <IconPrev /> Sebelumnya
+        </button>
+
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1C2E', whiteSpace: 'nowrap' }}>
+            {formatWeekRange(week.start, week.end)}
+          </div>
           {weekOffset < 0 && (
-            <>
-              <button
-                onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
-                style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.1)', background: '#fff', color: '#5C6B82', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              >
-                →
-              </button>
-              <button
-                onClick={() => setWeekOffset(0)}
-                style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#1A6FE8', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Pekan ini
-              </button>
-            </>
+            <button
+              onClick={() => setWeekOffset(0)}
+              style={{
+                marginTop: 5, padding: '3px 12px',
+                borderRadius: 20, border: 'none',
+                backgroundColor: '#EFF4FF', color: '#1A6FE8',
+                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              ↩ Pekan ini
+            </button>
           )}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
+            disabled={weekOffset === 0}
+            style={{
+              ...navBtnBase,
+              backgroundColor: weekOffset === 0 ? 'transparent' : '#fff',
+              color: weekOffset === 0 ? 'rgba(15,23,42,0.2)' : '#5C6B82',
+              cursor: weekOffset === 0 ? 'default' : 'pointer',
+              border: weekOffset === 0 ? '1px solid transparent' : '1px solid rgba(15,23,42,0.12)',
+              justifyContent: 'flex-end',
+            }}
+          >
+            Selanjutnya <IconNext />
+          </button>
         </div>
       </div>
 
-      {/* No programs */}
-      {!hasAnyPrograms && (
+      {/* On Going programs */}
+      {activePrograms.length === 0 && !showPlanningSection && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
           Tidak ada pekerjaan aktif
         </div>
       )}
 
-      {/* On Going programs */}
       {activePrograms.map((program, pIdx) => {
         const data = perProgram[program.id] || empty()
         const isExpanded = expandedPrograms.has(program.id)
-        const isLastActive = pIdx === activePrograms.length - 1 && planningPrograms.length === 0
+        const isLast = pIdx === activePrograms.length - 1 && !showPlanningSection
 
         return (
-          <div key={program.id} style={{ borderBottom: isLastActive ? 'none' : '2px solid rgba(15,23,42,0.05)' }}>
-            {/* Clickable header */}
+          <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
             <div
               onClick={() => toggleExpand(program.id)}
-              style={{ padding: '13px 20px 11px', backgroundColor: 'rgba(15,23,42,0.02)', cursor: 'pointer', userSelect: 'none' }}
+              style={{ padding: '13px 20px 11px', backgroundColor: 'rgba(15,23,42,0.015)', cursor: 'pointer', userSelect: 'none' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
                 <Chevron open={isExpanded} />
@@ -298,7 +375,6 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               </div>
             </div>
 
-            {/* 3 fields — only when expanded */}
             {isExpanded && SECTIONS.map(s => (
               <div key={s.field} style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -322,10 +398,15 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
         )
       })}
 
-      {/* Perencanaan separator */}
-      {planningPrograms.length > 0 && (
+      {/* Perencanaan section */}
+      {showPlanningSection && (
         <>
-          <div style={{ padding: '7px 20px', backgroundColor: 'rgba(15,23,42,0.025)', borderTop: activePrograms.length > 0 ? '2px solid rgba(15,23,42,0.05)' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            padding: '8px 20px',
+            backgroundColor: 'rgba(15,23,42,0.025)',
+            borderTop: activePrograms.length > 0 ? '2px solid rgba(15,23,42,0.05)' : 'none',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
             <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(15,23,42,0.08)' }} />
             <span style={{ fontSize: 10, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
               Perencanaan
@@ -333,26 +414,33 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
             <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(15,23,42,0.08)' }} />
           </div>
 
-          {planningPrograms.map((program, pIdx) => {
+          {pinnedPrograms.map((program, pIdx) => {
             const data = perProgram[program.id] || empty()
             const isExpanded = expandedPrograms.has(program.id)
-            const isLast = pIdx === planningPrograms.length - 1
+            const isLast = pIdx === pinnedPrograms.length - 1
 
             return (
-              <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
-                {/* Clickable header */}
+              <div key={program.id} style={{ borderBottom: isLast && !isAdmin ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
                 <div
                   onClick={() => toggleExpand(program.id)}
-                  style={{ padding: '11px 20px', backgroundColor: 'rgba(15,23,42,0.015)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, userSelect: 'none' }}
+                  style={{ padding: '11px 20px', backgroundColor: 'rgba(15,23,42,0.01)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, userSelect: 'none' }}
                 >
                   <Chevron open={isExpanded} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#0F1C2E', flex: 1 }}>
                     {program.nama_pekerjaan}
                   </span>
+                  {isAdmin && (
+                    <button
+                      onClick={e => { e.stopPropagation(); unpinProgram(program.id) }}
+                      title="Hapus dari daftar"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8D2E0', fontSize: 16, lineHeight: 1, padding: '0 2px', flexShrink: 0 }}
+                    >
+                      ×
+                    </button>
+                  )}
                   <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#1A6FE8' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
                 </div>
 
-                {/* Rencana Eksekusi — only when expanded */}
                 {isExpanded && (
                   <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -375,11 +463,67 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               </div>
             )
           })}
+
+          {/* Add planning program button (admin only) */}
+          {isAdmin && (
+            <div style={{ padding: '10px 20px', position: 'relative' }} ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown(v => !v)}
+                style={{
+                  width: '100%', padding: '8px 14px',
+                  borderRadius: 8, border: '1px dashed rgba(26,43,94,0.2)',
+                  backgroundColor: 'transparent', color: '#5C6B82',
+                  fontSize: 12, fontWeight: 600, cursor: availablePlanning.length > 0 ? 'pointer' : 'default',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  justifyContent: 'center', fontFamily: 'inherit',
+                  opacity: availablePlanning.length === 0 ? 0.4 : 1,
+                }}
+                disabled={availablePlanning.length === 0}
+              >
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {availablePlanning.length === 0 ? 'Semua program sudah ditambahkan' : 'Tambah program perencanaan'}
+              </button>
+
+              {showDropdown && availablePlanning.length > 0 && (
+                <div style={{
+                  position: 'absolute', bottom: '100%', left: 20, right: 20, zIndex: 20,
+                  backgroundColor: '#fff',
+                  borderRadius: 10,
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  boxShadow: '0 8px 24px rgba(15,23,42,0.12)',
+                  overflow: 'hidden',
+                  maxHeight: 220,
+                  overflowY: 'auto',
+                  marginBottom: 4,
+                }}>
+                  {availablePlanning.map((p, i) => (
+                    <button
+                      key={p.id}
+                      onClick={() => pinProgram(p.id)}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '10px 14px',
+                        border: 'none',
+                        borderBottom: i < availablePlanning.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none',
+                        backgroundColor: 'transparent', color: '#0F1C2E',
+                        fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+                        display: 'block',
+                      }}
+                    >
+                      {p.nama_pekerjaan}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
 
       {/* Save button */}
-      {isAdmin && hasAnyPrograms && (
+      {isAdmin && (activePrograms.length > 0 || pinnedPlanningIds.length > 0) && (
         <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
           {error && (
             <div style={{ marginBottom: 8, padding: 8, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
