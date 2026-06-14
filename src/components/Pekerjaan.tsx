@@ -235,12 +235,22 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                     {p.id}
                   </td>
                   <td style={{ padding: '12px 16px', maxWidth: 260 }}>
-                    <div style={{ fontSize: 13, color: '#0F1C2E', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-                      {p.nama_pekerjaan}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      {p.isu_utama && (
+                        <div title="Ada isu utama" style={{
+                          width: 7, height: 7, borderRadius: '50%',
+                          backgroundColor: '#D97706', flexShrink: 0,
+                        }} />
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, color: '#0F1C2E', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                          {p.nama_pekerjaan}
+                        </div>
+                        {p.vendor && (
+                          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>{p.vendor}</div>
+                        )}
+                      </div>
                     </div>
-                    {p.vendor && (
-                      <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>{p.vendor}</div>
-                    )}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: 12, color: '#5C6B82', whiteSpace: 'nowrap' }}>
                     {p.program || '-'}
