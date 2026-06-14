@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { fetchPrograms, fetchIssues, fetchTransactions, Program, Issue, Transaction } from '../lib/supabase'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { fetchPrograms, fetchIssues, Program, Issue } from '../lib/supabase'
 import { formatRupiahShort, formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import EditIsuModal from './EditIsuModal'
 import AddIsuModal from './AddIsuModal'
@@ -13,7 +13,6 @@ interface BerandaProps {
 
 const PIE_COLORS = ['#1A6FE8', '#059669', '#DC2626', '#D97706']
 
-const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
 const MetricIcon = ({ type }: { type: string }) => {
   const icons: Record<string, JSX.Element> = {
@@ -48,7 +47,6 @@ const MetricIcon = ({ type }: { type: string }) => {
 export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [issues, setIssues] = useState<Issue[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
   const [addingIsu, setAddingIsu] = useState(false)
@@ -56,10 +54,9 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [pRes, iRes, tRes] = await Promise.all([fetchPrograms(), fetchIssues(), fetchTransactions()])
+      const [pRes, iRes] = await Promise.all([fetchPrograms(), fetchIssues()])
       if (pRes.data) setPrograms(pRes.data)
       if (iRes.data) setIssues(iRes.data)
-      if (tRes.data) setTransactions(tRes.data)
       setLoading(false)
     }
     load()
@@ -391,74 +388,6 @@ export default function Beranda({ isAdmin }: BerandaProps) {
               </ResponsiveContainer>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Bar Chart */}
-      <div
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: 14,
-          border: '1px solid rgba(15,23,42,0.07)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          overflow: 'hidden',
-          marginBottom: 0,
-        }}
-      >
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Serapan Anggaran Bulanan</div>
-          <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 3 }}>Dana masuk, keluar, dan keluar PBB per bulan</div>
-        </div>
-        <div style={{ padding: '8px 8px 8px 0' }}>
-          {(() => {
-            const monthlyData: Record<number, { masuk: number; keluar: number; keluarPBB: number }> = {}
-            transactions.forEach(t => {
-              const date = new Date(t.tanggal)
-              const month = date.getMonth()
-              if (!monthlyData[month]) monthlyData[month] = { masuk: 0, keluar: 0, keluarPBB: 0 }
-              if (t.jenis_transaksi === 'Masuk') monthlyData[month].masuk += t.nominal || 0
-              else if (t.jenis_transaksi === 'Keluar') monthlyData[month].keluar += t.nominal || 0
-              else if (t.jenis_transaksi === 'Keluar PBB') monthlyData[month].keluarPBB += t.nominal || 0
-            })
-            const chartData = Object.entries(monthlyData)
-              .filter(([_, v]) => v.masuk > 0 || v.keluar > 0 || v.keluarPBB > 0)
-              .map(([month, values]) => ({
-                bulan: MONTHS[parseInt(month)].substring(0, 3),
-                masuk: values.masuk,
-                keluar: values.keluar,
-                keluarPBB: values.keluarPBB,
-              }))
-
-            return (
-              <ResponsiveContainer width="100%" height={256}>
-                <BarChart data={chartData} margin={{ top: 8, right: 20, left: 16, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.05)" vertical={false} />
-                  <XAxis dataKey="bulan" tick={{ fontSize: 11.5, fill: '#9CAABB' }} axisLine={false} tickLine={false} />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: '#9CAABB' }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={v => v >= 1_000_000_000 ? `${(v/1_000_000_000).toFixed(0)}M` : `${(v/1_000_000).toFixed(0)}Jt`}
-                  />
-                  <Tooltip
-                    formatter={(v: number) => formatRupiah(v)}
-                    contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                    cursor={{ fill: 'rgba(15,23,42,0.03)' }}
-                  />
-                  <Legend
-                    formatter={(value) => {
-                      const labels: Record<string, string> = { masuk: 'Dana Masuk', keluar: 'Dana Keluar Hamzah', keluarPBB: 'Dana Keluar PBB' }
-                      return <span style={{ fontSize: 12, color: '#5C6B82' }}>{labels[value] || value}</span>
-                    }}
-                    wrapperStyle={{ fontSize: 12, paddingTop: 4 }}
-                  />
-                  <Bar dataKey="masuk" fill="#1A6FE8" radius={[4, 4, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="keluar" fill="#94A3B8" radius={[4, 4, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="keluarPBB" fill="#CBD5E1" radius={[4, 4, 0, 0]} maxBarSize={28} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          })()}
         </div>
       </div>
 
