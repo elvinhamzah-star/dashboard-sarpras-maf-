@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
+import { formatRupiah } from '../lib/data'
 
 interface UpdateProgressModalProps {
   program: Program
@@ -37,64 +38,87 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     }
   }
 
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 14px',
+    borderRadius: 10,
+    border: '1px solid rgba(26,43,94,0.15)',
+    fontSize: 13,
+    color: '#0D1829',
+    fontFamily: 'inherit',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold" style={{ color: '#0D1829' }}>Update Progress</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-            style={{ color: '#6B7A99' }}
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        backgroundColor: 'rgba(13,24,41,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        style={{
+          backgroundColor: '#fff',
+          borderRadius: 16,
+          padding: '28px',
+          width: '100%',
+          maxWidth: 480,
+          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
+        }}
+      >
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Update Progress</div>
+          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>{program.nama_pekerjaan}</div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6B7A99', marginBottom: 20 }}>{program.nama_pekerjaan}</p>
+        {error && (
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+            {error}
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6 }}>
-              Progress (%)
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Progress: {progress}%
             </label>
             <input
-              type="number"
+              type="range"
               min="0"
               max="100"
               value={progress}
               onChange={e => setProgress(e.target.value)}
-              className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2"
-              style={{ borderColor: 'rgba(26,43,94,0.15)', color: '#0D1829', fontSize: 14 }}
+              style={{ width: '100%', cursor: 'pointer' }}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Realisasi Terkini (Rp)
             </label>
             <input
               type="number"
               min="0"
+              step="100000"
               value={realisasi}
               onChange={e => setRealisasi(e.target.value)}
-              className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2"
-              style={{ borderColor: 'rgba(26,43,94,0.15)', color: '#0D1829', fontSize: 14 }}
+              style={inputStyle}
             />
+            <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Status
             </label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2"
-              style={{ borderColor: 'rgba(26,43,94,0.15)', color: '#0D1829', fontSize: 14, backgroundColor: '#fff' }}
+              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
             >
               {STATUS_OPTIONS.map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -103,23 +127,18 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
           </div>
         </div>
 
-        {error && (
-          <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{error}</p>
-        )}
-
-        <div className="flex gap-3 mt-6">
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 24 }}>
           <button
             onClick={onClose}
             style={{
-              flex: 1,
-              padding: '12px',
+              padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              background: 'transparent',
+              backgroundColor: '#fff',
               color: '#6B7A99',
+              fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
-              fontSize: 14,
             }}
           >
             Batal
@@ -128,15 +147,15 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
             onClick={handleSave}
             disabled={saving}
             style={{
-              flex: 1,
-              padding: '12px',
+              padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
+              fontSize: 13,
               fontWeight: 600,
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontSize: 14,
+              cursor: 'pointer',
+              opacity: saving ? 0.7 : 1,
             }}
           >
             {saving ? 'Menyimpan...' : 'Simpan'}

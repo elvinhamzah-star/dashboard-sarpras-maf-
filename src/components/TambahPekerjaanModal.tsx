@@ -130,7 +130,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Progress</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0858b0' }}>{selectedProgram.progress_percent || 0}%</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1A6FE8' }}>{selectedProgram.progress_percent || 0}%</div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Status</div>
@@ -269,7 +269,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,

@@ -82,12 +82,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   }
 
   return (
-    <div style={{ padding: '24px 24px 40px' }}>
+    <div style={{ padding: '28px 28px 48px' }}>
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0D1829', margin: 0 }}>Galeri Dokumentasi Pekerjaan</h1>
-          <p style={{ color: '#6B7A99', fontSize: 13, margin: '4px 0 0' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>Galeri Dokumentasi</h1>
+          <p style={{ color: '#5C6B82', fontSize: 13, margin: '5px 0 0', fontWeight: 400 }}>
             {loading ? 'Memuat...' : `${filteredDocs.length} dokumentasi`}
           </p>
         </div>
@@ -95,18 +95,29 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           <button
             onClick={() => setShowAddModal(true)}
             style={{
-              padding: '10px 20px',
+              padding: '9px 18px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
-              fontSize: 13,
+              fontSize: 13.5,
               fontWeight: 600,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              letterSpacing: '-0.01em',
+              boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
+              transition: 'all 0.15s',
             }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
           >
-            + Tambah Dokumentasi
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Tambah Dokumentasi
           </button>
         )}
       </div>
@@ -146,7 +157,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 padding: '8px 14px',
                 borderRadius: 8,
                 border: filterFase === fase ? 'none' : '1px solid rgba(26,43,94,0.15)',
-                backgroundColor: filterFase === fase ? '#0858b0' : '#fff',
+                backgroundColor: filterFase === fase ? '#1A6FE8' : '#fff',
                 color: filterFase === fase ? '#fff' : '#6B7A99',
                 fontSize: 12,
                 fontWeight: 600,
@@ -245,7 +256,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                       <div
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
                           gap: 16,
                         }}
                       >
@@ -268,11 +279,15 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                 const el = e.currentTarget as HTMLDivElement
                                 el.style.boxShadow = '0 8px 24px rgba(8,88,176,0.15)'
                                 el.style.transform = 'translateY(-4px)'
+                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement
+                                if (actions) actions.style.opacity = '1'
                               }}
                               onMouseLeave={e => {
                                 const el = e.currentTarget as HTMLDivElement
                                 el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'
                                 el.style.transform = 'translateY(0)'
+                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement
+                                if (actions) actions.style.opacity = '0'
                               }}
                               onClick={() => setLightboxDoc(doc)}
                             >
@@ -280,7 +295,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                               <div
                                 style={{
                                   width: '100%',
-                                  height: 140,
+                                  height: 180,
                                   backgroundColor: '#F5F7FA',
                                   overflow: 'hidden',
                                   display: 'flex',
@@ -325,15 +340,17 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                               {/* Admin Edit & Delete Buttons */}
                               {isAdmin && (
                                 <div
+                                  className="galeri-admin-actions"
                                   style={{
                                     position: 'absolute',
                                     top: 8,
                                     right: 8,
                                     display: 'flex',
                                     gap: 6,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
                                   }}
                                 >
-                                  {/* Edit Button */}
                                   <div
                                     style={{
                                       backgroundColor: 'rgba(0,0,0,0.6)',
@@ -347,14 +364,6 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       fontSize: 14,
-                                      opacity: 0,
-                                      transition: 'opacity 0.2s',
-                                    }}
-                                    onMouseEnter={e => {
-                                      ;(e.currentTarget as HTMLDivElement).style.opacity = '1'
-                                    }}
-                                    onMouseLeave={e => {
-                                      ;(e.currentTarget as HTMLDivElement).style.opacity = '0'
                                     }}
                                     onClick={e => {
                                       e.stopPropagation()
@@ -365,11 +374,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                   >
                                     ✏️
                                   </div>
-
-                                  {/* Delete Button */}
                                   <div
                                     style={{
-                                      backgroundColor: 'rgba(0,0,0,0.6)',
+                                      backgroundColor: 'rgba(220,38,38,0.7)',
                                       border: 'none',
                                       color: '#fff',
                                       width: 28,
@@ -380,14 +387,6 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       fontSize: 14,
-                                      opacity: 0,
-                                      transition: 'opacity 0.2s',
-                                    }}
-                                    onMouseEnter={e => {
-                                      ;(e.currentTarget as HTMLDivElement).style.opacity = '1'
-                                    }}
-                                    onMouseLeave={e => {
-                                      ;(e.currentTarget as HTMLDivElement).style.opacity = '0'
                                     }}
                                     onClick={e => {
                                       e.stopPropagation()
@@ -510,7 +509,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   display: 'inline-block',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#0858b0',
+                  color: '#1A6FE8',
                   textDecoration: 'none',
                 }}
               >

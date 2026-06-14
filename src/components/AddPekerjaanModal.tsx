@@ -97,7 +97,15 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        backgroundColor: 'rgba(13,24,41,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div
         style={{
           backgroundColor: '#fff',
@@ -107,21 +115,30 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
           maxWidth: 560,
           maxHeight: '90vh',
           overflowY: 'auto',
-          margin: 16,
+          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
         }}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0D1829', margin: 0 }}>Tambah Pekerjaan</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Pekerjaan</div>
+            <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Tambahkan program pekerjaan baru</div>
+          </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7A99' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7A99', padding: 4 }}
           >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
+
+        {error && (
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+            {error}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {fields.map(f => (
@@ -131,7 +148,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
                 <select
                   value={form[f.key as keyof typeof form]}
                   onChange={e => update(f.key, e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
                 >
                   {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
@@ -140,25 +157,25 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
                   type={f.type || 'text'}
                   value={form[f.key as keyof typeof form]}
                   onChange={e => update(f.key, e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, boxSizing: 'border-box' }}
                 />
               )}
             </div>
           ))}
         </div>
 
-        {error && (
-          <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{error}</p>
-        )}
-
-        <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 24 }}>
           <button
             onClick={onClose}
             style={{
-              flex: 1, padding: 12, borderRadius: 10,
+              padding: '10px 16px',
+              borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              background: 'transparent', color: '#6B7A99',
-              fontWeight: 600, cursor: 'pointer', fontSize: 14,
+              backgroundColor: '#fff',
+              color: '#6B7A99',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
             }}
           >
             Batal
@@ -167,12 +184,15 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
             onClick={handleSave}
             disabled={saving}
             style={{
-              flex: 1, padding: 12, borderRadius: 10,
+              padding: '10px 20px',
+              borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0', color: '#fff',
+              backgroundColor: '#1A6FE8',
+              color: '#fff',
+              fontSize: 13,
               fontWeight: 600,
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontSize: 14,
+              cursor: 'pointer',
+              opacity: saving ? 0.7 : 1,
             }}
           >
             {saving ? 'Menyimpan...' : 'Simpan'}

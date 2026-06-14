@@ -190,7 +190,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
               padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,

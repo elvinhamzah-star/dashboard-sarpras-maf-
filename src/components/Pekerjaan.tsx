@@ -118,14 +118,6 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
               outline: 'none',
               transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-            onFocus={e => {
-              (e.target as HTMLInputElement).style.borderColor = '#1A6FE8'
-              ;(e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(26,111,232,0.1)'
-            }}
-            onBlur={e => {
-              (e.target as HTMLInputElement).style.borderColor = 'rgba(15,23,42,0.1)'
-              ;(e.target as HTMLInputElement).style.boxShadow = 'none'
-            }}
           />
         </div>
 

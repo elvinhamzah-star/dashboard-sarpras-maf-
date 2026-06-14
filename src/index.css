@@ -73,6 +73,25 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Smooth input transitions */
+input, select, textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(26,111,232,0.1) !important;
+}
+
 /* Utility */
 .truncate {
   overflow: hidden;

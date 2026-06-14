@@ -81,13 +81,13 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
     >
       {/* Logo area */}
       <div
-        onClick={onToggle}
+        onClick={isMobile ? undefined : onToggle}
         style={{
           padding: expanded ? '18px 16px 14px' : '18px 0 14px',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          cursor: 'pointer',
+          cursor: isMobile ? 'default' : 'pointer',
           justifyContent: expanded ? 'flex-start' : 'center',
           flexShrink: 0,
           minHeight: 68,
@@ -111,6 +111,26 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         )}
       </div>
+
+      {isMobile && (
+        <button
+          onClick={onToggle}
+          aria-label="Tutup menu"
+          style={{
+            position: 'absolute', top: 16, right: 12,
+            width: 32, height: 32, borderRadius: 8,
+            border: '1px solid rgba(255,255,255,0.1)',
+            backgroundColor: 'rgba(255,255,255,0.06)',
+            color: 'rgba(255,255,255,0.5)',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      )}
 
       <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', flexShrink: 0, marginBottom: 6 }} />
 

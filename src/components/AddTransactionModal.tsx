@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { adminInsert } from '../lib/adminApi'
+import { formatRupiah } from '../lib/data'
 
 interface AddTransactionModalProps {
   onClose: () => void
@@ -196,6 +197,9 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 boxSizing: 'border-box',
               }}
             />
+            {nominal && parseFloat(nominal) > 0 && (
+              <div style={{ fontSize: 11, color: '#1A6FE8', marginTop: 4, fontWeight: 500 }}>{formatRupiah(parseFloat(nominal))}</div>
+            )}
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
@@ -270,7 +274,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,

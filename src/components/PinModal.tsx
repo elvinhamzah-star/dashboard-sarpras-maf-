@@ -30,26 +30,49 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
     if (e.key === 'Enter') handleSubmit()
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold" style={{ color: '#0D1829' }}>Masuk Mode Admin</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-            style={{ color: '#6B7A99' }}
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
+  const canSubmit = pin.length === 4 && !checking
 
-        <p className="text-sm mb-4" style={{ color: '#6B7A99' }}>
-          Masukkan PIN 4 digit untuk mengakses fitur admin.
-        </p>
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        backgroundColor: 'rgba(13,24,41,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        style={{
+          backgroundColor: '#fff',
+          borderRadius: 16,
+          padding: '32px 28px',
+          width: '100%',
+          maxWidth: 380,
+          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ marginBottom: 8 }}>
+          <div
+            style={{
+              width: 48, height: 48, borderRadius: 12,
+              backgroundColor: 'rgba(26,111,232,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px',
+              color: '#1A6FE8',
+            }}
+          >
+            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Masuk Mode Admin</div>
+          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 6 }}>
+            Masukkan PIN 4 digit untuk mengakses fitur admin
+          </div>
+        </div>
 
         <input
           type="password"
@@ -60,30 +83,64 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
             setError('')
           }}
           onKeyDown={handleKeyDown}
-          placeholder="----"
-          className="w-full border rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-bold focus:outline-none focus:ring-2 mb-4"
+          placeholder="• • • •"
           style={{
-            borderColor: error ? '#ef4444' : 'rgba(26,43,94,0.15)',
+            width: '100%',
+            border: `1px solid ${error ? '#EF4444' : 'rgba(26,43,94,0.15)'}`,
+            borderRadius: 10,
+            padding: '14px',
+            textAlign: 'center',
+            fontSize: 24,
+            letterSpacing: '0.5em',
+            fontWeight: 700,
             color: '#0D1829',
+            outline: 'none',
+            marginTop: 20,
+            marginBottom: 8,
+            boxSizing: 'border-box',
+            fontFamily: 'inherit',
           }}
           autoFocus
         />
 
         {error && (
-          <p className="text-sm text-red-500 mb-4 text-center">{error}</p>
+          <div style={{ color: '#EF4444', fontSize: 12, marginBottom: 8 }}>{error}</div>
         )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={pin.length !== 4 || checking}
-          className="w-full py-3 rounded-xl font-semibold text-white transition-all"
-          style={{
-            backgroundColor: pin.length === 4 && !checking ? '#0858b0' : '#ccc',
-            cursor: pin.length === 4 && !checking ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {checking ? 'Memeriksa…' : 'Masuk'}
-        </button>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: '11px',
+              borderRadius: 10,
+              border: '1px solid rgba(26,43,94,0.15)',
+              backgroundColor: '#fff',
+              color: '#6B7A99',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            style={{
+              flex: 1, padding: '11px',
+              borderRadius: 10,
+              border: 'none',
+              backgroundColor: canSubmit ? '#1A6FE8' : 'rgba(15,23,42,0.1)',
+              color: canSubmit ? '#fff' : '#9CAABB',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              transition: 'all 0.15s',
+            }}
+          >
+            {checking ? 'Memeriksa...' : 'Masuk'}
+          </button>
+        </div>
       </div>
     </div>
   )

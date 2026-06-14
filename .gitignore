@@ -27,6 +27,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+# Backups
+backups
+
 # Env
 .env
 .env.local

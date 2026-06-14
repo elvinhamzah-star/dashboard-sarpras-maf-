@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { adminInsert } from '../lib/adminApi'
+import { fetchPrograms, Program } from '../lib/supabase'
 
 interface AddIsuModalProps {
   onClose: () => void
@@ -7,28 +8,44 @@ interface AddIsuModalProps {
 }
 
 export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
-  const [namaProgram, setNamaProgram] = useState('')
+  const [programs, setPrograms] = useState<Program[]>([])
+  const [programId, setProgramId] = useState('')
   const [deskripsi, setDeskripsi] = useState('')
+  const [tindakLanjut, setTindakLanjut] = useState('')
   const [status, setStatus] = useState('Proses')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchPrograms().then(({ data }) => {
+      if (data) setPrograms(data)
+    })
+  }, [])
 
   const handleSave = async () => {
-    if (!namaProgram.trim() || !deskripsi.trim()) {
-      alert('Nama program dan deskripsi harus diisi')
+    if (!programId) {
+      setError('Pilih program terlebih dahulu')
+      return
+    }
+    if (!deskripsi.trim()) {
+      setError('Deskripsi isu harus diisi')
       return
     }
 
     setSaving(true)
-    const { error } = await adminInsert('issues', {
-      nama_pekerjaan: namaProgram,
+    setError('')
+    const program = programs.find(p => p.id === programId)
+    const { error: err } = await adminInsert('issues', {
+      nama_pekerjaan: program?.nama_pekerjaan || '',
       isu_kendala: deskripsi,
       status_isu: status,
-      program_id: 'P-001',
+      tindak_lanjut: tindakLanjut || null,
+      program_id: programId,
     })
     setSaving(false)
 
-    if (error) {
-      alert('Gagal menambah isu: ' + error.message)
+    if (err) {
+      setError('Gagal menambah isu: ' + err.message)
       return
     }
 
@@ -61,15 +78,19 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
           <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Tambahkan isu baru untuk dilacak</div>
         </div>
 
+        {error && (
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+            {error}
+          </div>
+        )}
+
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Nama Program/Pekerjaan
+            Program / Pekerjaan
           </label>
-          <input
-            type="text"
-            value={namaProgram}
-            onChange={e => setNamaProgram(e.target.value)}
-            placeholder="Contoh: Pengecatan Gedung MAF"
+          <select
+            value={programId}
+            onChange={e => setProgramId(e.target.value)}
             style={{
               width: '100%',
               padding: '10px 14px',
@@ -77,11 +98,17 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
               border: '1px solid rgba(26,43,94,0.15)',
               fontSize: 13,
               color: '#0D1829',
-              fontFamily: 'inherit',
+              backgroundColor: '#fff',
               outline: 'none',
-              boxSizing: 'border-box',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
             }}
-          />
+          >
+            <option value="">-- Pilih Program --</option>
+            {programs.map(p => (
+              <option key={p.id} value={p.id}>{p.nama_pekerjaan}</option>
+            ))}
+          </select>
         </div>
 
         <div style={{ marginBottom: 16 }}>
@@ -91,7 +118,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
           <textarea
             value={deskripsi}
             onChange={e => setDeskripsi(e.target.value)}
-            rows={4}
+            rows={3}
             placeholder="Jelaskan isu atau kendala yang dihadapi..."
             style={{
               width: '100%',
@@ -101,6 +128,29 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
               fontSize: 13,
               color: '#0D1829',
               resize: 'vertical',
+              fontFamily: 'inherit',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Tindak Lanjut (Opsional)
+          </label>
+          <input
+            type="text"
+            value={tindakLanjut}
+            onChange={e => setTindakLanjut(e.target.value)}
+            placeholder="Rencana penyelesaian..."
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: '1px solid rgba(26,43,94,0.15)',
+              fontSize: 13,
+              color: '#0D1829',
               fontFamily: 'inherit',
               outline: 'none',
               boxSizing: 'border-box',
@@ -157,7 +207,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
               padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#0858b0',
+              backgroundColor: '#1A6FE8',
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,

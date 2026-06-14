@@ -46,7 +46,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   if (!program) {
     return (
       <div style={{ padding: 24 }}>
-        <button onClick={onBack} style={{ color: '#0858b0', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
+        <button onClick={onBack} style={{ color: '#1A6FE8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
           &larr; Kembali
         </button>
         <p style={{ color: '#6B7A99', marginTop: 20 }}>Pekerjaan tidak ditemukan.</p>
@@ -55,7 +55,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   }
 
   const pct = Math.min(program.progress_percent || 0, 100)
-  const statusColor = STATUS_COLORS[program.status] || '#0858b0'
+  const statusColor = STATUS_COLORS[program.status] || '#1A6FE8'
 
   return (
     <div style={{ padding: '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}>
