@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase, fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
+import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
+import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl } from '../lib/data'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
@@ -66,7 +67,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus dokumentasi ini?')) return
-    const { error: err } = await supabase.from('documentation').delete().eq('id', id)
+    const { error: err } = await adminDelete('documentation', id)
     if (err) {
       alert('Gagal menghapus: ' + err.message)
     } else {

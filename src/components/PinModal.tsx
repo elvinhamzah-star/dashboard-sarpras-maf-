@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { verifyPin, setAdminPin } from '../lib/adminApi'
 
 interface PinModalProps {
   onSuccess: () => void
@@ -8,10 +9,16 @@ interface PinModalProps {
 export default function PinModal({ onSuccess, onClose }: PinModalProps) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
 
-  const handleSubmit = () => {
-    if (pin === '1234') {
-      setError('')
+  const handleSubmit = async () => {
+    if (checking) return
+    setChecking(true)
+    setError('')
+    const ok = await verifyPin(pin)
+    setChecking(false)
+    if (ok) {
+      setAdminPin(pin)
       onSuccess()
     } else {
       setError('PIN salah. Coba lagi.')
@@ -68,14 +75,14 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
 
         <button
           onClick={handleSubmit}
-          disabled={pin.length !== 4}
+          disabled={pin.length !== 4 || checking}
           className="w-full py-3 rounded-xl font-semibold text-white transition-all"
           style={{
-            backgroundColor: pin.length === 4 ? '#0858b0' : '#ccc',
-            cursor: pin.length === 4 ? 'pointer' : 'not-allowed',
+            backgroundColor: pin.length === 4 && !checking ? '#0858b0' : '#ccc',
+            cursor: pin.length === 4 && !checking ? 'pointer' : 'not-allowed',
           }}
         >
-          Masuk
+          {checking ? 'Memeriksa…' : 'Masuk'}
         </button>
       </div>
     </div>

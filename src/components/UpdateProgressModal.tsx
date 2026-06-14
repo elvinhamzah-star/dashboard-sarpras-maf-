@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase, Program } from '../lib/supabase'
+import { Program } from '../lib/supabase'
+import { adminUpdate } from '../lib/adminApi'
 
 interface UpdateProgressModalProps {
   program: Program
@@ -22,15 +23,12 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     const progressNum = parseFloat(progress) || 0
     const realisasiNum = parseFloat(realisasi) || 0
     const sisa = (program.total_anggaran || 0) - realisasiNum
-    const { error: err } = await supabase
-      .from('programs')
-      .update({
-        progress_percent: progressNum,
-        realisasi_terkini: realisasiNum,
-        sisa_anggaran: sisa,
-        status,
-      })
-      .eq('id', program.id)
+    const { error: err } = await adminUpdate('programs', {
+      progress_percent: progressNum,
+      realisasi_terkini: realisasiNum,
+      sisa_anggaran: sisa,
+      status,
+    }, program.id)
     setSaving(false)
     if (err) {
       setError(err.message)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { adminInsert } from '../lib/adminApi'
 
 interface AddIsuModalProps {
   onClose: () => void
@@ -19,7 +19,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
     }
 
     setSaving(true)
-    const { error } = await supabase.from('issues').insert({
+    const { error } = await adminInsert('issues', {
       nama_pekerjaan: namaProgram,
       isu_kendala: deskripsi,
       status_isu: status,

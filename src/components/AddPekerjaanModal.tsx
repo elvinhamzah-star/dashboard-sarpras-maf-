@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { adminInsert } from '../lib/adminApi'
 
 interface AddPekerjaanModalProps {
   onClose: () => void
@@ -37,7 +37,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     setError('')
     const totalAnggaran = parseFloat(form.total_anggaran) || 0
     const realisasi = parseFloat(form.realisasi_terkini) || 0
-    const { error: err } = await supabase.from('programs').insert({
+    const { error: err } = await adminInsert('programs', {
       program: form.program,
       nama_pekerjaan: form.nama_pekerjaan,
       jenis_pekerjaan: form.jenis_pekerjaan,

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase, Issue } from '../lib/supabase'
+import { Issue } from '../lib/supabase'
+import { adminUpdate, adminDelete } from '../lib/adminApi'
 
 interface EditIsuModalProps {
   issue: Issue
@@ -15,10 +16,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
 
   const handleSave = async () => {
     setSaving(true)
-    const { error } = await supabase
-      .from('issues')
-      .update({ isu_kendala: deskripsi, status_isu: status })
-      .eq('id', issue.id)
+    const { error } = await adminUpdate('issues', { isu_kendala: deskripsi, status_isu: status }, issue.id)
     setSaving(false)
     if (error) { alert('Gagal menyimpan: ' + error.message); return }
     onSuccess()
@@ -28,7 +26,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
   const handleDelete = async () => {
     if (!confirm(`Hapus isu "${issue.isu_kendala.substring(0, 40)}..."?`)) return
     setDeleting(true)
-    const { error } = await supabase.from('issues').delete().eq('id', issue.id)
+    const { error } = await adminDelete('issues', issue.id)
     setDeleting(false)
     if (error) { alert('Gagal menghapus: ' + error.message); return }
     onSuccess()

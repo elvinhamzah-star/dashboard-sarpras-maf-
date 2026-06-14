@@ -7,6 +7,7 @@ import Keuangan from './components/Keuangan'
 import Galeri from './components/Galeri'
 import PinModal from './components/PinModal'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
+import { clearAdminPin } from './lib/adminApi'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri'
 
@@ -101,7 +102,7 @@ export default function App() {
         isMobile={isMobile}
         onToggle={() => setSidebarOpen(o => !o)}
         isAdmin={isAdmin}
-        onLogout={() => setIsAdmin(false)}
+        onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onShowPinModal={() => setShowPinModal(true)}
       />
 

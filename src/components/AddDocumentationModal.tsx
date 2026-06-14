@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase, Program } from '../lib/supabase'
+import { Program } from '../lib/supabase'
+import { adminInsert } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
 
 interface AddDocumentationModalProps {
@@ -44,7 +45,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
     setError('')
 
     const program = programs.find(p => p.id === programId)
-    const { error: err } = await supabase.from('documentation').insert({
+    const { error: err } = await adminInsert('documentation', {
       id: crypto.randomUUID(),
       program_id: programId,
       nama_pekerjaan: program?.nama_pekerjaan,

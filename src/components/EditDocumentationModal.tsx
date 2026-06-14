@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase, Documentation, Program } from '../lib/supabase'
+import { Documentation, Program } from '../lib/supabase'
+import { adminUpdate } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
 
 interface EditDocumentationModalProps {
@@ -39,16 +40,13 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
     setSaving(true)
     setError('')
 
-    const { error: err } = await supabase
-      .from('documentation')
-      .update({
-        fase,
-        drive_link: driveLink,
-        deskripsi: deskripsi || null,
-        tanggal,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', doc.id)
+    const { error: err } = await adminUpdate('documentation', {
+      fase,
+      drive_link: driveLink,
+      deskripsi: deskripsi || null,
+      tanggal,
+      updated_at: new Date().toISOString(),
+    }, doc.id)
 
     setSaving(false)
 

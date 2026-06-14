@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase, SubProgram } from '../lib/supabase'
+import { SubProgram } from '../lib/supabase'
+import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 
 interface UpdateSubPekerjaanModalProps {
@@ -24,16 +25,13 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
 
     setSaving(true)
     const sisa = anggaran - realisasi
-    const { error: err } = await supabase
-      .from('sub_programs')
-      .update({
-        progress_percent: progress,
-        total_anggaran: anggaran,
-        realisasi_terkini: realisasi,
-        sisa_anggaran: sisa,
-        status,
-      })
-      .eq('id', subProgram.id)
+    const { error: err } = await adminUpdate('sub_programs', {
+      progress_percent: progress,
+      total_anggaran: anggaran,
+      realisasi_terkini: realisasi,
+      sisa_anggaran: sisa,
+      status,
+    }, subProgram.id)
 
     setSaving(false)
 

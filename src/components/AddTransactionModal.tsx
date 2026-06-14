@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { adminInsert } from '../lib/adminApi'
 
 interface AddTransactionModalProps {
   onClose: () => void
@@ -30,7 +30,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     }
 
     setSaving(true)
-    const { error: err } = await supabase.from('transactions').insert({
+    const { error: err } = await adminInsert('transactions', {
       tanggal,
       nama_pekerjaan: pekerjaan,
       deskripsi: keterangan,
