@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { adminInsert } from '../lib/adminApi'
 import { fetchPrograms, Program } from '../lib/supabase'
+import BulletInput from './BulletInput'
 
 interface AddIsuModalProps {
   onClose: () => void
@@ -10,8 +11,8 @@ interface AddIsuModalProps {
 export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [programId, setProgramId] = useState('')
-  const [deskripsi, setDeskripsi] = useState('')
-  const [tindakLanjut, setTindakLanjut] = useState('')
+  const [deskripsi, setDeskripsi] = useState<string[]>([])
+  const [tindakLanjut, setTindakLanjut] = useState<string[]>([])
   const [status, setStatus] = useState('Proses')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -23,34 +24,38 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
   }, [])
 
   const handleSave = async () => {
-    if (!programId) {
-      setError('Pilih program terlebih dahulu')
-      return
-    }
-    if (!deskripsi.trim()) {
-      setError('Deskripsi isu harus diisi')
-      return
-    }
+    if (!programId) { setError('Pilih program terlebih dahulu'); return }
+    const deskripsiText = deskripsi.filter(d => d.trim()).join('\n')
+    if (!deskripsiText) { setError('Deskripsi isu harus diisi'); return }
 
     setSaving(true)
     setError('')
     const program = programs.find(p => p.id === programId)
     const { error: err } = await adminInsert('issues', {
       nama_pekerjaan: program?.nama_pekerjaan || '',
-      isu_kendala: deskripsi,
+      isu_kendala: deskripsiText,
       status_isu: status,
-      tindak_lanjut: tindakLanjut || null,
+      tindak_lanjut: tindakLanjut.filter(t => t.trim()).join('\n') || null,
       program_id: programId,
     })
     setSaving(false)
 
-    if (err) {
-      setError('Gagal menambah isu: ' + err.message)
-      return
-    }
-
+    if (err) { setError('Gagal menambah isu: ' + err.message); return }
     onSuccess()
     onClose()
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, color: '#6B7A99',
+    display: 'block', marginBottom: 8,
+    textTransform: 'uppercase', letterSpacing: '0.04em',
+  }
+
+  const selectStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', borderRadius: 10,
+    border: '1px solid rgba(26,43,94,0.15)', fontSize: 13,
+    color: '#0D1829', backgroundColor: '#fff',
+    outline: 'none', cursor: 'pointer', fontFamily: 'inherit',
   }
 
   return (
@@ -71,6 +76,8 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
           width: '100%',
           maxWidth: 480,
           boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
+          maxHeight: '90vh',
+          overflowY: 'auto',
         }}
       >
         <div style={{ marginBottom: 20 }}>
@@ -85,25 +92,8 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
         )}
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Program / Pekerjaan
-          </label>
-          <select
-            value={programId}
-            onChange={e => setProgramId(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              backgroundColor: '#fff',
-              outline: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
+          <label style={labelStyle}>Program / Pekerjaan</label>
+          <select value={programId} onChange={e => setProgramId(e.target.value)} style={selectStyle}>
             <option value="">-- Pilih Program --</option>
             {programs.map(p => (
               <option key={p.id} value={p.id}>{p.nama_pekerjaan}</option>
@@ -112,72 +102,26 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Deskripsi Isu
-          </label>
-          <textarea
-            value={deskripsi}
-            onChange={e => setDeskripsi(e.target.value)}
-            rows={3}
+          <label style={labelStyle}>Deskripsi Isu</label>
+          <BulletInput
+            items={deskripsi}
+            onChange={setDeskripsi}
             placeholder="Jelaskan isu atau kendala yang dihadapi..."
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              resize: 'vertical',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
           />
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Tindak Lanjut (Opsional)
-          </label>
-          <input
-            type="text"
-            value={tindakLanjut}
-            onChange={e => setTindakLanjut(e.target.value)}
+          <label style={labelStyle}>Tindak Lanjut <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opsional)</span></label>
+          <BulletInput
+            items={tindakLanjut}
+            onChange={setTindakLanjut}
             placeholder="Rencana penyelesaian..."
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
           />
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Status Awal
-          </label>
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              backgroundColor: '#fff',
-              outline: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
+          <label style={labelStyle}>Status Awal</label>
+          <select value={status} onChange={e => setStatus(e.target.value)} style={selectStyle}>
             <option>Proses</option>
             <option>Selesai</option>
             <option>Menunggu</option>
@@ -188,14 +132,10 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
           <button
             onClick={onClose}
             style={{
-              padding: '10px 16px',
-              borderRadius: 10,
+              padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
+              backgroundColor: '#fff', color: '#6B7A99',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >
             Batal
@@ -204,14 +144,9 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
             onClick={handleSave}
             disabled={saving}
             style={{
-              padding: '10px 20px',
-              borderRadius: 10,
-              border: 'none',
-              backgroundColor: '#1A6FE8',
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
+              padding: '10px 20px', borderRadius: 10, border: 'none',
+              backgroundColor: '#1A6FE8', color: '#fff',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
               opacity: saving ? 0.7 : 1,
             }}
           >
