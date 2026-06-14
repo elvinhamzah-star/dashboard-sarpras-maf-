@@ -149,48 +149,49 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
         )}
 
         <div style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-              Tanggal Mulai
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 10,
-                border: '1px solid rgba(26,43,94,0.15)',
-                fontSize: 13,
-                color: '#0D1829',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-              Tanggal Berakhir
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 10,
-                border: '1px solid rgba(26,43,94,0.15)',
-                fontSize: 13,
-                color: '#0D1829',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+          {[
+            { label: 'Tanggal Mulai', value: startDate, onChange: setStartDate },
+            { label: 'Tanggal Berakhir', value: endDate, onChange: setEndDate },
+          ].map(({ label, value, onChange }) => (
+            <div key={label}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {label}
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <svg
+                  width="15" height="15"
+                  fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                  style={{ position: 'absolute', left: 12, pointerEvents: 'none', flexShrink: 0, zIndex: 1 }}
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <input
+                  type="date"
+                  value={value}
+                  onChange={e => onChange(e.target.value)}
+                  style={{
+                    width: '100%',
+                    paddingLeft: 34,
+                    paddingRight: 12,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    borderRadius: 10,
+                    border: '1px solid rgba(26,43,94,0.15)',
+                    fontSize: 13,
+                    color: '#0D1829',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div style={{ marginBottom: 16 }}>

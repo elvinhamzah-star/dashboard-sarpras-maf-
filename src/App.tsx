@@ -81,7 +81,7 @@ export default function App() {
       case 'galeri':
         return <Galeri isAdmin={isAdmin} />
       default:
-        return <Beranda isAdmin={isAdmin} onAddPekerjaan={handleAddPekerjaan} />
+        return <Beranda isAdmin={isAdmin} />
     }
   }
 

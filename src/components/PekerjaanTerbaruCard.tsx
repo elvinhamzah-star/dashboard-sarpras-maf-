@@ -173,44 +173,39 @@ export default function PekerjaanTerbaruCard({ isAdmin, onSelectProgram }: Peker
         {/* Kanan: filter inputs + tombol */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {/* Dari Tanggal */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.09)', borderRadius: 8, padding: '0 10px', height: 34 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#9CAABB', whiteSpace: 'nowrap' }}>Dari</span>
-            <input
-              type="date"
-              value={filterFromDate}
-              onChange={e => setFilterFromDate(e.target.value)}
-              style={{
-                border: 'none',
-                outline: 'none',
-                fontSize: 12.5,
-                color: filterFromDate ? '#0F1C2E' : '#9CAABB',
-                fontFamily: 'inherit',
-                backgroundColor: 'transparent',
-                width: 120,
-                cursor: 'pointer',
-              }}
-            />
-          </div>
-
-          {/* Sampai Tanggal */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.09)', borderRadius: 8, padding: '0 10px', height: 34 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#9CAABB', whiteSpace: 'nowrap' }}>S/d</span>
-            <input
-              type="date"
-              value={filterToDate}
-              onChange={e => setFilterToDate(e.target.value)}
-              style={{
-                border: 'none',
-                outline: 'none',
-                fontSize: 12.5,
-                color: filterToDate ? '#0F1C2E' : '#9CAABB',
-                fontFamily: 'inherit',
-                backgroundColor: 'transparent',
-                width: 120,
-                cursor: 'pointer',
-              }}
-            />
-          </div>
+          {[
+            { label: 'Dari', value: filterFromDate, onChange: setFilterFromDate },
+            { label: 'S/d', value: filterToDate, onChange: setFilterToDate },
+          ].map(({ label, value, onChange }) => (
+            <div key={label} style={{ position: 'relative', display: 'flex', alignItems: 'center', backgroundColor: '#fff', border: '1px solid rgba(15,23,42,0.09)', borderRadius: 8, height: 34, paddingLeft: 8, paddingRight: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', whiteSpace: 'nowrap', flexShrink: 0, marginRight: 4 }}>{label}</span>
+              <svg
+                width="13" height="13"
+                fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24"
+                style={{ flexShrink: 0, marginRight: 4 }}
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <input
+                type="date"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                style={{
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: 12,
+                  color: value ? '#0F1C2E' : '#9CAABB',
+                  fontFamily: 'inherit',
+                  backgroundColor: 'transparent',
+                  width: 112,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          ))}
 
           {/* Hapus Filter */}
           {(filterFromDate || filterToDate) && (

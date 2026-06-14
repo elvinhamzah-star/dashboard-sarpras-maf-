@@ -92,6 +92,29 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(26,111,232,0.1) !important;
 }
 
+/* Date input - consistent styling */
+input[type="date"] {
+  color-scheme: light;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+  filter: invert(40%) sepia(10%) saturate(500%) hue-rotate(180deg);
+  border-radius: 4px;
+  padding: 2px;
+  transition: opacity 0.15s;
+}
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 0.8;
+}
+
+/* Galeri admin hover actions */
+.galeri-admin-actions {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
 /* Utility */
 .truncate {
   overflow: hidden;
