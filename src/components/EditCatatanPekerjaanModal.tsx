@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { adminUpdate } from '../lib/adminApi'
+import BulletInput from './BulletInput'
 
 interface EditCatatanPekerjaanModalProps {
   programId: string
@@ -9,15 +10,17 @@ interface EditCatatanPekerjaanModalProps {
 }
 
 export default function EditCatatanPekerjaanModal({ programId, currentNotes, onClose, onSuccess }: EditCatatanPekerjaanModalProps) {
-  const [notes, setNotes] = useState(currentNotes || '')
+  const toItems = (text: string) => text ? text.split('\n').filter(l => l.trim()) : []
+  const [items, setItems] = useState<string[]>(toItems(currentNotes))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const handleSave = async () => {
     setSaving(true)
     setError('')
+    const value = items.filter(i => i.trim()).join('\n') || null
     const { error: err } = await adminUpdate('programs', {
-      isu_utama: notes.trim() || null,
+      isu_utama: value,
     }, programId)
     setSaving(false)
     if (err) {
@@ -61,29 +64,12 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
         )}
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Catatan Pekerjaan
           </label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Masukkan catatan atau isu penting untuk pekerjaan ini..."
-            rows={4}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-              resize: 'vertical',
-            }}
-          />
-          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 6 }}>
-            Kosongkan untuk menghapus catatan
+          <BulletInput items={items} onChange={setItems} placeholder="Masukkan catatan atau isu penting..." />
+          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 8 }}>
+            Kosongkan semua poin untuk menghapus catatan
           </div>
         </div>
 

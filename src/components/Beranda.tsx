@@ -4,8 +4,7 @@ import { fetchPrograms, fetchIssues, Program, Issue } from '../lib/supabase'
 import { formatRupiahShort, formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import EditIsuModal from './EditIsuModal'
 import AddIsuModal from './AddIsuModal'
-import PekerjaanTerbaruCard from './PekerjaanTerbaruCard'
-import CatatanPekanCard from './CatatanPekanCard'
+import LaporanPekananCard from './LaporanPekananCard'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -391,11 +390,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
         </div>
       </div>
 
-      {/* Catatan Pekan */}
-      <CatatanPekanCard isAdmin={isAdmin} />
-
-      {/* Pekerjaan Terbaru */}
-      <PekerjaanTerbaruCard isAdmin={isAdmin} />
+      {/* Laporan Pekanan */}
+      <LaporanPekananCard isAdmin={isAdmin} programs={programs} />
 
       {editingIssue && (
         <EditIsuModal
