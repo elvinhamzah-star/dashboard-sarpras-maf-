@@ -250,7 +250,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                       {s.label}
                     </span>
                   </div>
-                  {isAdmin && isCurrentWeek ? (
+                  {isAdmin ? (
                     <BulletInput
                       items={data[s.field]}
                       onChange={items => setField(program.id, s.field, items)}
@@ -267,7 +267,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       )}
 
       {/* Save button */}
-      {isAdmin && isCurrentWeek && activePrograms.length > 0 && (
+      {isAdmin && activePrograms.length > 0 && (
         <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
           {error && (
             <div style={{ marginBottom: 8, padding: 8, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
