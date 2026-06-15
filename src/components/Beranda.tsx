@@ -44,6 +44,8 @@ const MetricIcon = ({ type }: { type: string }) => {
 export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
+  const [showProgramList, setShowProgramList] = useState(false)
+  const [listFilter, setListFilter] = useState('On Going')
 
   useEffect(() => {
     const load = async () => {
@@ -248,6 +250,98 @@ export default function Beranda({ isAdmin }: BerandaProps) {
               </ResponsiveContainer>
             )}
           </div>
+
+          {/* Toggle button */}
+          <div style={{ padding: '0 16px 14px' }}>
+            <button
+              onClick={() => setShowProgramList(v => !v)}
+              style={{
+                width: '100%', padding: '7px 14px',
+                borderRadius: 8,
+                border: showProgramList ? '1px solid rgba(26,111,232,0.25)' : '1px solid rgba(15,23,42,0.1)',
+                backgroundColor: showProgramList ? 'rgba(26,111,232,0.06)' : '#fff',
+                color: showProgramList ? '#1A6FE8' : '#5C6B82',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"
+                style={{ transform: showProgramList ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {showProgramList ? 'Sembunyikan' : 'Tampilkan Pekerjaan'}
+            </button>
+          </div>
+
+          {/* Collapsible program list */}
+          {showProgramList && (
+            <div style={{ borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+              {/* Filter tabs */}
+              <div style={{ padding: '10px 16px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {pieData.map(d => {
+                  const isActive = listFilter === d.name
+                  const color = STATUS_COLORS[d.name] || '#5C6B82'
+                  return (
+                    <button
+                      key={d.name}
+                      onClick={() => setListFilter(d.name)}
+                      style={{
+                        padding: '4px 12px', borderRadius: 20, border: 'none',
+                        cursor: 'pointer', fontSize: 11.5, fontWeight: 600,
+                        backgroundColor: isActive ? color : 'rgba(15,23,42,0.06)',
+                        color: isActive ? '#fff' : '#5C6B82',
+                        transition: 'all 0.13s', fontFamily: 'inherit',
+                      }}
+                    >
+                      {d.name} · {d.value}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* List */}
+              <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {programs.filter(p => p.status === listFilter).map(p => (
+                  <div
+                    key={p.id}
+                    style={{
+                      padding: '9px 12px', borderRadius: 9,
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid rgba(15,23,42,0.06)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.nama_pekerjaan}
+                        </div>
+                        {p.vendor && (
+                          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{p.vendor}</div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[p.status] || '#1A6FE8', flexShrink: 0 }}>
+                        {p.progress_percent || 0}%
+                      </span>
+                    </div>
+                    <div style={{ height: 4, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.min(100, p.progress_percent || 0)}%`,
+                        backgroundColor: STATUS_COLORS[p.status] || '#1A6FE8',
+                        borderRadius: 99,
+                      }} />
+                    </div>
+                  </div>
+                ))}
+                {programs.filter(p => p.status === listFilter).length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '16px 0', color: '#9CAABB', fontSize: 12 }}>
+                    Tidak ada program dengan status ini.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
