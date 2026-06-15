@@ -54,10 +54,7 @@ const empty = (): LaporanPerProgram => ({ dikerjakan: [], kendala: [], rencana: 
 const parseContent = (content: string): { programs: Record<string, LaporanPerProgram>; pinnedPlanning: string[] } => {
   try {
     const p = JSON.parse(content)
-    if (p.v === 2) return {
-      programs: p.programs || {},
-      pinnedPlanning: p.pinned_planning || [],
-    }
+    if (p.v === 2) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [] }
   } catch {}
   return { programs: {}, pinnedPlanning: [] }
 }
@@ -69,11 +66,11 @@ const BulletList = ({ items }: { items: string[] }) => {
   const filtered = items.filter(i => i.trim())
   if (!filtered.length) return <div style={{ fontSize: 12, color: '#C8D2E0', fontStyle: 'italic' }}>Belum ada catatan</div>
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       {filtered.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#9CAABB', flexShrink: 0, marginTop: 7 }} />
-          <span style={{ fontSize: 13, color: '#0F1C2E', lineHeight: 1.5 }}>{item}</span>
+          <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#9CAABB', flexShrink: 0, marginTop: 8 }} />
+          <span style={{ fontSize: 13, color: '#0F1C2E', lineHeight: 1.55 }}>{item}</span>
         </div>
       ))}
     </div>
@@ -92,13 +89,36 @@ const Chevron = ({ open }: { open: boolean }) => (
 const SectionDots = ({ data }: { data: LaporanPerProgram }) => (
   <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
     {[
-      { color: '#059669', filled: data.dikerjakan.some(x => x.trim()) },
-      { color: '#D97706', filled: data.kendala.some(x => x.trim()) },
-      { color: '#1A6FE8', filled: data.rencana.some(x => x.trim()) },
+      { color: '#059669', filled: data.dikerjakan.some(x => x.trim()), title: 'Sudah dikerjakan' },
+      { color: '#D97706', filled: data.kendala.some(x => x.trim()), title: 'Kendala' },
+      { color: '#1A6FE8', filled: data.rencana.some(x => x.trim()), title: 'Rencana' },
     ].map((d, i) => (
-      <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: d.filled ? d.color : 'rgba(15,23,42,0.1)' }} />
+      <div key={i} title={d.title} style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: d.filled ? d.color : 'rgba(15,23,42,0.1)' }} />
     ))}
   </div>
+)
+
+const FolderLink = ({ href }: { href: string }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    onClick={e => e.stopPropagation()}
+    title="Buka folder dokumentasi"
+    style={{
+      display: 'flex', alignItems: 'center', gap: 4,
+      padding: '3px 8px', borderRadius: 6,
+      backgroundColor: 'rgba(26,111,232,0.08)',
+      color: '#1A6FE8', fontSize: 11, fontWeight: 600,
+      textDecoration: 'none', flexShrink: 0,
+      border: '1px solid rgba(26,111,232,0.15)',
+    }}
+  >
+    <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+    </svg>
+    Dokumen
+  </a>
 )
 
 const IconPrev = () => (
@@ -116,8 +136,10 @@ const IconNext = () => (
 const SECTIONS = [
   {
     field: 'dikerjakan' as const,
-    label: 'Sudah dikerjakan',
+    label: 'Sudah Dikerjakan',
     placeholder: 'Progres atau pencapaian pekan ini...',
+    color: '#059669',
+    bg: 'rgba(5,150,105,0.07)',
     icon: (
       <svg width="13" height="13" fill="none" stroke="#059669" strokeWidth="2" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" /><polyline points="9 12 12 15 16 9" />
@@ -126,8 +148,10 @@ const SECTIONS = [
   },
   {
     field: 'kendala' as const,
-    label: 'Kendala / update penting',
+    label: 'Kendala / Update Penting',
     placeholder: 'Kendala atau hal penting yang perlu dilaporkan...',
+    color: '#D97706',
+    bg: 'rgba(217,119,6,0.07)',
     icon: (
       <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -137,8 +161,10 @@ const SECTIONS = [
   },
   {
     field: 'rencana' as const,
-    label: 'Rencana pekan depan',
+    label: 'Rencana Pekan Depan',
     placeholder: 'Target atau rencana untuk pekan berikutnya...',
+    color: '#1A6FE8',
+    bg: 'rgba(26,111,232,0.07)',
     icon: (
       <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2" viewBox="0 0 24 24">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -147,13 +173,6 @@ const SECTIONS = [
     ),
   },
 ]
-
-const RENCANA_ICON = (
-  <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2" viewBox="0 0 24 24">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-    <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-  </svg>
-)
 
 export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekananCardProps) {
   const [weekOffset, setWeekOffset] = useState(0)
@@ -274,29 +293,22 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       backgroundColor: '#fff',
       borderRadius: 14,
       border: '1px solid rgba(15,23,42,0.07)',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       overflow: 'hidden',
     }}>
-      {/* Header: title + navigation */}
-      <div style={{ padding: '14px 20px 12px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em', marginBottom: 10 }}>
-          Laporan Pekanan
+      {/* Header */}
+      <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Laporan Pekanan</div>
+          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>Update progress mingguan per program</div>
         </div>
-        {/* Opsi B navigation: [◀] date [▶] */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
           <button
             onClick={() => setWeekOffset(w => w - 1)}
-            style={{
-              width: 32, height: 32, borderRadius: '50%',
-              border: '1px solid rgba(15,23,42,0.14)',
-              backgroundColor: '#fff', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#5C6B82', flexShrink: 0, padding: 0,
-            }}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.14)', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5C6B82', flexShrink: 0, padding: 0 }}
           >
             <IconPrev />
           </button>
-
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1C2E', whiteSpace: 'nowrap' }}>
               {formatWeekRange(week.start, week.end)}
@@ -304,45 +316,29 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
             {weekOffset < 0 && (
               <button
                 onClick={() => setWeekOffset(0)}
-                style={{
-                  marginTop: 5, padding: '2px 10px',
-                  borderRadius: 20, border: 'none',
-                  backgroundColor: '#EFF4FF', color: '#1A6FE8',
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
+                style={{ marginTop: 5, padding: '2px 10px', borderRadius: 20, border: 'none', backgroundColor: '#EFF4FF', color: '#1A6FE8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 ↩ Pekan ini
               </button>
             )}
           </div>
-
           <button
             onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
             disabled={weekOffset === 0}
-            style={{
-              width: 32, height: 32, borderRadius: '50%',
-              border: '1px solid rgba(15,23,42,0.14)',
-              backgroundColor: '#fff',
-              cursor: weekOffset === 0 ? 'default' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: weekOffset === 0 ? 'rgba(15,23,42,0.2)' : '#5C6B82',
-              flexShrink: 0, padding: 0,
-              opacity: weekOffset === 0 ? 0.35 : 1,
-            }}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.14)', backgroundColor: '#fff', cursor: weekOffset === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: weekOffset === 0 ? 'rgba(15,23,42,0.2)' : '#5C6B82', flexShrink: 0, padding: 0, opacity: weekOffset === 0 ? 0.35 : 1 }}
           >
             <IconNext />
           </button>
         </div>
       </div>
 
-      {/* On Going programs */}
       {activePrograms.length === 0 && !showPlanningSection && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
           Tidak ada pekerjaan aktif
         </div>
       )}
 
+      {/* On Going programs */}
       {activePrograms.map((program, pIdx) => {
         const data = perProgram[program.id] || empty()
         const isExpanded = expandedPrograms.has(program.id)
@@ -350,46 +346,65 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
         return (
           <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
+            {/* Accordion header */}
             <div
               onClick={() => toggleExpand(program.id)}
               onMouseEnter={() => setHoveredId(program.id)}
               onMouseLeave={() => setHoveredId(null)}
-              style={{ padding: '13px 20px 11px', backgroundColor: hoveredId === program.id ? 'rgba(15,23,42,0.04)' : 'rgba(15,23,42,0.015)', cursor: 'pointer', userSelect: 'none', transition: 'background-color 0.12s' }}
+              style={{
+                padding: '14px 20px 12px',
+                backgroundColor: hoveredId === program.id
+                  ? 'rgba(15,23,42,0.035)'
+                  : isExpanded ? 'rgba(26,111,232,0.02)' : 'rgba(15,23,42,0.015)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'background-color 0.12s',
+                borderLeft: isExpanded ? '3px solid rgba(26,111,232,0.45)' : '3px solid transparent',
+              }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <Chevron open={isExpanded} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#0F1C2E', flex: 1 }}>
-                  {program.nama_pekerjaan}
-                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                    {program.nama_pekerjaan}
+                  </div>
+                  {program.vendor && (
+                    <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{program.vendor}</div>
+                  )}
+                </div>
+                {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
                 <SectionDots data={data} />
-                <span style={{ fontSize: 11, color: '#9CAABB', flexShrink: 0, marginLeft: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#1A6FE8', flexShrink: 0, minWidth: 30, textAlign: 'right' }}>
                   {program.progress_percent || 0}%
                 </span>
               </div>
-              <div style={{ height: 4, backgroundColor: 'rgba(15,23,42,0.08)', borderRadius: 99, overflow: 'hidden', marginLeft: 21 }}>
-                <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#1A6FE8', borderRadius: 99 }} />
+              <div style={{ height: 6, backgroundColor: 'rgba(15,23,42,0.08)', borderRadius: 99, overflow: 'hidden', marginLeft: 21 }}>
+                <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#1A6FE8', borderRadius: 99, transition: 'width 0.3s ease' }} />
               </div>
             </div>
 
-            {isExpanded && SECTIONS.map(s => (
-              <div key={s.field} style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  {s.icon}
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#5C6B82', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {s.label}
-                  </span>
-                </div>
-                {isAdmin ? (
-                  <BulletInput
-                    items={data[s.field]}
-                    onChange={items => setField(program.id, s.field, items)}
-                    placeholder={s.placeholder}
-                  />
-                ) : (
-                  <BulletList items={data[s.field]} />
-                )}
+            {/* Expanded content: mini-cards per section */}
+            {isExpanded && (
+              <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
+                {SECTIONS.map(s => (
+                  <div key={s.field} style={{ marginBottom: 10, borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
+                    <div style={{ padding: '8px 12px', backgroundColor: s.bg, borderLeft: `3px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {s.icon}
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {s.label}
+                      </span>
+                    </div>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: `3px solid ${s.color}` }}>
+                      {isAdmin ? (
+                        <BulletInput items={data[s.field]} onChange={items => setField(program.id, s.field, items)} placeholder={s.placeholder} />
+                      ) : (
+                        <BulletList items={data[s.field]} />
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )
       })}
@@ -421,12 +436,27 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   onClick={() => toggleExpand(program.id)}
                   onMouseEnter={() => setHoveredId(program.id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  style={{ padding: '11px 20px', backgroundColor: hoveredId === program.id ? 'rgba(15,23,42,0.04)' : 'rgba(15,23,42,0.01)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, userSelect: 'none', transition: 'background-color 0.12s' }}
+                  style={{
+                    padding: '14px 20px 12px',
+                    backgroundColor: hoveredId === program.id
+                      ? 'rgba(15,23,42,0.035)'
+                      : isExpanded ? 'rgba(26,111,232,0.02)' : 'rgba(15,23,42,0.01)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    userSelect: 'none',
+                    transition: 'background-color 0.12s',
+                    borderLeft: isExpanded ? '3px solid rgba(26,111,232,0.45)' : '3px solid transparent',
+                  }}
                 >
                   <Chevron open={isExpanded} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#0F1C2E', flex: 1 }}>
-                    {program.nama_pekerjaan}
-                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {program.nama_pekerjaan}
+                    </div>
+                  </div>
+                  {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
                   {isAdmin && (
                     <button
                       onClick={e => { e.stopPropagation(); unpinProgram(program.id) }}
@@ -436,37 +466,41 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                       ×
                     </button>
                   )}
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#1A6FE8' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#1A6FE8' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
                 </div>
 
                 {isExpanded && (
-                  <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.05)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                      {RENCANA_ICON}
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#5C6B82', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Rencana Eksekusi
-                      </span>
+                  <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
+                    <div style={{ borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
+                      <div style={{ padding: '8px 12px', backgroundColor: 'rgba(26,111,232,0.07)', borderLeft: '3px solid #1A6FE8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2" viewBox="0 0 24 24">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1A6FE8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          Rencana Eksekusi
+                        </span>
+                      </div>
+                      <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: '3px solid #1A6FE8' }}>
+                        {isAdmin ? (
+                          <BulletInput items={data.rencana} onChange={items => setField(program.id, 'rencana', items)} placeholder="Rencana atau target eksekusi..." />
+                        ) : (
+                          <BulletList items={data.rencana} />
+                        )}
+                      </div>
                     </div>
-                    {isAdmin ? (
-                      <BulletInput
-                        items={data.rencana}
-                        onChange={items => setField(program.id, 'rencana', items)}
-                        placeholder="Rencana atau target eksekusi..."
-                      />
-                    ) : (
-                      <BulletList items={data.rencana} />
-                    )}
                   </div>
                 )}
               </div>
             )
           })}
 
-          {/* Add planning program button (admin only) */}
+          {/* Add planning program dropdown (admin only) */}
           {isAdmin && (
             <div style={{ padding: '10px 20px', position: 'relative' }} ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(v => !v)}
+                disabled={availablePlanning.length === 0}
                 style={{
                   width: '100%', padding: '8px 14px',
                   borderRadius: 8, border: '1px dashed rgba(26,43,94,0.2)',
@@ -476,7 +510,6 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   justifyContent: 'center', fontFamily: 'inherit',
                   opacity: availablePlanning.length === 0 ? 0.4 : 1,
                 }}
-                disabled={availablePlanning.length === 0}
               >
                 <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
