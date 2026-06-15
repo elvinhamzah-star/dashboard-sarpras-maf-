@@ -226,7 +226,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
               <div style={{ display: 'flex', gap: 12, padding: '18px 16px 16px' }}>
                 {/* Left: Progress Lapangan */}
                 <div style={{
-                  flex: 1,
+                  flex: 35,
                   borderRadius: 11,
                   border: '1px solid rgba(124,58,237,0.2)',
                   borderTop: '3px solid #7C3AED',
@@ -238,7 +238,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
                     Progress Lapangan
                   </div>
-                  <div style={{ fontSize: 46, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 10 }}>
+                  <div style={{ fontSize: 36, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 10 }}>
                     {progressLapangan}%
                   </div>
                   <div style={{ fontSize: 11.5, color: '#9CAABB' }}>
@@ -248,7 +248,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
 
                 {/* Right: Horizontal status bars */}
                 <div style={{
-                  flex: 1,
+                  flex: 65,
                   borderRadius: 11,
                   border: '1px solid rgba(26,111,232,0.18)',
                   borderTop: '3px solid #1A6FE8',

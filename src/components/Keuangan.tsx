@@ -31,6 +31,7 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
   const [filterJenis, setFilterJenis] = useState<string>('Semua')
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showSerapan, setShowSerapan] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -240,38 +241,60 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
             marginBottom: 22,
           }}
         >
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
-            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
+          <div
+            onClick={() => setShowSerapan(v => !v)}
+            style={{
+              padding: '14px 20px',
+              borderBottom: showSerapan ? '1px solid rgba(15,23,42,0.06)' : 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              userSelect: 'none',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
+              <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9CAABB', fontSize: 12, fontWeight: 600 }}>
+              <span>{showSerapan ? 'Sembunyikan' : 'Tampilkan Detail'}</span>
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+                style={{ transform: showSerapan ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s', flexShrink: 0 }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
           </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
-              <thead>
-                <tr>
-                  {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(15,23,42,0.06)', backgroundColor: '#FAFBFC', whiteSpace: 'nowrap' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {serapanBulanan.map((row, i) => (
-                  <tr
-                    key={row.label}
-                    style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none', transition: 'background 0.1s' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
-                  >
-                    <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#0F1C2E' }}>{row.label}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 13, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 13, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: '#0F1C2E', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+          {showSerapan && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
+                <thead>
+                  <tr>
+                    {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(15,23,42,0.06)', backgroundColor: '#FAFBFC', whiteSpace: 'nowrap' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {serapanBulanan.map((row, i) => (
+                    <tr
+                      key={row.label}
+                      style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none', transition: 'background 0.1s' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                    >
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#0F1C2E' }}>{row.label}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: '#0F1C2E', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

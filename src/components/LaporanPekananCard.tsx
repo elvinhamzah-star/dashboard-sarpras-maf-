@@ -178,6 +178,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [weekOffset, setWeekOffset] = useState(0)
   const [note, setNote] = useState<WeeklyNote | null>(null)
   const [loading, setLoading] = useState(true)
+  const [weekLoading, setWeekLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [perProgram, setPerProgram] = useState<Record<string, LaporanPerProgram>>({})
@@ -185,6 +186,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [pinnedPlanningIds, setPinnedPlanningIds] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const mountedRef = useRef(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const week = getWeekDates(weekOffset)
@@ -240,7 +242,11 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   }, [showDropdown])
 
   const load = async () => {
-    setLoading(true)
+    if (!mountedRef.current) {
+      setLoading(true)
+    } else {
+      setWeekLoading(true)
+    }
     const { data } = await supabase
       .from('weekly_notes')
       .select('*')
@@ -259,7 +265,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       setPinnedPlanningIds([])
       setExpandedPrograms(new Set())
     }
+    mountedRef.current = true
     setLoading(false)
+    setWeekLoading(false)
   }
 
   useEffect(() => { load() }, [weekOffset])
@@ -311,18 +319,10 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
           >
             <IconPrev />
           </button>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', opacity: weekLoading ? 0.45 : 1, transition: 'opacity 0.15s' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1C2E', whiteSpace: 'nowrap' }}>
               {formatWeekRange(week.start, week.end)}
             </div>
-            {weekOffset < 0 && (
-              <button
-                onClick={() => setWeekOffset(0)}
-                style={{ marginTop: 5, padding: '2px 10px', borderRadius: 20, border: 'none', backgroundColor: '#EFF4FF', color: '#1A6FE8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                ↩ Pekan ini
-              </button>
-            )}
           </div>
           <button
             onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
@@ -337,6 +337,19 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       {activePrograms.length === 0 && !showPlanningSection && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
           Tidak ada pekerjaan aktif
+        </div>
+      )}
+
+      {/* Pekerjaan Berjalan divider */}
+      {activePrograms.length > 0 && (
+        <div style={{
+          padding: '12px 20px',
+          backgroundColor: 'rgba(26,111,232,0.04)',
+          borderLeft: '4px solid #1A6FE8',
+        }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            Pekerjaan Berjalan
+          </span>
         </div>
       )}
 
@@ -364,7 +377,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 borderLeft: isExpanded ? '3px solid rgba(26,111,232,0.45)' : '3px solid transparent',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Chevron open={isExpanded} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
@@ -380,9 +393,6 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   {program.progress_percent || 0}%
                 </span>
               </div>
-              <div style={{ height: 6, backgroundColor: 'rgba(15,23,42,0.08)', borderRadius: 99, overflow: 'hidden', marginLeft: 21 }}>
-                <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#1A6FE8', borderRadius: 99, transition: 'width 0.3s ease' }} />
-              </div>
             </div>
 
             {/* Expanded content: mini-cards per section */}
@@ -397,6 +407,17 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                       </span>
                     </div>
                     <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: `3px solid ${s.color}` }}>
+                      {s.field === 'dikerjakan' && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <span style={{ fontSize: 11, color: '#5C6B82', fontWeight: 500 }}>Progress lapangan</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>{program.progress_percent || 0}%</span>
+                          </div>
+                          <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#059669', borderRadius: 99 }} />
+                          </div>
+                        </div>
+                      )}
                       {isAdmin ? (
                         <BulletInput items={data[s.field]} onChange={items => setField(program.id, s.field, items)} placeholder={s.placeholder} />
                       ) : (
