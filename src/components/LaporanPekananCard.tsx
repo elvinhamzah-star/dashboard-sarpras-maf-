@@ -192,7 +192,8 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const planningPrograms = programs.filter(p => p.status === 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   const availablePlanning = planningPrograms.filter(p => !pinnedPlanningIds.includes(p.id))
   const pinnedPrograms = pinnedPlanningIds.map(id => planningPrograms.find(p => p.id === id)).filter(Boolean) as Program[]
-  const showPlanningSection = isAdmin ? planningPrograms.length > 0 : pinnedPlanningIds.length > 0
+  const displayedPlanningPrograms = isAdmin ? pinnedPrograms : planningPrograms
+  const showPlanningSection = planningPrograms.length > 0
 
   const setField = (programId: string, field: keyof LaporanPerProgram, items: string[]) => {
     setPerProgram(prev => ({
@@ -413,22 +414,22 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       {showPlanningSection && (
         <>
           <div style={{
-            padding: '8px 20px',
-            backgroundColor: 'rgba(15,23,42,0.025)',
-            borderTop: activePrograms.length > 0 ? '2px solid rgba(15,23,42,0.05)' : 'none',
+            padding: '14px 20px',
+            backgroundColor: 'rgba(220,38,38,0.025)',
+            borderTop: activePrograms.length > 0 ? '1px solid rgba(220,38,38,0.15)' : 'none',
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(15,23,42,0.08)' }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-              Perencanaan
+            <div style={{ flex: 1, height: 1.5, backgroundColor: 'rgba(220,38,38,0.25)' }} />
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>
+              Perencanaan Pekan Depan
             </span>
-            <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(15,23,42,0.08)' }} />
+            <div style={{ flex: 1, height: 1.5, backgroundColor: 'rgba(220,38,38,0.25)' }} />
           </div>
 
-          {pinnedPrograms.map((program, pIdx) => {
+          {displayedPlanningPrograms.map((program, pIdx) => {
             const data = perProgram[program.id] || empty()
             const isExpanded = expandedPrograms.has(program.id)
-            const isLast = pIdx === pinnedPrograms.length - 1
+            const isLast = pIdx === displayedPlanningPrograms.length - 1
 
             return (
               <div key={program.id} style={{ borderBottom: isLast && !isAdmin ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
@@ -439,15 +440,15 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   style={{
                     padding: '14px 20px 12px',
                     backgroundColor: hoveredId === program.id
-                      ? 'rgba(15,23,42,0.035)'
-                      : isExpanded ? 'rgba(26,111,232,0.02)' : 'rgba(15,23,42,0.01)',
+                      ? 'rgba(220,38,38,0.04)'
+                      : isExpanded ? 'rgba(220,38,38,0.02)' : 'rgba(15,23,42,0.01)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
                     userSelect: 'none',
                     transition: 'background-color 0.12s',
-                    borderLeft: isExpanded ? '3px solid rgba(26,111,232,0.45)' : '3px solid transparent',
+                    borderLeft: isExpanded ? '3px solid rgba(220,38,38,0.5)' : '3px solid transparent',
                   }}
                 >
                   <Chevron open={isExpanded} />
@@ -466,22 +467,22 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                       ×
                     </button>
                   )}
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#1A6FE8' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#DC2626' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
                 </div>
 
                 {isExpanded && (
                   <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
                     <div style={{ borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
-                      <div style={{ padding: '8px 12px', backgroundColor: 'rgba(26,111,232,0.07)', borderLeft: '3px solid #1A6FE8', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2" viewBox="0 0 24 24">
+                      <div style={{ padding: '8px 12px', backgroundColor: 'rgba(220,38,38,0.06)', borderLeft: '3px solid #DC2626', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <svg width="13" height="13" fill="none" stroke="#DC2626" strokeWidth="2" viewBox="0 0 24 24">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                           <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1A6FE8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                           Rencana Eksekusi
                         </span>
                       </div>
-                      <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: '3px solid #1A6FE8' }}>
+                      <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: '3px solid #DC2626' }}>
                         {isAdmin ? (
                           <BulletInput items={data.rencana} onChange={items => setField(program.id, 'rencana', items)} placeholder="Rencana atau target eksekusi..." />
                         ) : (

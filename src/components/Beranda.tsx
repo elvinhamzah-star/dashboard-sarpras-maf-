@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { fetchPrograms, Program } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
@@ -222,43 +222,50 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           {pieData.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CAABB', fontSize: 13 }}>Belum ada data program.</div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {/* Left: progress lapangan */}
-              <div style={{ flex: 1, padding: '24px 24px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                  Progress Lapangan
+            <>
+              {/* Two bordered sections side by side */}
+              <div style={{ display: 'flex', gap: 12, padding: '16px 16px 0' }}>
+                {/* Left: Progress Lapangan */}
+                <div style={{
+                  flex: 1,
+                  borderRadius: 11,
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  borderTop: '3px solid #7C3AED',
+                  padding: '14px 16px 16px',
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                    Progress Lapangan
+                  </div>
+                  <div style={{ fontSize: 40, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 6 }}>
+                    {progressLapangan}%
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#9CAABB' }}>
+                    rata-rata {progressPrograms.length} program aktif
+                  </div>
                 </div>
-                <div style={{ fontSize: 44, fontWeight: 800, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                  {progressLapangan}%
-                </div>
-                <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 8, marginBottom: 20 }}>
-                  rata-rata {progressPrograms.length} program aktif
-                </div>
-                {/* Mini status dots */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {pieData.map(d => (
-                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: '#5C6B82', flex: 1 }}>{d.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0F1C2E' }}>{d.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Right: donut chart */}
-              <div style={{ width: 180, flexShrink: 0, paddingRight: 12 }}>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
+                {/* Right: Donut chart */}
+                <div style={{
+                  flex: 1,
+                  borderRadius: 11,
+                  border: '1px solid rgba(26,111,232,0.18)',
+                  borderTop: '3px solid #1A6FE8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '6px 0',
+                }}>
+                  <PieChart width={130} height={130}>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={52}
-                      outerRadius={82}
+                      innerRadius={36}
+                      outerRadius={60}
                       paddingAngle={2}
                       dataKey="value"
                       strokeWidth={0}
+                      isAnimationActive={false}
                     >
                       {pieData.map((entry, index) => (
                         <Cell
@@ -272,9 +279,20 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                       contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                     />
                   </PieChart>
-                </ResponsiveContainer>
+                </div>
               </div>
-            </div>
+
+              {/* Horizontal status row */}
+              <div style={{ padding: '12px 16px 14px', display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {pieData.map(d => (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: '#5C6B82' }}>{d.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0F1C2E', marginLeft: 2 }}>{d.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Toggle button */}
@@ -327,14 +345,14 @@ export default function Beranda({ isAdmin }: BerandaProps) {
               </div>
 
               {/* List */}
-              <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {programs.filter(p => p.status === listFilter).map(p => (
                   <div
                     key={p.id}
                     style={{
-                      padding: '9px 12px', borderRadius: 9,
-                      backgroundColor: '#F8FAFC',
-                      border: '1px solid rgba(15,23,42,0.06)',
+                      padding: '11px 14px', borderRadius: 10,
+                      backgroundColor: '#fff',
+                      border: '1px solid rgba(15,23,42,0.13)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>

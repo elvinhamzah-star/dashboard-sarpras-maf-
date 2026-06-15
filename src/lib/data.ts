@@ -1,12 +1,12 @@
 export const STATUS_COLORS: Record<string, string> = {
-  'Perencanaan': '#8B0000',
+  'Perencanaan': '#DC2626',
   'On Going': '#0A7BC8',
   'Selesai': '#1B5E2B',
   'On Hold': '#D97706',
 }
 
 export const STATUS_BG: Record<string, string> = {
-  'Perencanaan': 'rgba(139,0,0,0.1)',
+  'Perencanaan': 'rgba(220,38,38,0.1)',
   'On Going': 'rgba(10,123,200,0.1)',
   'Selesai': 'rgba(27,94,43,0.1)',
   'On Hold': 'rgba(217,119,6,0.1)',
