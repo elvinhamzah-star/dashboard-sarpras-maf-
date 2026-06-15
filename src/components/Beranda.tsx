@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { fetchPrograms, Program } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
@@ -8,7 +7,7 @@ interface BerandaProps {
   isAdmin: boolean
 }
 
-const PIE_COLORS = ['#1A6FE8', '#059669', '#DC2626', '#D97706']
+const STATUS_ORDER = ['On Going', 'Selesai', 'On Hold', 'Perencanaan']
 
 
 const MetricIcon = ({ type }: { type: string }) => {
@@ -232,6 +231,9 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   border: '1px solid rgba(124,58,237,0.2)',
                   borderTop: '3px solid #7C3AED',
                   padding: '20px 18px 22px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
                 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
                     Progress Lapangan
@@ -244,53 +246,45 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   </div>
                 </div>
 
-                {/* Right: Donut chart + status row inside */}
+                {/* Right: Horizontal status bars */}
                 <div style={{
                   flex: 1,
                   borderRadius: 11,
                   border: '1px solid rgba(26,111,232,0.18)',
                   borderTop: '3px solid #1A6FE8',
+                  padding: '16px 18px 20px',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '12px 12px 16px',
+                  justifyContent: 'center',
                   gap: 12,
                 }}>
-                  <PieChart width={144} height={144}>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={66}
-                      paddingAngle={2}
-                      dataKey="value"
-                      strokeWidth={0}
-                      isAnimationActive={false}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={STATUS_COLORS[entry.name] || PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v: number) => [`${v} pekerjaan`, '']}
-                      contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                    />
-                  </PieChart>
-
-                  {/* Status row inside donut box */}
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {pieData.map(d => (
-                      <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
-                        <span style={{ fontSize: 11, color: '#5C6B82' }}>{d.name}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#0F1C2E', marginLeft: 1 }}>{d.value}</span>
-                      </div>
-                    ))}
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1A6FE8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+                    Status Program
                   </div>
+                  {STATUS_ORDER.map(statusName => {
+                    const count = statusCount[statusName] || 0
+                    const pct = programs.length > 0 ? (count / programs.length) * 100 : 0
+                    const color = STATUS_COLORS[statusName] || '#9CAABB'
+                    return (
+                      <div key={statusName}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 11.5, color: '#5C6B82', fontWeight: 500 }}>{statusName}</span>
+                          </div>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E' }}>{count}</span>
+                        </div>
+                        <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${pct}%`,
+                            backgroundColor: color,
+                            borderRadius: 99,
+                          }} />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </>
