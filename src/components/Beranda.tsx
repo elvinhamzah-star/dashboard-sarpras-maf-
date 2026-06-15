@@ -224,19 +224,19 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           ) : (
             <>
               {/* Two bordered sections side by side */}
-              <div style={{ display: 'flex', gap: 12, padding: '16px 16px 0' }}>
+              <div style={{ display: 'flex', gap: 12, padding: '18px 16px 16px' }}>
                 {/* Left: Progress Lapangan */}
                 <div style={{
                   flex: 1,
                   borderRadius: 11,
                   border: '1px solid rgba(124,58,237,0.2)',
                   borderTop: '3px solid #7C3AED',
-                  padding: '14px 16px 16px',
+                  padding: '20px 18px 22px',
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
                     Progress Lapangan
                   </div>
-                  <div style={{ fontSize: 40, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 6 }}>
+                  <div style={{ fontSize: 46, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 10 }}>
                     {progressLapangan}%
                   </div>
                   <div style={{ fontSize: 11.5, color: '#9CAABB' }}>
@@ -244,24 +244,25 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   </div>
                 </div>
 
-                {/* Right: Donut chart */}
+                {/* Right: Donut chart + status row inside */}
                 <div style={{
                   flex: 1,
                   borderRadius: 11,
                   border: '1px solid rgba(26,111,232,0.18)',
                   borderTop: '3px solid #1A6FE8',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '6px 0',
+                  padding: '12px 12px 16px',
+                  gap: 12,
                 }}>
-                  <PieChart width={130} height={130}>
+                  <PieChart width={144} height={144}>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={36}
-                      outerRadius={60}
+                      innerRadius={40}
+                      outerRadius={66}
                       paddingAngle={2}
                       dataKey="value"
                       strokeWidth={0}
@@ -279,18 +280,18 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                       contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                     />
                   </PieChart>
-                </div>
-              </div>
 
-              {/* Horizontal status row */}
-              <div style={{ padding: '12px 16px 14px', display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {pieData.map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: '#5C6B82' }}>{d.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0F1C2E', marginLeft: 2 }}>{d.value}</span>
+                  {/* Status row inside donut box */}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {pieData.map(d => (
+                      <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, color: '#5C6B82' }}>{d.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#0F1C2E', marginLeft: 1 }}>{d.value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </>
           )}
