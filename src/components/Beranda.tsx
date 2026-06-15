@@ -117,15 +117,6 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       valueColor: '#0F1C2E',
       trend: 'Dari total anggaran',
     },
-    {
-      label: 'Progress Lapangan',
-      value: `${progressLapangan}%`,
-      iconType: 'progress',
-      iconBg: 'rgba(124,58,237,0.1)',
-      iconColor: '#7C3AED',
-      valueColor: '#7C3AED',
-      trend: `${progressPrograms.length} program aktif`,
-    },
   ]
 
   if (loading) {
@@ -224,53 +215,67 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           }}
         >
           <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Status Pekerjaan</span>
-            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 3 }}>{programs.length} program aktif</div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Progress Pekerjaan</span>
+            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 3 }}>{programs.length} program total</div>
           </div>
-          <div style={{ padding: '4px 16px 8px' }}>
-            {pieData.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CAABB', fontSize: 13 }}>Belum ada data program.</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="46%"
-                    innerRadius={58}
-                    outerRadius={92}
-                    paddingAngle={2}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={STATUS_COLORS[entry.name] || PIE_COLORS[index % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v: number) => [`${v} pekerjaan`, '']}
-                    contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                  />
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(value) => {
-                      const count = pieData.find(d => d.name === value)?.value || 0
-                      const color = STATUS_COLORS[value] || '#666'
-                      return (
-                        <span style={{ fontSize: 12, color: '#5C6B82' }}>
-                          {value} <span style={{ color, fontWeight: 700 }}>{count}</span>
-                        </span>
-                      )
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+
+          {pieData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CAABB', fontSize: 13 }}>Belum ada data program.</div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {/* Left: progress lapangan */}
+              <div style={{ flex: 1, padding: '24px 24px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  Progress Lapangan
+                </div>
+                <div style={{ fontSize: 44, fontWeight: 800, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                  {progressLapangan}%
+                </div>
+                <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 8, marginBottom: 20 }}>
+                  rata-rata {progressPrograms.length} program aktif
+                </div>
+                {/* Mini status dots */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {pieData.map(d => (
+                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: STATUS_COLORS[d.name] || '#9CAABB', flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: '#5C6B82', flex: 1 }}>{d.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0F1C2E' }}>{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: donut chart */}
+              <div style={{ width: 180, flexShrink: 0, paddingRight: 12 }}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={52}
+                      outerRadius={82}
+                      paddingAngle={2}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={STATUS_COLORS[entry.name] || PIE_COLORS[index % PIE_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(v: number) => [`${v} pekerjaan`, '']}
+                      contentStyle={{ borderRadius: 10, border: '1px solid rgba(15,23,42,0.08)', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {/* Toggle button */}
           <div style={{ padding: '0 16px 14px' }}>
