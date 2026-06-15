@@ -234,6 +234,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
                     Progress Lapangan
