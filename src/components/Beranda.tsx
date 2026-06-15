@@ -37,6 +37,12 @@ const MetricIcon = ({ type }: { type: string }) => {
         <line x1="6" y1="20" x2="6" y2="14"/>
       </svg>
     ),
+    progress: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="9 12 11 14 15 10"/>
+      </svg>
+    ),
   }
   return icons[type] || null
 }
@@ -61,6 +67,12 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const totalRealisasi = programs.reduce((s, p) => s + (p.realisasi_terkini || 0), 0)
   const totalSisa = programs.reduce((s, p) => s + (p.sisa_anggaran || 0), 0)
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
+
+  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
+  const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const progressLapangan = progressAnggaranTotal > 0
+    ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
+    : '0'
 
   const statusCount: Record<string, number> = {}
   programs.forEach(p => {
@@ -104,6 +116,15 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconColor: '#1A6FE8',
       valueColor: '#0F1C2E',
       trend: 'Dari total anggaran',
+    },
+    {
+      label: 'Progress Lapangan',
+      value: `${progressLapangan}%`,
+      iconType: 'progress',
+      iconBg: 'rgba(124,58,237,0.1)',
+      iconColor: '#7C3AED',
+      valueColor: '#7C3AED',
+      trend: `${progressPrograms.length} program aktif`,
     },
   ]
 
