@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fetchTransactions, Transaction } from '../lib/supabase'
+import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS } from '../lib/data'
+import { adminUpsertConfig } from '../lib/adminApi'
 import AddTransactionModal from './AddTransactionModal'
 
 interface KeuanganProps {
@@ -32,16 +33,30 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSerapan, setShowSerapan] = useState(false)
+  const [showRiwayat, setShowRiwayat] = useState(true)
+  const [togglingRiwayat, setTogglingRiwayat] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const { data } = await fetchTransactions()
-      if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
+      const [txRes, cfgRes] = await Promise.all([
+        fetchTransactions(),
+        fetchAppConfig('show_riwayat_transaksi'),
+      ])
+      if (txRes.data) setTransactions(txRes.data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
+      if (cfgRes.data) setShowRiwayat(cfgRes.data.value === 'true')
       setLoading(false)
     }
     load()
   }, [])
+
+  const handleToggleRiwayat = async () => {
+    const next = !showRiwayat
+    setTogglingRiwayat(true)
+    const { error } = await adminUpsertConfig('show_riwayat_transaksi', String(next))
+    if (!error) setShowRiwayat(next)
+    setTogglingRiwayat(false)
+  }
 
   const masukList = transactions.filter(t => t.jenis_transaksi === 'Masuk')
   const keluarList = transactions.filter(t => t.jenis_transaksi === 'Keluar')
@@ -129,32 +144,65 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
           <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5 }}>Riwayat transaksi keuangan Sarpras MAF</p>
         </div>
         {isAdmin && (
-          <button
-            onClick={() => setShowAddModal(true)}
-            style={{
-              padding: '9px 18px',
-              borderRadius: 10,
-              border: 'none',
-              backgroundColor: '#1A6FE8',
-              color: '#fff',
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              letterSpacing: '-0.01em',
-              boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
-              transition: 'all 0.15s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 7,
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
-          >
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Tambah Transaksi
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={handleToggleRiwayat}
+              disabled={togglingRiwayat}
+              title={showRiwayat ? 'Sembunyikan Riwayat Transaksi dari viewer' : 'Tampilkan Riwayat Transaksi ke viewer'}
+              style={{
+                padding: '9px 14px',
+                borderRadius: 10,
+                border: `1px solid ${showRiwayat ? 'rgba(15,23,42,0.12)' : 'rgba(26,111,232,0.25)'}`,
+                backgroundColor: showRiwayat ? '#fff' : 'rgba(26,111,232,0.06)',
+                color: showRiwayat ? '#5C6B82' : '#1A6FE8',
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: togglingRiwayat ? 'wait' : 'pointer',
+                opacity: togglingRiwayat ? 0.6 : 1,
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              {showRiwayat ? (
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              ) : (
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              )}
+              {showRiwayat ? 'Riwayat: Terlihat' : 'Riwayat: Tersembunyi'}
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                padding: '9px 18px',
+                borderRadius: 10,
+                border: 'none',
+                backgroundColor: '#1A6FE8',
+                color: '#fff',
+                fontSize: 13.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                letterSpacing: '-0.01em',
+                boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Tambah Transaksi
+            </button>
+          </div>
         )}
       </div>
 
@@ -299,7 +347,7 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
       )}
 
       {/* Transactions Table */}
-      <div
+      {showRiwayat && <div
         style={{
           backgroundColor: '#fff',
           borderRadius: 14,
@@ -505,6 +553,8 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
           </div>
         )}
       </div>
+
+      }
 
       {isAdmin && showAddModal && (
         <AddTransactionModal

@@ -84,6 +84,9 @@ export interface WorkNote {
   created_at: string
 }
 
+export const fetchAppConfig = (key: string) =>
+  supabase.from('app_config').select('value').eq('key', key).single()
+
 export const fetchPrograms = () => supabase.from('programs').select('*').order('id', { ascending: true })
 export const fetchSubPrograms = (parentId: string) => supabase.from('sub_programs').select('*').eq('program_id', parentId).order('id', { ascending: true })
 export const fetchTransactions = () => supabase.from('transactions').select('*').order('tanggal', { ascending: false })

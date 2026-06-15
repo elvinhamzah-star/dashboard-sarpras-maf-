@@ -56,6 +56,15 @@ export async function adminUpdate(
   return { data, error }
 }
 
+export async function adminUpsertConfig(key: string, value: string) {
+  const { error } = await supabase.rpc('admin_upsert_config', {
+    p_pin: adminPin,
+    p_key: key,
+    p_value: value,
+  })
+  return { error }
+}
+
 export async function adminDelete(table: string, id: string | number) {
   const { error } = await supabase.rpc('admin_delete', {
     p_pin: adminPin,
