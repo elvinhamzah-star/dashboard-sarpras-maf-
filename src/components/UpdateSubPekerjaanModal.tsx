@@ -14,6 +14,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
   const [anggaran, setAnggaran] = useState(subProgram.total_anggaran || 0)
   const [realisasi, setRealisasi] = useState(subProgram.realisasi_terkini || 0)
   const [status, setStatus] = useState(subProgram.status)
+  const [linkDokumentasi, setLinkDokumentasi] = useState(subProgram.link_dokumentasi || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,6 +32,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
       realisasi_terkini: realisasi,
       sisa_anggaran: sisa,
       status,
+      link_dokumentasi: linkDokumentasi || null,
     }, subProgram.id)
 
     setSaving(false)
@@ -165,6 +167,29 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
             <option>Selesai</option>
             <option>On Hold</option>
           </select>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+            Link Dokumentasi (Google Drive)
+          </label>
+          <input
+            type="text"
+            value={linkDokumentasi}
+            onChange={e => setLinkDokumentasi(e.target.value)}
+            placeholder="https://drive.google.com/..."
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: '1px solid rgba(26,43,94,0.15)',
+              fontSize: 13,
+              color: '#0D1829',
+              fontFamily: 'inherit',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

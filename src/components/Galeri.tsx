@@ -342,42 +342,68 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                 position: 'relative', borderRadius: 12, overflow: 'hidden',
                                 backgroundColor: '#F5F7FA',
                                 border: '1px solid rgba(15,23,42,0.07)',
-                                cursor: 'pointer', transition: 'all 0.2s',
+                                cursor: 'pointer', transition: 'box-shadow 0.22s, transform 0.22s',
                                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                               }}
                               onMouseEnter={e => {
                                 const el = e.currentTarget as HTMLDivElement
-                                el.style.boxShadow = '0 8px 24px rgba(8,88,176,0.15)'
-                                el.style.transform = 'translateY(-3px)';
-                                (el.querySelector('.galeri-admin-actions') as HTMLElement | null)?.style && ((el.querySelector('.galeri-admin-actions') as HTMLElement).style.opacity = '1')
+                                el.style.boxShadow = '0 10px 28px rgba(8,88,176,0.16)'
+                                el.style.transform = 'translateY(-3px)'
+                                const img = el.querySelector('img') as HTMLImageElement | null
+                                if (img) img.style.transform = 'scale(1.06)'
+                                const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
+                                if (overlay) overlay.style.opacity = '1'
+                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
+                                if (actions) actions.style.opacity = '1'
                               }}
                               onMouseLeave={e => {
                                 const el = e.currentTarget as HTMLDivElement
                                 el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'
-                                el.style.transform = 'translateY(0)';
-                                (el.querySelector('.galeri-admin-actions') as HTMLElement | null)?.style && ((el.querySelector('.galeri-admin-actions') as HTMLElement).style.opacity = '0')
+                                el.style.transform = 'translateY(0)'
+                                const img = el.querySelector('img') as HTMLImageElement | null
+                                if (img) img.style.transform = 'scale(1)'
+                                const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
+                                if (overlay) overlay.style.opacity = '0'
+                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
+                                if (actions) actions.style.opacity = '0'
                               }}
                               onClick={() => setLightboxDoc(doc)}
                             >
-                              <div style={{ width: '100%', height: 170, backgroundColor: '#F5F7FA', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '100%', height: 200, backgroundColor: '#F5F7FA', overflow: 'hidden', position: 'relative' }}>
                                 {thumbUrl ? (
-                                  <img src={thumbUrl} alt={doc.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  <img src={thumbUrl} alt={doc.caption}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }}
                                     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                 ) : (
-                                  <svg width="36" height="36" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <path d="M21 15l-5-5L5 21"/>
-                                  </svg>
-                                )}
-                              </div>
-                              <div style={{ padding: '10px 12px' }}>
-                                <div style={{ fontSize: 10.5, color: '#9CAABB', marginBottom: 3 }}>{formatTanggal(doc.tanggal)}</div>
-                                {doc.caption && (
-                                  <div style={{ fontSize: 11.5, color: '#0F1C2E', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {doc.caption}
+                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="36" height="36" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
+                                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                                      <path d="M21 15l-5-5L5 21"/>
+                                    </svg>
                                   </div>
                                 )}
+                                {/* Caption overlay — appears on hover */}
+                                <div
+                                  className="galeri-caption-overlay"
+                                  style={{
+                                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                                    background: 'linear-gradient(to top, rgba(8,18,36,0.84) 0%, rgba(8,18,36,0.45) 55%, transparent 100%)',
+                                    padding: '40px 12px 12px',
+                                    opacity: 0,
+                                    transition: 'opacity 0.22s',
+                                    pointerEvents: 'none',
+                                  }}
+                                >
+                                  <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.6)', marginBottom: 3, fontWeight: 500 }}>
+                                    {formatTanggal(doc.tanggal)}
+                                  </div>
+                                  {doc.caption && (
+                                    <div style={{ fontSize: 11.5, color: '#fff', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                      {doc.caption}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               {isAdmin && (
                                 <div className="galeri-admin-actions" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5, opacity: 0, transition: 'opacity 0.2s' }}>
@@ -404,13 +430,13 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
       {lightboxDoc && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}
           onClick={() => setLightboxDoc(null)}>
-          <div style={{ backgroundColor: '#fff', borderRadius: 16, maxWidth: 700, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+          <div style={{ backgroundColor: '#fff', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
             onClick={e => e.stopPropagation()}>
             <button onClick={() => setLightboxDoc(null)}
               style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 18, zIndex: 101 }}>✕</button>
             {getDriveThumbnailUrl(lightboxDoc.link_foto) && (
               <img src={getDriveThumbnailUrl(lightboxDoc.link_foto) || ''} alt={lightboxDoc.caption}
-                style={{ width: '100%', maxHeight: 500, objectFit: 'cover' }} />
+                style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block' }} />
             )}
             <div style={{ padding: 20 }}>
               <div style={{ fontSize: 11, color: '#9CAABB', marginBottom: 8 }}>{formatTanggal(lightboxDoc.tanggal)}</div>

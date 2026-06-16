@@ -32,6 +32,7 @@ export interface SubProgram {
   realisasi_terkini: number
   sisa_anggaran: number
   status: string
+  link_dokumentasi?: string
   created_at: string
 }
 

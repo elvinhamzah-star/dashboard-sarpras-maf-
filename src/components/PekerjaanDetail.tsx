@@ -448,7 +448,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                 <thead>
                   <tr>
-                    {['No', 'Nama Gedung', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', ''].map(h => (
+                    {['No', 'Nama Gedung', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
                       <th
                         key={h}
                         style={{
@@ -518,6 +518,33 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                         >
                           {sp.status}
                         </span>
+                      </td>
+                      <td style={{ padding: '11px 14px' }}>
+                        {sp.link_dokumentasi ? (
+                          <a
+                            href={sp.link_dokumentasi}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              backgroundColor: 'rgba(26,111,232,0.08)',
+                              color: '#1A6FE8',
+                              padding: '5px 11px',
+                              borderRadius: 7,
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                              border: '1px solid rgba(26,111,232,0.15)',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Buka ↗
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
+                        )}
                       </td>
                       {isAdmin && (
                         <td style={{ padding: '11px 14px', textAlign: 'right' }}>
