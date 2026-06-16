@@ -24,12 +24,13 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [filterProgram, setFilterProgram] = useState<string>('Semua')
   const [filterFase, setFilterFase] = useState<string>('Semua')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [lightboxDoc, setLightboxDoc] = useState<Documentation | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
   const [programSearch, setProgramSearch] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef<number | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -78,6 +79,18 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     acc[progName].items.push(doc)
     return acc
   }, {} as Record<string, { program_id: string; items: Documentation[] }>)
+
+  // Keyboard navigation for lightbox — placed after filteredDocs to avoid TDZ
+  useEffect(() => {
+    if (lightboxIndex === null) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') setLightboxIndex(i => i !== null ? Math.max(0, i - 1) : null)
+      if (e.key === 'ArrowRight') setLightboxIndex(i => i !== null ? Math.min(filteredDocs.length - 1, i + 1) : null)
+      if (e.key === 'Escape') setLightboxIndex(null)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [lightboxIndex, filteredDocs.length])
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus dokumentasi ini?')) return
@@ -367,7 +380,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                 const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
                                 if (actions) actions.style.opacity = '0'
                               }}
-                              onClick={() => setLightboxDoc(doc)}
+                              onClick={() => setLightboxIndex(filteredDocs.indexOf(doc))}
                             >
                               <div style={{ width: '100%', height: 200, backgroundColor: '#F5F7FA', overflow: 'hidden', position: 'relative' }}>
                                 {thumbUrl ? (
@@ -427,43 +440,96 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
       )}
 
       {/* Lightbox */}
-      {lightboxDoc && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}
-          onClick={() => setLightboxDoc(null)}>
-          <div style={{ backgroundColor: '#fff', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
-            onClick={e => e.stopPropagation()}>
-            <button onClick={() => setLightboxDoc(null)}
-              style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 18, zIndex: 101 }}>✕</button>
-            {getDriveThumbnailUrl(lightboxDoc.link_foto) && (
-              <img src={getDriveThumbnailUrl(lightboxDoc.link_foto) || ''} alt={lightboxDoc.caption}
-                style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block' }} />
-            )}
-            <div style={{ padding: 20 }}>
-              <div style={{ fontSize: 11, color: '#9CAABB', marginBottom: 8 }}>{formatTanggal(lightboxDoc.tanggal)}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1C2E', marginBottom: 10, letterSpacing: '-0.02em' }}>{lightboxDoc.nama_pekerjaan}</div>
-              {lightboxDoc.fase && FASE_INFO[lightboxDoc.fase] && (
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '4px 10px', borderRadius: 6, marginBottom: 12,
-                  backgroundColor: FASE_INFO[lightboxDoc.fase].bg,
-                  borderLeft: `3px solid ${FASE_INFO[lightboxDoc.fase].color}`,
-                }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: FASE_INFO[lightboxDoc.fase].color }}>
-                    {lightboxDoc.fase}
-                  </span>
-                </div>
+      {lightboxIndex !== null && filteredDocs[lightboxIndex] && (() => {
+        const doc = filteredDocs[lightboxIndex]
+        const hasPrev = lightboxIndex > 0
+        const hasNext = lightboxIndex < filteredDocs.length - 1
+        const navBtn = (disabled: boolean, onClick: () => void, children: React.ReactNode) => (
+          <button
+            onClick={onClick}
+            disabled={disabled}
+            style={{
+              position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+              backgroundColor: disabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.18)',
+              border: 'none', color: '#fff', width: 44, height: 44, borderRadius: 50,
+              cursor: disabled ? 'default' : 'pointer', fontSize: 20, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              opacity: disabled ? 0.25 : 1, transition: 'background 0.15s, opacity 0.15s',
+              backdropFilter: 'blur(4px)',
+              zIndex: 102,
+            }}
+            onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.32)' }}
+            onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.18)' }}
+          >
+            {children}
+          </button>
+        )
+        return (
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '16px 72px' }}
+            onClick={() => setLightboxIndex(null)}
+            onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+            onTouchEnd={e => {
+              if (touchStartX.current === null) return
+              const delta = e.changedTouches[0].clientX - touchStartX.current
+              if (delta > 50 && hasPrev) setLightboxIndex(i => i !== null ? i - 1 : null)
+              if (delta < -50 && hasNext) setLightboxIndex(i => i !== null ? i + 1 : null)
+              touchStartX.current = null
+            }}
+          >
+            {/* Prev button */}
+            <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }}>
+              {navBtn(!hasPrev, () => setLightboxIndex(i => i !== null ? i - 1 : null),
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
               )}
-              {lightboxDoc.caption && (
-                <div style={{ fontSize: 13, color: '#5C6B82', lineHeight: 1.6, marginBottom: 16 }}>{lightboxDoc.caption}</div>
+            </div>
+
+            {/* Card */}
+            <div
+              style={{ backgroundColor: '#fff', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setLightboxIndex(null)}
+                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >✕</button>
+
+              {/* Counter */}
+              <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
+                {lightboxIndex + 1} / {filteredDocs.length}
+              </div>
+
+              {getDriveThumbnailUrl(doc.link_foto) && (
+                <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt={doc.caption}
+                  style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', borderRadius: '16px 16px 0 0' }} />
               )}
-              <a href={lightboxDoc.link_foto} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: '#1A6FE8', textDecoration: 'none' }}>
-                Buka di Google Drive →
-              </a>
+              <div style={{ padding: 20 }}>
+                <div style={{ fontSize: 11, color: '#9CAABB', marginBottom: 8 }}>{formatTanggal(doc.tanggal)}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1C2E', marginBottom: 10, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
+                {doc.fase && FASE_INFO[doc.fase] && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, marginBottom: 12, backgroundColor: FASE_INFO[doc.fase].bg, borderLeft: `3px solid ${FASE_INFO[doc.fase].color}` }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: FASE_INFO[doc.fase].color }}>{doc.fase}</span>
+                  </div>
+                )}
+                {doc.caption && (
+                  <div style={{ fontSize: 13, color: '#5C6B82', lineHeight: 1.6, marginBottom: 16 }}>{doc.caption}</div>
+                )}
+                <a href={doc.link_foto} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: '#1A6FE8', textDecoration: 'none' }}>
+                  Buka di Google Drive →
+                </a>
+              </div>
+            </div>
+
+            {/* Next button */}
+            <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }}>
+              {navBtn(!hasNext, () => setLightboxIndex(i => i !== null ? i + 1 : null),
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {isAdmin && showAddModal && (
         <AddDocumentationModal programs={programs} onClose={() => setShowAddModal(false)}
