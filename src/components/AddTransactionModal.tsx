@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
+import { supabase } from '../lib/supabase'
+
+interface Program { id: string; nama_pekerjaan: string }
 
 interface AddTransactionModalProps {
   onClose: () => void
@@ -8,6 +11,7 @@ interface AddTransactionModalProps {
 }
 
 export default function AddTransactionModal({ onClose, onSuccess }: AddTransactionModalProps) {
+  const [programs, setPrograms] = useState<Program[]>([])
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
   const [pekerjaan, setPekerjaan] = useState('')
   const [keterangan, setKeterangan] = useState('')
@@ -17,6 +21,12 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   const [bukti, setBukti] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    supabase.from('programs').select('id, nama_pekerjaan').order('nama_pekerjaan').then(({ data }) => {
+      if (data) setPrograms(data)
+    })
+  }, [])
 
   const handleSave = async () => {
     if (!tanggal || !pekerjaan.trim() || !keterangan.trim() || !nominal) {
@@ -110,23 +120,28 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Nama Pekerjaan
           </label>
-          <input
-            type="text"
+          <select
             value={pekerjaan}
             onChange={e => setPekerjaan(e.target.value)}
-            placeholder="Contoh: Pengecatan Gedung MAF"
             style={{
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
               fontSize: 13,
-              color: '#0D1829',
+              color: pekerjaan ? '#0D1829' : '#9CAABB',
+              backgroundColor: '#fff',
               fontFamily: 'inherit',
               outline: 'none',
+              cursor: 'pointer',
               boxSizing: 'border-box',
             }}
-          />
+          >
+            <option value="">-- Pilih Pekerjaan --</option>
+            {programs.map(p => (
+              <option key={p.id} value={p.nama_pekerjaan}>{p.nama_pekerjaan}</option>
+            ))}
+          </select>
         </div>
 
         <div style={{ marginBottom: 16 }}>
