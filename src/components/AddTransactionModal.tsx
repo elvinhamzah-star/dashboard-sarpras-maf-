@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { supabase } from '../lib/supabase'
@@ -8,6 +8,28 @@ interface Program { id: string; nama_pekerjaan: string }
 interface AddTransactionModalProps {
   onClose: () => void
   onSuccess: () => void
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  borderRadius: 10,
+  border: '1px solid rgba(26,43,94,0.15)',
+  fontSize: 13,
+  color: '#0D1829',
+  fontFamily: 'inherit',
+  outline: 'none',
+  boxSizing: 'border-box',
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: '#6B7A99',
+  display: 'block',
+  marginBottom: 6,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
 }
 
 export default function AddTransactionModal({ onClose, onSuccess }: AddTransactionModalProps) {
@@ -22,11 +44,45 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Dropdown state
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     supabase.from('programs').select('id, nama_pekerjaan').order('nama_pekerjaan').then(({ data }) => {
       if (data) setPrograms(data)
     })
   }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+        setSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [dropdownOpen])
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
+  }, [dropdownOpen])
+
+  const filteredPrograms = programs.filter(p =>
+    p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const handleSelect = (name: string) => {
+    setPekerjaan(name)
+    setDropdownOpen(false)
+    setSearch('')
+  }
 
   const handleSave = async () => {
     if (!tanggal || !pekerjaan.trim() || !keterangan.trim() || !nominal) {
@@ -94,105 +150,201 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           </div>
         )}
 
+        {/* Tanggal */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-            Tanggal
-          </label>
+          <label style={labelStyle}>Tanggal</label>
           <input
             type="date"
             value={tanggal}
             onChange={e => setTanggal(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            style={inputStyle}
           />
         </div>
 
+        {/* Nama Pekerjaan — custom dropdown */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-            Nama Pekerjaan
-          </label>
-          <select
-            value={pekerjaan}
-            onChange={e => setPekerjaan(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: pekerjaan ? '#0D1829' : '#9CAABB',
-              backgroundColor: '#fff',
-              fontFamily: 'inherit',
-              outline: 'none',
-              cursor: 'pointer',
-              boxSizing: 'border-box',
-            }}
-          >
-            <option value="">-- Pilih Pekerjaan --</option>
-            {programs.map(p => (
-              <option key={p.id} value={p.nama_pekerjaan}>{p.nama_pekerjaan}</option>
-            ))}
-          </select>
+          <label style={labelStyle}>Nama Pekerjaan</label>
+          <div ref={dropdownRef} style={{ position: 'relative' }}>
+            {/* Trigger */}
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(v => !v)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: `1px solid ${dropdownOpen ? '#1A6FE8' : 'rgba(26,43,94,0.15)'}`,
+                backgroundColor: '#fff',
+                fontSize: 13,
+                color: pekerjaan ? '#0D1829' : '#9CAABB',
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+                textAlign: 'left',
+                outline: 'none',
+                boxShadow: dropdownOpen ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
+                transition: 'border-color 0.15s, box-shadow 0.15s',
+              }}
+            >
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {pekerjaan || 'Pilih pekerjaan...'}
+              </span>
+              <svg
+                width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
+                style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {/* Dropdown panel */}
+            {dropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                left: 0,
+                right: 0,
+                zIndex: 200,
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                border: '1px solid rgba(26,43,94,0.12)',
+                boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
+                overflow: 'hidden',
+              }}>
+                {/* Search */}
+                <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+                  <div style={{ position: 'relative' }}>
+                    <svg
+                      width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                    >
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Cari pekerjaan..."
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px 8px 30px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(26,43,94,0.12)',
+                        fontSize: 12.5,
+                        color: '#0D1829',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#F7F9FC',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* List */}
+                <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                  {filteredPrograms.length === 0 ? (
+                    <div style={{ padding: '16px 14px', fontSize: 12.5, color: '#9CAABB', textAlign: 'center' }}>
+                      Tidak ada hasil
+                    </div>
+                  ) : (
+                    filteredPrograms.map((p, i) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelect(p.nama_pekerjaan)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          border: 'none',
+                          borderBottom: i < filteredPrograms.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none',
+                          backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
+                          color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : '#0D1829',
+                          fontSize: 13,
+                          fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
+                        onMouseEnter={e => {
+                          if (p.nama_pekerjaan !== pekerjaan)
+                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.03)'
+                        }}
+                        onMouseLeave={e => {
+                          if (p.nama_pekerjaan !== pekerjaan)
+                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        {p.nama_pekerjaan === pekerjaan && (
+                          <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.nama_pekerjaan}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Keterangan */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-            Keterangan
-          </label>
+          <label style={labelStyle}>Keterangan</label>
           <textarea
             value={keterangan}
             onChange={e => setKeterangan(e.target.value)}
             rows={3}
             placeholder="Detail transaksi..."
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              resize: 'vertical',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            style={{ ...inputStyle, resize: 'vertical' }}
           />
         </div>
 
+        {/* Jenis Transaksi */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-            Jenis Transaksi
-          </label>
+          <label style={labelStyle}>Jenis Transaksi</label>
           <div style={{ display: 'flex', gap: 8 }}>
             {['Masuk', 'Keluar', 'Keluar PBB'].map(j => (
-              <label key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <label
+                key={j}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                  padding: '8px 14px', borderRadius: 8,
+                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'rgba(26,43,94,0.13)'}`,
+                  backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : '#fff',
+                  transition: 'all 0.12s',
+                }}
+              >
                 <input
                   type="radio"
                   value={j}
                   checked={jenis === j}
                   onChange={e => setJenis(e.target.value)}
-                  style={{ cursor: 'pointer' }}
+                  style={{ display: 'none' }}
                 />
-                <span style={{ fontSize: 12, color: '#0D1829' }}>{j}</span>
+                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : '#5C6B82' }}>
+                  {j}
+                </span>
               </label>
             ))}
           </div>
         </div>
 
+        {/* Nominal + Sumber */}
         <div style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-              Nominal
-            </label>
+            <label style={labelStyle}>Nominal</label>
             <input
               type="number"
               value={nominal}
@@ -200,41 +352,20 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               placeholder="0"
               min="0"
               step="1000"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 10,
-                border: '1px solid rgba(26,43,94,0.15)',
-                fontSize: 13,
-                color: '#0D1829',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
+              style={inputStyle}
             />
             {nominal && parseFloat(nominal) > 0 && (
-              <div style={{ fontSize: 11, color: '#1A6FE8', marginTop: 4, fontWeight: 500 }}>{formatRupiah(parseFloat(nominal))}</div>
+              <div style={{ fontSize: 11, color: '#1A6FE8', marginTop: 4, fontWeight: 500 }}>
+                {formatRupiah(parseFloat(nominal))}
+              </div>
             )}
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-              Sumber
-            </label>
+            <label style={labelStyle}>Sumber</label>
             <select
               value={sumber}
               onChange={e => setSumber(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 10,
-                border: '1px solid rgba(26,43,94,0.15)',
-                fontSize: 13,
-                color: '#0D1829',
-                backgroundColor: '#fff',
-                outline: 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
             >
               <option>PBB</option>
               <option>Hamzah</option>
@@ -243,26 +374,15 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           </div>
         </div>
 
+        {/* Link Bukti */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-            Link Bukti (Opsional)
-          </label>
+          <label style={labelStyle}>Link Bukti (Opsional)</label>
           <input
             type="url"
             value={bukti}
             onChange={e => setBukti(e.target.value)}
             placeholder="https://..."
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
-              fontSize: 13,
-              color: '#0D1829',
-              fontFamily: 'inherit',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            style={inputStyle}
           />
         </div>
 
@@ -270,14 +390,10 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           <button
             onClick={onClose}
             style={{
-              padding: '10px 16px',
-              borderRadius: 10,
+              padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
+              backgroundColor: '#fff', color: '#6B7A99',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >
             Batal
@@ -286,14 +402,9 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             onClick={handleSave}
             disabled={saving}
             style={{
-              padding: '10px 20px',
-              borderRadius: 10,
-              border: 'none',
-              backgroundColor: '#1A6FE8',
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
+              padding: '10px 20px', borderRadius: 10, border: 'none',
+              backgroundColor: '#1A6FE8', color: '#fff',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
               opacity: saving ? 0.7 : 1,
             }}
           >
