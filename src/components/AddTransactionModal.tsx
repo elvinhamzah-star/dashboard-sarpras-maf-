@@ -47,7 +47,9 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   // Dropdown state
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -73,6 +75,14 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   useEffect(() => {
     if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
   }, [dropdownOpen])
+
+  const openDropdown = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+    }
+    setDropdownOpen(true)
+  }
 
   const filteredPrograms = programs.filter(p =>
     p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
@@ -164,11 +174,12 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         {/* Nama Pekerjaan — custom dropdown */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Nama Pekerjaan</label>
-          <div ref={dropdownRef} style={{ position: 'relative' }}>
+          <div ref={dropdownRef}>
             {/* Trigger */}
             <button
+              ref={triggerRef}
               type="button"
-              onClick={() => setDropdownOpen(v => !v)}
+              onClick={() => dropdownOpen ? (setDropdownOpen(false), setSearch('')) : openDropdown()}
               style={{
                 width: '100%',
                 padding: '10px 14px',
@@ -200,13 +211,13 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               </svg>
             </button>
 
-            {/* Dropdown panel */}
+            {/* Dropdown panel — fixed to escape modal overflow clipping */}
             {dropdownOpen && (
               <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 6px)',
-                left: 0,
-                right: 0,
+                position: 'fixed',
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                width: dropdownPos.width,
                 zIndex: 200,
                 backgroundColor: '#fff',
                 borderRadius: 12,
