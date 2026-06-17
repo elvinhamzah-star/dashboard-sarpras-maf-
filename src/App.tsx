@@ -22,6 +22,8 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalKey, setAddModalKey] = useState(0)
+  // Shared month filter ('YYYY-MM' or null for all). Used across pages.
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
@@ -86,9 +88,9 @@ export default function App() {
           />
         )
       case 'keuangan':
-        return <Keuangan isAdmin={isAdmin} />
+        return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       case 'galeri':
-        return <Galeri isAdmin={isAdmin} />
+        return <Galeri isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       default:
         return <Beranda isAdmin={isAdmin} />
     }

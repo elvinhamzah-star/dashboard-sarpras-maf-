@@ -36,6 +36,27 @@ export function getTodayFormatted(): string {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 
+const MONTH_NAMES_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+
+// 'YYYY-MM' -> 'Juni 2026'
+export function monthLabelFromYM(ym: string): string {
+  const [y, m] = ym.split('-')
+  return `${MONTH_NAMES_FULL[parseInt(m) - 1]} ${y}`
+}
+
+// Current month as 'YYYY-MM'
+export function currentYM(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Unique 'YYYY-MM' values from a list of date strings, sorted newest first.
+export function monthsFromDates(dates: (string | undefined | null)[]): string[] {
+  const set = new Set<string>()
+  dates.forEach(d => { if (d) set.add(d.slice(0, 7)) })
+  return Array.from(set).sort((a, b) => b.localeCompare(a))
+}
+
 export function formatNumberShort(num: number): string {
   if (!num) return '0'
   if (num >= 1_000_000_000) {

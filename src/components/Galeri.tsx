@@ -1,12 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, monthsFromDates } from '../lib/data'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
+import MonthSelector from './MonthSelector'
 
 interface GaleriProps {
   isAdmin?: boolean
+  selectedMonth?: string | null
+  onMonthChange?: (ym: string | null) => void
 }
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
@@ -17,7 +20,7 @@ const FASE_INFO: Record<string, { color: string; bg: string }> = {
 
 const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'] as const
 
-export default function Galeri({ isAdmin = false }: GaleriProps) {
+export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthChange }: GaleriProps) {
   const [docs, setDocs] = useState<Documentation[]>([])
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,9 +69,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     setLoading(false)
   }
 
+  const availableMonths = monthsFromDates(docs.map(d => d.tanggal))
+
   const filteredDocs = docs.filter(doc => {
     if (filterProgram !== 'Semua' && doc.program_id !== filterProgram) return false
     if (filterFase !== 'Semua' && doc.fase !== filterFase) return false
+    if (selectedMonth && doc.tanggal?.slice(0, 7) !== selectedMonth) return false
     return true
   })
 
@@ -255,6 +261,11 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             )
           })}
         </div>
+
+        {/* Month filter */}
+        {onMonthChange && availableMonths.length > 0 && (
+          <MonthSelector value={selectedMonth} months={availableMonths} onChange={onMonthChange} />
+        )}
       </div>
 
       {error && (

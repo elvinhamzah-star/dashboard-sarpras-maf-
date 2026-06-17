@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
-import { formatRupiah, formatTanggal, TRANSACTION_COLORS } from '../lib/data'
+import { formatRupiah, formatTanggal, TRANSACTION_COLORS, monthsFromDates, monthLabelFromYM } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import AddTransactionModal from './AddTransactionModal'
+import MonthSelector from './MonthSelector'
 
 interface KeuanganProps {
   isAdmin?: boolean
+  selectedMonth?: string | null
+  onMonthChange?: (ym: string | null) => void
 }
 
 const JENIS_ICONS: Record<string, JSX.Element> = {
@@ -26,7 +29,7 @@ const JENIS_ICONS: Record<string, JSX.Element> = {
   ),
 }
 
-export default function Keuangan({ isAdmin = false }: KeuanganProps) {
+export default function Keuangan({ isAdmin = false, selectedMonth = null, onMonthChange }: KeuanganProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Semua')
@@ -50,6 +53,8 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
     load()
   }, [])
 
+  useEffect(() => { setPage(1) }, [selectedMonth])
+
   const handleToggleRiwayat = async () => {
     const next = !showRiwayat
     setTogglingRiwayat(true)
@@ -58,19 +63,30 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
     setTogglingRiwayat(false)
   }
 
-  const masukList = transactions.filter(t => t.jenis_transaksi === 'Masuk')
-  const keluarList = transactions.filter(t => t.jenis_transaksi === 'Keluar')
-  const keluarPBBList = transactions.filter(t => t.jenis_transaksi === 'Keluar PBB')
+  // Month filter: available months from data, and the set scoped to the selected month
+  const availableMonths = monthsFromDates(transactions.map(t => t.tanggal))
+  const monthTransactions = selectedMonth
+    ? transactions.filter(t => t.tanggal?.slice(0, 7) === selectedMonth)
+    : transactions
+
+  const masukList = monthTransactions.filter(t => t.jenis_transaksi === 'Masuk')
+  const keluarList = monthTransactions.filter(t => t.jenis_transaksi === 'Keluar')
+  const keluarPBBList = monthTransactions.filter(t => t.jenis_transaksi === 'Keluar PBB')
 
   const totalMasuk = masukList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluar = keluarList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluarPBB = keluarPBBList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalDeployment = totalMasuk + totalKeluarPBB
-  const saldoKas = totalMasuk - totalKeluar
+  // Saldo Kas is a running balance (stock), so always compute it across ALL
+  // transactions — never scope it to the selected month like the flow cards.
+  const saldoKas = transactions.reduce(
+    (s, t) => s + (t.jenis_transaksi === 'Masuk' ? (t.nominal || 0) : t.jenis_transaksi === 'Keluar' ? -(t.nominal || 0) : 0),
+    0,
+  )
 
   const filtered = filterJenis === 'Semua'
-    ? transactions
-    : transactions.filter(t => t.jenis_transaksi === filterJenis)
+    ? monthTransactions
+    : monthTransactions.filter(t => t.jenis_transaksi === filterJenis)
 
   const itemsPerPage = 20
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -88,7 +104,7 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
     {
       title: 'Saldo Kas',
       value: formatRupiah(saldoKas),
-      subtitle: 'Sisa saldo kas Sarpras',
+      subtitle: selectedMonth ? 'Sisa saldo kas (total keseluruhan)' : 'Sisa saldo kas Sarpras',
       color: saldoKas >= 0 ? '#059669' : '#DC2626',
       borderColor: saldoKas >= 0 ? '#059669' : '#DC2626',
     },
@@ -141,7 +157,11 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5 }}>Riwayat transaksi keuangan Sarpras MAF</p>
+          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5 }}>
+            {selectedMonth
+              ? `Transaksi bulan ${monthLabelFromYM(selectedMonth)}`
+              : 'Riwayat transaksi keuangan Sarpras MAF'}
+          </p>
         </div>
         {isAdmin && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -205,6 +225,18 @@ export default function Keuangan({ isAdmin = false }: KeuanganProps) {
           </div>
         )}
       </div>
+
+      {/* Month filter bar */}
+      {onMonthChange && availableMonths.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+          <MonthSelector value={selectedMonth} months={availableMonths} onChange={onMonthChange} />
+          {selectedMonth && (
+            <span style={{ fontSize: 12, color: '#9CAABB' }}>
+              {monthTransactions.length} transaksi · {formatRupiah(totalMasuk)} masuk · {formatRupiah(totalKeluar + totalKeluarPBB)} keluar
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Hero Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
