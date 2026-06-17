@@ -191,6 +191,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   const week = getWeekDates(weekOffset)
   const activePrograms = programs.filter(p => p.status === 'On Going' && p.jenis_pekerjaan !== 'Operasional')
+  const onHoldPrograms = programs.filter(p => p.status === 'On Hold' && p.jenis_pekerjaan !== 'Operasional')
   const planningPrograms = programs.filter(p => p.status === 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   const availablePlanning = planningPrograms.filter(p => !pinnedPlanningIds.includes(p.id))
   const pinnedPrograms = pinnedPlanningIds.map(id => planningPrograms.find(p => p.id === id)).filter(Boolean) as Program[]
@@ -334,7 +335,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
         </div>
       </div>
 
-      {activePrograms.length === 0 && !showPlanningSection && (
+      {activePrograms.length === 0 && onHoldPrograms.length === 0 && !showPlanningSection && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
           Tidak ada pekerjaan aktif
         </div>
@@ -357,7 +358,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       {activePrograms.map((program, pIdx) => {
         const data = perProgram[program.id] || empty()
         const isExpanded = expandedPrograms.has(program.id)
-        const isLast = pIdx === activePrograms.length - 1 && !showPlanningSection
+        const isLast = pIdx === activePrograms.length - 1 && !showPlanningSection && onHoldPrograms.length === 0
 
         return (
           <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
@@ -432,13 +433,104 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
         )
       })}
 
+      {/* On Hold divider */}
+      {onHoldPrograms.length > 0 && (
+        <div style={{
+          padding: '12px 20px',
+          backgroundColor: 'rgba(217,119,6,0.04)',
+          borderTop: activePrograms.length > 0 ? '1px solid rgba(217,119,6,0.15)' : 'none',
+          borderLeft: '4px solid #D97706',
+        }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            On Hold
+          </span>
+        </div>
+      )}
+
+      {/* On Hold programs */}
+      {onHoldPrograms.map((program, pIdx) => {
+        const data = perProgram[program.id] || empty()
+        const isExpanded = expandedPrograms.has(program.id)
+        const isLast = pIdx === onHoldPrograms.length - 1 && !showPlanningSection
+
+        return (
+          <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
+            <div
+              onClick={() => toggleExpand(program.id)}
+              onMouseEnter={() => setHoveredId(program.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{
+                padding: '14px 20px 12px',
+                backgroundColor: hoveredId === program.id
+                  ? 'rgba(15,23,42,0.035)'
+                  : isExpanded ? 'rgba(217,119,6,0.03)' : 'rgba(15,23,42,0.015)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'background-color 0.12s',
+                borderLeft: isExpanded ? '3px solid rgba(217,119,6,0.55)' : '3px solid transparent',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Chevron open={isExpanded} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                    {program.nama_pekerjaan}
+                  </div>
+                  {program.vendor && (
+                    <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{program.vendor}</div>
+                  )}
+                </div>
+                {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
+                <SectionDots data={data} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#D97706', flexShrink: 0, minWidth: 30, textAlign: 'right' }}>
+                  {program.progress_percent || 0}%
+                </span>
+              </div>
+            </div>
+
+            {isExpanded && (
+              <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
+                {SECTIONS.map(s => (
+                  <div key={s.field} style={{ marginBottom: 10, borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
+                    <div style={{ padding: '8px 12px', backgroundColor: s.bg, borderLeft: `3px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {s.icon}
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {s.label}
+                      </span>
+                    </div>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: `3px solid ${s.color}` }}>
+                      {s.field === 'dikerjakan' && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <span style={{ fontSize: 11, color: '#5C6B82', fontWeight: 500 }}>Progress lapangan</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#D97706' }}>{program.progress_percent || 0}%</span>
+                          </div>
+                          <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#D97706', borderRadius: 99 }} />
+                          </div>
+                        </div>
+                      )}
+                      {isAdmin ? (
+                        <BulletInput items={data[s.field]} onChange={items => setField(program.id, s.field, items)} placeholder={s.placeholder} />
+                      ) : (
+                        <BulletList items={data[s.field]} />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
       {/* Perencanaan section */}
       {showPlanningSection && (
         <>
           <div style={{
             padding: '12px 20px',
             backgroundColor: 'rgba(185,28,28,0.05)',
-            borderTop: activePrograms.length > 0 ? '1px solid rgba(185,28,28,0.15)' : 'none',
+            borderTop: (activePrograms.length > 0 || onHoldPrograms.length > 0) ? '1px solid rgba(185,28,28,0.15)' : 'none',
             borderLeft: '4px solid #B91C1C',
           }}>
             <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
@@ -575,7 +667,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       )}
 
       {/* Save button */}
-      {isAdmin && (activePrograms.length > 0 || pinnedPlanningIds.length > 0) && (
+      {isAdmin && (activePrograms.length > 0 || onHoldPrograms.length > 0 || pinnedPlanningIds.length > 0) && (
         <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
           {error && (
             <div style={{ marginBottom: 8, padding: 8, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
