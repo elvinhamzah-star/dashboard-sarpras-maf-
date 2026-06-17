@@ -5,12 +5,13 @@ import Pekerjaan from './components/Pekerjaan'
 import PekerjaanDetail from './components/PekerjaanDetail'
 import Keuangan from './components/Keuangan'
 import Galeri from './components/Galeri'
+import Laporan from './components/Laporan'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'laporan'
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
@@ -91,6 +92,8 @@ export default function App() {
         return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       case 'galeri':
         return <Galeri isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+      case 'laporan':
+        return <Laporan selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       default:
         return <Beranda isAdmin={isAdmin} />
     }
@@ -101,6 +104,7 @@ export default function App() {
     pekerjaan: 'Pekerjaan',
     keuangan: 'Keuangan',
     galeri: 'Galeri',
+    laporan: 'Laporan',
   }
 
   if (!isLoggedIn) {
