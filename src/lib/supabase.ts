@@ -16,10 +16,25 @@ export interface Program {
   realisasi_terkini: number
   sisa_anggaran: number
   vendor: string
+  target_selesai?: string
   isu_utama: string
   link_rab_detail?: string
   link_dokumentasi?: string
   link_bukti_transaksi?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface ProgramSnapshot {
+  id: number
+  program_id: string
+  snapshot_date: string
+  progress_percent: number | null
+  realisasi_terkini: number | null
+  sisa_anggaran: number | null
+  total_anggaran: number | null
+  status: string | null
+  note?: string | null
   created_at: string
 }
 
@@ -95,3 +110,6 @@ export const fetchIssues = () => supabase.from('issues').select('*').order('crea
 export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
 export const fetchActivities = () => supabase.from('activities').select('*').order('created_at', { ascending: false })
 export const fetchWorkNotes = () => supabase.from('work_notes').select('*').order('created_at', { ascending: false })
+export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
+export const fetchProgramSnapshots = (programId: string) =>
+  supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })

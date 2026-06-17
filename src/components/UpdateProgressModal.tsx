@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Program } from '../lib/supabase'
-import { adminUpdate } from '../lib/adminApi'
+import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 
 interface UpdateProgressModalProps {
@@ -29,13 +29,30 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
       realisasi_terkini: realisasiNum,
       sisa_anggaran: sisa,
       status,
+      updated_at: new Date().toISOString(),
     }, program.id)
-    setSaving(false)
+
     if (err) {
+      setSaving(false)
       setError(err.message)
-    } else {
-      onUpdated()
+      return
     }
+
+    // Append a history snapshot (non-destructive). Best-effort: the program update
+    // is the source of truth, so a snapshot failure should not block the save.
+    const { error: snapErr } = await adminInsert('program_snapshots', {
+      program_id: program.id,
+      snapshot_date: new Date().toISOString().split('T')[0],
+      progress_percent: progressNum,
+      realisasi_terkini: realisasiNum,
+      sisa_anggaran: sisa,
+      total_anggaran: program.total_anggaran || 0,
+      status,
+    })
+    if (snapErr) console.warn('Gagal menyimpan snapshot riwayat:', snapErr.message)
+
+    setSaving(false)
+    onUpdated()
   }
 
   const inputStyle = {
