@@ -7,6 +7,7 @@ interface SidebarProps {
   isAdmin: boolean
   onLogout: () => void
   onShowPinModal: () => void
+  onLogoutDashboard: () => void
 }
 
 const menuItems = [
@@ -55,7 +56,7 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, onLogout, onShowPinModal }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, onLogout, onShowPinModal, onLogoutDashboard }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
   return (
     <div
@@ -286,9 +287,43 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
             <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, padding: '6px 6px 0', letterSpacing: '0.02em' }}>
               Dashboard Sarpras MAF v2
             </div>
+            <button
+              onClick={onLogoutDashboard}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                color: 'rgba(255,255,255,0.25)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 11.5,
+                fontWeight: 500,
+                padding: '5px 6px',
+                borderRadius: 7,
+                width: '100%',
+                marginTop: 4,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(248,113,113,0.08)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(248,113,113,0.9)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'
+              }}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Keluar
+            </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <button
               onClick={isAdmin ? onLogout : onShowPinModal}
               title={isAdmin ? 'Keluar Mode Admin' : 'Masuk Mode Admin'}
@@ -309,6 +344,40 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
               <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <rect x="3" y="11" width="18" height="11" rx="2"/>
                 <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </button>
+            <button
+              onClick={onLogoutDashboard}
+              title="Keluar Dashboard"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255,255,255,0.08)',
+                cursor: 'pointer',
+                color: 'rgba(255,255,255,0.25)',
+                padding: 0,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(248,113,113,0.1)'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(248,113,113,0.2)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = '#F87171'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'
+              }}
+            >
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             </button>
           </div>

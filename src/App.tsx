@@ -54,6 +54,13 @@ export default function App() {
     setShowAddModal(false)
   }
 
+  const handleLogoutDashboard = () => {
+    sessionStorage.removeItem('dashboard_auth')
+    clearAdminPin()
+    setIsAdmin(false)
+    setIsLoggedIn(false)
+  }
+
   const sidebarWidth = isMobile ? 0 : sidebarOpen ? 248 : 68
 
   const renderPage = () => {
@@ -109,6 +116,7 @@ export default function App() {
         onToggle={() => setSidebarOpen(o => !o)}
         isAdmin={isAdmin}
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
+        onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
       />
 
@@ -202,6 +210,29 @@ export default function App() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: isAdmin ? '#1A6FE8' : '#9CAABB' }} />
               {isAdmin ? 'Admin' : 'Viewer'}
             </span>
+            <button
+              onClick={handleLogoutDashboard}
+              title="Keluar"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 34,
+                height: 34,
+                borderRadius: 9,
+                border: '1px solid rgba(15,23,42,0.08)',
+                backgroundColor: '#fff',
+                color: '#9CAABB',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
           </header>
         )}
 
