@@ -55,13 +55,13 @@ const menuItems = [
     ),
   },
   {
-    id: 'laporan',
-    label: 'Laporan',
+    id: 'riwayat',
+    label: 'Riwayat',
     icon: (
       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <line x1="8" y1="21" x2="16" y2="21"/>
-        <line x1="12" y1="17" x2="12" y2="21"/>
+        <path d="M12 8v4l3 3"/>
+        <path d="M3.05 11a9 9 0 1 0 .5-4"/>
+        <polyline points="3 3 3 7 7 7"/>
       </svg>
     ),
   },

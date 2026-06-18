@@ -10,6 +10,21 @@ interface LaporanPerProgram {
   rencana: string[]
 }
 
+interface ProgramMeta {
+  name: string
+  vendor?: string | null
+  category: 'ongoing' | 'onhold' | 'planning'
+  link?: string | null
+}
+
+interface DisplayProgram {
+  id: string
+  nama_pekerjaan: string
+  vendor?: string | null
+  link_dokumentasi?: string | null
+  progress_percent?: number | null
+}
+
 interface WeeklyNote {
   id: string
   week_start: string
@@ -51,12 +66,17 @@ const formatWeekRange = (start: string, end: string) => {
 
 const empty = (): LaporanPerProgram => ({ dikerjakan: [], kendala: [], rencana: [] })
 
-const parseContent = (content: string): { programs: Record<string, LaporanPerProgram>; pinnedPlanning: string[] } => {
+const parseContent = (content: string): {
+  programs: Record<string, LaporanPerProgram>
+  pinnedPlanning: string[]
+  programMeta: Record<string, ProgramMeta>
+} => {
   try {
     const p = JSON.parse(content)
-    if (p.v === 2) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [] }
+    if (p.v === 2) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], programMeta: {} }
+    if (p.v === 3) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], programMeta: p.program_meta || {} }
   } catch {}
-  return { programs: {}, pinnedPlanning: [] }
+  return { programs: {}, pinnedPlanning: [], programMeta: {} }
 }
 
 const hasAnyData = (d: LaporanPerProgram) =>
@@ -66,7 +86,7 @@ const BulletList = ({ items }: { items: string[] }) => {
   const filtered = items.filter(i => i.trim())
   if (!filtered.length) return <div style={{ fontSize: 12, color: '#C8D2E0', fontStyle: 'italic' }}>Belum ada catatan</div>
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {filtered.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#9CAABB', flexShrink: 0, marginTop: 8 }} />
@@ -86,23 +106,9 @@ const Chevron = ({ open }: { open: boolean }) => (
   </svg>
 )
 
-const SectionDots = ({ data }: { data: LaporanPerProgram }) => (
-  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-    {[
-      { color: '#059669', filled: data.dikerjakan.some(x => x.trim()), title: 'Sudah dikerjakan' },
-      { color: '#D97706', filled: data.kendala.some(x => x.trim()), title: 'Kendala' },
-      { color: '#1A6FE8', filled: data.rencana.some(x => x.trim()), title: 'Rencana' },
-    ].map((d, i) => (
-      <div key={i} title={d.title} style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: d.filled ? d.color : 'rgba(15,23,42,0.1)' }} />
-    ))}
-  </div>
-)
-
 const FolderLink = ({ href }: { href: string }) => (
   <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
+    href={href} target="_blank" rel="noopener noreferrer"
     onClick={e => e.stopPropagation()}
     title="Buka folder dokumentasi"
     style={{
@@ -117,20 +123,8 @@ const FolderLink = ({ href }: { href: string }) => (
     <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
     </svg>
-    Dokumentasi
+    Dok
   </a>
-)
-
-const IconPrev = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-)
-
-const IconNext = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
 )
 
 const SECTIONS = [
@@ -140,11 +134,6 @@ const SECTIONS = [
     placeholder: 'Progres atau pencapaian pekan ini...',
     color: '#059669',
     bg: 'rgba(5,150,105,0.07)',
-    icon: (
-      <svg width="13" height="13" fill="none" stroke="#059669" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" /><polyline points="9 12 12 15 16 9" />
-      </svg>
-    ),
   },
   {
     field: 'kendala' as const,
@@ -152,12 +141,6 @@ const SECTIONS = [
     placeholder: 'Kendala atau hal penting yang perlu dilaporkan...',
     color: '#D97706',
     bg: 'rgba(217,119,6,0.07)',
-    icon: (
-      <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
   },
   {
     field: 'rencana' as const,
@@ -165,14 +148,193 @@ const SECTIONS = [
     placeholder: 'Target atau rencana untuk pekan berikutnya...',
     color: '#1A6FE8',
     bg: 'rgba(26,111,232,0.07)',
-    icon: (
-      <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ),
   },
 ]
+
+// ─── Shared program row renderer ────────────────────────────────────────────
+
+interface ProgramRowProps {
+  program: DisplayProgram
+  data: LaporanPerProgram
+  sectionColor: string
+  isExpanded: boolean
+  isLast: boolean
+  isAdmin: boolean
+  canEdit: boolean // false for past-week read-only
+  onToggle: () => void
+  onFieldChange?: (field: keyof LaporanPerProgram, items: string[]) => void
+  extraActions?: React.ReactNode
+}
+
+function ProgramRow({
+  program, data, sectionColor, isExpanded, isLast,
+  isAdmin, canEdit, onToggle, onFieldChange, extraActions,
+}: ProgramRowProps) {
+  const [hovered, setHovered] = useState(false)
+  const progress = program.progress_percent ?? 0
+
+  return (
+    <div style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
+      {/* Accordion header */}
+      <div
+        onClick={onToggle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          padding: '12px 18px 10px',
+          backgroundColor: hovered
+            ? 'rgba(15,23,42,0.03)'
+            : isExpanded ? `rgba(${sectionColor === '#1A6FE8' ? '26,111,232' : sectionColor === '#D97706' ? '217,119,6' : '185,28,28'},0.02)` : 'transparent',
+          cursor: 'pointer',
+          userSelect: 'none',
+          transition: 'background-color 0.12s',
+          borderLeft: `3px solid ${isExpanded ? sectionColor : 'transparent'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Chevron open={isExpanded} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+              {program.nama_pekerjaan}
+            </div>
+            {program.vendor && (
+              <div style={{ fontSize: 10.5, color: '#9CAABB', marginTop: 1 }}>{program.vendor}</div>
+            )}
+          </div>
+          {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
+          {extraActions}
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: sectionColor, flexShrink: 0, minWidth: 34, textAlign: 'right' }}>
+            {progress}%
+          </span>
+        </div>
+        {/* Mini progress bar */}
+        <div style={{ marginTop: 8, marginLeft: 21, marginRight: 0, height: 3, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.min(100, progress)}%`, backgroundColor: sectionColor, borderRadius: 99, opacity: 0.75 }} />
+        </div>
+      </div>
+
+      {/* Expanded content */}
+      {isExpanded && (
+        <div style={{ backgroundColor: '#FAFBFD', borderTop: '1px solid rgba(15,23,42,0.04)' }}>
+          {SECTIONS.map((s, idx) => (
+            <div key={s.field} style={{ borderTop: idx > 0 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
+              <div style={{ padding: '9px 18px 7px', backgroundColor: s.bg, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 3, height: 12, borderRadius: 2, backgroundColor: s.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {s.label}
+                </span>
+                {s.field === 'dikerjakan' && (
+                  <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#059669' }}>{progress}%</span>
+                )}
+              </div>
+              <div style={{ padding: '10px 18px 12px' }}>
+                {canEdit && onFieldChange ? (
+                  <BulletInput items={data[s.field]} onChange={items => onFieldChange(s.field, items)} placeholder={s.placeholder} />
+                ) : (
+                  <BulletList items={data[s.field]} />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Planning-only row (single "rencana" section) ────────────────────────────
+
+interface PlanningRowProps {
+  program: DisplayProgram
+  data: LaporanPerProgram
+  isExpanded: boolean
+  isLast: boolean
+  isAdmin: boolean
+  canEdit: boolean
+  onToggle: () => void
+  onFieldChange?: (field: keyof LaporanPerProgram, items: string[]) => void
+  onUnpin?: () => void
+}
+
+function PlanningRow({ program, data, isExpanded, isLast, isAdmin, canEdit, onToggle, onFieldChange, onUnpin }: PlanningRowProps) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
+      <div
+        onClick={onToggle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          padding: '12px 18px 10px',
+          backgroundColor: hovered ? 'rgba(185,28,28,0.04)' : isExpanded ? 'rgba(185,28,28,0.02)' : 'transparent',
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 8,
+          userSelect: 'none', transition: 'background-color 0.12s',
+          borderLeft: `3px solid ${isExpanded ? '#B91C1C' : 'transparent'}`,
+        }}
+      >
+        <Chevron open={isExpanded} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {program.nama_pekerjaan}
+          </div>
+        </div>
+        {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
+        {isAdmin && canEdit && onUnpin && (
+          <button
+            onClick={e => { e.stopPropagation(); onUnpin() }}
+            title="Hapus dari daftar"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8D2E0', fontSize: 16, lineHeight: 1, padding: '0 2px', flexShrink: 0 }}
+          >
+            ×
+          </button>
+        )}
+        <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#B91C1C' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
+      </div>
+
+      {isExpanded && (
+        <div style={{ backgroundColor: '#FAFBFD', borderTop: '1px solid rgba(15,23,42,0.04)' }}>
+          <div style={{ padding: '9px 18px 7px', backgroundColor: 'rgba(185,28,28,0.06)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 3, height: 12, borderRadius: 2, backgroundColor: '#B91C1C', flexShrink: 0 }} />
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: '#B91C1C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Rencana Eksekusi
+            </span>
+          </div>
+          <div style={{ padding: '10px 18px 12px' }}>
+            {canEdit && onFieldChange ? (
+              <BulletInput items={data.rencana} onChange={items => onFieldChange('rencana', items)} placeholder="Rencana atau target eksekusi..." />
+            ) : (
+              <BulletList items={data.rencana} />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Section divider header ────────────────────────────────────────────────
+
+function SectionHeader({ label, count, color, bg }: { label: string; count: number; color: string; bg: string }) {
+  return (
+    <div style={{
+      padding: '10px 18px',
+      backgroundColor: bg,
+      borderLeft: `4px solid ${color}`,
+      display: 'flex', alignItems: 'center', gap: 8,
+    }}>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em', flex: 1 }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 10.5, fontWeight: 700, color, backgroundColor: `rgba(${color === '#1A6FE8' ? '26,111,232' : color === '#D97706' ? '217,119,6' : '185,28,28'},0.12)`, padding: '2px 8px', borderRadius: 12 }}>
+        {count}
+      </span>
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekananCardProps) {
   const [weekOffset, setWeekOffset] = useState(0)
@@ -182,14 +344,17 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [perProgram, setPerProgram] = useState<Record<string, LaporanPerProgram>>({})
+  const [programMeta, setProgramMeta] = useState<Record<string, ProgramMeta>>({})
   const [expandedPrograms, setExpandedPrograms] = useState<Set<string>>(new Set())
   const [pinnedPlanningIds, setPinnedPlanningIds] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const mountedRef = useRef(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const week = getWeekDates(weekOffset)
+  const isPastWeek = weekOffset < 0
+
+  // Current-week live program lists
   const activePrograms = programs.filter(p => p.status === 'On Going' && p.jenis_pekerjaan !== 'Operasional')
   const onHoldPrograms = programs.filter(p => p.status === 'On Hold' && p.jenis_pekerjaan !== 'Operasional')
   const planningPrograms = programs.filter(p => p.status === 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
@@ -197,26 +362,47 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const pinnedPrograms = pinnedPlanningIds.map(id => planningPrograms.find(p => p.id === id)).filter(Boolean) as Program[]
   const displayedPlanningPrograms = isAdmin
     ? pinnedPrograms
-    : planningPrograms.filter(p => {
-        const d = perProgram[p.id]
-        return d && d.rencana.some(x => x.trim())
+    : planningPrograms.filter(p => { const d = perProgram[p.id]; return d && d.rencana.some(x => x.trim()) })
+
+  // Past-week historical program lists (from saved meta + perProgram)
+  const buildHistorical = (category: 'ongoing' | 'onhold' | 'planning'): DisplayProgram[] => {
+    if (!isPastWeek) return []
+    return Object.entries(perProgram)
+      .filter(([id, data]) => {
+        if (!hasAnyData(data)) return false
+        const meta = programMeta[id]
+        if (meta) return meta.category === category
+        // v2 fallback: guess from live status
+        const live = programs.find(p => p.id === id)
+        if (!live) return category === 'ongoing'
+        const s = live.status
+        if (category === 'ongoing') return s === 'On Going' || s === 'Selesai'
+        if (category === 'onhold') return s === 'On Hold'
+        return s === 'Perencanaan'
       })
-  const showPlanningSection = displayedPlanningPrograms.length > 0
+      .map(([id]) => {
+        const meta = programMeta[id]
+        const live = programs.find(p => p.id === id)
+        return {
+          id,
+          nama_pekerjaan: meta?.name || live?.nama_pekerjaan || '[Program Tidak Ditemukan]',
+          vendor: meta?.vendor !== undefined ? meta.vendor : live?.vendor,
+          link_dokumentasi: meta?.link !== undefined ? meta.link : live?.link_dokumentasi,
+          progress_percent: live?.progress_percent ?? null,
+        }
+      })
+  }
+
+  const histOngoing = buildHistorical('ongoing')
+  const histOnhold = buildHistorical('onhold')
+  const histPlanning = buildHistorical('planning')
 
   const setField = (programId: string, field: keyof LaporanPerProgram, items: string[]) => {
-    setPerProgram(prev => ({
-      ...prev,
-      [programId]: { ...(prev[programId] || empty()), [field]: items },
-    }))
+    setPerProgram(prev => ({ ...prev, [programId]: { ...(prev[programId] || empty()), [field]: items } }))
   }
 
   const toggleExpand = (id: string) => {
-    setExpandedPrograms(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    setExpandedPrograms(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
 
   const pinProgram = (id: string) => {
@@ -234,38 +420,32 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   useEffect(() => {
     if (!showDropdown) return
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false)
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showDropdown])
 
   const load = async () => {
-    if (!mountedRef.current) {
-      setLoading(true)
-    } else {
-      setWeekLoading(true)
-    }
+    if (!mountedRef.current) setLoading(true)
+    else setWeekLoading(true)
+
     const { data } = await supabase
-      .from('weekly_notes')
-      .select('*')
-      .eq('week_start', week.start)
-      .maybeSingle()
+      .from('weekly_notes').select('*').eq('week_start', week.start).maybeSingle()
 
     if (data) {
       setNote(data as WeeklyNote)
-      const { programs: parsed, pinnedPlanning } = parseContent(data.content)
+      const { programs: parsed, pinnedPlanning, programMeta: meta } = parseContent(data.content)
       setPerProgram(parsed)
       setPinnedPlanningIds(pinnedPlanning)
-      setExpandedPrograms(new Set())
+      setProgramMeta(meta)
     } else {
       setNote(null)
       setPerProgram({})
       setPinnedPlanningIds([])
-      setExpandedPrograms(new Set())
+      setProgramMeta({})
     }
+    setExpandedPrograms(new Set())
     mountedRef.current = true
     setLoading(false)
     setWeekLoading(false)
@@ -286,7 +466,19 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       }
     })
 
-    const content = JSON.stringify({ v: 2, programs: cleaned, pinned_planning: pinnedPlanningIds })
+    // Build program meta for v3 format
+    const meta: Record<string, ProgramMeta> = {}
+    activePrograms.forEach(p => {
+      meta[p.id] = { name: p.nama_pekerjaan, vendor: p.vendor, category: 'ongoing', link: p.link_dokumentasi }
+    })
+    onHoldPrograms.forEach(p => {
+      meta[p.id] = { name: p.nama_pekerjaan, vendor: p.vendor, category: 'onhold', link: p.link_dokumentasi }
+    })
+    pinnedPrograms.forEach(p => {
+      meta[p.id] = { name: p.nama_pekerjaan, vendor: p.vendor, category: 'planning', link: p.link_dokumentasi }
+    })
+
+    const content = JSON.stringify({ v: 3, programs: cleaned, pinned_planning: pinnedPlanningIds, program_meta: meta })
     const payload = { week_start: week.start, week_end: week.end, content }
     const result = note
       ? await adminUpdate('weekly_notes', payload, note.id)
@@ -299,28 +491,51 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   if (loading) return null
 
+  const showCurrentWeekSave = !isPastWeek && isAdmin && (activePrograms.length > 0 || onHoldPrograms.length > 0 || pinnedPlanningIds.length > 0)
+  const showPlanningSection = isPastWeek ? histPlanning.length > 0 : displayedPlanningPrograms.length > 0
+
+  const histTotal = histOngoing.length + histOnhold.length + histPlanning.length
+  const emptyPastWeek = isPastWeek && !note
+
   return (
     <div style={{
       backgroundColor: '#fff',
       borderRadius: 14,
       border: '1px solid rgba(15,23,42,0.07)',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
       overflow: 'hidden',
     }}>
       {/* Header */}
-      <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Laporan Pekanan</div>
-          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>Update progress mingguan per program</div>
+      <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Laporan Pekanan</div>
+            <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>Update progress mingguan per program</div>
+          </div>
+          {isPastWeek && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '4px 10px', borderRadius: 20,
+              backgroundColor: 'rgba(124,58,237,0.08)', color: '#7C3AED',
+              fontSize: 10.5, fontWeight: 700,
+            }}>
+              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path d="M12 8v4l3 3"/><path d="M3.05 11a9 9 0 1 0 .5-4"/>
+              </svg>
+              Riwayat
+            </div>
+          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+
+        {/* Week navigator */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <button
             onClick={() => setWeekOffset(w => w - 1)}
-            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.14)', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5C6B82', flexShrink: 0, padding: 0 }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.12)', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5C6B82', padding: 0 }}
           >
-            <IconPrev />
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
-          <div style={{ textAlign: 'center', opacity: weekLoading ? 0.45 : 1, transition: 'opacity 0.15s' }}>
+          <div style={{ textAlign: 'center', opacity: weekLoading ? 0.45 : 1, transition: 'opacity 0.15s', minWidth: 160 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1C2E', whiteSpace: 'nowrap' }}>
               {formatWeekRange(week.start, week.end)}
             </div>
@@ -328,347 +543,212 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
           <button
             onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
             disabled={weekOffset === 0}
-            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.14)', backgroundColor: '#fff', cursor: weekOffset === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: weekOffset === 0 ? 'rgba(15,23,42,0.2)' : '#5C6B82', flexShrink: 0, padding: 0, opacity: weekOffset === 0 ? 0.35 : 1 }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(15,23,42,0.12)', backgroundColor: '#fff', cursor: weekOffset === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: weekOffset === 0 ? 'rgba(15,23,42,0.2)' : '#5C6B82', padding: 0, opacity: weekOffset === 0 ? 0.35 : 1 }}
           >
-            <IconNext />
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
       </div>
 
-      {activePrograms.length === 0 && onHoldPrograms.length === 0 && !showPlanningSection && (
+      {/* Past week: no data */}
+      {emptyPastWeek && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
-          Tidak ada pekerjaan aktif
+          Belum ada laporan disimpan untuk minggu ini
         </div>
       )}
 
-      {/* Pekerjaan Berjalan divider */}
-      {activePrograms.length > 0 && (
-        <div style={{
-          padding: '12px 20px',
-          backgroundColor: 'rgba(26,111,232,0.04)',
-          borderLeft: '4px solid #1A6FE8',
-        }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Pekerjaan Berjalan
-          </span>
+      {/* Past week: has data */}
+      {isPastWeek && note && histTotal === 0 && (
+        <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
+          Laporan minggu ini belum memiliki catatan program
         </div>
       )}
 
-      {/* On Going programs */}
-      {activePrograms.map((program, pIdx) => {
-        const data = perProgram[program.id] || empty()
-        const isExpanded = expandedPrograms.has(program.id)
-        const isLast = pIdx === activePrograms.length - 1 && !showPlanningSection && onHoldPrograms.length === 0
-
-        return (
-          <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
-            {/* Accordion header */}
-            <div
-              onClick={() => toggleExpand(program.id)}
-              onMouseEnter={() => setHoveredId(program.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{
-                padding: '14px 20px 12px',
-                backgroundColor: hoveredId === program.id
-                  ? 'rgba(15,23,42,0.035)'
-                  : isExpanded ? 'rgba(26,111,232,0.02)' : 'rgba(15,23,42,0.015)',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'background-color 0.12s',
-                borderLeft: isExpanded ? '3px solid rgba(26,111,232,0.45)' : '3px solid transparent',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Chevron open={isExpanded} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-                    {program.nama_pekerjaan}
-                  </div>
-                  {program.vendor && (
-                    <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{program.vendor}</div>
-                  )}
-                </div>
-                {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
-                <SectionDots data={data} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#1A6FE8', flexShrink: 0, minWidth: 30, textAlign: 'right' }}>
-                  {program.progress_percent || 0}%
-                </span>
-              </div>
-            </div>
-
-            {/* Expanded content: mini-cards per section */}
-            {isExpanded && (
-              <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
-                {SECTIONS.map(s => (
-                  <div key={s.field} style={{ marginBottom: 10, borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
-                    <div style={{ padding: '8px 12px', backgroundColor: s.bg, borderLeft: `3px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {s.icon}
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {s.label}
-                      </span>
-                    </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: `3px solid ${s.color}` }}>
-                      {s.field === 'dikerjakan' && (
-                        <div style={{ marginBottom: 10 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                            <span style={{ fontSize: 11, color: '#5C6B82', fontWeight: 500 }}>Progress lapangan</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>{program.progress_percent || 0}%</span>
-                          </div>
-                          <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#059669', borderRadius: 99 }} />
-                          </div>
-                        </div>
-                      )}
-                      {isAdmin ? (
-                        <BulletInput items={data[s.field]} onChange={items => setField(program.id, s.field, items)} placeholder={s.placeholder} />
-                      ) : (
-                        <BulletList items={data[s.field]} />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-      {/* On Hold divider */}
-      {onHoldPrograms.length > 0 && (
-        <div style={{
-          padding: '12px 20px',
-          backgroundColor: 'rgba(217,119,6,0.04)',
-          borderTop: activePrograms.length > 0 ? '1px solid rgba(217,119,6,0.15)' : 'none',
-          borderLeft: '4px solid #D97706',
-        }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            On Hold
-          </span>
-        </div>
-      )}
-
-      {/* On Hold programs */}
-      {onHoldPrograms.map((program, pIdx) => {
-        const data = perProgram[program.id] || empty()
-        const isExpanded = expandedPrograms.has(program.id)
-        const isLast = pIdx === onHoldPrograms.length - 1 && !showPlanningSection
-
-        return (
-          <div key={program.id} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
-            <div
-              onClick={() => toggleExpand(program.id)}
-              onMouseEnter={() => setHoveredId(program.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{
-                padding: '14px 20px 12px',
-                backgroundColor: hoveredId === program.id
-                  ? 'rgba(15,23,42,0.035)'
-                  : isExpanded ? 'rgba(217,119,6,0.03)' : 'rgba(15,23,42,0.015)',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'background-color 0.12s',
-                borderLeft: isExpanded ? '3px solid rgba(217,119,6,0.55)' : '3px solid transparent',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Chevron open={isExpanded} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-                    {program.nama_pekerjaan}
-                  </div>
-                  {program.vendor && (
-                    <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{program.vendor}</div>
-                  )}
-                </div>
-                {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
-                <SectionDots data={data} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#D97706', flexShrink: 0, minWidth: 30, textAlign: 'right' }}>
-                  {program.progress_percent || 0}%
-                </span>
-              </div>
-            </div>
-
-            {isExpanded && (
-              <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
-                {SECTIONS.map(s => (
-                  <div key={s.field} style={{ marginBottom: 10, borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
-                    <div style={{ padding: '8px 12px', backgroundColor: s.bg, borderLeft: `3px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {s.icon}
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {s.label}
-                      </span>
-                    </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: `3px solid ${s.color}` }}>
-                      {s.field === 'dikerjakan' && (
-                        <div style={{ marginBottom: 10 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                            <span style={{ fontSize: 11, color: '#5C6B82', fontWeight: 500 }}>Progress lapangan</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#D97706' }}>{program.progress_percent || 0}%</span>
-                          </div>
-                          <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min(100, program.progress_percent || 0)}%`, backgroundColor: '#D97706', borderRadius: 99 }} />
-                          </div>
-                        </div>
-                      )}
-                      {isAdmin ? (
-                        <BulletInput items={data[s.field]} onChange={items => setField(program.id, s.field, items)} placeholder={s.placeholder} />
-                      ) : (
-                        <BulletList items={data[s.field]} />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-      {/* Perencanaan section */}
-      {showPlanningSection && (
+      {/* ── PAST WEEK: READ-ONLY historical view ─────────────────────────── */}
+      {isPastWeek && note && histTotal > 0 && (
         <>
-          <div style={{
-            padding: '12px 20px',
-            backgroundColor: 'rgba(185,28,28,0.05)',
-            borderTop: (activePrograms.length > 0 || onHoldPrograms.length > 0) ? '1px solid rgba(185,28,28,0.15)' : 'none',
-            borderLeft: '4px solid #B91C1C',
-          }}>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-              Perencanaan Pekan Depan
-            </span>
-          </div>
+          {histOngoing.length > 0 && (
+            <>
+              <SectionHeader label="Pekerjaan Berjalan" count={histOngoing.length} color="#1A6FE8" bg="rgba(26,111,232,0.05)" />
+              {histOngoing.map((prog, idx) => (
+                <ProgramRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  sectionColor="#1A6FE8"
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === histOngoing.length - 1 && histOnhold.length === 0 && histPlanning.length === 0}
+                  isAdmin={false}
+                  canEdit={false}
+                  onToggle={() => toggleExpand(prog.id)}
+                />
+              ))}
+            </>
+          )}
 
-          {displayedPlanningPrograms.map((program, pIdx) => {
-            const data = perProgram[program.id] || empty()
-            const isExpanded = expandedPrograms.has(program.id)
-            const isLast = pIdx === displayedPlanningPrograms.length - 1
+          {histOnhold.length > 0 && (
+            <>
+              <SectionHeader label="On Hold" count={histOnhold.length} color="#D97706" bg="rgba(217,119,6,0.05)" />
+              {histOnhold.map((prog, idx) => (
+                <ProgramRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  sectionColor="#D97706"
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === histOnhold.length - 1 && histPlanning.length === 0}
+                  isAdmin={false}
+                  canEdit={false}
+                  onToggle={() => toggleExpand(prog.id)}
+                />
+              ))}
+            </>
+          )}
 
-            return (
-              <div key={program.id} style={{ borderBottom: isLast && !isAdmin ? 'none' : '1px solid rgba(15,23,42,0.05)' }}>
-                <div
-                  onClick={() => toggleExpand(program.id)}
-                  onMouseEnter={() => setHoveredId(program.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{
-                    padding: '14px 20px 12px',
-                    backgroundColor: hoveredId === program.id
-                      ? 'rgba(185,28,28,0.05)'
-                      : isExpanded ? 'rgba(185,28,28,0.03)' : 'rgba(15,23,42,0.01)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    userSelect: 'none',
-                    transition: 'background-color 0.12s',
-                    borderLeft: isExpanded ? '3px solid rgba(185,28,28,0.65)' : '3px solid transparent',
-                  }}
-                >
-                  <Chevron open={isExpanded} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {program.nama_pekerjaan}
-                    </div>
-                  </div>
-                  {program.link_dokumentasi && <FolderLink href={program.link_dokumentasi} />}
-                  {isAdmin && (
-                    <button
-                      onClick={e => { e.stopPropagation(); unpinProgram(program.id) }}
-                      title="Hapus dari daftar"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8D2E0', fontSize: 16, lineHeight: 1, padding: '0 2px', flexShrink: 0 }}
-                    >
-                      ×
-                    </button>
-                  )}
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: data.rencana.some(x => x.trim()) ? '#B91C1C' : 'rgba(15,23,42,0.1)', flexShrink: 0 }} />
-                </div>
-
-                {isExpanded && (
-                  <div style={{ padding: '12px 16px 8px', backgroundColor: '#FAFBFD' }}>
-                    <div style={{ borderRadius: 9, overflow: 'hidden', border: '1px solid rgba(15,23,42,0.07)' }}>
-                      <div style={{ padding: '8px 12px', backgroundColor: 'rgba(185,28,28,0.06)', borderLeft: '3px solid #B91C1C', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <svg width="13" height="13" fill="none" stroke="#B91C1C" strokeWidth="2" viewBox="0 0 24 24">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                          <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#5C6B82', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                          Rencana Eksekusi
-                        </span>
-                      </div>
-                      <div style={{ padding: '10px 12px', backgroundColor: '#fff', borderLeft: '3px solid #B91C1C' }}>
-                        {isAdmin ? (
-                          <BulletInput items={data.rencana} onChange={items => setField(program.id, 'rencana', items)} placeholder="Rencana atau target eksekusi..." />
-                        ) : (
-                          <BulletList items={data.rencana} />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-
-          {/* Add planning program dropdown (admin only) */}
-          {isAdmin && (
-            <div style={{ padding: '10px 20px', position: 'relative' }} ref={dropdownRef}>
-              <button
-                onClick={() => setShowDropdown(v => !v)}
-                disabled={availablePlanning.length === 0}
-                style={{
-                  width: '100%', padding: '8px 14px',
-                  borderRadius: 8, border: '1px dashed rgba(26,43,94,0.2)',
-                  backgroundColor: 'transparent', color: '#5C6B82',
-                  fontSize: 12, fontWeight: 600, cursor: availablePlanning.length > 0 ? 'pointer' : 'default',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  justifyContent: 'center', fontFamily: 'inherit',
-                  opacity: availablePlanning.length === 0 ? 0.4 : 1,
-                }}
-              >
-                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                {availablePlanning.length === 0 ? 'Semua program sudah ditambahkan' : 'Tambah program perencanaan'}
-              </button>
-
-              {showDropdown && availablePlanning.length > 0 && (
-                <div style={{
-                  position: 'absolute', bottom: '100%', left: 20, right: 20, zIndex: 20,
-                  backgroundColor: '#fff',
-                  borderRadius: 10,
-                  border: '1px solid rgba(15,23,42,0.1)',
-                  boxShadow: '0 8px 24px rgba(15,23,42,0.12)',
-                  overflow: 'hidden',
-                  maxHeight: 220,
-                  overflowY: 'auto',
-                  marginBottom: 4,
-                }}>
-                  {availablePlanning.map((p, i) => (
-                    <button
-                      key={p.id}
-                      onClick={() => pinProgram(p.id)}
-                      style={{
-                        width: '100%', textAlign: 'left',
-                        padding: '10px 14px',
-                        border: 'none',
-                        borderBottom: i < availablePlanning.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none',
-                        backgroundColor: 'transparent', color: '#0F1C2E',
-                        fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                        display: 'block',
-                      }}
-                    >
-                      {p.nama_pekerjaan}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          {histPlanning.length > 0 && (
+            <>
+              <SectionHeader label="Perencanaan" count={histPlanning.length} color="#B91C1C" bg="rgba(185,28,28,0.05)" />
+              {histPlanning.map((prog, idx) => (
+                <PlanningRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === histPlanning.length - 1}
+                  isAdmin={false}
+                  canEdit={false}
+                  onToggle={() => toggleExpand(prog.id)}
+                />
+              ))}
+            </>
           )}
         </>
       )}
 
-      {/* Save button */}
-      {isAdmin && (activePrograms.length > 0 || onHoldPrograms.length > 0 || pinnedPlanningIds.length > 0) && (
-        <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+      {/* ── CURRENT WEEK: editable view ────────────────────────────────────── */}
+      {!isPastWeek && (
+        <>
+          {activePrograms.length === 0 && onHoldPrograms.length === 0 && !showPlanningSection && (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>
+              Tidak ada pekerjaan aktif
+            </div>
+          )}
+
+          {activePrograms.length > 0 && (
+            <>
+              <SectionHeader label="Pekerjaan Berjalan" count={activePrograms.length} color="#1A6FE8" bg="rgba(26,111,232,0.05)" />
+              {activePrograms.map((prog, idx) => (
+                <ProgramRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  sectionColor="#1A6FE8"
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === activePrograms.length - 1 && onHoldPrograms.length === 0 && !showPlanningSection}
+                  isAdmin={isAdmin}
+                  canEdit={isAdmin}
+                  onToggle={() => toggleExpand(prog.id)}
+                  onFieldChange={(field, items) => setField(prog.id, field, items)}
+                />
+              ))}
+            </>
+          )}
+
+          {onHoldPrograms.length > 0 && (
+            <>
+              <SectionHeader label="On Hold" count={onHoldPrograms.length} color="#D97706" bg="rgba(217,119,6,0.05)" />
+              {onHoldPrograms.map((prog, idx) => (
+                <ProgramRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  sectionColor="#D97706"
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === onHoldPrograms.length - 1 && !showPlanningSection}
+                  isAdmin={isAdmin}
+                  canEdit={isAdmin}
+                  onToggle={() => toggleExpand(prog.id)}
+                  onFieldChange={(field, items) => setField(prog.id, field, items)}
+                />
+              ))}
+            </>
+          )}
+
+          {showPlanningSection && (
+            <>
+              <SectionHeader label="Perencanaan Pekan Depan" count={displayedPlanningPrograms.length} color="#B91C1C" bg="rgba(185,28,28,0.05)" />
+              {displayedPlanningPrograms.map((prog, idx) => (
+                <PlanningRow
+                  key={prog.id}
+                  program={prog}
+                  data={perProgram[prog.id] || empty()}
+                  isExpanded={expandedPrograms.has(prog.id)}
+                  isLast={idx === displayedPlanningPrograms.length - 1 && !isAdmin}
+                  isAdmin={isAdmin}
+                  canEdit={isAdmin}
+                  onToggle={() => toggleExpand(prog.id)}
+                  onFieldChange={(field, items) => setField(prog.id, field, items)}
+                  onUnpin={() => unpinProgram(prog.id)}
+                />
+              ))}
+
+              {/* Add planning program (admin) */}
+              {isAdmin && (
+                <div style={{ padding: '10px 18px', position: 'relative' }} ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowDropdown(v => !v)}
+                    disabled={availablePlanning.length === 0}
+                    style={{
+                      width: '100%', padding: '8px 14px',
+                      borderRadius: 8, border: '1px dashed rgba(26,43,94,0.2)',
+                      backgroundColor: 'transparent', color: '#5C6B82',
+                      fontSize: 12, fontWeight: 600, cursor: availablePlanning.length > 0 ? 'pointer' : 'default',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      justifyContent: 'center', fontFamily: 'inherit',
+                      opacity: availablePlanning.length === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    {availablePlanning.length === 0 ? 'Semua program sudah ditambahkan' : 'Tambah program perencanaan'}
+                  </button>
+
+                  {showDropdown && availablePlanning.length > 0 && (
+                    <div style={{
+                      position: 'absolute', bottom: '100%', left: 18, right: 18, zIndex: 20,
+                      backgroundColor: '#fff', borderRadius: 10,
+                      border: '1px solid rgba(15,23,42,0.1)',
+                      boxShadow: '0 8px 24px rgba(15,23,42,0.12)',
+                      overflow: 'hidden', maxHeight: 220, overflowY: 'auto', marginBottom: 4,
+                    }}>
+                      {availablePlanning.map((p, i) => (
+                        <button
+                          key={p.id}
+                          onClick={() => pinProgram(p.id)}
+                          style={{
+                            width: '100%', textAlign: 'left', padding: '10px 14px',
+                            border: 'none',
+                            borderBottom: i < availablePlanning.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none',
+                            backgroundColor: 'transparent', color: '#0F1C2E',
+                            fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'block',
+                          }}
+                        >
+                          {p.nama_pekerjaan}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Save button (current week, admin only) */}
+      {showCurrentWeekSave && (
+        <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
           {error && (
             <div style={{ marginBottom: 8, padding: 8, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
               {error}
@@ -678,7 +758,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
             <button
               onClick={handleSave}
               disabled={saving}
-              style={{ padding: '8px 18px', borderRadius: 8, border: 'none', backgroundColor: '#1A6FE8', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}
+              style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: '#1A6FE8', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
             >
               {saving ? 'Menyimpan...' : 'Simpan Laporan'}
             </button>
