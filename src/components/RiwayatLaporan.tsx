@@ -24,6 +24,7 @@ interface WeeklyNote {
 interface LiveProgram {
   id: string
   nama_pekerjaan: string
+  status?: string | null
   vendor?: string | null
   link_dokumentasi?: string | null
   progress_percent?: number | null
@@ -187,7 +188,7 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
         if (meta) return meta.category === category
         const live = livePrograms.find(p => p.id === id)
         if (!live) return category === 'ongoing'
-        if (category === 'ongoing') return live.name === 'On Going' || !['On Hold', 'Perencanaan'].includes((live as any).status || '')
+        if (category === 'ongoing') return live.status === 'On Going' || !['On Hold', 'Perencanaan'].includes(live.status || '')
         return false
       })
 

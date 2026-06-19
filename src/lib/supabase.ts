@@ -58,7 +58,8 @@ export interface Transaction {
   nominal: number
   nama_pekerjaan: string
   deskripsi: string
-  link_bukti?: string
+  sumber?: string | null
+  link_bukti?: string | null
   created_at: string
 }
 

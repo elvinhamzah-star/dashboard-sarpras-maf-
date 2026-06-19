@@ -397,16 +397,22 @@ export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthC
                                 {thumbUrl ? (
                                   <img src={thumbUrl} alt={doc.caption}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }}
-                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                                ) : (
-                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <svg width="36" height="36" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
-                                      <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                                      <path d="M21 15l-5-5L5 21"/>
-                                    </svg>
-                                  </div>
-                                )}
+                                    onError={e => {
+                                      const img = e.target as HTMLImageElement
+                                      img.style.display = 'none'
+                                      const placeholder = img.nextElementSibling as HTMLElement | null
+                                      if (placeholder) placeholder.style.display = 'flex'
+                                    }}
+                                  />
+                                ) : null}
+                                <div style={{ width: '100%', height: '100%', display: thumbUrl ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                  <svg width="32" height="32" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <path d="M21 15l-5-5L5 21"/>
+                                  </svg>
+                                  <span style={{ fontSize: 10, color: '#C8D2E0', fontWeight: 500 }}>Foto tidak tersedia</span>
+                                </div>
                                 {/* Caption overlay — appears on hover */}
                                 <div
                                   className="galeri-caption-overlay"
@@ -513,8 +519,11 @@ export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthC
               </div>
 
               {getDriveThumbnailUrl(doc.link_foto) && (
-                <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt={doc.caption}
-                  style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', borderRadius: '16px 16px 0 0' }} />
+                <img
+                  src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                  alt={doc.caption || ''}
+                  style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', borderRadius: '16px 16px 0 0' }}
+                />
               )}
               <div style={{ padding: 20 }}>
                 <div style={{ fontSize: 11, color: '#9CAABB', marginBottom: 8 }}>{formatTanggal(doc.tanggal)}</div>

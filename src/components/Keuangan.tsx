@@ -3,6 +3,7 @@ import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS, monthsFromDates, monthLabelFromYM } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import AddTransactionModal from './AddTransactionModal'
+import EditTransactionModal from './EditTransactionModal'
 import MonthSelector from './MonthSelector'
 
 interface KeuanganProps {
@@ -35,6 +36,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
   const [filterJenis, setFilterJenis] = useState<string>('Semua')
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [showSerapan, setShowSerapan] = useState(false)
   const [showRiwayat, setShowRiwayat] = useState(true)
   const [togglingRiwayat, setTogglingRiwayat] = useState(false)
@@ -426,7 +428,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
               <thead>
                 <tr>
-                  {['Tanggal', 'Pekerjaan', 'Keterangan', 'Jenis', 'Nominal', 'Bukti'].map(h => (
+                  {['Tanggal', 'Pekerjaan', 'Keterangan', 'Jenis', 'Nominal', 'Bukti', ...(isAdmin ? [''] : [])].map(h => (
                     <th
                       key={h}
                       style={{
@@ -502,7 +504,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                       <td style={{ padding: '12px 16px' }}>
                         {t.link_bukti ? (
                           <button
-                            onClick={() => window.open(t.link_bukti, '_blank')}
+                            onClick={() => window.open(t.link_bukti ?? undefined, '_blank')}
                             style={{
                               padding: '5px 11px',
                               borderRadius: 7,
@@ -527,6 +529,46 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                           <span style={{ color: '#C8D2E0', fontSize: 12 }}>—</span>
                         )}
                       </td>
+                      {isAdmin && (
+                        <td style={{ padding: '12px 16px' }}>
+                          <button
+                            onClick={() => setEditingTransaction(t)}
+                            title="Edit transaksi"
+                            style={{
+                              padding: '5px 9px',
+                              borderRadius: 7,
+                              border: '1px solid rgba(15,23,42,0.1)',
+                              backgroundColor: '#fff',
+                              color: '#5C6B82',
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              transition: 'all 0.12s',
+                            }}
+                            onMouseEnter={e => {
+                              const btn = e.currentTarget as HTMLButtonElement
+                              btn.style.backgroundColor = 'rgba(26,111,232,0.06)'
+                              btn.style.color = '#1A6FE8'
+                              btn.style.borderColor = 'rgba(26,111,232,0.2)'
+                            }}
+                            onMouseLeave={e => {
+                              const btn = e.currentTarget as HTMLButtonElement
+                              btn.style.backgroundColor = '#fff'
+                              btn.style.color = '#5C6B82'
+                              btn.style.borderColor = 'rgba(15,23,42,0.1)'
+                            }}
+                          >
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Edit
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}
@@ -595,6 +637,17 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             const { data } = await fetchTransactions()
             if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
             setPage(1)
+          }}
+        />
+      )}
+
+      {isAdmin && editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+          onSuccess={async () => {
+            const { data } = await fetchTransactions()
+            if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
           }}
         />
       )}
