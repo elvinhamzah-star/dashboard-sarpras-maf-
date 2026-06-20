@@ -91,7 +91,7 @@ export default function App() {
       case 'keuangan':
         return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       case 'galeri':
-        return <Galeri isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+        return <Galeri isAdmin={isAdmin} />
       case 'riwayat':
         return <RiwayatLaporan />
       default:

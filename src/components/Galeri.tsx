@@ -20,12 +20,13 @@ const FASE_INFO: Record<string, { color: string; bg: string }> = {
 
 const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'] as const
 
-export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthChange }: GaleriProps) {
+export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [docs, setDocs] = useState<Documentation[]>([])
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
   const [filterProgram, setFilterProgram] = useState<string>('Semua')
   const [filterFase, setFilterFase] = useState<string>('Semua')
+  const [localMonth, setLocalMonth] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
@@ -74,7 +75,7 @@ export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthC
   const filteredDocs = docs.filter(doc => {
     if (filterProgram !== 'Semua' && doc.program_id !== filterProgram) return false
     if (filterFase !== 'Semua' && doc.fase !== filterFase) return false
-    if (selectedMonth && doc.tanggal?.slice(0, 7) !== selectedMonth) return false
+    if (localMonth && doc.tanggal?.slice(0, 7) !== localMonth) return false
     return true
   })
 
@@ -263,8 +264,8 @@ export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthC
         </div>
 
         {/* Month filter */}
-        {onMonthChange && availableMonths.length > 0 && (
-          <MonthSelector value={selectedMonth} months={availableMonths} onChange={onMonthChange} />
+        {availableMonths.length > 0 && (
+          <MonthSelector value={localMonth} months={availableMonths} onChange={setLocalMonth} />
         )}
       </div>
 
@@ -284,7 +285,19 @@ export default function Galeri({ isAdmin = false, selectedMonth = null, onMonthC
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <path d="M21 15l-5-5L5 21"/>
           </svg>
-          <p style={{ margin: 0 }}>Belum ada dokumentasi foto.</p>
+          {docs.length > 0 ? (
+            <>
+              <p style={{ margin: 0 }}>Tidak ada foto untuk filter ini.</p>
+              <button
+                onClick={() => { setLocalMonth(null); setFilterProgram('Semua'); setFilterFase('Semua') }}
+                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: '#1A6FE8', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Lihat semua foto
+              </button>
+            </>
+          ) : (
+            <p style={{ margin: 0 }}>Belum ada dokumentasi foto.</p>
+          )}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
