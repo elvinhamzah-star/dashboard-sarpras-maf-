@@ -22,7 +22,7 @@ const FASE_AKHIR = 'Kondisi Akhir'
 const GOLD = '#D4B068'
 const INK = '#0A1628'
 
-const driveImg = (doc: Documentation) => getDriveThumbnailUrl(doc.link_foto) || ''
+const driveImg = (doc: Documentation) => getDriveThumbnailUrl(doc.link_foto, 'w800') || ''
 
 export default function Laporan({ selectedMonth, onMonthChange }: LaporanProps) {
   const [programs, setPrograms] = useState<Program[]>([])

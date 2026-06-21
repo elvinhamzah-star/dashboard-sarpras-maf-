@@ -83,7 +83,13 @@ export function extractDriveFileId(link: string): string | null {
   return match ? match[1] : null
 }
 
-export function getDriveThumbnailUrl(driveLink: string): string | null {
+export function getDriveThumbnailUrl(driveLink: string, size = 'w400'): string | null {
+  const fileId = extractDriveFileId(driveLink)
+  return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=${size}` : null
+}
+
+// Full-res viewer URL (for lightbox)
+export function getDriveViewUrl(driveLink: string): string | null {
   const fileId = extractDriveFileId(driveLink)
   return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : null
 }

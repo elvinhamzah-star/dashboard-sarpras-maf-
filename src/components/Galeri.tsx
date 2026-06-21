@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, monthsFromDates } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, monthsFromDates } from '../lib/data'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import MonthSelector from './MonthSelector'
@@ -531,9 +531,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 {lightboxIndex + 1} / {filteredDocs.length}
               </div>
 
-              {getDriveThumbnailUrl(doc.link_foto) && (
+              {getDriveViewUrl(doc.link_foto) && (
                 <img
-                  src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                  src={getDriveViewUrl(doc.link_foto) || ''}
                   alt={doc.caption || ''}
                   style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', borderRadius: '16px 16px 0 0' }}
                 />
