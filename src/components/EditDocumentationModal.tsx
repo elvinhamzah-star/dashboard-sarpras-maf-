@@ -19,16 +19,12 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
   const [error, setError] = useState('')
 
   const handleSave = async () => {
-    // Validation
     if (!fase.trim()) {
       setError('Fase harus dipilih')
       return
     }
-    if (!driveLink.trim()) {
-      setError('Google Drive Link harus diisi')
-      return
-    }
-    if (!isValidDriveLink(driveLink)) {
+    // Drive link is optional on edit — only validate format if a new link is entered
+    if (driveLink.trim() && !isValidDriveLink(driveLink)) {
       setError('Format Google Drive Link tidak valid. Gunakan format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing')
       return
     }
@@ -87,7 +83,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumentasi</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Dokumentasi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{doc.nama_pekerjaan}</div>
         </div>
 
@@ -111,7 +107,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
                   onChange={e => setFase(e.target.value as 'Kondisi Awal' | 'Proses Pekerjaan' | 'Kondisi Akhir')}
                   style={{ cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: 12, color: '#0D1829' }}>{f}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{f}</span>
               </label>
             ))}
           </div>
@@ -130,9 +126,9 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               fontFamily: 'inherit',
               outline: 'none',
               boxSizing: 'border-box',
@@ -155,9 +151,9 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               fontFamily: 'inherit',
               outline: 'none',
               boxSizing: 'border-box',
@@ -178,9 +174,9 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               resize: 'vertical',
               fontFamily: 'inherit',
               outline: 'none',
@@ -195,7 +191,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,
