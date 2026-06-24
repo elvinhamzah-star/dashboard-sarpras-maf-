@@ -84,7 +84,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Pekerjaan</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Pekerjaan</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Atur periode dan aktivitas pekerjaan</div>
         </div>
 
@@ -105,9 +105,9 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               backgroundColor: 'var(--card)',
               outline: 'none',
               cursor: 'pointer',
@@ -134,11 +134,11 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               </div>
               <div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Status</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0D1829' }}>{selectedProgram.status}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{selectedProgram.status}</div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Anggaran</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0D1829' }}>{formatRupiah(selectedProgram.total_anggaran || 0)}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{formatRupiah(selectedProgram.total_anggaran || 0)}</div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Realisasi</div>
@@ -179,9 +179,9 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
                     paddingTop: 10,
                     paddingBottom: 10,
                     borderRadius: 10,
-                    border: '1px solid rgba(26,43,94,0.15)',
+                    border: '1px solid var(--border)',
                     fontSize: 13,
-                    color: '#0D1829',
+                    color: 'var(--text-primary)',
                     fontFamily: 'inherit',
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -207,9 +207,9 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               resize: 'vertical',
               fontFamily: 'inherit',
               outline: 'none',
@@ -234,9 +234,9 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               resize: 'vertical',
               fontFamily: 'inherit',
               outline: 'none',
@@ -254,7 +254,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,

@@ -13,9 +13,9 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 14px',
   borderRadius: 10,
-  border: '1px solid rgba(26,43,94,0.15)',
+  border: '1px solid var(--border)',
   fontSize: 13,
-  color: '#0D1829',
+  color: 'var(--text-primary)',
   fontFamily: 'inherit',
   outline: 'none',
   boxSizing: 'border-box',
@@ -98,7 +98,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Transaksi</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Transaksi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Ubah detail transaksi yang dipilih</div>
         </div>
 
@@ -153,7 +153,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'rgba(26,43,94,0.13)'}`,
+                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'var(--border)'}`,
                   backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
@@ -223,7 +223,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
             onClick={onClose}
             style={{
               padding: '10px 16px', borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}

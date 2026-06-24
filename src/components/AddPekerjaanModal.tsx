@@ -68,11 +68,11 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
 
   const inputStyle = {
     width: '100%',
-    border: '1px solid rgba(26,43,94,0.15)',
+    border: '1px solid var(--border)',
     borderRadius: 10,
     padding: '10px 12px',
     fontSize: 13,
-    color: '#0D1829',
+    color: 'var(--text-primary)',
     outline: 'none',
     backgroundColor: 'var(--card)',
   }
@@ -127,7 +127,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Pekerjaan</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Pekerjaan</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tambahkan program pekerjaan baru</div>
           </div>
           <button
@@ -177,7 +177,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,

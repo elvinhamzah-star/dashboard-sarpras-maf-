@@ -14,9 +14,9 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 14px',
   borderRadius: 10,
-  border: '1px solid rgba(26,43,94,0.15)',
+  border: '1px solid var(--border)',
   fontSize: 13,
-  color: '#0D1829',
+  color: 'var(--text-primary)',
   fontFamily: 'inherit',
   outline: 'none',
   boxSizing: 'border-box',
@@ -150,7 +150,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Transaksi</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Transaksi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Catat transaksi keuangan baru</div>
         </div>
 
@@ -184,10 +184,10 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 width: '100%',
                 padding: '10px 14px',
                 borderRadius: 10,
-                border: `1px solid ${dropdownOpen ? '#1A6FE8' : 'rgba(26,43,94,0.15)'}`,
+                border: `1px solid ${dropdownOpen ? '#1A6FE8' : 'var(--border)'}`,
                 backgroundColor: 'var(--card)',
                 fontSize: 13,
-                color: pekerjaan ? '#0D1829' : 'var(--text-muted)',
+                color: pekerjaan ? 'var(--text-primary)' : 'var(--text-muted)',
                 fontFamily: 'inherit',
                 cursor: 'pointer',
                 display: 'flex',
@@ -221,7 +221,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 zIndex: 200,
                 backgroundColor: 'var(--card)',
                 borderRadius: 12,
-                border: '1px solid rgba(26,43,94,0.12)',
+                border: '1px solid var(--border-subtle)',
                 boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
                 overflow: 'hidden',
               }}>
@@ -244,13 +244,13 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                         width: '100%',
                         padding: '8px 10px 8px 30px',
                         borderRadius: 8,
-                        border: '1px solid rgba(26,43,94,0.12)',
+                        border: '1px solid var(--border-subtle)',
                         fontSize: 12.5,
-                        color: '#0D1829',
+                        color: 'var(--text-primary)',
                         fontFamily: 'inherit',
                         outline: 'none',
                         boxSizing: 'border-box',
-                        backgroundColor: '#F7F9FC',
+                        backgroundColor: 'var(--surface-raised)',
                       }}
                     />
                   </div>
@@ -274,7 +274,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                           border: 'none',
                           borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
                           backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                          color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : '#0D1829',
+                          color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
                           fontSize: 13,
                           fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
                           fontFamily: 'inherit',
@@ -332,7 +332,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'rgba(26,43,94,0.13)'}`,
+                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'var(--border)'}`,
                   backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
@@ -402,7 +402,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             onClick={onClose}
             style={{
               padding: '10px 16px', borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}

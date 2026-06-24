@@ -53,7 +53,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Catatan Pekerjaan</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Catatan Pekerjaan</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Catatan atau isu yang perlu diperhatikan untuk pekerjaan ini</div>
         </div>
 
@@ -79,7 +79,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,

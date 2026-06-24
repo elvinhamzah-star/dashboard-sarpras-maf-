@@ -18,9 +18,9 @@ interface LinkRow {
 const inputStyle: React.CSSProperties = {
   padding: '9px 12px',
   borderRadius: 9,
-  border: '1px solid rgba(26,43,94,0.15)',
+  border: '1px solid var(--border)',
   fontSize: 13,
-  color: '#0D1829',
+  color: 'var(--text-primary)',
   fontFamily: 'inherit',
   outline: 'none',
   boxSizing: 'border-box',
@@ -154,7 +154,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
       >
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Dokumentasi</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Dokumentasi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             Upload beberapa foto sekaligus dari Google Drive
           </div>
@@ -246,7 +246,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       placeholder="https://drive.google.com/file/d/…/view"
                       style={{
                         ...inputStyle,
-                        borderColor: isInvalid ? '#F87171' : 'rgba(26,43,94,0.15)',
+                        borderColor: isInvalid ? '#F87171' : 'var(--border)',
                         backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : 'var(--card)',
                       }}
                     />
@@ -353,7 +353,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             disabled={saving}
             style={{
               padding: '10px 16px', borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600,
               cursor: saving ? 'default' : 'pointer',

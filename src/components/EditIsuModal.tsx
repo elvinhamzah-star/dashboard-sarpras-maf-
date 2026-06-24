@@ -54,7 +54,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
         }}
       >
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Isu Lapangan</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Isu Lapangan</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{issue.nama_pekerjaan}</div>
         </div>
 
@@ -69,7 +69,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
               backgroundColor: 'var(--surface-raised)',
               fontSize: 13,
               color: 'var(--text-muted)',
-              border: '1px solid rgba(26,43,94,0.07)',
+              border: '1px solid var(--surface-2)',
             }}
           >
             {issue.nama_pekerjaan}
@@ -88,9 +88,9 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               resize: 'vertical',
               fontFamily: 'inherit',
               outline: 'none',
@@ -110,9 +110,9 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
               width: '100%',
               padding: '10px 14px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               fontSize: 13,
-              color: '#0D1829',
+              color: 'var(--text-primary)',
               backgroundColor: 'var(--card)',
               outline: 'none',
               cursor: 'pointer',
@@ -150,7 +150,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,
