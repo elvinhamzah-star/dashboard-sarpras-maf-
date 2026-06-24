@@ -382,6 +382,20 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                         borderRadius: 99,
                       }} />
                     </div>
+                    {p.isu_utama && (
+                      <div style={{
+                        marginTop: 7,
+                        fontSize: 11,
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.5,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}>
+                        {p.isu_utama.split('\n')[0]}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {programs.filter(p => p.status === listFilter).length === 0 && (
