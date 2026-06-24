@@ -84,6 +84,10 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     setDropdownOpen(true)
   }
 
+  const STATIC_OPTIONS = ['Dana PBB']
+  const filteredStatic = STATIC_OPTIONS.filter(n =>
+    n.toLowerCase().includes(search.toLowerCase())
+  )
   const filteredPrograms = programs.filter(p =>
     p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
   )
@@ -258,51 +262,93 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
                 {/* List */}
                 <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                  {filteredPrograms.length === 0 ? (
+                  {filteredStatic.length === 0 && filteredPrograms.length === 0 ? (
                     <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>
                       Tidak ada hasil
                     </div>
                   ) : (
-                    filteredPrograms.map((p, i) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => handleSelect(p.nama_pekerjaan)}
-                        style={{
-                          width: '100%',
-                          padding: '10px 14px',
-                          border: 'none',
-                          borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
-                          backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                          color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
-                          fontSize: 13,
-                          fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
-                          fontFamily: 'inherit',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                        }}
-                        onMouseEnter={e => {
-                          if (p.nama_pekerjaan !== pekerjaan)
-                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
-                        }}
-                        onMouseLeave={e => {
-                          if (p.nama_pekerjaan !== pekerjaan)
-                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-                        }}
-                      >
-                        {p.nama_pekerjaan === pekerjaan && (
-                          <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.nama_pekerjaan}
-                        </span>
-                      </button>
-                    ))
+                    <>
+                      {filteredStatic.map(name => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => handleSelect(name)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            border: 'none',
+                            borderBottom: '1px solid var(--surface-min)',
+                            backgroundColor: name === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
+                            color: name === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
+                            fontSize: 13,
+                            fontWeight: name === pekerjaan ? 600 : 500,
+                            fontFamily: 'inherit',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                          onMouseEnter={e => {
+                            if (name !== pekerjaan)
+                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
+                          }}
+                          onMouseLeave={e => {
+                            if (name !== pekerjaan)
+                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                          }}
+                        >
+                          {name === pekerjaan && (
+                            <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {name}
+                          </span>
+                        </button>
+                      ))}
+                      {filteredPrograms.map((p, i) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleSelect(p.nama_pekerjaan)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            border: 'none',
+                            borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
+                            backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
+                            color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
+                            fontSize: 13,
+                            fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
+                            fontFamily: 'inherit',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                          onMouseEnter={e => {
+                            if (p.nama_pekerjaan !== pekerjaan)
+                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
+                          }}
+                          onMouseLeave={e => {
+                            if (p.nama_pekerjaan !== pekerjaan)
+                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                          }}
+                        >
+                          {p.nama_pekerjaan === pekerjaan && (
+                            <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.nama_pekerjaan}
+                          </span>
+                        </button>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
