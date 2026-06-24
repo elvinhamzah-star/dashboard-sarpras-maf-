@@ -442,7 +442,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                     {formatTanggal(doc.tanggal)}
                                   </div>
                                   {doc.caption && (
-                                    <div style={{ fontSize: 11.5, color: 'var(--card)', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.92)', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {doc.caption}
                                     </div>
                                   )}
