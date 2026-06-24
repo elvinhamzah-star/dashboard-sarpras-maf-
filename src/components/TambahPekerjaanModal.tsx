@@ -73,7 +73,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -85,17 +85,17 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Pekerjaan</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Atur periode dan aktivitas pekerjaan</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Atur periode dan aktivitas pekerjaan</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.08)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Nama Pekerjaan
           </label>
           <select
@@ -108,7 +108,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               border: '1px solid rgba(26,43,94,0.15)',
               fontSize: 13,
               color: '#0D1829',
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               outline: 'none',
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -126,22 +126,22 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
         {/* Auto-filled info */}
         {selectedProgram && (
           <div style={{ marginBottom: 16, padding: 12, borderRadius: 10, backgroundColor: 'rgba(8,88,176,0.05)', border: '1px solid rgba(8,88,176,0.1)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7A99', marginBottom: 8 }}>INFO PEKERJAAN</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>INFO PEKERJAAN</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Progress</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Progress</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#1A6FE8' }}>{selectedProgram.progress_percent || 0}%</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Status</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Status</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#0D1829' }}>{selectedProgram.status}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Anggaran</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Anggaran</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#0D1829' }}>{formatRupiah(selectedProgram.total_anggaran || 0)}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: '#9CAABB', marginBottom: 2 }}>Realisasi</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Realisasi</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#1B5E2B' }}>{formatRupiah(selectedProgram.realisasi_terkini || 0)}</div>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
             { label: 'Tanggal Berakhir', value: endDate, onChange: setEndDate },
           ].map(({ label, value, onChange }) => (
             <div key={label}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {label}
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -185,7 +185,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
                     fontFamily: 'inherit',
                     outline: 'none',
                     boxSizing: 'border-box',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card)',
                     cursor: 'pointer',
                   }}
                 />
@@ -195,7 +195,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Aktivitas Pekerjaan
           </label>
           <textarea
@@ -216,13 +216,13 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               boxSizing: 'border-box',
             }}
           />
-          <div style={{ fontSize: 11, color: '#6B7A99', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             Masukkan setiap aktivitas di baris baru dengan format: 1. aktivitas, 2. aktivitas, dst
           </div>
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Catatan Pekerjaan
           </label>
           <textarea
@@ -243,7 +243,7 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               boxSizing: 'border-box',
             }}
           />
-          <div style={{ fontSize: 11, color: '#6B7A99', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             Masukkan setiap catatan di baris baru dengan format: - catatan, - catatan, dst
           </div>
         </div>
@@ -255,8 +255,8 @@ export default function TambahPekerjaanModal({ programs, onClose, onSuccess }: T
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

@@ -36,7 +36,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#F1F4F9',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -45,12 +45,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 20,
           padding: '44px 36px 36px',
           width: '100%',
           maxWidth: 380,
-          boxShadow: '0 4px 32px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06)',
+          boxShadow: '0 4px 32px var(--border), 0 1px 4px var(--border-subtle)',
         }}
       >
         {/* Logo area */}
@@ -60,18 +60,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             alt="Peradaban Baik Bahagia"
             style={{ width: 260, height: 'auto', display: 'block', margin: '0 auto 6px' }}
           />
-          <div style={{ fontSize: 12.5, color: '#9CAABB', fontWeight: 500 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 500 }}>
             Dashboard Sarpras MAF
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, backgroundColor: 'rgba(15,23,42,0.07)', marginBottom: 28 }} />
+        <div style={{ height: 1, backgroundColor: 'var(--surface-2)', marginBottom: 28 }} />
 
         {/* Username */}
         <div style={{ marginBottom: 14 }}>
           <label style={{
-            fontSize: 11, fontWeight: 600, color: '#9CAABB',
+            fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
             display: 'block', marginBottom: 6,
             textTransform: 'uppercase', letterSpacing: '0.06em',
           }}>
@@ -100,7 +100,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         {/* PIN */}
         <div style={{ marginBottom: error ? 8 : 24 }}>
           <label style={{
-            fontSize: 11, fontWeight: 600, color: '#9CAABB',
+            fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
             display: 'block', marginBottom: 6,
             textTransform: 'uppercase', letterSpacing: '0.06em',
           }}>
@@ -141,8 +141,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           disabled={!canSubmit}
           style={{
             width: '100%', padding: '13px', borderRadius: 10, border: 'none',
-            backgroundColor: canSubmit ? '#1A6FE8' : 'rgba(15,23,42,0.08)',
-            color: canSubmit ? '#fff' : '#9CAABB',
+            backgroundColor: canSubmit ? '#1A6FE8' : 'var(--border)',
+            color: canSubmit ? '#fff' : 'var(--text-muted)',
             fontSize: 14, fontWeight: 600,
             cursor: canSubmit ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit', transition: 'all 0.15s',

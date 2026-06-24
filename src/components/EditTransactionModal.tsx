@@ -24,7 +24,7 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
-  color: '#6B7A99',
+  color: 'var(--text-muted)',
   display: 'block',
   marginBottom: 6,
   textTransform: 'uppercase',
@@ -87,7 +87,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -99,11 +99,11 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Transaksi</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Ubah detail transaksi yang dipilih</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Ubah detail transaksi yang dipilih</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -154,7 +154,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
                   border: `1px solid ${jenis === j ? '#1A6FE8' : 'rgba(26,43,94,0.13)'}`,
-                  backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : '#fff',
+                  backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
               >
@@ -165,7 +165,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
                   onChange={e => setJenis(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : '#5C6B82' }}>
+                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : 'var(--text-secondary)' }}>
                   {j}
                 </span>
               </label>
@@ -197,7 +197,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
             <select
               value={sumber}
               onChange={e => setSumber(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
             >
               <option>PBB</option>
               <option>Hamzah</option>
@@ -224,7 +224,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
             style={{
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff', color: '#6B7A99',
+              backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >

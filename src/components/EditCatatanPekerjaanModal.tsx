@@ -42,7 +42,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -54,21 +54,21 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Catatan Pekerjaan</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Catatan atau isu yang perlu diperhatikan untuk pekerjaan ini</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Catatan atau isu yang perlu diperhatikan untuk pekerjaan ini</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Catatan Pekerjaan
           </label>
           <BulletInput items={items} onChange={setItems} placeholder="Masukkan catatan atau isu penting..." />
-          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
             Kosongkan semua poin untuk menghapus catatan
           </div>
         </div>
@@ -80,8 +80,8 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

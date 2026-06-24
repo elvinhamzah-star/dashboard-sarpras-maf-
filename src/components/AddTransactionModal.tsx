@@ -25,7 +25,7 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
-  color: '#6B7A99',
+  color: 'var(--text-muted)',
   display: 'block',
   marginBottom: 6,
   textTransform: 'uppercase',
@@ -139,7 +139,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -151,11 +151,11 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Transaksi</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Catat transaksi keuangan baru</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Catat transaksi keuangan baru</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -185,9 +185,9 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 padding: '10px 14px',
                 borderRadius: 10,
                 border: `1px solid ${dropdownOpen ? '#1A6FE8' : 'rgba(26,43,94,0.15)'}`,
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card)',
                 fontSize: 13,
-                color: pekerjaan ? '#0D1829' : '#9CAABB',
+                color: pekerjaan ? '#0D1829' : 'var(--text-muted)',
                 fontFamily: 'inherit',
                 cursor: 'pointer',
                 display: 'flex',
@@ -219,14 +219,14 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 left: dropdownPos.left,
                 width: dropdownPos.width,
                 zIndex: 200,
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card)',
                 borderRadius: 12,
                 border: '1px solid rgba(26,43,94,0.12)',
                 boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
                 overflow: 'hidden',
               }}>
                 {/* Search */}
-                <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+                <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ position: 'relative' }}>
                     <svg
                       width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
@@ -259,7 +259,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 {/* List */}
                 <div style={{ maxHeight: 220, overflowY: 'auto' }}>
                   {filteredPrograms.length === 0 ? (
-                    <div style={{ padding: '16px 14px', fontSize: 12.5, color: '#9CAABB', textAlign: 'center' }}>
+                    <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>
                       Tidak ada hasil
                     </div>
                   ) : (
@@ -272,7 +272,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                           width: '100%',
                           padding: '10px 14px',
                           border: 'none',
-                          borderBottom: i < filteredPrograms.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none',
+                          borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
                           backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
                           color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : '#0D1829',
                           fontSize: 13,
@@ -286,7 +286,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                         }}
                         onMouseEnter={e => {
                           if (p.nama_pekerjaan !== pekerjaan)
-                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.03)'
+                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
                         }}
                         onMouseLeave={e => {
                           if (p.nama_pekerjaan !== pekerjaan)
@@ -333,7 +333,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
                   border: `1px solid ${jenis === j ? '#1A6FE8' : 'rgba(26,43,94,0.13)'}`,
-                  backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : '#fff',
+                  backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
               >
@@ -344,7 +344,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                   onChange={e => setJenis(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : '#5C6B82' }}>
+                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : 'var(--text-secondary)' }}>
                   {j}
                 </span>
               </label>
@@ -376,7 +376,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             <select
               value={sumber}
               onChange={e => setSumber(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
             >
               <option>PBB</option>
               <option>Hamzah</option>
@@ -403,7 +403,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             style={{
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff', color: '#6B7A99',
+              backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >

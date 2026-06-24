@@ -74,13 +74,13 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     fontSize: 13,
     color: '#0D1829',
     outline: 'none',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--card)',
   }
 
   const labelStyle = {
     fontSize: 11,
     fontWeight: 600 as const,
-    color: '#6B7A99',
+    color: 'var(--text-muted)',
     display: 'block' as const,
     marginBottom: 4,
     textTransform: 'uppercase' as const,
@@ -115,7 +115,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: 28,
           width: '100%',
@@ -128,11 +128,11 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Pekerjaan</div>
-            <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Tambahkan program pekerjaan baru</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tambahkan program pekerjaan baru</div>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7A99', padding: 4 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -142,7 +142,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.08)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -178,8 +178,8 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

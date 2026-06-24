@@ -53,7 +53,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -65,11 +65,11 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumen & Link</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Perbarui link dokumen, RAB, dan bukti transaksi</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Perbarui link dokumen, RAB, dan bukti transaksi</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.08)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -77,7 +77,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
           {fields.map(f => (
             <div key={f.label}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {f.label}
               </label>
               <input
@@ -108,8 +108,8 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

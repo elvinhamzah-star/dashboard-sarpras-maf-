@@ -103,19 +103,19 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
 
   return (
     <div style={{
-      backgroundColor: '#fff',
+      backgroundColor: 'var(--card)',
       borderRadius: 12,
-      border: `1px solid rgba(15,23,42,0.08)`,
+      border: `1px solid var(--border)`,
       borderLeft: `4px solid ${accentColor}`,
       overflow: 'hidden',
       boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
       marginBottom: 12,
     }}>
       {/* Program header */}
-      <div style={{ padding: '14px 18px 12px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+      <div style={{ padding: '14px 18px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F1C2E', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
               {name}
             </div>
             {vendor && (
@@ -149,7 +149,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
           </div>
         </div>
         {progress !== null && (
-          <div style={{ height: 3, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden', marginTop: 10 }}>
+          <div style={{ height: 3, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden', marginTop: 10 }}>
             <div style={{ height: '100%', width: `${Math.min(100, progress)}%`, backgroundColor: accentColor, borderRadius: 99, transition: 'width 0.3s ease' }} />
           </div>
         )}
@@ -157,7 +157,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
 
       {/* Sections */}
       {sections.map((s, idx) => (
-        <div key={s.key} style={{ borderTop: idx > 0 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
+        <div key={s.key} style={{ borderTop: idx > 0 ? '1px solid var(--surface-subtle)' : 'none' }}>
           <div style={{ padding: '10px 18px 8px', backgroundColor: s.bg, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {s.label}
@@ -219,7 +219,7 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
 
   if (totalPrograms === 0) {
     return (
-      <div style={{ padding: '48px 32px', textAlign: 'center', color: '#9CAABB' }}>
+      <div style={{ padding: '48px 32px', textAlign: 'center', color: 'var(--text-muted)' }}>
         <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }}>
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -235,7 +235,7 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
       marginBottom: 12, marginTop: 4,
     }}>
       <div style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
       <div style={{
         fontSize: 11, fontWeight: 700, color, backgroundColor: bg,
         padding: '2px 8px', borderRadius: 20,
@@ -322,7 +322,7 @@ export default function RiwayatLaporan() {
 
   if (loading) {
     return (
-      <div style={{ padding: 32, color: '#9CAABB', fontSize: 14, textAlign: 'center' }}>
+      <div style={{ padding: 32, color: 'var(--text-muted)', fontSize: 14, textAlign: 'center' }}>
         Memuat riwayat laporan...
       </div>
     )
@@ -331,19 +331,19 @@ export default function RiwayatLaporan() {
   const SIDEBAR_W = 220
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#F1F4F9' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
       <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#0F1C2E', letterSpacing: '-0.03em' }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
           Riwayat Laporan
         </div>
-        <div style={{ fontSize: 13, color: '#9CAABB', marginTop: 3 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>
           Arsip laporan pekanan per minggu
         </div>
       </div>
 
       {notes.length === 0 ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: '#9CAABB', padding: 32 }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--text-muted)', padding: 32 }}>
           <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.25" viewBox="0 0 24 24">
             <path d="M12 8v4l3 3"/>
             <path d="M3.05 11a9 9 0 1 0 .5-4"/>
@@ -359,15 +359,15 @@ export default function RiwayatLaporan() {
             <div style={{
               width: isMobile ? '100%' : SIDEBAR_W,
               flexShrink: 0,
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               borderRadius: 14,
-              border: '1px solid rgba(15,23,42,0.07)',
+              border: '1px solid var(--border-subtle)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
               overflowY: 'auto',
               maxHeight: 'calc(100vh - 160px)',
             }}>
-              <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                   Daftar Minggu
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function RiwayatLaporan() {
                           fontFamily: 'inherit',
                           transition: 'all 0.12s',
                         }}
-                        onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.03)' }}
+                        onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
                         onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
                       >
                         {formatWeekRange(n.week_start, n.week_end)}
@@ -422,9 +422,9 @@ export default function RiwayatLaporan() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     marginBottom: 16, padding: '7px 14px',
-                    borderRadius: 8, border: '1px solid rgba(15,23,42,0.1)',
-                    backgroundColor: '#fff', cursor: 'pointer',
-                    fontSize: 12.5, fontWeight: 600, color: '#5C6B82', fontFamily: 'inherit',
+                    borderRadius: 8, border: '1px solid var(--border)',
+                    backgroundColor: 'var(--card)', cursor: 'pointer',
+                    fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: 'inherit',
                   }}
                 >
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -438,19 +438,19 @@ export default function RiwayatLaporan() {
                 <div>
                   {/* Report header */}
                   <div style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card)',
                     borderRadius: 14,
-                    border: '1px solid rgba(15,23,42,0.07)',
+                    border: '1px solid var(--border-subtle)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                     padding: '18px 22px',
                     marginBottom: 16,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>
                           Laporan Pekanan
                         </div>
-                        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F1C2E', letterSpacing: '-0.02em' }}>
+                        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                           {formatWeekRange(selectedNote.week_start, selectedNote.week_end)}
                         </div>
                       </div>
@@ -470,9 +470,9 @@ export default function RiwayatLaporan() {
 
                   {/* Report body */}
                   <div style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card)',
                     borderRadius: 14,
-                    border: '1px solid rgba(15,23,42,0.07)',
+                    border: '1px solid var(--border-subtle)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                     padding: '20px 22px',
                     overflowY: 'auto',

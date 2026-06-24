@@ -19,7 +19,7 @@ export default function BulletInput({ items, onChange, placeholder = 'Tulis poin
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
           {items.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'rgba(15,23,42,0.25)', flexShrink: 0 }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--text-secondary)', flexShrink: 0 }} />
               <input
                 type="text"
                 value={item}
@@ -34,7 +34,7 @@ export default function BulletInput({ items, onChange, placeholder = 'Tulis poin
                   color: '#0D1829',
                   fontFamily: 'inherit',
                   outline: 'none',
-                  backgroundColor: '#fff',
+                  backgroundColor: 'var(--card)',
                 }}
               />
               <button
@@ -42,7 +42,7 @@ export default function BulletInput({ items, onChange, placeholder = 'Tulis poin
                 title="Hapus poin"
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#9CAABB', fontSize: 20, lineHeight: 1,
+                  color: 'var(--text-muted)', fontSize: 20, lineHeight: 1,
                   padding: '0 2px', flexShrink: 0,
                 }}
               >
@@ -60,7 +60,7 @@ export default function BulletInput({ items, onChange, placeholder = 'Tulis poin
           borderRadius: 8,
           border: '1px dashed rgba(26,43,94,0.2)',
           backgroundColor: 'transparent',
-          color: '#5C6B82',
+          color: 'var(--text-secondary)',
           fontSize: 12,
           fontFamily: 'inherit',
           cursor: 'pointer',

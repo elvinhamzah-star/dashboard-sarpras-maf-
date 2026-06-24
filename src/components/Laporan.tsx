@@ -111,7 +111,7 @@ export default function Laporan({ selectedMonth, onMonthChange }: LaporanProps) 
   const periodLabel = selectedMonth ? monthLabelFromYM(selectedMonth) : 'Semua Periode'
 
   if (loading) {
-    return <div style={{ padding: 48, textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>Menyiapkan laporan…</div>
+    return <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Menyiapkan laporan…</div>
   }
 
   const current = slides[idx]
@@ -122,8 +122,8 @@ export default function Laporan({ selectedMonth, onMonthChange }: LaporanProps) 
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>Laporan Presentasi</h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Laporan Presentasi</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5 }}>
             Dokumentasi sebelum &amp; sesudah — siap dipresentasikan layar penuh
           </p>
         </div>
@@ -149,10 +149,10 @@ export default function Laporan({ selectedMonth, onMonthChange }: LaporanProps) 
 
       {!hasContent ? (
         <div style={{
-          border: '1px dashed rgba(15,23,42,0.15)', borderRadius: 16, padding: '56px 24px',
-          textAlign: 'center', color: '#9CAABB', backgroundColor: '#fff',
+          border: '1px dashed var(--border-strong)', borderRadius: 16, padding: '56px 24px',
+          textAlign: 'center', color: 'var(--text-muted)', backgroundColor: 'var(--card)',
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#5C6B82', marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
             Belum ada dokumentasi untuk {periodLabel.toLowerCase()}
           </div>
           <div style={{ fontSize: 12.5 }}>Tambahkan foto di halaman Galeri, atau pilih periode lain.</div>
@@ -194,15 +194,15 @@ export default function Laporan({ selectedMonth, onMonthChange }: LaporanProps) 
                   style={{
                     height: 8, minWidth: i === idx ? 28 : 8, width: i === idx ? 28 : 8,
                     borderRadius: 99, border: 'none', cursor: 'pointer', padding: 0,
-                    backgroundColor: i === idx ? '#1A6FE8' : 'rgba(15,23,42,0.15)',
+                    backgroundColor: i === idx ? '#1A6FE8' : 'var(--border-strong)',
                     transition: 'all 0.18s',
                   }}
                 />
               ))}
             </div>
           )}
-          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#9CAABB' }}>
-            Gunakan tombol ← → untuk navigasi · tekan <b style={{ color: '#5C6B82' }}>F</b> untuk layar penuh · {idx + 1} / {slides.length}
+          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+            Gunakan tombol ← → untuk navigasi · tekan <b style={{ color: 'var(--text-secondary)' }}>F</b> untuk layar penuh · {idx + 1} / {slides.length}
           </div>
         </>
       )}
@@ -239,7 +239,7 @@ const eyebrow: React.CSSProperties = {
 function CoverSlide({ periodLabel, totalPrograms, totalDocs }: { periodLabel: string; totalPrograms: number; totalDocs: number }) {
   return (
     <div style={{ position: 'absolute', inset: 0, padding: '8cqw 9cqw', display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#fff' }}>
-      <div style={{ width: '7cqw', height: '7cqw', borderRadius: '1.4cqw', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4cqw', boxShadow: '0 1cqw 3cqw rgba(0,0,0,0.3)' }}>
+      <div style={{ width: '7cqw', height: '7cqw', borderRadius: '1.4cqw', backgroundColor: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4cqw', boxShadow: '0 1cqw 3cqw rgba(0,0,0,0.3)' }}>
         <img src="/LogoPBB.svg" alt="PBB" style={{ width: '5cqw', height: '5cqw', objectFit: 'contain' }} />
       </div>
       <div style={eyebrow}>Dokumentasi Lapangan</div>

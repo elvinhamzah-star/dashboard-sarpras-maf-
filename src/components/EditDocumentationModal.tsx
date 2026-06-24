@@ -76,7 +76,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -88,17 +88,17 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumentasi</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>{doc.nama_pekerjaan}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{doc.nama_pekerjaan}</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Fase
           </label>
           <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
@@ -118,7 +118,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Google Drive Link
           </label>
           <input
@@ -138,13 +138,13 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
               boxSizing: 'border-box',
             }}
           />
-          <div style={{ fontSize: 11, color: '#6B7A99', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             Paste link share dari Google Drive (harus berisi /d/)
           </div>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Tanggal
           </label>
           <input
@@ -166,7 +166,7 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Deskripsi (Opsional)
           </label>
           <textarea
@@ -196,8 +196,8 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

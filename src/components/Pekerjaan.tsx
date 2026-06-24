@@ -6,15 +6,17 @@ interface PekerjaanProps {
   isAdmin: boolean
   onSelectProgram: (id: string) => void
   onAddPekerjaan: () => void
+  activeStatus: string
+  onStatusChange: (s: string) => void
+  search: string
+  onSearchChange: (s: string) => void
 }
 
 const STATUS_TABS = ['Semua', 'On Going', 'Selesai', 'Perencanaan', 'On Hold']
 
-export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: PekerjaanProps) {
+export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [activeStatus, setActiveStatus] = useState('Semua')
 
   useEffect(() => {
     const load = async () => {
@@ -45,10 +47,10 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
             Daftar Pekerjaan
           </h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5, fontWeight: 400 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400 }}>
             {programs.length} total pekerjaan
           </p>
         </div>
@@ -57,7 +59,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
             onClick={onAddPekerjaan}
             style={{
               backgroundColor: '#1A6FE8',
-              color: '#fff',
+              color: 'var(--card)',
               border: 'none',
               borderRadius: 10,
               padding: '9px 18px',
@@ -103,18 +105,18 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
             type="text"
             placeholder="Cari pekerjaan, vendor..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             style={{
               width: '100%',
               paddingLeft: 34,
               paddingRight: 12,
               paddingTop: 9,
               paddingBottom: 9,
-              border: '1px solid rgba(15,23,42,0.1)',
+              border: '1px solid var(--border)',
               borderRadius: 9,
               fontSize: 13,
-              color: '#0F1C2E',
-              backgroundColor: '#fff',
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--card)',
               outline: 'none',
               transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
@@ -124,21 +126,21 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           {STATUS_TABS.map(tab => {
             const isActive = activeStatus === tab
-            const tabColor = tab === 'Semua' ? '#1A6FE8' : STATUS_COLORS[tab] || '#5C6B82'
+            const tabColor = tab === 'Semua' ? '#1A6FE8' : STATUS_COLORS[tab] || 'var(--text-secondary)'
             const count = statusCounts[tab] || 0
             return (
               <button
                 key={tab}
-                onClick={() => setActiveStatus(tab)}
+                onClick={() => onStatusChange(tab)}
                 style={{
                   padding: '6px 13px',
                   borderRadius: 8,
-                  border: isActive ? 'none' : '1px solid rgba(15,23,42,0.1)',
+                  border: isActive ? 'none' : '1px solid var(--border)',
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: isActive ? (tab === 'Semua' ? '#1A6FE8' : `${STATUS_COLORS[tab]}18`) : '#fff',
-                  color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : '#5C6B82',
+                  backgroundColor: isActive ? (tab === 'Semua' ? '#1A6FE8' : `${STATUS_COLORS[tab]}18`) : 'var(--card)',
+                  color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                   display: 'flex',
                   alignItems: 'center',
@@ -146,14 +148,14 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                 }}
                 onMouseEnter={e => {
                   if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.04)'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = '#0F1C2E'
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#fff'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = '#5C6B82'
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--card)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
                   }
                 }}
               >
@@ -162,8 +164,8 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                   <span style={{
                     fontSize: 10,
                     fontWeight: 700,
-                    backgroundColor: isActive && tab !== 'Semua' ? `${STATUS_COLORS[tab]}25` : isActive ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.07)',
-                    color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : '#9CAABB',
+                    backgroundColor: isActive && tab !== 'Semua' ? `${STATUS_COLORS[tab]}25` : isActive ? 'rgba(255,255,255,0.2)' : 'var(--surface-2)',
+                    color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-muted)',
                     padding: '1px 5px',
                     borderRadius: 5,
                     lineHeight: 1.6,
@@ -180,17 +182,17 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
       {/* Table */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 14,
-          border: '1px solid rgba(15,23,42,0.07)',
+          border: '1px solid var(--border-subtle)',
           overflow: 'hidden',
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
         {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>Memuat data...</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat data...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>Tidak ada pekerjaan ditemukan.</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak ada pekerjaan ditemukan.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
@@ -204,11 +206,11 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                       textAlign: 'left',
                       fontSize: 11,
                       fontWeight: 700,
-                      color: '#9CAABB',
+                      color: 'var(--text-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.06em',
-                      borderBottom: '1px solid rgba(15,23,42,0.06)',
-                      backgroundColor: '#FAFBFC',
+                      borderBottom: '1px solid var(--border-subtle)',
+                      backgroundColor: 'var(--surface-raised)',
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -224,14 +226,14 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                   onClick={() => onSelectProgram(p.id)}
                   style={{
                     cursor: 'pointer',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card)',
                     transition: 'background 0.12s',
-                    borderBottom: i < filtered.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none',
+                    borderBottom: i < filtered.length - 1 ? '1px solid var(--surface-min)' : 'none',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                 >
-                  <td style={{ padding: '12px 16px', fontSize: 11.5, color: '#9CAABB', fontWeight: 600, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ padding: '12px 16px', fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {p.id}
                   </td>
                   <td style={{ padding: '12px 16px', maxWidth: 260 }}>
@@ -243,16 +245,16 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                         }} />
                       )}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, color: '#0F1C2E', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                           {p.nama_pekerjaan}
                         </div>
                         {p.vendor && (
-                          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2 }}>{p.vendor}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.vendor}</div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#5C6B82', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     {p.program || '-'}
                   </td>
                   <td style={{ padding: '12px 16px', minWidth: 120 }}>
@@ -261,7 +263,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                         style={{
                           flex: 1,
                           height: 4,
-                          backgroundColor: 'rgba(15,23,42,0.07)',
+                          backgroundColor: 'var(--surface-2)',
                           borderRadius: 10,
                           overflow: 'hidden',
                         }}
@@ -281,7 +283,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12.5, color: '#0F1C2E', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ padding: '12px 16px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {formatRupiah(p.total_anggaran || 0)}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
@@ -295,8 +297,8 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan }: 
                         borderRadius: 20,
                         fontSize: 11,
                         fontWeight: 700,
-                        backgroundColor: STATUS_BG[p.status] || 'rgba(15,23,42,0.06)',
-                        color: STATUS_COLORS[p.status] || '#5C6B82',
+                        backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)',
+                        color: STATUS_COLORS[p.status] || 'var(--text-secondary)',
                         whiteSpace: 'nowrap',
                         letterSpacing: '0.01em',
                       }}

@@ -42,7 +42,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <span style={{ color: '#6B7A99' }}>Memuat...</span>
+        <span style={{ color: 'var(--text-muted)' }}>Memuat...</span>
       </div>
     )
   }
@@ -53,7 +53,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
         <button onClick={onBack} style={{ color: '#1A6FE8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
           &larr; Kembali
         </button>
-        <p style={{ color: '#6B7A99', marginTop: 20 }}>Pekerjaan tidak ditemukan.</p>
+        <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>Pekerjaan tidak ditemukan.</p>
       </div>
     )
   }
@@ -69,14 +69,14 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
         onClick={onBack}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          color: '#5C6B82', background: 'none', border: 'none',
+          color: 'var(--text-secondary)', background: 'none', border: 'none',
           cursor: 'pointer', fontSize: 13, fontWeight: 600,
           marginBottom: 20, padding: 0,
           letterSpacing: '-0.01em',
           transition: 'color 0.15s',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#5C6B82' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)' }}
       >
         <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <polyline points="15 18 9 12 15 6"/>
@@ -87,10 +87,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       {/* Header Card */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 14,
           padding: '20px 24px',
-          border: '1px solid rgba(15,23,42,0.07)',
+          border: '1px solid var(--border-subtle)',
           marginBottom: 14,
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}
@@ -98,7 +98,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: '#9CAABB', letterSpacing: '0.02em' }}>{program.id}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.02em' }}>{program.id}</span>
               <span
                 style={{
                   display: 'inline-block',
@@ -106,7 +106,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                   borderRadius: 20,
                   fontSize: 11,
                   fontWeight: 700,
-                  backgroundColor: STATUS_BG[program.status] || 'rgba(15,23,42,0.06)',
+                  backgroundColor: STATUS_BG[program.status] || 'var(--border-subtle)',
                   color: statusColor,
                   letterSpacing: '0.01em',
                 }}
@@ -114,18 +114,18 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 {program.status}
               </span>
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 750, color: '#0F1C2E', margin: '0 0 10px', lineHeight: 1.3, letterSpacing: '-0.03em' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 750, color: 'var(--text-primary)', margin: '0 0 10px', lineHeight: 1.3, letterSpacing: '-0.03em' }}>
               {program.nama_pekerjaan}
             </h1>
             <div
               onClick={() => isAdmin && setShowEditCatatan(true)}
               style={{
-                backgroundColor: program.isu_utama ? 'rgba(217,119,6,0.07)' : 'rgba(15,23,42,0.03)',
+                backgroundColor: program.isu_utama ? 'rgba(217,119,6,0.07)' : 'var(--surface-min)',
                 borderLeft: program.isu_utama ? '2.5px solid #D97706' : '2.5px solid #C8D2E0',
                 borderRadius: 7,
                 padding: '8px 12px',
                 fontSize: 12.5,
-                color: program.isu_utama ? '#92400e' : '#9CAABB',
+                color: program.isu_utama ? '#92400e' : 'var(--text-muted)',
                 fontWeight: 500,
                 cursor: isAdmin ? 'pointer' : 'default',
                 transition: 'all 0.15s',
@@ -169,7 +169,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               style={{
                 flexShrink: 0,
                 backgroundColor: '#1A6FE8',
-                color: '#fff',
+                color: 'var(--card)',
                 border: 'none',
                 borderRadius: 10,
                 padding: '9px 18px',
@@ -202,7 +202,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             gap: 16,
             marginTop: 20,
             paddingTop: 16,
-            borderTop: '1px solid rgba(15,23,42,0.06)',
+            borderTop: '1px solid var(--border-subtle)',
           }}
         >
           {[
@@ -212,10 +212,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             { label: 'Tanggal Dibuat', value: formatTanggal(program.created_at) },
           ].map(m => (
             <div key={m.label}>
-              <div style={{ fontSize: 10.5, color: '#9CAABB', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+              <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                 {m.label}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0F1C2E' }}>{m.value}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{m.value}</div>
             </div>
           ))}
         </div>
@@ -232,14 +232,14 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
           <div
             key={c.label}
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               borderRadius: 12,
               padding: '16px 18px',
-              border: '1px solid rgba(15,23,42,0.07)',
+              border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            <div style={{ fontSize: 10.5, color: '#9CAABB', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {c.label}
             </div>
             <div style={{ fontSize: 18, fontWeight: 750, color: c.color, letterSpacing: '-0.03em' }}>{c.value}</div>
@@ -250,19 +250,19 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       {/* Progress Bar */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 12,
           padding: '16px 20px',
-          border: '1px solid rgba(15,23,42,0.07)',
+          border: '1px solid var(--border-subtle)',
           marginBottom: 14,
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#0F1C2E', letterSpacing: '-0.01em' }}>Progress Pekerjaan</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Progress Pekerjaan</span>
           <span style={{ fontSize: 16, fontWeight: 750, color: statusColor, letterSpacing: '-0.02em' }}>{pct}%</span>
         </div>
-        <div style={{ height: 8, backgroundColor: 'rgba(15,23,42,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ height: 8, backgroundColor: 'var(--border-subtle)', borderRadius: 10, overflow: 'hidden' }}>
           <div
             style={{
               width: `${pct}%`,
@@ -284,25 +284,25 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             style={{
               padding: '7px 16px',
               borderRadius: 8,
-              border: activeTab === tab ? 'none' : '1px solid rgba(15,23,42,0.1)',
+              border: activeTab === tab ? 'none' : '1px solid var(--border)',
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: 600,
-              backgroundColor: activeTab === tab ? '#1A6FE8' : '#fff',
-              color: activeTab === tab ? '#fff' : '#5C6B82',
+              backgroundColor: activeTab === tab ? '#1A6FE8' : 'var(--card)',
+              color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
               transition: 'all 0.15s',
               letterSpacing: '-0.01em',
             }}
             onMouseEnter={e => {
               if (activeTab !== tab) {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.04)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = '#0F1C2E'
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'
               }
             }}
             onMouseLeave={e => {
               if (activeTab !== tab) {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#fff'
-                ;(e.currentTarget as HTMLButtonElement).style.color = '#5C6B82'
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--card)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
               }
             }}
           >
@@ -314,16 +314,16 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       {/* Tab Content */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 14,
-          border: '1px solid rgba(15,23,42,0.07)',
+          border: '1px solid var(--border-subtle)',
           padding: '20px 24px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}
       >
         {activeTab === 'Ringkasan' && (
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <tbody>
@@ -341,16 +341,16 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ['Catatan Pekerjaan', program.isu_utama
                       ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
                           <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: idx > 0 ? 3 : 0 }}>
-                            <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#5C6B82', flexShrink: 0, marginTop: 5 }} />
+                            <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: 'var(--text-secondary)', flexShrink: 0, marginTop: 5 }} />
                             <span>{line}</span>
                           </div>
                         ))
                       : '-'],
                     ['Dibuat', formatTanggal(program.created_at)],
                   ].map(([label, value], i, arr) => (
-                    <tr key={String(label)} style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(15,23,42,0.05)' : 'none' }}>
-                      <td style={{ padding: '10px 0', color: '#9CAABB', fontWeight: 600, width: '40%', minWidth: 140, verticalAlign: 'top', fontSize: 12 }}>{label}</td>
-                      <td style={{ padding: '10px 0', color: '#0F1C2E', fontSize: 13 }}>{value}</td>
+                    <tr key={String(label)} style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--surface-subtle)' : 'none' }}>
+                      <td style={{ padding: '10px 0', color: 'var(--text-muted)', fontWeight: 600, width: '40%', minWidth: 140, verticalAlign: 'top', fontSize: 12 }}>{label}</td>
+                      <td style={{ padding: '10px 0', color: 'var(--text-primary)', fontSize: 13 }}>{value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -362,13 +362,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
         {activeTab === 'Dokumen' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
               {isAdmin && (
                 <button
                   onClick={() => setShowEditDokumen(true)}
                   style={{
                     backgroundColor: '#1A6FE8',
-                    color: '#fff',
+                    color: 'var(--card)',
                     border: 'none',
                     borderRadius: 8,
                     padding: '6px 12px',
@@ -400,13 +400,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     padding: '13px 16px',
                     borderRadius: 10,
                     backgroundColor: '#F8FAFC',
-                    border: '1px solid rgba(15,23,42,0.07)',
+                    border: '1px solid var(--border-subtle)',
                     flexWrap: 'wrap',
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0F1C2E', letterSpacing: '-0.01em' }}>{doc.label}</div>
-                    <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 2, wordBreak: 'break-all' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{doc.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, wordBreak: 'break-all' }}>
                       {doc.url ? doc.url.substring(0, 60) + (doc.url.length > 60 ? '...' : '') : 'Dokumen tidak tersedia'}
                     </div>
                   </div>
@@ -441,8 +441,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
 
         {activeTab === 'Sub Pekerjaan' && (
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>
-              Sub Pekerjaan <span style={{ color: '#9CAABB', fontWeight: 500 }}>({subPrograms.length})</span>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>
+              Sub Pekerjaan <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({subPrograms.length})</span>
             </h3>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
@@ -456,11 +456,11 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                           textAlign: 'left',
                           fontSize: 11,
                           fontWeight: 700,
-                          color: '#9CAABB',
+                          color: 'var(--text-muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.06em',
-                          borderBottom: '1px solid rgba(15,23,42,0.06)',
-                          backgroundColor: '#FAFBFC',
+                          borderBottom: '1px solid var(--border-subtle)',
+                          backgroundColor: 'var(--surface-raised)',
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -473,15 +473,15 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                   {subPrograms.map((sp, i) => (
                     <tr
                       key={sp.id}
-                      style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none', backgroundColor: '#fff', transition: 'background 0.1s' }}
+                      style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#F8FAFC' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#fff' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                     >
-                      <td style={{ padding: '11px 14px', fontSize: 12, color: '#9CAABB' }}>{i + 1}</td>
-                      <td style={{ padding: '11px 14px', fontSize: 13, color: '#0F1C2E', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
+                      <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
+                      <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
                       <td style={{ padding: '11px 14px', minWidth: 120 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ flex: 1, height: 4, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 10, overflow: 'hidden', minWidth: 40 }}>
+                          <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden', minWidth: 40 }}>
                             <div
                               style={{
                                 width: `${Math.min(sp.progress_percent || 0, 100)}%`,
@@ -494,7 +494,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                           <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || '#1A6FE8', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
                         </div>
                       </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#0F1C2E', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                         {formatRupiah(sp.total_anggaran || 0)}
                       </td>
                       <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -511,8 +511,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                             borderRadius: 20,
                             fontSize: 11,
                             fontWeight: 700,
-                            backgroundColor: STATUS_BG[sp.status] || 'rgba(15,23,42,0.06)',
-                            color: STATUS_COLORS[sp.status] || '#5C6B82',
+                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -552,11 +552,11 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                             onClick={() => setEditingSubProgram(sp)}
                             style={{
                               background: 'none',
-                              border: '1px solid rgba(15,23,42,0.1)',
+                              border: '1px solid var(--border)',
                               borderRadius: 7,
                               padding: '5px 10px',
                               cursor: 'pointer',
-                              color: '#5C6B82',
+                              color: 'var(--text-secondary)',
                               fontSize: 12,
                               fontWeight: 600,
                               transition: 'all 0.12s',
@@ -566,8 +566,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                               ;(e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8'
                             }}
                             onMouseLeave={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(15,23,42,0.1)'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = '#5C6B82'
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'
+                              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
                             }}
                           >
                             Edit

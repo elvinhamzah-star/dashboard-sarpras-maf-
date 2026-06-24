@@ -30,7 +30,7 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
-  color: '#6B7A99',
+  color: 'var(--text-muted)',
   display: 'block',
   marginBottom: 6,
   textTransform: 'uppercase',
@@ -139,7 +139,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -155,13 +155,13 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Dokumentasi</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             Upload beberapa foto sekaligus dari Google Drive
           </div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.08)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -172,7 +172,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
           <select
             value={programId}
             onChange={e => setProgramId(e.target.value)}
-            style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+            style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
           >
             <option value="">-- Pilih Program --</option>
             {programs.map(p => (
@@ -188,7 +188,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             <select
               value={fase}
               onChange={e => setFase(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
             >
               {['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'].map(f => (
                 <option key={f}>{f}</option>
@@ -212,12 +212,12 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             <label style={{ ...labelStyle, marginBottom: 0 }}>
               Google Drive Links
               {rows.length > 1 && (
-                <span style={{ fontWeight: 400, color: '#9CAABB', textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>
+                <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>
                   ({rows.length} baris)
                 </span>
               )}
             </label>
-            <span style={{ fontSize: 11, color: '#9CAABB' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
               Bisa paste beberapa link sekaligus
             </span>
           </div>
@@ -247,7 +247,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       style={{
                         ...inputStyle,
                         borderColor: isInvalid ? '#F87171' : 'rgba(26,43,94,0.15)',
-                        backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : '#fff',
+                        backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : 'var(--card)',
                       }}
                     />
                     {/* Caption */}
@@ -256,7 +256,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       value={row.caption}
                       onChange={e => updateRow(row.id, 'caption', e.target.value)}
                       placeholder="Caption (opsional)"
-                      style={{ ...inputStyle, fontSize: 12, color: '#5C6B82', padding: '7px 12px' }}
+                      style={{ ...inputStyle, fontSize: 12, color: 'var(--text-secondary)', padding: '7px 12px' }}
                     />
                   </div>
 
@@ -268,8 +268,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                     style={{
                       width: 32, height: 38,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRadius: 8, border: '1px solid rgba(15,23,42,0.1)',
-                      backgroundColor: '#fff', color: '#9CAABB',
+                      borderRadius: 8, border: '1px solid var(--border)',
+                      backgroundColor: 'var(--card)', color: 'var(--text-muted)',
                       cursor: rows.length === 1 ? 'default' : 'pointer',
                       opacity: rows.length === 1 ? 0.3 : 1,
                       flexShrink: 0, marginTop: 1,
@@ -285,9 +285,9 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                     }}
                     onMouseLeave={e => {
                       const btn = e.currentTarget as HTMLButtonElement
-                      btn.style.backgroundColor = '#fff'
-                      btn.style.color = '#9CAABB'
-                      btn.style.borderColor = 'rgba(15,23,42,0.1)'
+                      btn.style.backgroundColor = 'var(--card)'
+                      btn.style.color = 'var(--text-muted)'
+                      btn.style.borderColor = 'var(--border)'
                     }}
                   >
                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -332,7 +332,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         {/* Save progress bar */}
         {saveProgress && (
           <div style={{ marginTop: 12, marginBottom: 4 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#6B7A99', marginBottom: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 5 }}>
               <span>Menyimpan...</span>
               <span>{saveProgress.done}/{saveProgress.total}</span>
             </div>
@@ -354,7 +354,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             style={{
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff', color: '#6B7A99',
+              backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600,
               cursor: saving ? 'default' : 'pointer',
               opacity: saving ? 0.5 : 1,

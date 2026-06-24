@@ -79,7 +79,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -89,18 +89,18 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Update Progress</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>{program.nama_pekerjaan}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{program.nama_pekerjaan}</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Progress: {progress}%
             </label>
             <input
@@ -114,7 +114,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Realisasi Terkini (Rp)
             </label>
             <input
@@ -129,13 +129,13 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Status
             </label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
             >
               {STATUS_OPTIONS.map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -151,8 +151,8 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

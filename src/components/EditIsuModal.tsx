@@ -45,7 +45,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -55,20 +55,20 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Isu Lapangan</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>{issue.nama_pekerjaan}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{issue.nama_pekerjaan}</div>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Program
           </label>
           <div
             style={{
               padding: '10px 14px',
               borderRadius: 10,
-              backgroundColor: '#F5F7FA',
+              backgroundColor: 'var(--surface-raised)',
               fontSize: 13,
-              color: '#9CAABB',
+              color: 'var(--text-muted)',
               border: '1px solid rgba(26,43,94,0.07)',
             }}
           >
@@ -77,7 +77,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Deskripsi Isu
           </label>
           <textarea
@@ -100,7 +100,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7A99', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Status Isu
           </label>
           <select
@@ -113,7 +113,7 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
               border: '1px solid rgba(26,43,94,0.15)',
               fontSize: 13,
               color: '#0D1829',
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               outline: 'none',
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -151,8 +151,8 @@ export default function EditIsuModal({ issue, onClose, onSuccess }: EditIsuModal
               padding: '10px 16px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

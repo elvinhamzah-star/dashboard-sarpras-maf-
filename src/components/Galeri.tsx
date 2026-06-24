@@ -119,8 +119,8 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>Galeri Dokumentasi</h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, margin: '5px 0 0', fontWeight: 400 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Galeri Dokumentasi</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0', fontWeight: 400 }}>
             {loading ? 'Memuat...' : `${filteredDocs.length} dokumentasi`}
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             onClick={() => setShowAddModal(true)}
             style={{
               padding: '9px 18px', borderRadius: 10, border: 'none',
-              backgroundColor: '#1A6FE8', color: '#fff', fontSize: 13.5, fontWeight: 600,
+              backgroundColor: '#1A6FE8', color: 'var(--card)', fontSize: 13.5, fontWeight: 600,
               cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center',
               gap: 7, letterSpacing: '-0.01em',
               boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
@@ -155,9 +155,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             onClick={() => { setShowProgramDropdown(v => !v); setProgramSearch('') }}
             style={{
               padding: '9px 13px', borderRadius: 10,
-              border: showProgramDropdown ? '1px solid #1A6FE8' : '1px solid rgba(15,23,42,0.13)',
-              backgroundColor: '#fff', fontSize: 12.5, cursor: 'pointer',
-              color: filterProgram === 'Semua' ? '#5C6B82' : '#0F1C2E',
+              border: showProgramDropdown ? '1px solid #1A6FE8' : '1px solid var(--border-strong)',
+              backgroundColor: 'var(--card)', fontSize: 12.5, cursor: 'pointer',
+              color: filterProgram === 'Semua' ? 'var(--text-secondary)' : 'var(--text-primary)',
               fontWeight: filterProgram === 'Semua' ? 500 : 600,
               display: 'flex', alignItems: 'center', gap: 8,
               minWidth: 180, maxWidth: 240, fontFamily: 'inherit',
@@ -165,14 +165,14 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               transition: 'all 0.15s',
             }}
           >
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, color: '#9CAABB' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, color: 'var(--text-muted)' }}>
               <path d="M3 3h18v4L13 13v8l-2-1v-7L3 7V3z"/>
             </svg>
             <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedProgramName}
             </span>
             <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-              style={{ transform: showProgramDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s', flexShrink: 0, color: '#9CAABB' }}>
+              style={{ transform: showProgramDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s', flexShrink: 0, color: 'var(--text-muted)' }}>
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
@@ -180,9 +180,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           {showProgramDropdown && (
             <div style={{
               position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 30,
-              backgroundColor: '#fff', borderRadius: 12,
-              border: '1px solid rgba(15,23,42,0.1)',
-              boxShadow: '0 8px 28px rgba(15,23,42,0.13)',
+              backgroundColor: 'var(--card)', borderRadius: 12,
+              border: '1px solid var(--border)',
+              boxShadow: '0 8px 28px var(--border-strong)',
               minWidth: 240, maxWidth: 320, overflow: 'hidden',
             }}>
               <div style={{ padding: '10px 10px 8px' }}>
@@ -193,9 +193,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   onChange={e => setProgramSearch(e.target.value)}
                   style={{
                     width: '100%', padding: '7px 10px', borderRadius: 8,
-                    border: '1px solid rgba(15,23,42,0.1)', fontSize: 12,
-                    color: '#0F1C2E', outline: 'none', fontFamily: 'inherit',
-                    backgroundColor: 'rgba(15,23,42,0.03)', boxSizing: 'border-box',
+                    border: '1px solid var(--border)', fontSize: 12,
+                    color: 'var(--text-primary)', outline: 'none', fontFamily: 'inherit',
+                    backgroundColor: 'var(--surface-min)', boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -204,9 +204,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   onClick={() => { setFilterProgram('Semua'); setShowProgramDropdown(false); setProgramSearch('') }}
                   style={{
                     width: '100%', textAlign: 'left', padding: '9px 14px',
-                    border: 'none', borderBottom: '1px solid rgba(15,23,42,0.06)',
+                    border: 'none', borderBottom: '1px solid var(--border-subtle)',
                     backgroundColor: filterProgram === 'Semua' ? 'rgba(26,111,232,0.07)' : 'transparent',
-                    color: filterProgram === 'Semua' ? '#1A6FE8' : '#0F1C2E',
+                    color: filterProgram === 'Semua' ? '#1A6FE8' : 'var(--text-primary)',
                     fontWeight: filterProgram === 'Semua' ? 700 : 500,
                     fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -219,9 +219,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                     onClick={() => { setFilterProgram(p.id); setShowProgramDropdown(false); setProgramSearch('') }}
                     style={{
                       width: '100%', textAlign: 'left', padding: '9px 14px',
-                      border: 'none', borderBottom: '1px solid rgba(15,23,42,0.04)',
+                      border: 'none', borderBottom: '1px solid var(--surface-min)',
                       backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.07)' : 'transparent',
-                      color: filterProgram === p.id ? '#1A6FE8' : '#5C6B82',
+                      color: filterProgram === p.id ? '#1A6FE8' : 'var(--text-secondary)',
                       fontWeight: filterProgram === p.id ? 700 : 400,
                       fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -230,7 +230,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   </button>
                 ))}
                 {filteredProgramList.length === 0 && (
-                  <div style={{ padding: '14px', fontSize: 12, color: '#9CAABB', textAlign: 'center' }}>
+                  <div style={{ padding: '14px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
                     Tidak ditemukan
                   </div>
                 )}
@@ -250,9 +250,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 onClick={() => setFilterFase(fase)}
                 style={{
                   padding: '8px 14px', borderRadius: 8, fontFamily: 'inherit',
-                  border: isActive ? 'none' : '1px solid rgba(15,23,42,0.13)',
-                  backgroundColor: isActive ? activeColor : '#fff',
-                  color: isActive ? '#fff' : '#6B7A99',
+                  border: isActive ? 'none' : '1px solid var(--border-strong)',
+                  backgroundColor: isActive ? activeColor : 'var(--card)',
+                  color: isActive ? '#fff' : 'var(--text-muted)',
                   fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
@@ -270,16 +270,16 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
       </div>
 
       {error && (
-        <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+        <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
           {error}
         </div>
       )}
 
       {/* Content */}
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#6B7A99', paddingTop: 60 }}>Memuat galeri...</div>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Memuat galeri...</div>
       ) : filteredDocs.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#6B7A99', paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <svg width="48" height="48" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -305,9 +305,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             <div
               key={progName}
               style={{
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card)',
                 borderRadius: 14,
-                border: '1px solid rgba(15,23,42,0.07)',
+                border: '1px solid var(--border-subtle)',
                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 overflow: 'hidden',
               }}
@@ -315,12 +315,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               {/* Program Header */}
               <div style={{
                 padding: '14px 20px',
-                borderBottom: '1px solid rgba(15,23,42,0.06)',
+                borderBottom: '1px solid var(--border-subtle)',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
                 <div style={{
                   width: 30, height: 30, borderRadius: 8,
-                  backgroundColor: 'rgba(15,23,42,0.05)',
+                  backgroundColor: 'var(--surface-subtle)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   <svg width="14" height="14" fill="none" stroke="#5C6B82" strokeWidth="1.75" viewBox="0 0 24 24">
@@ -329,10 +329,10 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                     <path d="M21 15l-5-5L5 21"/>
                   </svg>
                 </div>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em', flex: 1 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', flex: 1 }}>
                   {progName}
                 </span>
-                <span style={{ fontSize: 11, color: '#9CAABB', fontWeight: 500, flexShrink: 0 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, flexShrink: 0 }}>
                   {items.length} foto
                 </span>
               </div>
@@ -355,7 +355,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                         borderRadius: '0 8px 8px 0',
                         marginBottom: 14,
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#0F1C2E', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                           {fase}
                         </span>
                         <span style={{
@@ -377,8 +377,8 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                               key={doc.id}
                               style={{
                                 position: 'relative', borderRadius: 12, overflow: 'hidden',
-                                backgroundColor: '#F5F7FA',
-                                border: '1px solid rgba(15,23,42,0.07)',
+                                backgroundColor: 'var(--surface-raised)',
+                                border: '1px solid var(--border-subtle)',
                                 cursor: 'pointer', transition: 'box-shadow 0.22s, transform 0.22s',
                                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                               }}
@@ -406,7 +406,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                               }}
                               onClick={() => setLightboxIndex(filteredDocs.indexOf(doc))}
                             >
-                              <div style={{ width: '100%', height: 200, backgroundColor: '#F5F7FA', overflow: 'hidden', position: 'relative' }}>
+                              <div style={{ width: '100%', height: 200, backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
                                 {thumbUrl ? (
                                   <img src={thumbUrl} alt={doc.caption}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }}
@@ -442,7 +442,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                                     {formatTanggal(doc.tanggal)}
                                   </div>
                                   {doc.caption && (
-                                    <div style={{ fontSize: 11.5, color: '#fff', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <div style={{ fontSize: 11.5, color: 'var(--card)', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {doc.caption}
                                     </div>
                                   )}
@@ -450,9 +450,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                               </div>
                               {isAdmin && (
                                 <div className="galeri-admin-actions" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5, opacity: 0, transition: 'opacity 0.2s' }}>
-                                  <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                                  <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
                                     onClick={e => { e.stopPropagation(); setEditingDoc(doc) }} role="button" title="Edit">✏️</div>
-                                  <div style={{ backgroundColor: 'rgba(220,38,38,0.7)', color: '#fff', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                                  <div style={{ backgroundColor: 'rgba(220,38,38,0.7)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
                                     onClick={e => { e.stopPropagation(); handleDelete(doc.id) }} role="button" title="Hapus">✕</div>
                                 </div>
                               )}
@@ -480,7 +480,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             disabled={disabled}
             style={{
               backgroundColor: disabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.18)',
-              border: 'none', color: '#fff', width: 44, height: 44, borderRadius: 50,
+              border: 'none', color: 'var(--card)', width: 44, height: 44, borderRadius: 50,
               cursor: disabled ? 'default' : 'pointer', fontSize: 20, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
               opacity: disabled ? 0.25 : 1, transition: 'background 0.15s, opacity 0.15s',
@@ -518,16 +518,16 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
 
             {/* Card */}
             <div
-              style={{ backgroundColor: '#fff', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+              style={{ backgroundColor: 'var(--card)', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
               onClick={e => e.stopPropagation()}
             >
               <button
                 onClick={() => setLightboxIndex(null)}
-                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: 'var(--card)', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >✕</button>
 
               {/* Counter */}
-              <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
+              <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: 'var(--card)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
                 {lightboxIndex + 1} / {filteredDocs.length}
               </div>
 
@@ -539,15 +539,15 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 />
               )}
               <div style={{ padding: 20 }}>
-                <div style={{ fontSize: 11, color: '#9CAABB', marginBottom: 8 }}>{formatTanggal(doc.tanggal)}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1C2E', marginBottom: 10, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{formatTanggal(doc.tanggal)}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
                 {doc.fase && FASE_INFO[doc.fase] && (
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, marginBottom: 12, backgroundColor: FASE_INFO[doc.fase].bg, borderLeft: `3px solid ${FASE_INFO[doc.fase].color}` }}>
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: FASE_INFO[doc.fase].color }}>{doc.fase}</span>
                   </div>
                 )}
                 {doc.caption && (
-                  <div style={{ fontSize: 13, color: '#5C6B82', lineHeight: 1.6, marginBottom: 16 }}>{doc.caption}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{doc.caption}</div>
                 )}
                 <a href={doc.link_foto} target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: '#1A6FE8', textDecoration: 'none' }}>

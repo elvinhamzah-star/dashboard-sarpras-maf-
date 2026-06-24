@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, Program } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, Program } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
 
@@ -48,6 +48,7 @@ const MetricIcon = ({ type }: { type: string }) => {
 
 export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
+  const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showProgramList, setShowProgramList] = useState(false)
   const [listFilter, setListFilter] = useState('On Going')
@@ -55,16 +56,24 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const { data } = await fetchPrograms()
-      if (data) setPrograms(data)
+      const [{ data: progData }, { data: txData }] = await Promise.all([
+        fetchPrograms(),
+        fetchTransactions(),
+      ])
+      if (progData) setPrograms(progData)
+      if (txData) {
+        const realisasi = txData
+          .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
+          .reduce((s, t) => s + (t.nominal || 0), 0)
+        setTotalRealisasi(realisasi)
+      }
       setLoading(false)
     }
     load()
   }, [])
 
   const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const totalRealisasi = programs.reduce((s, p) => s + (p.realisasi_terkini || 0), 0)
-  const totalSisa = programs.reduce((s, p) => s + (p.sisa_anggaran || 0), 0)
+  const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
   const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
@@ -113,7 +122,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconType: 'penyerapan',
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: '#1A6FE8',
-      valueColor: '#0F1C2E',
+      valueColor: 'var(--text-primary)',
       trend: 'Dari total anggaran',
     },
   ]
@@ -123,15 +132,15 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       <div style={{ padding: '28px 28px 40px' }}>
         {/* Skeleton header */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ width: 240, height: 24, borderRadius: 8, backgroundColor: 'rgba(15,23,42,0.06)', marginBottom: 8 }} />
-          <div style={{ width: 120, height: 14, borderRadius: 6, backgroundColor: 'rgba(15,23,42,0.04)' }} />
+          <div style={{ width: 240, height: 24, borderRadius: 8, backgroundColor: 'var(--border-subtle)', marginBottom: 8 }} />
+          <div style={{ width: 120, height: 14, borderRadius: 6, backgroundColor: 'var(--surface-hover)' }} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           {[...Array(4)].map((_, i) => (
-            <div key={i} style={{ backgroundColor: '#fff', borderRadius: 14, padding: 20, height: 110, border: '1px solid rgba(15,23,42,0.06)' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(15,23,42,0.05)', marginBottom: 14 }} />
-              <div style={{ width: '60%', height: 11, borderRadius: 5, backgroundColor: 'rgba(15,23,42,0.05)', marginBottom: 8 }} />
-              <div style={{ width: '80%', height: 20, borderRadius: 6, backgroundColor: 'rgba(15,23,42,0.05)' }} />
+            <div key={i} style={{ backgroundColor: 'var(--card)', borderRadius: 14, padding: 20, height: 110, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'var(--surface-subtle)', marginBottom: 14 }} />
+              <div style={{ width: '60%', height: 11, borderRadius: 5, backgroundColor: 'var(--surface-subtle)', marginBottom: 8 }} />
+              <div style={{ width: '80%', height: 20, borderRadius: 6, backgroundColor: 'var(--surface-subtle)' }} />
             </div>
           ))}
         </div>
@@ -144,10 +153,10 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
             Dashboard Sarpras MAF
           </h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5, fontWeight: 400 }}>{getTodayFormatted()}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400 }}>{getTodayFormatted()}</p>
         </div>
       </div>
 
@@ -157,10 +166,10 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           <div
             key={card.label}
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               borderRadius: 14,
               padding: '18px 20px',
-              border: '1px solid rgba(15,23,42,0.07)',
+              border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s ease, transform 0.18s ease',
             }}
@@ -191,13 +200,13 @@ export default function Beranda({ isAdmin }: BerandaProps) {
             >
               <MetricIcon type={card.iconType} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#5C6B82', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
               {card.label}
             </div>
             <div style={{ fontSize: 20, fontWeight: 750, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 6 }}>
               {card.value}
             </div>
-            <div style={{ fontSize: 11, color: '#9CAABB', fontWeight: 400 }}>{card.trend}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.trend}</div>
           </div>
         ))}
       </div>
@@ -206,20 +215,20 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14, marginBottom: 20 }}>
         <div
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card)',
             borderRadius: 14,
-            border: '1px solid rgba(15,23,42,0.07)',
+            border: '1px solid var(--border-subtle)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             overflow: 'hidden',
           }}
         >
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Progress Pekerjaan</span>
-            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 3 }}>{programs.length} program total</div>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progress Pekerjaan</span>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{programs.length} program total</div>
           </div>
 
           {pieData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CAABB', fontSize: 13 }}>Belum ada data program.</div>
+            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 13 }}>Belum ada data program.</div>
           ) : (
             <>
               {/* Two bordered sections side by side */}
@@ -243,7 +252,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   <div style={{ fontSize: 36, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 10 }}>
                     {progressLapangan}%
                   </div>
-                  <div style={{ fontSize: 11.5, color: '#9CAABB' }}>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
                     rata-rata {progressPrograms.length} program aktif
                   </div>
                 </div>
@@ -266,17 +275,17 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   {STATUS_ORDER.map(statusName => {
                     const count = statusCount[statusName] || 0
                     const pct = programs.length > 0 ? (count / programs.length) * 100 : 0
-                    const color = STATUS_COLORS[statusName] || '#9CAABB'
+                    const color = STATUS_COLORS[statusName] || 'var(--text-muted)'
                     return (
                       <div key={statusName}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-                            <span style={{ fontSize: 11.5, color: '#5C6B82', fontWeight: 500 }}>{statusName}</span>
+                            <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', fontWeight: 500 }}>{statusName}</span>
                           </div>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F1C2E' }}>{count}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-primary)' }}>{count}</span>
                         </div>
-                        <div style={{ height: 5, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: 5, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
                           <div style={{
                             height: '100%',
                             width: `${pct}%`,
@@ -299,9 +308,9 @@ export default function Beranda({ isAdmin }: BerandaProps) {
               style={{
                 width: '100%', padding: '7px 14px',
                 borderRadius: 8,
-                border: showProgramList ? '1px solid rgba(26,111,232,0.25)' : '1px solid rgba(15,23,42,0.1)',
-                backgroundColor: showProgramList ? 'rgba(26,111,232,0.06)' : '#fff',
-                color: showProgramList ? '#1A6FE8' : '#5C6B82',
+                border: showProgramList ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
+                backgroundColor: showProgramList ? 'rgba(26,111,232,0.06)' : 'var(--card)',
+                color: showProgramList ? '#1A6FE8' : 'var(--text-secondary)',
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
@@ -317,12 +326,12 @@ export default function Beranda({ isAdmin }: BerandaProps) {
 
           {/* Collapsible program list */}
           {showProgramList && (
-            <div style={{ borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+            <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
               {/* Filter tabs */}
               <div style={{ padding: '10px 16px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {pieData.map(d => {
                   const isActive = listFilter === d.name
-                  const color = STATUS_COLORS[d.name] || '#5C6B82'
+                  const color = STATUS_COLORS[d.name] || 'var(--text-secondary)'
                   return (
                     <button
                       key={d.name}
@@ -330,8 +339,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                       style={{
                         padding: '4px 12px', borderRadius: 20, border: 'none',
                         cursor: 'pointer', fontSize: 11.5, fontWeight: 600,
-                        backgroundColor: isActive ? color : 'rgba(15,23,42,0.06)',
-                        color: isActive ? '#fff' : '#5C6B82',
+                        backgroundColor: isActive ? color : 'var(--border-subtle)',
+                        color: isActive ? '#fff' : 'var(--text-secondary)',
                         transition: 'all 0.13s', fontFamily: 'inherit',
                       }}
                     >
@@ -348,24 +357,24 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                     key={p.id}
                     style={{
                       padding: '11px 14px', borderRadius: 10,
-                      backgroundColor: '#fff',
-                      border: '1px solid rgba(15,23,42,0.13)',
+                      backgroundColor: 'var(--card)',
+                      border: '1px solid var(--border-strong)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.nama_pekerjaan}
                         </div>
                         {p.vendor && (
-                          <div style={{ fontSize: 11, color: '#9CAABB', marginTop: 1 }}>{p.vendor}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{p.vendor}</div>
                         )}
                       </div>
                       <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[p.status] || '#1A6FE8', flexShrink: 0 }}>
                         {p.progress_percent || 0}%
                       </span>
                     </div>
-                    <div style={{ height: 4, backgroundColor: 'rgba(15,23,42,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: `${Math.min(100, p.progress_percent || 0)}%`,
@@ -376,7 +385,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   </div>
                 ))}
                 {programs.filter(p => p.status === listFilter).length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '16px 0', color: '#9CAABB', fontSize: 12 }}>
+                  <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 12 }}>
                     Tidak ada program dengan status ini.
                   </div>
                 )}

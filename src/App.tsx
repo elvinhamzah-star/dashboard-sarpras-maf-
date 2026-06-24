@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTheme } from './lib/useTheme'
 import Sidebar from './components/Sidebar'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
@@ -14,6 +15,7 @@ import { clearAdminPin } from './lib/adminApi'
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat'
 
 export default function App() {
+  const { isDark, toggle: toggleTheme } = useTheme()
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -25,6 +27,9 @@ export default function App() {
   const [addModalKey, setAddModalKey] = useState(0)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
+  // Pekerjaan filter state — persisted across detail navigation
+  const [pekerjaanStatus, setPekerjaanStatus] = useState('Semua')
+  const [pekerjaanSearch, setPekerjaanSearch] = useState('')
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
@@ -86,6 +91,10 @@ export default function App() {
             isAdmin={isAdmin}
             onSelectProgram={handleSelectProgram}
             onAddPekerjaan={handleAddPekerjaan}
+            activeStatus={pekerjaanStatus}
+            onStatusChange={setPekerjaanStatus}
+            search={pekerjaanSearch}
+            onSearchChange={setPekerjaanSearch}
           />
         )
       case 'keuangan':
@@ -112,7 +121,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F1F4F9' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
       {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
@@ -124,6 +133,8 @@ export default function App() {
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Mobile backdrop */}
@@ -164,9 +175,9 @@ export default function App() {
               alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
-              backgroundColor: 'rgba(255,255,255,0.85)',
-              backdropFilter: 'saturate(180%) blur(12px)',
-              borderBottom: '1px solid rgba(15,23,42,0.07)',
+              backgroundColor: 'var(--bg-glass)',
+              backdropFilter: 'saturate(150%) blur(16px)',
+              borderBottom: '1px solid var(--border)',
             }}
           >
             <button
@@ -179,10 +190,10 @@ export default function App() {
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                border: '1px solid rgba(15,23,42,0.08)',
-                backgroundColor: '#fff',
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--card)',
                 cursor: 'pointer',
-                color: '#0F1C2E',
+                color: 'var(--text-primary)',
                 flexShrink: 0,
               }}
             >
@@ -226,9 +237,9 @@ export default function App() {
                 width: 34,
                 height: 34,
                 borderRadius: 9,
-                border: '1px solid rgba(15,23,42,0.08)',
-                backgroundColor: '#fff',
-                color: '#9CAABB',
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--card)',
+                color: 'var(--text-muted)',
                 cursor: 'pointer',
                 flexShrink: 0,
               }}

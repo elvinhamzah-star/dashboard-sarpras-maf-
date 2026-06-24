@@ -5,21 +5,53 @@
   --navy: #0D1829;
   --blue: #1A6FE8;
   --blue-dark: #0858b0;
-  --blue-light: #EEF4FF;
+  --blue-light: rgba(26,111,232,0.1);
   --text-primary: #0F1C2E;
   --text-secondary: #5C6B82;
-  --text-muted: #9CAABB;
+  --text-muted: #64748B;
   --bg: #F1F4F9;
   --card: #ffffff;
+  --card-hover: #F8FAFF;
+  --surface-raised: #FAFBFC;
+  --surface-2: rgba(15,23,42,0.07);
+  --surface-subtle: rgba(15,23,42,0.05);
+  --surface-hover: rgba(15,23,42,0.04);
+  --surface-min: rgba(15,23,42,0.03);
   --border: rgba(15,23,42,0.08);
+  --border-subtle: rgba(15,23,42,0.06);
   --border-strong: rgba(15,23,42,0.12);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-lg: 0 12px 32px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+  --bg-glass: rgba(255,255,255,0.85);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --transition: all 0.18s ease;
+}
+
+[data-theme="dark"] {
+  --blue: #5B9EF9;
+  --blue-dark: #3B7FD4;
+  --blue-light: rgba(91,158,249,0.14);
+  --text-primary: #EDF0F5;
+  --text-secondary: #9AAABF;
+  --text-muted: #5E6E84;
+  --bg: #10141C;
+  --card: #1A2030;
+  --card-hover: #212840;
+  --surface-raised: #1E2638;
+  --surface-2: rgba(255,255,255,0.07);
+  --surface-subtle: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.05);
+  --surface-min: rgba(255,255,255,0.025);
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+  --border-strong: rgba(255,255,255,0.13);
+  --bg-glass: rgba(26,32,48,0.88);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
 }
 
 * {
@@ -49,7 +81,7 @@ input, select, textarea {
   font-family: inherit;
 }
 
-/* Premium scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -63,6 +95,12 @@ input, select, textarea {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(15,23,42,0.25);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
 }
 
 /* Focus ring */
@@ -92,10 +130,13 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(26,111,232,0.1) !important;
 }
 
-/* Date input - consistent styling */
+/* Date input */
 input[type="date"] {
   color-scheme: light;
   cursor: pointer;
+}
+[data-theme="dark"] input[type="date"] {
+  color-scheme: dark;
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
@@ -104,6 +145,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-radius: 4px;
   padding: 2px;
   transition: opacity 0.15s;
+}
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
 }
 input[type="date"]:hover::-webkit-calendar-picker-indicator {
   opacity: 0.8;

@@ -158,8 +158,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F1C2E', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
-          <p style={{ color: '#5C6B82', fontSize: 13, marginTop: 5 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5 }}>
             {selectedMonth
               ? `Transaksi bulan ${monthLabelFromYM(selectedMonth)}`
               : 'Riwayat transaksi keuangan Sarpras MAF'}
@@ -174,9 +174,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               style={{
                 padding: '9px 14px',
                 borderRadius: 10,
-                border: `1px solid ${showRiwayat ? 'rgba(15,23,42,0.12)' : 'rgba(26,111,232,0.25)'}`,
-                backgroundColor: showRiwayat ? '#fff' : 'rgba(26,111,232,0.06)',
-                color: showRiwayat ? '#5C6B82' : '#1A6FE8',
+                border: `1px solid ${showRiwayat ? 'var(--border-strong)' : 'rgba(26,111,232,0.25)'}`,
+                backgroundColor: showRiwayat ? 'var(--card)' : 'rgba(26,111,232,0.06)',
+                color: showRiwayat ? 'var(--text-secondary)' : '#1A6FE8',
                 fontSize: 12.5,
                 fontWeight: 600,
                 cursor: togglingRiwayat ? 'wait' : 'pointer',
@@ -205,7 +205,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 borderRadius: 10,
                 border: 'none',
                 backgroundColor: '#1A6FE8',
-                color: '#fff',
+                color: 'var(--card)',
                 fontSize: 13.5,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -233,7 +233,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <MonthSelector value={selectedMonth} months={availableMonths} onChange={onMonthChange} />
           {selectedMonth && (
-            <span style={{ fontSize: 12, color: '#9CAABB' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {monthTransactions.length} transaksi · {formatRupiah(totalMasuk)} masuk · {formatRupiah(totalKeluar + totalKeluarPBB)} keluar
             </span>
           )}
@@ -246,10 +246,10 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <div
             key={card.title}
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               borderRadius: 14,
               padding: '22px 24px',
-              border: '1px solid rgba(15,23,42,0.07)',
+              border: '1px solid var(--border-subtle)',
               borderLeft: `3px solid ${card.borderColor}`,
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s, transform 0.18s',
@@ -265,13 +265,13 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
               {card.title}
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
               {card.value}
             </div>
-            <div style={{ fontSize: 12, color: '#9CAABB' }}>{card.subtitle}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{card.subtitle}</div>
           </div>
         ))}
       </div>
@@ -282,10 +282,10 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <div
             key={card.title}
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card)',
               borderRadius: 14,
               padding: '16px 18px',
-              border: '1px solid rgba(15,23,42,0.07)',
+              border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s, transform 0.18s',
             }}
@@ -300,13 +300,13 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {card.title}
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
               {card.value}
             </div>
-            <div style={{ fontSize: 11, color: '#9CAABB' }}>{card.subtitle}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{card.subtitle}</div>
           </div>
         ))}
       </div>
@@ -315,9 +315,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {serapanBulanan.length > 0 && (
         <div
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card)',
             borderRadius: 14,
-            border: '1px solid rgba(15,23,42,0.07)',
+            border: '1px solid var(--border-subtle)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             overflow: 'hidden',
             marginBottom: 22,
@@ -327,7 +327,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             onClick={() => setShowSerapan(v => !v)}
             style={{
               padding: '14px 20px',
-              borderBottom: showSerapan ? '1px solid rgba(15,23,42,0.06)' : 'none',
+              borderBottom: showSerapan ? '1px solid var(--border-subtle)' : 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -336,10 +336,10 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             }}
           >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
-              <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9CAABB', fontSize: 12, fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 }}>
               <span>{showSerapan ? 'Sembunyikan' : 'Tampilkan Detail'}</span>
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
                 style={{ transform: showSerapan ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s', flexShrink: 0 }}>
@@ -353,7 +353,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 <thead>
                   <tr>
                     {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#9CAABB', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(15,23,42,0.06)', backgroundColor: '#FAFBFC', whiteSpace: 'nowrap' }}>
+                      <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-raised)', whiteSpace: 'nowrap' }}>
                         {h}
                       </th>
                     ))}
@@ -363,14 +363,14 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   {serapanBulanan.map((row, i) => (
                     <tr
                       key={row.label}
-                      style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none', transition: 'background 0.1s' }}
+                      style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid var(--surface-min)' : 'none', transition: 'background 0.1s' }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                     >
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#0F1C2E' }}>{row.label}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</td>
                       <td style={{ padding: '11px 16px', fontSize: 13, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
                       <td style={{ padding: '11px 16px', fontSize: 13, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: '#0F1C2E', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -383,18 +383,18 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {/* Transactions Table */}
       {showRiwayat && <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 14,
-          border: '1px solid rgba(15,23,42,0.07)',
+          border: '1px solid var(--border-subtle)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           overflow: 'hidden',
         }}
       >
         {/* Table header */}
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
-            <div style={{ fontSize: 12, color: '#9CAABB', marginTop: 2 }}>{filtered.length} transaksi</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} transaksi</div>
           </div>
           <div style={{ display: 'flex', gap: 5 }}>
             {JENIS_TABS.map(tab => (
@@ -404,12 +404,12 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 style={{
                   padding: '5px 11px',
                   borderRadius: 7,
-                  border: filterJenis === tab ? 'none' : '1px solid rgba(15,23,42,0.1)',
+                  border: filterJenis === tab ? 'none' : '1px solid var(--border)',
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: filterJenis === tab ? '#1A6FE8' : '#fff',
-                  color: filterJenis === tab ? '#fff' : '#5C6B82',
+                  backgroundColor: filterJenis === tab ? '#1A6FE8' : 'var(--card)',
+                  color: filterJenis === tab ? '#fff' : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                 }}
               >
@@ -420,9 +420,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         </div>
 
         {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>Memuat data...</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat data...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#9CAABB', fontSize: 13 }}>Belum ada transaksi.</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum ada transaksi.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
@@ -436,11 +436,11 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                         textAlign: 'left',
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#9CAABB',
+                        color: 'var(--text-muted)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.06em',
-                        borderBottom: '1px solid rgba(15,23,42,0.06)',
-                        backgroundColor: '#FAFBFC',
+                        borderBottom: '1px solid var(--border-subtle)',
+                        backgroundColor: 'var(--surface-raised)',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -454,29 +454,29 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   const isMasuk = t.jenis_transaksi === 'Masuk'
                   const isKeluarPBB = t.jenis_transaksi === 'Keluar PBB'
                   const nominalColor = isMasuk ? '#059669' : isKeluarPBB ? '#D97706' : '#DC2626'
-                  const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: '#6B7A99', text: '#fff' }
+                  const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
 
                   return (
                     <tr
                       key={t.id}
                       style={{
-                        borderBottom: i < paged.length - 1 ? '1px solid rgba(15,23,42,0.04)' : 'none',
-                        backgroundColor: '#fff',
+                        borderBottom: i < paged.length - 1 ? '1px solid var(--surface-min)' : 'none',
+                        backgroundColor: 'var(--card)',
                         transition: 'background 0.1s',
                       }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                     >
-                      <td style={{ padding: '12px 16px', fontSize: 12, color: '#5C6B82', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                         {formatTanggal(t.tanggal)}
                       </td>
                       <td style={{ padding: '12px 16px', maxWidth: 160 }}>
-                        <div style={{ fontSize: 12.5, color: '#0F1C2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                        <div style={{ fontSize: 12.5, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
                           {t.nama_pekerjaan || '-'}
                         </div>
                       </td>
                       <td style={{ padding: '12px 16px', maxWidth: 180 }}>
-                        <div style={{ fontSize: 12, color: '#5C6B82', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {t.deskripsi || '-'}
                         </div>
                       </td>
@@ -491,7 +491,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                             fontSize: 11,
                             fontWeight: 700,
                             backgroundColor: badgeColor.bg,
-                            color: '#fff',
+                            color: 'var(--card)',
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -537,9 +537,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                             style={{
                               padding: '5px 9px',
                               borderRadius: 7,
-                              border: '1px solid rgba(15,23,42,0.1)',
-                              backgroundColor: '#fff',
-                              color: '#5C6B82',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--card)',
+                              color: 'var(--text-secondary)',
                               fontSize: 11.5,
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -556,9 +556,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                             }}
                             onMouseLeave={e => {
                               const btn = e.currentTarget as HTMLButtonElement
-                              btn.style.backgroundColor = '#fff'
-                              btn.style.color = '#5C6B82'
-                              btn.style.borderColor = 'rgba(15,23,42,0.1)'
+                              btn.style.backgroundColor = 'var(--card)'
+                              btn.style.color = 'var(--text-secondary)'
+                              btn.style.borderColor = 'var(--border)'
                             }}
                           >
                             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -579,8 +579,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
 
         {/* Pagination */}
         {!loading && filtered.length > itemsPerPage && (
-          <div style={{ padding: '14px 20px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ fontSize: 12, color: '#9CAABB' }}>
+          <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {start + 1}–{Math.min(start + itemsPerPage, filtered.length)} dari {filtered.length} transaksi
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -590,19 +590,19 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 style={{
                   padding: '5px 12px',
                   borderRadius: 7,
-                  border: '1px solid rgba(15,23,42,0.1)',
-                  backgroundColor: '#fff',
+                  border: '1px solid var(--border)',
+                  backgroundColor: 'var(--card)',
                   cursor: page === 1 ? 'default' : 'pointer',
                   opacity: page === 1 ? 0.4 : 1,
                   fontSize: 12,
                   fontWeight: 600,
-                  color: '#5C6B82',
+                  color: 'var(--text-secondary)',
                   transition: 'all 0.12s',
                 }}
               >
                 ← Sebelumnya
               </button>
-              <span style={{ fontSize: 12, color: '#9CAABB', padding: '0 4px' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '0 4px' }}>
                 {page} / {totalPages}
               </span>
               <button
@@ -611,13 +611,13 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 style={{
                   padding: '5px 12px',
                   borderRadius: 7,
-                  border: '1px solid rgba(15,23,42,0.1)',
-                  backgroundColor: '#fff',
+                  border: '1px solid var(--border)',
+                  backgroundColor: 'var(--card)',
                   cursor: page === totalPages ? 'default' : 'pointer',
                   opacity: page === totalPages ? 0.4 : 1,
                   fontSize: 12,
                   fontWeight: 600,
-                  color: '#5C6B82',
+                  color: 'var(--text-secondary)',
                   transition: 'all 0.12s',
                 }}
               >

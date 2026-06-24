@@ -44,7 +44,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '32px 28px',
           width: '100%',
@@ -69,7 +69,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
             </svg>
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Masuk Mode Admin</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
             Masukkan PIN 4 digit untuk mengakses fitur admin
           </div>
         </div>
@@ -114,8 +114,8 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
               flex: 1, padding: '11px',
               borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff',
-              color: '#6B7A99',
+              backgroundColor: 'var(--card)',
+              color: 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
@@ -130,8 +130,8 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
               flex: 1, padding: '11px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: canSubmit ? '#1A6FE8' : 'rgba(15,23,42,0.1)',
-              color: canSubmit ? '#fff' : '#9CAABB',
+              backgroundColor: canSubmit ? '#1A6FE8' : 'var(--border)',
+              color: canSubmit ? '#fff' : 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,
               cursor: canSubmit ? 'pointer' : 'not-allowed',

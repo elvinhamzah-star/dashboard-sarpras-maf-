@@ -53,9 +53,9 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
       aria-label={dir === 'older' ? 'Bulan sebelumnya' : 'Bulan berikutnya'}
       style={{
         width: 30, height: 32, borderRadius: 8, flexShrink: 0,
-        border: '1px solid rgba(15,23,42,0.12)', backgroundColor: '#fff',
+        border: '1px solid var(--border-strong)', backgroundColor: 'var(--card)',
         cursor: enabled ? 'pointer' : 'default', opacity: enabled ? 1 : 0.35,
-        color: '#5C6B82', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+        color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
       }}
     >
       <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
@@ -75,10 +75,10 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
         onClick={() => (open ? setOpen(false) : openPanel())}
         style={{
           minWidth: 150, height: 32, padding: '0 12px', borderRadius: 8,
-          border: `1px solid ${open ? '#1A6FE8' : 'rgba(15,23,42,0.12)'}`,
-          backgroundColor: '#fff', cursor: 'pointer',
+          border: `1px solid ${open ? '#1A6FE8' : 'var(--border-strong)'}`,
+          backgroundColor: 'var(--card)', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-          fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: '#0F1C2E',
+          fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
           boxShadow: open ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none', transition: 'all 0.15s',
         }}
       >
@@ -100,7 +100,7 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
       {open && (
         <div style={{
           position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 200,
-          backgroundColor: '#fff', borderRadius: 12, border: '1px solid rgba(26,43,94,0.12)',
+          backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid rgba(26,43,94,0.12)',
           boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
           maxHeight: 280, overflowY: 'auto',
         }}>
@@ -113,13 +113,13 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
                 onClick={() => { onChange(m); setOpen(false) }}
                 style={{
                   width: '100%', padding: '10px 14px', border: 'none',
-                  borderBottom: i === 0 ? '1px solid rgba(15,23,42,0.06)' : 'none',
+                  borderBottom: i === 0 ? '1px solid var(--border-subtle)' : 'none',
                   backgroundColor: active ? 'rgba(26,111,232,0.06)' : 'transparent',
-                  color: active ? '#1A6FE8' : '#0F1C2E', fontSize: 13,
+                  color: active ? '#1A6FE8' : 'var(--text-primary)', fontSize: 13,
                   fontWeight: active ? 700 : 500, fontFamily: 'inherit', cursor: 'pointer',
                   textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8,
                 }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(15,23,42,0.03)' }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
               >
                 {active && (

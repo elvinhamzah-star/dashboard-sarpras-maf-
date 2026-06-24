@@ -46,7 +46,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: '#6B7A99',
+    fontSize: 12, fontWeight: 600, color: 'var(--text-muted)',
     display: 'block', marginBottom: 8,
     textTransform: 'uppercase', letterSpacing: '0.04em',
   }
@@ -54,7 +54,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
   const selectStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10,
     border: '1px solid rgba(26,43,94,0.15)', fontSize: 13,
-    color: '#0D1829', backgroundColor: '#fff',
+    color: '#0D1829', backgroundColor: 'var(--card)',
     outline: 'none', cursor: 'pointer', fontFamily: 'inherit',
   }
 
@@ -70,7 +70,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
     >
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--card)',
           borderRadius: 16,
           padding: '28px',
           width: '100%',
@@ -82,11 +82,11 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
       >
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Tambah Isu Lapangan</div>
-          <div style={{ fontSize: 12, color: '#6B7A99', marginTop: 4 }}>Tambahkan isu baru untuk dilacak</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tambahkan isu baru untuk dilacak</div>
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#991b1b', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.08)', color: '#E53E3E', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -134,7 +134,7 @@ export default function AddIsuModal({ onClose, onSuccess }: AddIsuModalProps) {
             style={{
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid rgba(26,43,94,0.15)',
-              backgroundColor: '#fff', color: '#6B7A99',
+              backgroundColor: 'var(--card)', color: 'var(--text-muted)',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >
