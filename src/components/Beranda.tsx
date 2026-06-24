@@ -384,17 +384,27 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                     </div>
                     {p.isu_utama && (
                       <div style={{
-                        marginTop: 7,
-                        fontSize: 11,
-                        color: 'var(--text-secondary)',
-                        lineHeight: 1.5,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        whiteSpace: 'pre-line',
+                        marginTop: 8,
+                        backgroundColor: 'rgba(217,119,6,0.07)',
+                        borderLeft: '2.5px solid #D97706',
+                        borderRadius: 7,
+                        padding: '7px 10px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 7,
                       }}>
-                        {p.isu_utama}
+                        <svg width="12" height="12" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24" style={{ marginTop: 2, flexShrink: 0 }}>
+                          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                              <span style={{ width: 3, height: 3, borderRadius: '50%', backgroundColor: '#92400e', flexShrink: 0, marginTop: 6 }} />
+                              <span style={{ fontSize: 11, color: '#92400e', fontWeight: 500, lineHeight: 1.5 }}>{line}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
