@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useTheme } from './lib/useTheme'
 import Sidebar from './components/Sidebar'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
@@ -15,7 +14,6 @@ import { clearAdminPin } from './lib/adminApi'
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat'
 
 export default function App() {
-  const { isDark, toggle: toggleTheme } = useTheme()
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -133,8 +131,6 @@ export default function App() {
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
-        isDark={isDark}
-        onToggleTheme={toggleTheme}
       />
 
       {/* Mobile backdrop */}
