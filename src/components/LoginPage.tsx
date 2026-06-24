@@ -55,11 +55,17 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       >
         {/* Logo area */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <img
-            src="/LogoPBBNew.svg"
-            alt="Peradaban Baik Bahagia"
-            style={{ width: 260, height: 'auto', display: 'block', margin: '0 auto 6px' }}
-          />
+          <div style={{
+            display: 'inline-block', backgroundColor: '#fff',
+            borderRadius: 10, padding: '10px 18px',
+            marginBottom: 6, boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+          }}>
+            <img
+              src="/LogoPBBNew.svg"
+              alt="Peradaban Baik Bahagia"
+              style={{ width: 220, height: 'auto', display: 'block' }}
+            />
+          </div>
           <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 500 }}>
             Dashboard Sarpras MAF
           </div>
@@ -87,13 +93,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             autoComplete="off"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
-              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'rgba(26,43,94,0.15)'}`,
-              fontSize: 14, color: '#0D1829', fontFamily: 'inherit',
+              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+              fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit',
               outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
             }}
             onFocus={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,111,232,0.5)' }}
-            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,43,94,0.15)' }}
+            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'var(--border)' }}
           />
         </div>
 
@@ -115,13 +121,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             autoComplete="current-password"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
-              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'rgba(26,43,94,0.15)'}`,
-              fontSize: 20, letterSpacing: '0.25em', color: '#0D1829',
+              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+              fontSize: 20, letterSpacing: '0.25em', color: 'var(--text-primary)',
               fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
             }}
             onFocus={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,111,232,0.5)' }}
-            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,43,94,0.15)' }}
+            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'var(--border)' }}
           />
         </div>
 

@@ -68,7 +68,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
               <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Masuk Mode Admin</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Masuk Mode Admin</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
             Masukkan PIN 4 digit untuk mengakses fitur admin
           </div>
@@ -86,14 +86,14 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
           placeholder="• • • •"
           style={{
             width: '100%',
-            border: `1px solid ${error ? '#EF4444' : 'rgba(26,43,94,0.15)'}`,
+            border: `1px solid ${error ? '#EF4444' : 'var(--border)'}`,
             borderRadius: 10,
             padding: '14px',
             textAlign: 'center',
             fontSize: 24,
             letterSpacing: '0.5em',
             fontWeight: 700,
-            color: '#0D1829',
+            color: 'var(--text-primary)',
             outline: 'none',
             marginTop: 20,
             marginBottom: 8,
@@ -113,7 +113,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
             style={{
               flex: 1, padding: '11px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,
