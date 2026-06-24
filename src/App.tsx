@@ -205,7 +205,7 @@ export default function App() {
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
               <img src="/LogoPBB.svg" alt="Logo" style={{ height: 38, width: 'auto', flexShrink: 0, filter: 'grayscale(1) brightness(0) contrast(1)', mixBlendMode: 'multiply' }} />
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#0F1C2E', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {pageTitles[currentPage]}
               </span>
             </div>

@@ -364,7 +364,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                     <tr
                       key={row.label}
                       style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid var(--surface-min)' : 'none', transition: 'background 0.1s' }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                     >
                       <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</td>
@@ -464,7 +464,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                         backgroundColor: 'var(--card)',
                         transition: 'background 0.1s',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                     >
                       <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
@@ -526,7 +526,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                             Lihat Bukti
                           </button>
                         ) : (
-                          <span style={{ color: '#C8D2E0', fontSize: 12 }}>—</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
                         )}
                       </td>
                       {isAdmin && (

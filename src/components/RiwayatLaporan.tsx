@@ -66,14 +66,14 @@ const hasAnyData = (d: LaporanPerProgram) =>
 function BulletList({ items, color }: { items: string[]; color: string }) {
   const filtered = items.filter(i => i.trim())
   if (!filtered.length) {
-    return <span style={{ fontSize: 13, color: '#C8D2E0', fontStyle: 'italic' }}>Belum ada catatan</span>
+    return <span style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ada catatan</span>
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {filtered.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: color, flexShrink: 0, marginTop: 7 }} />
-          <span style={{ fontSize: 13, color: '#1A2637', lineHeight: 1.6 }}>{item}</span>
+          <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6 }}>{item}</span>
         </div>
       ))}
     </div>
@@ -119,7 +119,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
               {name}
             </div>
             {vendor && (
-              <div style={{ fontSize: 11.5, color: '#7A8FA8', marginTop: 3 }}>{vendor}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 3 }}>{vendor}</div>
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -373,7 +373,7 @@ export default function RiwayatLaporan() {
               </div>
               {grouped.map(({ monthYear, notes: mNotes }) => (
                 <div key={monthYear}>
-                  <div style={{ padding: '10px 16px 6px', fontSize: 10.5, fontWeight: 700, color: '#B0BCCB', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  <div style={{ padding: '10px 16px 6px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                     {monthYear}
                   </div>
                   {mNotes.map(n => {

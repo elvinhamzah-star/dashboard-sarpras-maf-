@@ -31,7 +31,7 @@ export default function BulletInput({ items, onChange, placeholder = 'Tulis poin
                   borderRadius: 8,
                   border: '1px solid rgba(26,43,94,0.15)',
                   fontSize: 13,
-                  color: '#0D1829',
+                  color: 'var(--text-primary)',
                   fontFamily: 'inherit',
                   outline: 'none',
                   backgroundColor: 'var(--card)',
