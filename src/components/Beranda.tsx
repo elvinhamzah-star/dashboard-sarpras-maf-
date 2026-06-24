@@ -389,11 +389,12 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                         color: 'var(--text-secondary)',
                         lineHeight: 1.5,
                         display: '-webkit-box',
-                        WebkitLineClamp: 2,
+                        WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
+                        whiteSpace: 'pre-line',
                       }}>
-                        {p.isu_utama.split('\n')[0]}
+                        {p.isu_utama}
                       </div>
                     )}
                   </div>
