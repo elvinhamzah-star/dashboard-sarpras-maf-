@@ -50,7 +50,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [showProgramList, setShowProgramList] = useState(false)
+  const [showProgramList, setShowProgramList] = useState(true)
+  const [showLaporan, setShowLaporan] = useState(false)
   const [listFilter, setListFilter] = useState('On Going')
 
   useEffect(() => {
@@ -421,7 +422,32 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       </div>
 
       {/* Laporan Pekanan */}
-      <LaporanPekananCard isAdmin={isAdmin} programs={programs} />
+      <div>
+        <button
+          onClick={() => setShowLaporan(v => !v)}
+          style={{
+            width: '100%', padding: '10px 16px',
+            borderRadius: 10,
+            border: showLaporan ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
+            backgroundColor: showLaporan ? 'rgba(26,111,232,0.06)' : 'var(--card)',
+            color: showLaporan ? '#1A6FE8' : 'var(--text-secondary)',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
+          }}
+        >
+          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"
+            style={{ transform: showLaporan ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          {showLaporan ? 'Sembunyikan Laporan Pekanan' : 'Tampilkan Laporan Pekanan'}
+        </button>
+        {showLaporan && (
+          <div style={{ marginTop: 12 }}>
+            <LaporanPekananCard isAdmin={isAdmin} programs={programs} />
+          </div>
+        )}
+      </div>
 
     </div>
   )
