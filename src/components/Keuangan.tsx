@@ -18,6 +18,11 @@ const JENIS_ICONS: Record<string, JSX.Element> = {
       <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
     </svg>
   ),
+  'Dana PBB': (
+    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+    </svg>
+  ),
   Keluar: (
     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
@@ -72,17 +77,23 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
     : transactions
 
   const masukList = monthTransactions.filter(t => t.jenis_transaksi === 'Masuk')
+  const danaPBBList = monthTransactions.filter(t => t.jenis_transaksi === 'Dana PBB')
   const keluarList = monthTransactions.filter(t => t.jenis_transaksi === 'Keluar')
   const keluarPBBList = monthTransactions.filter(t => t.jenis_transaksi === 'Keluar PBB')
 
   const totalMasuk = masukList.reduce((s, t) => s + (t.nominal || 0), 0)
+  const totalDanaPBB = danaPBBList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluar = keluarList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluarPBB = keluarPBBList.reduce((s, t) => s + (t.nominal || 0), 0)
-  const totalDeployment = totalMasuk + totalKeluarPBB
+  const totalDeployment = totalMasuk + totalDanaPBB + totalKeluarPBB
   // Saldo Kas is a running balance (stock), so always compute it across ALL
   // transactions — never scope it to the selected month like the flow cards.
   const saldoKas = transactions.reduce(
-    (s, t) => s + (t.jenis_transaksi === 'Masuk' ? (t.nominal || 0) : t.jenis_transaksi === 'Keluar' ? -(t.nominal || 0) : 0),
+    (s, t) => s + (
+      t.jenis_transaksi === 'Masuk' || t.jenis_transaksi === 'Dana PBB' ? (t.nominal || 0)
+      : t.jenis_transaksi === 'Keluar' ? -(t.nominal || 0)
+      : 0
+    ),
     0,
   )
 
@@ -114,6 +125,12 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
 
   const smallCards = [
     {
+      title: 'Dana PBB',
+      value: formatRupiah(totalDanaPBB),
+      subtitle: `${danaPBBList.length} transaksi masuk`,
+      color: '#0E7490',
+    },
+    {
       title: 'Dana Keluar',
       value: formatRupiah(totalKeluar),
       subtitle: `${keluarList.length} transaksi`,
@@ -128,7 +145,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
     {
       title: 'Total Deployment',
       value: formatRupiah(totalDeployment),
-      subtitle: 'Masuk + Keluar PBB',
+      subtitle: 'Masuk + Dana PBB + Keluar PBB',
       color: '#1A6FE8',
     },
   ]
@@ -136,7 +153,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
   const serapanBulanan = (() => {
     const map: Record<string, { keluar: number; keluarPBB: number }> = {}
     transactions.forEach(t => {
-      if (t.jenis_transaksi === 'Masuk') return
+      if (t.jenis_transaksi === 'Masuk' || t.jenis_transaksi === 'Dana PBB') return
       const ym = t.tanggal.slice(0, 7)
       if (!map[ym]) map[ym] = { keluar: 0, keluarPBB: 0 }
       if (t.jenis_transaksi === 'Keluar') map[ym].keluar += t.nominal || 0
@@ -151,7 +168,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       })
   })()
 
-  const JENIS_TABS = ['Semua', 'Masuk', 'Keluar', 'Keluar PBB']
+  const JENIS_TABS = ['Semua', 'Masuk', 'Dana PBB', 'Keluar', 'Keluar PBB']
 
   return (
     <div style={{ padding: '28px 28px 48px' }}>
@@ -452,8 +469,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               <tbody>
                 {paged.map((t, i) => {
                   const isMasuk = t.jenis_transaksi === 'Masuk'
+                  const isDanaPBB = t.jenis_transaksi === 'Dana PBB'
                   const isKeluarPBB = t.jenis_transaksi === 'Keluar PBB'
-                  const nominalColor = isMasuk ? '#059669' : isKeluarPBB ? '#D97706' : '#DC2626'
+                  const nominalColor = (isMasuk || isDanaPBB) ? '#059669' : isKeluarPBB ? '#D97706' : '#DC2626'
                   const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
 
                   return (
