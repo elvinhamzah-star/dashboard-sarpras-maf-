@@ -8,6 +8,8 @@ interface SidebarProps {
   onLogout: () => void
   onShowPinModal: () => void
   onLogoutDashboard: () => void
+  isDark?: boolean
+  onToggleTheme?: () => void
 }
 
 const menuItems = [
@@ -67,7 +69,7 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, onLogout, onShowPinModal, onLogoutDashboard }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, onLogout, onShowPinModal, onLogoutDashboard, isDark = false, onToggleTheme }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
   return (
     <div
@@ -209,6 +211,46 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       <div style={{ padding: '10px 8px 16px', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         {expanded ? (
           <div>
+            {/* Theme toggle */}
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                title={isDark ? 'Ganti ke Light Mode' : 'Ganti ke Dark Mode'}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  width: '100%', padding: '7px 8px', marginBottom: 6,
+                  borderRadius: 9, border: 'none', cursor: 'pointer',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.55)',
+                  fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.backgroundColor = 'rgba(255,255,255,0.09)'
+                  b.style.color = 'rgba(255,255,255,0.85)'
+                }}
+                onMouseLeave={e => {
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.backgroundColor = 'rgba(255,255,255,0.05)'
+                  b.style.color = 'rgba(255,255,255,0.55)'
+                }}
+              >
+                {isDark ? (
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                  </svg>
+                )}
+                {isDark ? 'Light Mode' : 'Dark Mode'}
+              </button>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 6px', marginBottom: 4 }}>
               <div
                 style={{
@@ -335,6 +377,44 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 34, height: 34, borderRadius: 8,
+                  backgroundColor: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  cursor: 'pointer', color: 'rgba(255,255,255,0.5)', padding: 0,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.backgroundColor = 'rgba(255,255,255,0.12)'
+                  b.style.color = 'rgba(255,255,255,0.9)'
+                }}
+                onMouseLeave={e => {
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.backgroundColor = 'rgba(255,255,255,0.06)'
+                  b.style.color = 'rgba(255,255,255,0.5)'
+                }}
+              >
+                {isDark ? (
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                  </svg>
+                )}
+              </button>
+            )}
             <button
               onClick={isAdmin ? onLogout : onShowPinModal}
               title={isAdmin ? 'Keluar Mode Admin' : 'Masuk Mode Admin'}
