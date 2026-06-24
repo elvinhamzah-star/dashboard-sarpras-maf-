@@ -55,17 +55,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       >
         {/* Logo area */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{
-            display: 'inline-block', backgroundColor: '#fff',
-            borderRadius: 10, padding: '10px 18px',
-            marginBottom: 6, boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-          }}>
-            <img
-              src="/LogoPBBNew.svg"
-              alt="Peradaban Baik Bahagia"
-              style={{ width: 220, height: 'auto', display: 'block' }}
-            />
-          </div>
+          <img
+            src="/LogoPBBNew.svg"
+            alt="Peradaban Baik Bahagia"
+            style={{ width: 220, height: 'auto', display: 'block', margin: '0 auto 6px' }}
+          />
           <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 500 }}>
             Dashboard Sarpras MAF
           </div>
