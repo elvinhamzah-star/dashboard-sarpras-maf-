@@ -149,12 +149,14 @@ function LeftItem({
   isSelected,
   statusColor,
   statusBg,
+  notePreview,
   onClick,
 }: {
   program: DisplayProgram
   isSelected: boolean
   statusColor: string
   statusBg: string
+  notePreview?: string
   onClick: () => void
 }) {
   const [hovered, setHovered] = useState(false)
@@ -190,6 +192,20 @@ function LeftItem({
           {progress}%
         </span>
       </div>
+      {notePreview && (
+        <div style={{
+          marginTop: 6,
+          fontSize: 10.5,
+          color: 'var(--text-secondary)',
+          lineHeight: 1.4,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {notePreview}
+        </div>
+      )}
     </div>
   )
 }
@@ -427,6 +443,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       : displayedSelesaiPrograms.some(p => p.id === selectedId)
   )
 
+  const getNotePreview = (progId: string) =>
+    perProgram[progId]?.dikerjakan.find(x => x.trim()) ?? undefined
+
   const getStatusColor = (id: string) => {
     if (isPastWeek && !isAdmin) {
       if (histOnhold.some(p => p.id === id)) return '#D97706'
@@ -526,7 +545,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Pekerjaan Berjalan" count={histOngoing.length} color="#1A6FE8" bg="rgba(26,111,232,0.04)" />
                     {histOngoing.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -534,7 +553,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Dalam Garansi" count={histSelesai.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {histSelesai.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -542,7 +561,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="On Hold" count={histOnhold.length} color="#D97706" bg="rgba(217,119,6,0.04)" />
                     {histOnhold.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#D97706" statusBg="rgba(217,119,6,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#D97706" statusBg="rgba(217,119,6,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -550,7 +569,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Perencanaan" count={histPlanning.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
                     {histPlanning.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -562,7 +581,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Pekerjaan Berjalan" count={activePrograms.length} color="#1A6FE8" bg="rgba(26,111,232,0.04)" />
                     {activePrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -570,7 +589,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Dalam Garansi" count={displayedSelesaiPrograms.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {displayedSelesaiPrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                   </>
                 )}
@@ -578,7 +597,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Perencanaan Pekan Depan" count={displayedPlanningPrograms.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
                     {displayedPlanningPrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                     {isAdmin && (
                       <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownRef}>
