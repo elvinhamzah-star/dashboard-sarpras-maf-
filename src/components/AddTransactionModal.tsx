@@ -326,7 +326,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Jenis Transaksi</label>
           <div style={{ display: 'flex', gap: 8 }}>
-            {['Masuk', 'Dana PBB', 'Keluar', 'Keluar PBB'].map(j => (
+            {['Masuk', 'Keluar', 'Keluar PBB'].map(j => (
               <label
                 key={j}
                 style={{

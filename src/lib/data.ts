@@ -73,7 +73,6 @@ export function formatNumberShort(num: number): string {
 // Updated darker transaction colors
 export const TRANSACTION_COLORS: Record<string, { bg: string; text: string; light: string }> = {
   'Masuk': { bg: '#059669', text: '#fff', light: 'rgba(5,150,105,0.1)' },
-  'Dana PBB': { bg: '#0E7490', text: '#fff', light: 'rgba(14,116,144,0.1)' },
   'Keluar': { bg: '#991b1b', text: '#fff', light: 'rgba(153,27,27,0.1)' },
   'Keluar PBB': { bg: '#92400e', text: '#fff', light: 'rgba(146,64,14,0.1)' },
 }
