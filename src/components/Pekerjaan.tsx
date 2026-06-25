@@ -58,7 +58,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
           <button
             onClick={onAddPekerjaan}
             style={{
-              backgroundColor: '#1A6FE8',
+              backgroundColor: 'var(--blue)',
               color: 'var(--card)',
               border: 'none',
               borderRadius: 10,
@@ -77,7 +77,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4'
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8'
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)'
             }}
           >
             <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           {STATUS_TABS.map(tab => {
             const isActive = activeStatus === tab
-            const tabColor = tab === 'Semua' ? '#1A6FE8' : STATUS_COLORS[tab] || 'var(--text-secondary)'
+            const tabColor = tab === 'Semua' ? 'var(--blue)' : STATUS_COLORS[tab] || 'var(--text-secondary)'
             const count = statusCounts[tab] || 0
             return (
               <button
@@ -139,7 +139,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: isActive ? (tab === 'Semua' ? '#1A6FE8' : `${STATUS_COLORS[tab]}18`) : 'var(--card)',
+                  backgroundColor: isActive ? (tab === 'Semua' ? 'var(--blue)' : `${STATUS_COLORS[tab]}18`) : 'var(--card)',
                   color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                   display: 'flex',
@@ -272,13 +272,13 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                           style={{
                             width: `${Math.min(p.progress_percent || 0, 100)}%`,
                             height: '100%',
-                            backgroundColor: STATUS_COLORS[p.status] || '#1A6FE8',
+                            backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)',
                             borderRadius: 10,
                             transition: 'width 0.3s ease',
                           }}
                         />
                       </div>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[p.status] || '#1A6FE8', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[p.status] || 'var(--blue)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {p.progress_percent || 0}%
                       </span>
                     </div>

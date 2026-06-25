@@ -129,7 +129,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       title: 'Total Deployment',
       value: formatRupiah(totalDeployment),
       subtitle: 'Masuk + Keluar PBB',
-      color: '#1A6FE8',
+      color: 'var(--blue)',
     },
   ]
 
@@ -176,7 +176,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 borderRadius: 10,
                 border: `1px solid ${showRiwayat ? 'var(--border-strong)' : 'rgba(26,111,232,0.25)'}`,
                 backgroundColor: showRiwayat ? 'var(--card)' : 'rgba(26,111,232,0.06)',
-                color: showRiwayat ? 'var(--text-secondary)' : '#1A6FE8',
+                color: showRiwayat ? 'var(--text-secondary)' : 'var(--blue)',
                 fontSize: 12.5,
                 fontWeight: 600,
                 cursor: togglingRiwayat ? 'wait' : 'pointer',
@@ -204,7 +204,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 padding: '9px 18px',
                 borderRadius: 10,
                 border: 'none',
-                backgroundColor: '#1A6FE8',
+                backgroundColor: 'var(--blue)',
                 color: 'var(--card)',
                 fontSize: 13.5,
                 fontWeight: 600,
@@ -217,7 +217,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 gap: 7,
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -408,7 +408,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: filterJenis === tab ? '#1A6FE8' : 'var(--card)',
+                  backgroundColor: filterJenis === tab ? 'var(--blue)' : 'var(--card)',
                   color: filterJenis === tab ? '#fff' : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                 }}
@@ -510,7 +510,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                               borderRadius: 7,
                               border: '1px solid rgba(26,111,232,0.2)',
                               backgroundColor: 'rgba(26,111,232,0.06)',
-                              color: '#1A6FE8',
+                              color: 'var(--blue)',
                               fontSize: 11.5,
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -551,7 +551,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                             onMouseEnter={e => {
                               const btn = e.currentTarget as HTMLButtonElement
                               btn.style.backgroundColor = 'rgba(26,111,232,0.06)'
-                              btn.style.color = '#1A6FE8'
+                              btn.style.color = 'var(--blue)'
                               btn.style.borderColor = 'rgba(26,111,232,0.2)'
                             }}
                             onMouseLeave={e => {

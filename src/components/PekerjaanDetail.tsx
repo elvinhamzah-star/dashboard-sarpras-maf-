@@ -50,7 +50,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   if (!program) {
     return (
       <div style={{ padding: 24 }}>
-        <button onClick={onBack} style={{ color: '#1A6FE8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
+        <button onClick={onBack} style={{ color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
           &larr; Kembali
         </button>
         <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>Pekerjaan tidak ditemukan.</p>
@@ -59,7 +59,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   }
 
   const pct = Math.min(program.progress_percent || 0, 100)
-  const statusColor = STATUS_COLORS[program.status] || '#1A6FE8'
+  const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
 
   return (
     <div style={{ padding: '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}>
@@ -75,7 +75,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
           letterSpacing: '-0.01em',
           transition: 'color 0.15s',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)' }}
       >
         <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               onClick={() => setShowUpdateModal(true)}
               style={{
                 flexShrink: 0,
-                backgroundColor: '#1A6FE8',
+                backgroundColor: 'var(--blue)',
                 color: 'var(--card)',
                 border: 'none',
                 borderRadius: 10,
@@ -184,7 +184,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 transition: 'background 0.15s',
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
@@ -224,7 +224,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
         {[
-          { label: 'Total Anggaran', value: formatRupiah(program.total_anggaran || 0), color: '#1A6FE8' },
+          { label: 'Total Anggaran', value: formatRupiah(program.total_anggaran || 0), color: 'var(--blue)' },
           { label: 'Realisasi Terkini', value: formatRupiah(program.realisasi_terkini || 0), color: '#059669' },
           { label: 'Sisa Anggaran', value: formatRupiah(program.sisa_anggaran || 0), color: '#D97706' },
           { label: 'Progress', value: `${pct}%`, color: statusColor },
@@ -288,7 +288,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: 600,
-              backgroundColor: activeTab === tab ? '#1A6FE8' : 'var(--card)',
+              backgroundColor: activeTab === tab ? 'var(--blue)' : 'var(--card)',
               color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
               transition: 'all 0.15s',
               letterSpacing: '-0.01em',
@@ -367,7 +367,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 <button
                   onClick={() => setShowEditDokumen(true)}
                   style={{
-                    backgroundColor: '#1A6FE8',
+                    backgroundColor: 'var(--blue)',
                     color: 'var(--card)',
                     border: 'none',
                     borderRadius: 8,
@@ -378,7 +378,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     transition: 'background 0.15s',
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
                 >
                   Edit
                 </button>
@@ -417,7 +417,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                       rel="noopener noreferrer"
                       style={{
                         backgroundColor: 'rgba(26,111,232,0.08)',
-                        color: '#1A6FE8',
+                        color: 'var(--blue)',
                         padding: '6px 13px',
                         borderRadius: 8,
                         fontSize: 12,
@@ -486,12 +486,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                               style={{
                                 width: `${Math.min(sp.progress_percent || 0, 100)}%`,
                                 height: '100%',
-                                backgroundColor: STATUS_COLORS[sp.status] || '#1A6FE8',
+                                backgroundColor: STATUS_COLORS[sp.status] || 'var(--blue)',
                                 borderRadius: 10,
                               }}
                             />
                           </div>
-                          <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || '#1A6FE8', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
                         </div>
                       </td>
                       <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
@@ -530,7 +530,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                               alignItems: 'center',
                               gap: 5,
                               backgroundColor: 'rgba(26,111,232,0.08)',
-                              color: '#1A6FE8',
+                              color: 'var(--blue)',
                               padding: '5px 11px',
                               borderRadius: 7,
                               fontSize: 11.5,
@@ -562,8 +562,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                               transition: 'all 0.12s',
                             }}
                             onMouseEnter={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A6FE8'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = '#1A6FE8'
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'
+                              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)'
                             }}
                             onMouseLeave={e => {
                               (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'

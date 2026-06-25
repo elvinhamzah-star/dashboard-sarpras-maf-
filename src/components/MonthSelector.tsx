@@ -75,7 +75,7 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
         onClick={() => (open ? setOpen(false) : openPanel())}
         style={{
           minWidth: 150, height: 32, padding: '0 12px', borderRadius: 8,
-          border: `1px solid ${open ? '#1A6FE8' : 'var(--border-strong)'}`,
+          border: `1px solid ${open ? 'var(--blue)' : 'var(--border-strong)'}`,
           backgroundColor: 'var(--card)', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
           fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
@@ -115,7 +115,7 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
                   width: '100%', padding: '10px 14px', border: 'none',
                   borderBottom: i === 0 ? '1px solid var(--border-subtle)' : 'none',
                   backgroundColor: active ? 'rgba(26,111,232,0.06)' : 'transparent',
-                  color: active ? '#1A6FE8' : 'var(--text-primary)', fontSize: 13,
+                  color: active ? 'var(--blue)' : 'var(--text-primary)', fontSize: 13,
                   fontWeight: active ? 700 : 500, fontFamily: 'inherit', cursor: 'pointer',
                   textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8,
                 }}

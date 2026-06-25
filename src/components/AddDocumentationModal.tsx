@@ -310,7 +310,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
               padding: '8px 14px', borderRadius: 9,
               border: '1px dashed rgba(26,111,232,0.3)',
               backgroundColor: 'rgba(26,111,232,0.03)',
-              color: '#1A6FE8', fontSize: 12.5, fontWeight: 600,
+              color: 'var(--blue)', fontSize: 12.5, fontWeight: 600,
               cursor: 'pointer', transition: 'all 0.12s',
             }}
             onMouseEnter={e => {
@@ -340,7 +340,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             </div>
             <div style={{ height: 4, borderRadius: 4, backgroundColor: 'rgba(26,111,232,0.12)', overflow: 'hidden' }}>
               <div style={{
-                height: '100%', borderRadius: 4, backgroundColor: '#1A6FE8',
+                height: '100%', borderRadius: 4, backgroundColor: 'var(--blue)',
                 width: `${(saveProgress.done / saveProgress.total) * 100}%`,
                 transition: 'width 0.2s',
               }} />
@@ -369,7 +369,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             disabled={saving}
             style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              backgroundColor: '#1A6FE8', color: '#fff',
+              backgroundColor: 'var(--blue)', color: '#fff',
               fontSize: 13, fontWeight: 600,
               cursor: saving ? 'default' : 'pointer',
               opacity: saving ? 0.7 : 1,

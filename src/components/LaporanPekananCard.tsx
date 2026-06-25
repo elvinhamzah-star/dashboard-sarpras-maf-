@@ -106,7 +106,7 @@ const FolderLink = ({ href }: { href: string }) => (
       display: 'inline-flex', alignItems: 'center', gap: 4,
       padding: '3px 8px', borderRadius: 6,
       backgroundColor: 'rgba(26,111,232,0.08)',
-      color: '#1A6FE8', fontSize: 11, fontWeight: 600,
+      color: 'var(--blue)', fontSize: 11, fontWeight: 600,
       textDecoration: 'none', flexShrink: 0,
       border: '1px solid rgba(26,111,232,0.15)',
     }}
@@ -137,7 +137,7 @@ const SECTIONS = [
     field: 'rencana' as const,
     label: 'Rencana Pekan Depan',
     placeholder: 'Target atau rencana untuk pekan berikutnya...',
-    color: '#1A6FE8',
+    color: 'var(--blue)',
     bg: 'rgba(26,111,232,0.07)',
   },
 ]
@@ -224,7 +224,7 @@ function LeftSectionHeader({ label, count, color, bg }: { label: string; count: 
       <span style={{ fontSize: 10.5, fontWeight: 700, color, flex: 1, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
       <span style={{
         fontSize: 10.5, fontWeight: 700, color,
-        backgroundColor: `rgba(${color === '#1A6FE8' ? '26,111,232' : color === '#D97706' ? '217,119,6' : color === '#1B5E2B' ? '27,94,43' : '185,28,28'},0.12)`,
+        backgroundColor: `rgba(${color === 'var(--blue)' ? '26,111,232' : color === '#D97706' ? '217,119,6' : color === '#1B5E2B' ? '27,94,43' : '185,28,28'},0.12)`,
         padding: '1px 7px', borderRadius: 12,
       }}>{count}</span>
     </div>
@@ -451,16 +451,16 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       if (histOnhold.some(p => p.id === id)) return '#D97706'
       if (histPlanning.some(p => p.id === id)) return '#B91C1C'
       if (histSelesai.some(p => p.id === id)) return '#1B5E2B'
-      return '#1A6FE8'
+      return 'var(--blue)'
     }
     if (onHoldPrograms.some(p => p.id === id)) return '#D97706'
     if (displayedPlanningPrograms.some(p => p.id === id)) return '#B91C1C'
     if (displayedSelesaiPrograms.some(p => p.id === id)) return '#1B5E2B'
-    return '#1A6FE8'
+    return 'var(--blue)'
   }
 
   const statusBgMap: Record<string, string> = {
-    '#1A6FE8': 'rgba(26,111,232,0.07)',
+    'var(--blue)': 'rgba(26,111,232,0.07)',
     '#D97706': 'rgba(217,119,6,0.07)',
     '#B91C1C': 'rgba(185,28,28,0.07)',
     '#1B5E2B': 'rgba(27,94,43,0.07)',
@@ -785,7 +785,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: '#1A6FE8', color: 'var(--card)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
+                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: 'var(--blue)', color: 'var(--card)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
                 >
                   {saving ? 'Menyimpan...' : 'Simpan Laporan'}
                 </button>
@@ -793,7 +793,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: '#1A6FE8', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>

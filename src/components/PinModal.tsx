@@ -62,7 +62,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
               backgroundColor: 'rgba(26,111,232,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 16px',
-              color: '#1A6FE8',
+              color: 'var(--blue)',
             }}
           >
             <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
               flex: 1, padding: '11px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: canSubmit ? '#1A6FE8' : 'var(--border)',
+              backgroundColor: canSubmit ? 'var(--blue)' : 'var(--border)',
               color: canSubmit ? '#fff' : 'var(--text-muted)',
               fontSize: 13,
               fontWeight: 600,

@@ -95,8 +95,8 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       value: formatRupiah(totalAnggaran),
       iconType: 'anggaran',
       iconBg: 'rgba(26,111,232,0.1)',
-      iconColor: '#1A6FE8',
-      valueColor: '#1A6FE8',
+      iconColor: 'var(--blue)',
+      valueColor: 'var(--blue)',
       trend: `${programs.length} program`,
     },
     {
@@ -122,7 +122,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       value: `${penyerapan}%`,
       iconType: 'penyerapan',
       iconBg: 'rgba(26,111,232,0.1)',
-      iconColor: '#1A6FE8',
+      iconColor: 'var(--blue)',
       valueColor: 'var(--text-primary)',
       trend: 'Dari total anggaran',
     },
@@ -263,14 +263,14 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                   flex: 65,
                   borderRadius: 11,
                   border: '1px solid rgba(26,111,232,0.18)',
-                  borderTop: '3px solid #1A6FE8',
+                  borderTop: '3px solid var(--blue)',
                   padding: '16px 18px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
                   gap: 12,
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1A6FE8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
                     Status Program
                   </div>
                   {STATUS_ORDER.map(statusName => {
@@ -311,7 +311,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                 borderRadius: 8,
                 border: showProgramList ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
                 backgroundColor: showProgramList ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-                color: showProgramList ? '#1A6FE8' : 'var(--text-secondary)',
+                color: showProgramList ? 'var(--blue)' : 'var(--text-secondary)',
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
@@ -371,7 +371,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{p.vendor}</div>
                         )}
                       </div>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[p.status] || '#1A6FE8', flexShrink: 0 }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[p.status] || 'var(--blue)', flexShrink: 0 }}>
                         {p.progress_percent || 0}%
                       </span>
                     </div>
@@ -379,7 +379,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                       <div style={{
                         height: '100%',
                         width: `${Math.min(100, p.progress_percent || 0)}%`,
-                        backgroundColor: STATUS_COLORS[p.status] || '#1A6FE8',
+                        backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)',
                         borderRadius: 99,
                       }} />
                     </div>
@@ -430,7 +430,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
             borderRadius: 10,
             border: showLaporan ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
             backgroundColor: showLaporan ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-            color: showLaporan ? '#1A6FE8' : 'var(--text-secondary)',
+            color: showLaporan ? 'var(--blue)' : 'var(--text-secondary)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',

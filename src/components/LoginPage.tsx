@@ -141,7 +141,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           disabled={!canSubmit}
           style={{
             width: '100%', padding: '13px', borderRadius: 10, border: 'none',
-            backgroundColor: canSubmit ? '#1A6FE8' : 'var(--border)',
+            backgroundColor: canSubmit ? 'var(--blue)' : 'var(--border)',
             color: canSubmit ? '#fff' : 'var(--text-muted)',
             fontSize: 14, fontWeight: 600,
             cursor: canSubmit ? 'pointer' : 'not-allowed',
@@ -149,7 +149,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             boxShadow: canSubmit ? '0 2px 8px rgba(26,111,232,0.25)' : 'none',
           }}
           onMouseEnter={e => { if (canSubmit) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-          onMouseLeave={e => { if (canSubmit) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+          onMouseLeave={e => { if (canSubmit) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
         >
           {loading ? 'Memeriksa...' : 'Masuk'}
         </button>

@@ -190,7 +190,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 width: '100%',
                 padding: '10px 14px',
                 borderRadius: 10,
-                border: `1px solid ${dropdownOpen ? '#1A6FE8' : 'var(--border)'}`,
+                border: `1px solid ${dropdownOpen ? 'var(--blue)' : 'var(--border)'}`,
                 backgroundColor: 'var(--card)',
                 fontSize: 13,
                 color: pekerjaan ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -281,7 +281,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                             border: 'none',
                             borderBottom: '1px solid var(--surface-min)',
                             backgroundColor: name === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                            color: name === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
+                            color: name === pekerjaan ? 'var(--blue)' : 'var(--text-primary)',
                             fontSize: 13,
                             fontWeight: name === pekerjaan ? 600 : 500,
                             fontFamily: 'inherit',
@@ -321,7 +321,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                             border: 'none',
                             borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
                             backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                            color: p.nama_pekerjaan === pekerjaan ? '#1A6FE8' : 'var(--text-primary)',
+                            color: p.nama_pekerjaan === pekerjaan ? 'var(--blue)' : 'var(--text-primary)',
                             fontSize: 13,
                             fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
                             fontFamily: 'inherit',
@@ -380,7 +380,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'var(--border)'}`,
+                  border: `1px solid ${jenis === j ? 'var(--blue)' : 'var(--border)'}`,
                   backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
@@ -392,7 +392,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                   onChange={e => setJenis(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? 'var(--blue)' : 'var(--text-secondary)' }}>
                   {j}
                 </span>
               </label>
@@ -414,7 +414,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               style={inputStyle}
             />
             {nominal && parseFloat(nominal) > 0 && (
-              <div style={{ fontSize: 11, color: '#1A6FE8', marginTop: 4, fontWeight: 500 }}>
+              <div style={{ fontSize: 11, color: 'var(--blue)', marginTop: 4, fontWeight: 500 }}>
                 {formatRupiah(parseFloat(nominal))}
               </div>
             )}
@@ -462,7 +462,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             disabled={saving}
             style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              backgroundColor: '#1A6FE8', color: '#fff',
+              backgroundColor: 'var(--blue)', color: '#fff',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
               opacity: saving ? 0.7 : 1,
             }}

@@ -155,7 +155,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   padding: '8px 14px', borderRadius: 8,
-                  border: `1px solid ${jenis === j ? '#1A6FE8' : 'var(--border)'}`,
+                  border: `1px solid ${jenis === j ? 'var(--blue)' : 'var(--border)'}`,
                   backgroundColor: jenis === j ? 'rgba(26,111,232,0.07)' : 'var(--card)',
                   transition: 'all 0.12s',
                 }}
@@ -167,7 +167,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
                   onChange={e => setJenis(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? '#1A6FE8' : 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 12.5, fontWeight: jenis === j ? 600 : 400, color: jenis === j ? 'var(--blue)' : 'var(--text-secondary)' }}>
                   {j}
                 </span>
               </label>
@@ -189,7 +189,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
               style={inputStyle}
             />
             {nominal && parseFloat(nominal) > 0 && (
-              <div style={{ fontSize: 11, color: '#1A6FE8', marginTop: 4, fontWeight: 500 }}>
+              <div style={{ fontSize: 11, color: 'var(--blue)', marginTop: 4, fontWeight: 500 }}>
                 {formatRupiah(parseFloat(nominal))}
               </div>
             )}
@@ -237,7 +237,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
             disabled={saving}
             style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              backgroundColor: '#1A6FE8', color: '#fff',
+              backgroundColor: 'var(--blue)', color: '#fff',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
               opacity: saving ? 0.7 : 1,
             }}

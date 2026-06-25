@@ -196,7 +196,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
               padding: '10px 20px',
               borderRadius: 10,
               border: 'none',
-              backgroundColor: '#1A6FE8',
+              backgroundColor: 'var(--blue)',
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,

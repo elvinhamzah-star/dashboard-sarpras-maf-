@@ -14,7 +14,7 @@ interface GaleriProps {
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
   'Kondisi Awal':    { color: '#DC2626', bg: 'rgba(220,38,38,0.06)' },
-  'Proses Pekerjaan':{ color: '#1A6FE8', bg: 'rgba(26,111,232,0.06)' },
+  'Proses Pekerjaan':{ color: 'var(--blue)', bg: 'rgba(26,111,232,0.06)' },
   'Kondisi Akhir':   { color: '#059669', bg: 'rgba(5,150,105,0.06)' },
 }
 
@@ -129,14 +129,14 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             onClick={() => setShowAddModal(true)}
             style={{
               padding: '9px 18px', borderRadius: 10, border: 'none',
-              backgroundColor: '#1A6FE8', color: 'var(--card)', fontSize: 13.5, fontWeight: 600,
+              backgroundColor: 'var(--blue)', color: 'var(--card)', fontSize: 13.5, fontWeight: 600,
               cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center',
               gap: 7, letterSpacing: '-0.01em',
               boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
               transition: 'all 0.15s', fontFamily: 'inherit',
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1A6FE8' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -155,7 +155,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             onClick={() => { setShowProgramDropdown(v => !v); setProgramSearch('') }}
             style={{
               padding: '9px 13px', borderRadius: 10,
-              border: showProgramDropdown ? '1px solid #1A6FE8' : '1px solid var(--border-strong)',
+              border: showProgramDropdown ? '1px solid var(--blue)' : '1px solid var(--border-strong)',
               backgroundColor: 'var(--card)', fontSize: 12.5, cursor: 'pointer',
               color: filterProgram === 'Semua' ? 'var(--text-secondary)' : 'var(--text-primary)',
               fontWeight: filterProgram === 'Semua' ? 500 : 600,
@@ -206,7 +206,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                     width: '100%', textAlign: 'left', padding: '9px 14px',
                     border: 'none', borderBottom: '1px solid var(--border-subtle)',
                     backgroundColor: filterProgram === 'Semua' ? 'rgba(26,111,232,0.07)' : 'transparent',
-                    color: filterProgram === 'Semua' ? '#1A6FE8' : 'var(--text-primary)',
+                    color: filterProgram === 'Semua' ? 'var(--blue)' : 'var(--text-primary)',
                     fontWeight: filterProgram === 'Semua' ? 700 : 500,
                     fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -221,7 +221,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                       width: '100%', textAlign: 'left', padding: '9px 14px',
                       border: 'none', borderBottom: '1px solid var(--surface-min)',
                       backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.07)' : 'transparent',
-                      color: filterProgram === p.id ? '#1A6FE8' : 'var(--text-secondary)',
+                      color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-secondary)',
                       fontWeight: filterProgram === p.id ? 700 : 400,
                       fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -243,7 +243,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
         <div style={{ display: 'flex', gap: 7 }}>
           {FASE_LIST.map(fase => {
             const isActive = filterFase === fase
-            const activeColor = fase === 'Semua' ? '#1A6FE8' : (FASE_INFO[fase]?.color || '#1A6FE8')
+            const activeColor = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
             return (
               <button
                 key={fase}
@@ -290,7 +290,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               <p style={{ margin: 0 }}>Tidak ada foto untuk filter ini.</p>
               <button
                 onClick={() => { setLocalMonth(null); setFilterProgram('Semua'); setFilterFase('Semua') }}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: '#1A6FE8', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Lihat semua foto
               </button>
@@ -550,7 +550,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{doc.caption}</div>
                 )}
                 <a href={doc.link_foto} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: '#1A6FE8', textDecoration: 'none' }}>
+                  style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: 'var(--blue)', textDecoration: 'none' }}>
                   Buka di Google Drive →
                 </a>
               </div>

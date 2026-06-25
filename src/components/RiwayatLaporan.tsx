@@ -98,7 +98,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
   const sections = [
     { key: 'dikerjakan', label: 'Sudah Dikerjakan', color: '#059669', bg: 'rgba(5,150,105,0.07)', items: data.dikerjakan },
     { key: 'kendala', label: 'Kendala / Update', color: '#D97706', bg: 'rgba(217,119,6,0.07)', items: data.kendala },
-    { key: 'rencana', label: 'Rencana Pekan Depan', color: '#1A6FE8', bg: 'rgba(26,111,232,0.07)', items: data.rencana },
+    { key: 'rencana', label: 'Rencana Pekan Depan', color: 'var(--blue)', bg: 'rgba(26,111,232,0.07)', items: data.rencana },
   ]
 
   return (
@@ -130,7 +130,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
                   display: 'flex', alignItems: 'center', gap: 4,
                   padding: '3px 8px', borderRadius: 6,
                   backgroundColor: 'rgba(26,111,232,0.08)',
-                  color: '#1A6FE8', fontSize: 11, fontWeight: 600,
+                  color: 'var(--blue)', fontSize: 11, fontWeight: 600,
                   textDecoration: 'none',
                   border: '1px solid rgba(26,111,232,0.15)',
                 }}
@@ -390,9 +390,9 @@ export default function RiwayatLaporan() {
                           textAlign: 'left',
                           padding: '9px 16px',
                           border: 'none',
-                          borderLeft: `3px solid ${isSelected ? '#1A6FE8' : 'transparent'}`,
+                          borderLeft: `3px solid ${isSelected ? 'var(--blue)' : 'transparent'}`,
                           backgroundColor: isSelected ? 'rgba(26,111,232,0.06)' : 'transparent',
-                          color: isSelected ? '#1A6FE8' : '#3D5070',
+                          color: isSelected ? 'var(--blue)' : '#3D5070',
                           fontSize: 12.5,
                           fontWeight: isSelected ? 700 : 450,
                           cursor: 'pointer',
