@@ -107,7 +107,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       >
         <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 9, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img
-            src="/LogoPBB.svg"
+            src="/pbb-app-icon-white.svg"
             alt="Logo PBB"
             style={{ width: 36, height: 36, objectFit: 'cover', display: 'block' }}
           />
