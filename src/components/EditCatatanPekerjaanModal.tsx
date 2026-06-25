@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import BulletInput from './BulletInput'
 
@@ -10,6 +11,7 @@ interface EditCatatanPekerjaanModalProps {
 }
 
 export default function EditCatatanPekerjaanModal({ programId, currentNotes, onClose, onSuccess }: EditCatatanPekerjaanModalProps) {
+  useEscapeKey(onClose)
   const toItems = (text: string) => text ? text.split('\n').filter(l => l.trim()) : []
   const [items, setItems] = useState<string[]>(toItems(currentNotes))
   const [saving, setSaving] = useState(false)

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 
 interface AddPekerjaanModalProps {
@@ -9,6 +10,7 @@ interface AddPekerjaanModalProps {
 const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
 export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModalProps) {
+  useEscapeKey(onClose)
   const [form, setForm] = useState({
     id: '',
     program: '',

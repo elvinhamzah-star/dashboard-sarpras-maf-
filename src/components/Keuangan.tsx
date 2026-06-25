@@ -504,7 +504,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                       <td style={{ padding: '12px 16px' }}>
                         {t.link_bukti ? (
                           <button
-                            onClick={() => window.open(t.link_bukti ?? undefined, '_blank')}
+                            onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
                             style={{
                               padding: '5px 11px',
                               borderRadius: 7,

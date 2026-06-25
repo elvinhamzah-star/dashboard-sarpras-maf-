@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { verifyPin, setAdminPin } from '../lib/adminApi'
 
 interface PinModalProps {
@@ -7,6 +8,7 @@ interface PinModalProps {
 }
 
 export default function PinModal({ onSuccess, onClose }: PinModalProps) {
+  useEscapeKey(onClose)
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)

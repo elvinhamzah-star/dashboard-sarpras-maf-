@@ -63,16 +63,6 @@ export interface Transaction {
   created_at: string
 }
 
-export interface Issue {
-  id: string
-  program_id: string
-  nama_pekerjaan: string
-  isu_kendala: string
-  status_isu: string
-  tindak_lanjut?: string
-  created_at: string
-}
-
 export interface Documentation {
   id: string
   program_id: string
@@ -87,30 +77,12 @@ export interface Documentation {
   updated_at?: string
 }
 
-export interface Activity {
-  id: string
-  content: string
-  tanggal?: string
-  created_at: string
-}
-
-export interface WorkNote {
-  id: string
-  kategori: 'Isu Pekerjaan' | 'Catatan' | 'Reminder'
-  content: string
-  created_at: string
-}
-
 export const fetchAppConfig = (key: string) =>
   supabase.from('app_config').select('value').eq('key', key).single()
 
 export const fetchPrograms = () => supabase.from('programs').select('*').order('id', { ascending: true })
-export const fetchSubPrograms = (parentId: string) => supabase.from('sub_programs').select('*').eq('program_id', parentId).order('id', { ascending: true })
 export const fetchTransactions = () => supabase.from('transactions').select('*').order('tanggal', { ascending: false })
-export const fetchIssues = () => supabase.from('issues').select('*').order('created_at', { ascending: false })
 export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
-export const fetchActivities = () => supabase.from('activities').select('*').order('created_at', { ascending: false })
-export const fetchWorkNotes = () => supabase.from('work_notes').select('*').order('created_at', { ascending: false })
 export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })

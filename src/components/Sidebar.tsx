@@ -154,6 +154,9 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+              title={!expanded ? item.label : undefined}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -296,7 +299,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
               </button>
             )}
             <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, padding: '6px 6px 0', letterSpacing: '0.02em' }}>
-              Dashboard Sarpras MAF v2
+              Dashboard Sarpras MAF
             </div>
             <button
               onClick={onLogoutDashboard}

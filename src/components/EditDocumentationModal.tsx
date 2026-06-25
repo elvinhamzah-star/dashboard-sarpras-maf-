@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { Documentation, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
@@ -11,6 +12,7 @@ interface EditDocumentationModalProps {
 }
 
 export default function EditDocumentationModal({ doc, programs, onClose, onSuccess }: EditDocumentationModalProps) {
+  useEscapeKey(onClose)
   const [fase, setFase] = useState(doc.fase || '')
   const [driveLink, setDriveLink] = useState(doc.drive_link || '')
   const [tanggal, setTanggal] = useState(doc.tanggal)

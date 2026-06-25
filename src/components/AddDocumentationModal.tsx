@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
@@ -42,6 +43,7 @@ function newRow(): LinkRow {
 }
 
 export default function AddDocumentationModal({ programs, onClose, onSuccess }: AddDocumentationModalProps) {
+  useEscapeKey(onClose)
   const [programId, setProgramId] = useState('')
   const [fase, setFase] = useState('Kondisi Awal')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])

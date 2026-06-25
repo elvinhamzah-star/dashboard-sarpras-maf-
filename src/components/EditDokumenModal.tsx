@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 
 interface EditDokumenModalProps {
@@ -13,6 +14,7 @@ interface EditDokumenModalProps {
 }
 
 export default function EditDokumenModal({ programId, links, onClose, onSuccess }: EditDokumenModalProps) {
+  useEscapeKey(onClose)
   const [rabDetail, setRabDetail] = useState(links.rabDetail || '')
   const [dokumentasi, setDokumentasi] = useState(links.dokumentasi || '')
   const [buktiTransaksi, setBuktiTransaksi] = useState(links.buktiTransaksi || '')

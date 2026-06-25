@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
@@ -12,6 +13,7 @@ interface UpdateProgressModalProps {
 const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
 export default function UpdateProgressModal({ program, onClose, onUpdated }: UpdateProgressModalProps) {
+  useEscapeKey(onClose)
   const [progress, setProgress] = useState(program.progress_percent?.toString() || '0')
   const [realisasi, setRealisasi] = useState(program.realisasi_terkini?.toString() || '0')
   const [status, setStatus] = useState(program.status || 'On Going')

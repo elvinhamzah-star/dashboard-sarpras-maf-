@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { supabase } from '../lib/supabase'
@@ -33,6 +34,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AddTransactionModal({ onClose, onSuccess }: AddTransactionModalProps) {
+  useEscapeKey(onClose)
   const [programs, setPrograms] = useState<Program[]>([])
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
   const [pekerjaan, setPekerjaan] = useState('')

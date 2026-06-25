@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { SubProgram } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
@@ -10,6 +11,7 @@ interface UpdateSubPekerjaanModalProps {
 }
 
 export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess }: UpdateSubPekerjaanModalProps) {
+  useEscapeKey(onClose)
   const [progress, setProgress] = useState(subProgram.progress_percent || 0)
   const [anggaran, setAnggaran] = useState(subProgram.total_anggaran || 0)
   const [realisasi, setRealisasi] = useState(subProgram.realisasi_terkini || 0)
