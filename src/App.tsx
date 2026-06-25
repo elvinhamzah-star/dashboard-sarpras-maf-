@@ -119,7 +119,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
+    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
       {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
@@ -154,7 +154,7 @@ export default function App() {
           marginLeft: sidebarWidth,
           flex: 1,
           minWidth: 0,
-          minHeight: '100vh',
+          height: '100dvh',
           transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
           display: 'flex',
           flexDirection: 'column',
