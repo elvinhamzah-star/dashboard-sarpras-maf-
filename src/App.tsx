@@ -186,14 +186,18 @@ export default function App() {
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                border: 'none',
-                backgroundColor: 'transparent',
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--card)',
                 cursor: 'pointer',
+                color: 'var(--text-primary)',
                 flexShrink: 0,
-                padding: 0,
               }}
             >
-              <img src="/LogoPBB.svg" alt="Logo PBB" style={{ width: 36, height: 36, objectFit: 'cover', display: 'block' }} />
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
             </button>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {pageTitles[currentPage]}
