@@ -245,10 +245,11 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [pinnedPlanningIds, setPinnedPlanningIds] = useState<string[]>([])
   const [pinnedSelesaiIds, setPinnedSelesaiIds] = useState<string[]>([])
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [showDropdown, setShowDropdown] = useState<'planning' | 'selesai' | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const mountedRef = useRef(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const dropdownPlanningRef = useRef<HTMLDivElement>(null)
+  const dropdownSelesaiRef = useRef<HTMLDivElement>(null)
 
   const week = getWeekDates(weekOffset)
   const isPastWeek = weekOffset < 0
@@ -307,7 +308,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   const pinProgram = (id: string) => {
     setPinnedPlanningIds(prev => [...prev, id])
-    setShowDropdown(false)
+    setShowDropdown(null)
     setSelectedId(id)
   }
 
@@ -322,7 +323,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
   const pinSelesai = (id: string) => {
     setPinnedSelesaiIds(prev => [...prev, id])
-    setShowDropdown(false)
+    setShowDropdown(null)
     setSelectedId(id)
   }
 
@@ -338,7 +339,10 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   useEffect(() => {
     if (!showDropdown) return
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false)
+      const target = e.target as Node
+      const inPlanning = dropdownPlanningRef.current?.contains(target)
+      const inSelesai = dropdownSelesaiRef.current?.contains(target)
+      if (!inPlanning && !inSelesai) setShowDropdown(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -551,7 +555,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 )}
                 {histSelesai.length > 0 && (
                   <>
-                    <LeftSectionHeader label="Dalam Garansi" count={histSelesai.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
+                    <LeftSectionHeader label="Selesai" count={histSelesai.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {histSelesai.map(prog => (
                       <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
@@ -585,12 +589,59 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                     ))}
                   </>
                 )}
-                {displayedSelesaiPrograms.length > 0 && (
+                {(displayedSelesaiPrograms.length > 0 || isAdmin) && (
                   <>
-                    <LeftSectionHeader label="Dalam Garansi" count={displayedSelesaiPrograms.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
+                    <LeftSectionHeader label="Selesai" count={displayedSelesaiPrograms.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {displayedSelesaiPrograms.map(prog => (
                       <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
+                    {isAdmin && (
+                      <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownSelesaiRef}>
+                        <button
+                          onClick={() => setShowDropdown(v => v === 'selesai' ? null : 'selesai')}
+                          disabled={availableSelesai.length === 0}
+                          style={{
+                            width: '100%', padding: '6px 10px',
+                            borderRadius: 7, border: '1px dashed rgba(26,43,94,0.2)',
+                            backgroundColor: 'transparent', color: 'var(--text-secondary)',
+                            fontSize: 11.5, fontWeight: 600,
+                            cursor: availableSelesai.length > 0 ? 'pointer' : 'default',
+                            display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center',
+                            fontFamily: 'inherit', opacity: availableSelesai.length === 0 ? 0.4 : 1,
+                          }}
+                        >
+                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                          {availableSelesai.length === 0 ? 'Semua sudah ditambahkan' : 'Tambah program'}
+                        </button>
+                        {showDropdown === 'selesai' && availableSelesai.length > 0 && (
+                          <div style={{
+                            position: 'absolute', bottom: '100%', left: 12, right: 12, zIndex: 20,
+                            backgroundColor: 'var(--card)', borderRadius: 10,
+                            border: '1px solid var(--border)',
+                            boxShadow: '0 8px 24px var(--border-strong)',
+                            overflow: 'hidden', maxHeight: 240, overflowY: 'auto', marginBottom: 4,
+                          }}>
+                            {availableSelesai.map((p, i) => (
+                              <button
+                                key={p.id}
+                                onClick={() => pinSelesai(p.id)}
+                                style={{
+                                  width: '100%', textAlign: 'left', padding: '8px 12px',
+                                  border: 'none',
+                                  borderBottom: i < availableSelesai.length - 1 ? '1px solid var(--surface-subtle)' : 'none',
+                                  backgroundColor: 'transparent', color: 'var(--text-primary)',
+                                  fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'block',
+                                }}
+                              >
+                                {p.nama_pekerjaan}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
                 {(displayedPlanningPrograms.length > 0 || isAdmin) && (
@@ -600,26 +651,26 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                       <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
                     ))}
                     {isAdmin && (
-                      <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownRef}>
+                      <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownPlanningRef}>
                         <button
-                          onClick={() => setShowDropdown(v => !v)}
-                          disabled={availablePlanning.length === 0 && availableSelesai.length === 0}
+                          onClick={() => setShowDropdown(v => v === 'planning' ? null : 'planning')}
+                          disabled={availablePlanning.length === 0}
                           style={{
                             width: '100%', padding: '6px 10px',
                             borderRadius: 7, border: '1px dashed rgba(26,43,94,0.2)',
                             backgroundColor: 'transparent', color: 'var(--text-secondary)',
                             fontSize: 11.5, fontWeight: 600,
-                            cursor: availablePlanning.length > 0 || availableSelesai.length > 0 ? 'pointer' : 'default',
+                            cursor: availablePlanning.length > 0 ? 'pointer' : 'default',
                             display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center',
-                            fontFamily: 'inherit', opacity: availablePlanning.length === 0 && availableSelesai.length === 0 ? 0.4 : 1,
+                            fontFamily: 'inherit', opacity: availablePlanning.length === 0 ? 0.4 : 1,
                           }}
                         >
                           <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
-                          {availablePlanning.length === 0 && availableSelesai.length === 0 ? 'Semua sudah ditambahkan' : 'Tambah program'}
+                          {availablePlanning.length === 0 ? 'Semua sudah ditambahkan' : 'Tambah program'}
                         </button>
-                        {showDropdown && (availablePlanning.length > 0 || availableSelesai.length > 0) && (
+                        {showDropdown === 'planning' && availablePlanning.length > 0 && (
                           <div style={{
                             position: 'absolute', bottom: '100%', left: 12, right: 12, zIndex: 20,
                             backgroundColor: 'var(--card)', borderRadius: 10,
@@ -627,50 +678,21 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                             boxShadow: '0 8px 24px var(--border-strong)',
                             overflow: 'hidden', maxHeight: 240, overflowY: 'auto', marginBottom: 4,
                           }}>
-                            {availablePlanning.length > 0 && (
-                              <>
-                                <div style={{ padding: '7px 12px 3px', fontSize: 10, fontWeight: 700, color: '#B91C1C', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                                  Perencanaan
-                                </div>
-                                {availablePlanning.map((p, i) => (
-                                  <button
-                                    key={p.id}
-                                    onClick={() => pinProgram(p.id)}
-                                    style={{
-                                      width: '100%', textAlign: 'left', padding: '8px 12px',
-                                      border: 'none',
-                                      borderBottom: i < availablePlanning.length - 1 || availableSelesai.length > 0 ? '1px solid var(--surface-subtle)' : 'none',
-                                      backgroundColor: 'transparent', color: 'var(--text-primary)',
-                                      fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'block',
-                                    }}
-                                  >
-                                    {p.nama_pekerjaan}
-                                  </button>
-                                ))}
-                              </>
-                            )}
-                            {availableSelesai.length > 0 && (
-                              <>
-                                <div style={{ padding: '7px 12px 3px', fontSize: 10, fontWeight: 700, color: '#1B5E2B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                                  Selesai · Dalam Garansi
-                                </div>
-                                {availableSelesai.map((p, i) => (
-                                  <button
-                                    key={p.id}
-                                    onClick={() => pinSelesai(p.id)}
-                                    style={{
-                                      width: '100%', textAlign: 'left', padding: '8px 12px',
-                                      border: 'none',
-                                      borderBottom: i < availableSelesai.length - 1 ? '1px solid var(--surface-subtle)' : 'none',
-                                      backgroundColor: 'transparent', color: 'var(--text-primary)',
-                                      fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'block',
-                                    }}
-                                  >
-                                    {p.nama_pekerjaan}
-                                  </button>
-                                ))}
-                              </>
-                            )}
+                            {availablePlanning.map((p, i) => (
+                              <button
+                                key={p.id}
+                                onClick={() => pinProgram(p.id)}
+                                style={{
+                                  width: '100%', textAlign: 'left', padding: '8px 12px',
+                                  border: 'none',
+                                  borderBottom: i < availablePlanning.length - 1 ? '1px solid var(--surface-subtle)' : 'none',
+                                  backgroundColor: 'transparent', color: 'var(--text-primary)',
+                                  fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'block',
+                                }}
+                              >
+                                {p.nama_pekerjaan}
+                              </button>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -703,7 +725,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                     {isSelectedSelesai && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, backgroundColor: 'rgba(27,94,43,0.1)', color: '#1B5E2B', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>
                         <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                        Garansi
+                        Selesai
                       </span>
                     )}
                     {selectedProgram.link_dokumentasi && <FolderLink href={selectedProgram.link_dokumentasi} />}

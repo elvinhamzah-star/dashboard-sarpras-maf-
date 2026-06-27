@@ -17,13 +17,13 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
     if (checking) return
     setChecking(true)
     setError('')
-    const { ok, reason } = await verifyPin(pin)
+    const ok = await verifyPin(pin)
     setChecking(false)
     if (ok) {
       setAdminPin(pin)
       onSuccess()
     } else {
-      setError(reason || 'PIN salah. Coba lagi.')
+      setError('PIN salah. Coba lagi.')
       setPin('')
     }
   }
