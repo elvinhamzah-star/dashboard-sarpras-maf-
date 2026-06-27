@@ -24,10 +24,11 @@ export async function verifyLogin(username: string, pin: string): Promise<boolea
 }
 
 // Verify a PIN against the server (bcrypt hash stored in a locked table).
-export async function verifyPin(pin: string): Promise<boolean> {
+export async function verifyPin(pin: string): Promise<{ ok: boolean; reason: string }> {
   const { data, error } = await supabase.rpc('verify_admin_pin', { p_pin: pin })
-  if (error) return false
-  return data === true
+  if (error) return { ok: false, reason: `Error: ${error.message} (${error.code})` }
+  if (data === true) return { ok: true, reason: '' }
+  return { ok: false, reason: `PIN salah (data=${JSON.stringify(data)})` }
 }
 
 // Change the admin PIN (validated against the current PIN on the server).
