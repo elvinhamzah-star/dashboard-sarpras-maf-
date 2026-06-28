@@ -72,3 +72,11 @@ export function getDriveViewUrl(driveLink: string): string | null {
 export function isValidDriveLink(link: string): boolean {
   return link.includes('/d/') && link.includes('drive.google.com')
 }
+
+// Untuk jenis_pekerjaan 'Operasional' (Man Power), progress dihitung dari realisasi dana
+export function getEffectiveProgress(p: { jenis_pekerjaan: string; progress_percent: number | string; total_anggaran: number; realisasi_terkini: number }): number {
+  if (p.jenis_pekerjaan === 'Operasional' && p.total_anggaran > 0) {
+    return Math.min(100, Math.round((p.realisasi_terkini / p.total_anggaran) * 100))
+  }
+  return Number(p.progress_percent) || 0
+}

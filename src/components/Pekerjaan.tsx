@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, getEffectiveProgress } from '../lib/data'
 
 interface PekerjaanProps {
   isAdmin: boolean
@@ -268,30 +268,19 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                     {p.program || '-'}
                   </td>
                   <td style={{ padding: '12px 16px', minWidth: 120 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div
-                        style={{
-                          flex: 1,
-                          height: 4,
-                          backgroundColor: 'var(--surface-2)',
-                          borderRadius: 10,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${Math.min(p.progress_percent || 0, 100)}%`,
-                            height: '100%',
-                            backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)',
-                            borderRadius: 10,
-                            transition: 'width 0.3s ease',
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[p.status] || 'var(--blue)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                        {p.progress_percent || 0}%
-                      </span>
-                    </div>
+                    {(() => {
+                      const pct = getEffectiveProgress(p)
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)', borderRadius: 10, transition: 'width 0.3s ease' }} />
+                          </div>
+                          <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[p.status] || 'var(--blue)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                            {pct}%
+                          </span>
+                        </div>
+                      )
+                    })()}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {formatRupiah(p.total_anggaran || 0)}

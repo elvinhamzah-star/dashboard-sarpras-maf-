@@ -88,3 +88,6 @@ export const fetchSnapshots = () => supabase.from('program_snapshots').select('*
 export const fetchSubPrograms = () => supabase.from('sub_programs').select('*').order('id', { ascending: true })
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
+
+export const fetchWeeklyNotes = () =>
+  supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })

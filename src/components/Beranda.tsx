@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
@@ -53,19 +53,35 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
+  const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
   const [showLaporan, setShowLaporan] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }] = await Promise.all([
+      const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }, { data: notesData }] = await Promise.all([
         fetchPrograms(),
         fetchTransactions(),
         fetchSnapshots(),
         fetchSubPrograms(),
+        fetchWeeklyNotes(),
       ])
       if (progData) setPrograms(progData)
+      if (notesData && notesData.length > 0) {
+        const map: Record<string, string[]> = {}
+        // oldest → newest: newer weeks overwrite older rencana
+        notesData.forEach(note => {
+          try {
+            const parsed = JSON.parse(note.content)
+            Object.entries(parsed.programs || {}).forEach(([id, d]: [string, unknown]) => {
+              const rencana = ((d as Record<string, string[]>).rencana || []).filter((r: string) => r.trim())
+              if (rencana.length > 0) map[id] = rencana
+            })
+          } catch {}
+        })
+        setRencanaMap(map)
+      }
       if (txData) {
         setRawTransactions(txData)
         const realisasi = txData
@@ -234,7 +250,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
         ))}
       </div>
 
-      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} subPrograms={subPrograms} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
+      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
       <BerandaChart transactions={rawTransactions} />
       <BerandaVendor programs={programs} />
 

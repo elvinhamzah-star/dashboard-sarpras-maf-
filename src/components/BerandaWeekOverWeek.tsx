@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Program, ProgramSnapshot, SubProgram } from '../lib/supabase'
-import { STATUS_COLORS, formatRupiah } from '../lib/data'
+import { STATUS_COLORS, formatRupiah, getEffectiveProgress } from '../lib/data'
 
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
@@ -13,6 +13,7 @@ interface Props {
   programs: Program[]
   snapshots: ProgramSnapshot[]
   subPrograms: SubProgram[]
+  rencanaMap: Record<string, string[]>
   progressLapangan: string | null
   freshnessDays: number | null
   lastUpdated: string
@@ -28,7 +29,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, progressLapangan, freshnessDays, lastUpdated }: Props) {
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated }: Props) {
   const [activeTab, setActiveTab] = useState('On Going')
 
   const now = Date.now()
@@ -209,41 +210,65 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             )
           })
         ) : activeTab === 'Perencanaan' ? (
-          filteredPrograms.map(p => (
-            <div key={p.id} style={{
-              padding: '10px 12px',
-              borderRadius: 10,
-              border: '1.5px solid var(--border-subtle)',
-              backgroundColor: 'var(--card)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {p.nama_pekerjaan}
+          filteredPrograms.map(p => {
+            const rencana = rencanaMap[p.id] || []
+            return (
+              <div key={p.id} style={{
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: '1.5px solid var(--border-subtle)',
+                borderLeft: rencana.length > 0 ? '3px solid #DC2626' : '1.5px solid var(--border-subtle)',
+                backgroundColor: 'var(--card)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {p.nama_pekerjaan}
+                    </div>
+                    {getVendorDisplay(p, subPrograms) && (
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
+                    )}
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    {p.total_anggaran ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatRupiah(p.total_anggaran)}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ditetapkan</span>
+                    )}
+                  </div>
                 </div>
-                {getVendorDisplay(p, subPrograms) && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
+                {rencana.length > 0 && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+                      <svg width="10" height="10" fill="none" stroke="#DC2626" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rencana</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 4 }}>
+                      {rencana.map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                          <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-              <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                {p.total_anggaran ? (
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-                    {formatRupiah(p.total_anggaran)}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ditetapkan</span>
-                )}
-              </div>
-            </div>
-          ))
+            )
+          })
         ) : (
           filteredPrograms.map(p => {
             const wow = wowMap[p.id]
             const color = STATUS_COLORS[p.status] || '#1A6FE8'
             const isOnHold = p.status === 'On Hold'
+            const effectivePct = getEffectiveProgress(p)
             return (
               <div key={p.id} style={{
                 padding: '10px 12px',
@@ -266,7 +291,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 60 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color }}>
-                      {p.progress_percent || 0}%
+                      {effectivePct}%
                     </div>
                     {p.status === 'On Going' && wow && (
                       wow.delta === null ? (
@@ -285,7 +310,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ marginTop: 10, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
-                    width: `${Math.min(100, p.progress_percent || 0)}%`,
+                    width: `${effectivePct}%`,
                     backgroundColor: color,
                     borderRadius: 99,
                   }} />
