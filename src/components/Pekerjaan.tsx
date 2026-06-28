@@ -12,7 +12,7 @@ interface PekerjaanProps {
   onSearchChange: (s: string) => void
 }
 
-const STATUS_TABS = ['Semua', 'On Going', 'Selesai', 'Perencanaan', 'On Hold']
+const STATUS_TABS = ['Semua', 'On Going', 'On Hold', 'Selesai', 'Perencanaan']
 
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const [programs, setPrograms] = useState<Program[]>([])
@@ -208,7 +208,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead>
               <tr>
-                {['ID', 'Nama Pekerjaan', 'Program', 'Progress', 'Anggaran', 'Realisasi', 'Status', ''].map(h => (
+                {['ID', 'Nama Pekerjaan', 'Program', 'Progress', 'Anggaran', 'Penyerapan', 'Status', ''].map(h => (
                   <th
                     key={h}
                     style={{
@@ -296,8 +296,24 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   <td style={{ padding: '12px 16px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {formatRupiah(p.total_anggaran || 0)}
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                    {formatRupiah(p.realisasi_terkini || 0)}
+                  <td style={{ padding: '12px 16px', minWidth: 110 }}>
+                    {p.total_anggaran ? (() => {
+                      const pct = Math.min(100, Math.round(((p.realisasi_terkini || 0) / p.total_anggaran) * 100))
+                      const hasRealisasi = (p.realisasi_terkini || 0) > 0
+                      const color = hasRealisasi ? '#059669' : 'var(--text-muted)'
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: color, borderRadius: 10 }} />
+                          </div>
+                          <span style={{ fontSize: 11.5, fontWeight: 600, color, minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                            {pct}%
+                          </span>
+                        </div>
+                      )
+                    })() : (
+                      <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>–</span>
+                    )}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <span
