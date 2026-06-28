@@ -10,7 +10,7 @@ interface LaporanPerProgram {
 interface ProgramMeta {
   name: string
   vendor?: string | null
-  category: 'ongoing' | 'onhold' | 'planning'
+  category: 'ongoing' | 'onhold' | 'planning' | 'selesai'
   link?: string | null
 }
 

@@ -283,7 +283,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             </svg>
             <p style={{ margin: 0 }}>Tidak Ada Foto Untuk Filter Ini.</p>
             <button
-              onClick={() => { setLocalMonth(null); setFilterFase('Semua') }}
+              onClick={() => { setFilterFase('Semua') }}
               style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Lihat semua fase
@@ -420,7 +420,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             <>
               <p style={{ margin: 0 }}>Tidak Ada Foto Untuk Filter Ini.</p>
               <button
-                onClick={() => { setLocalMonth(null); setFilterProgram('Semua') }}
+                onClick={() => { setFilterProgram('Semua') }}
                 style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Lihat semua foto
