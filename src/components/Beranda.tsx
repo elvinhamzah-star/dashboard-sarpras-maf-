@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchTransactions, Program } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, Program, ProgramSnapshot, Transaction } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
+import BerandaAlerts from './BerandaAlerts'
+import BerandaWeekOverWeek from './BerandaWeekOverWeek'
+import BerandaChart from './BerandaChart'
+import BerandaVendor from './BerandaVendor'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -49,6 +53,8 @@ const MetricIcon = ({ type }: { type: string }) => {
 export default function Beranda({ isAdmin }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [totalRealisasi, setTotalRealisasi] = useState(0)
+  const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
+  const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
   const [loading, setLoading] = useState(true)
   const [showProgramList, setShowProgramList] = useState(true)
   const [showLaporan, setShowLaporan] = useState(false)
@@ -57,17 +63,20 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data: progData }, { data: txData }] = await Promise.all([
+      const [{ data: progData }, { data: txData }, { data: snapData }] = await Promise.all([
         fetchPrograms(),
         fetchTransactions(),
+        fetchSnapshots(),
       ])
       if (progData) setPrograms(progData)
       if (txData) {
+        setRawTransactions(txData)
         const realisasi = txData
           .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
           .reduce((s, t) => s + (t.nominal || 0), 0)
         setTotalRealisasi(realisasi)
       }
+      if (snapData) setSnapshots(snapData)
       setLoading(false)
     }
     load()
@@ -76,6 +85,14 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
+
+  const mostRecentUpdate = programs.reduce((latest, p) => {
+    if (!p.updated_at) return latest
+    return p.updated_at > latest ? p.updated_at : latest
+  }, '')
+  const freshnessDays = mostRecentUpdate
+    ? Math.floor((Date.now() - new Date(mostRecentUpdate).getTime()) / 86400000)
+    : null
 
   const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
@@ -157,9 +174,22 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
             Dashboard Sarpras MAF
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400 }}>{getTodayFormatted()}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {getTodayFormatted()}
+            {freshnessDays !== null && (
+              <span style={{
+                fontSize: 11,
+                color: freshnessDays === 0 ? '#059669' : freshnessDays <= 3 ? '#D97706' : '#DC2626',
+                fontWeight: 700,
+              }}>
+                · data diperbarui {freshnessDays === 0 ? 'hari ini' : `${freshnessDays} hari lalu`}
+              </span>
+            )}
+          </p>
         </div>
       </div>
+
+      <BerandaAlerts programs={programs} />
 
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
@@ -211,6 +241,10 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           </div>
         ))}
       </div>
+
+      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} />
+      <BerandaChart transactions={rawTransactions} />
+      <BerandaVendor programs={programs} />
 
       {/* Status Pekerjaan */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14, marginBottom: 20 }}>
