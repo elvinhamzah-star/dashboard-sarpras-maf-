@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, Program, ProgramSnapshot, Transaction } from '../lib/supabase'
-import { formatRupiah, getTodayFormatted, STATUS_COLORS } from '../lib/data'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { formatRupiah, getTodayFormatted } from '../lib/data'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
@@ -10,9 +10,6 @@ import BerandaVendor from './BerandaVendor'
 interface BerandaProps {
   isAdmin: boolean
 }
-
-const STATUS_ORDER = ['On Going', 'Selesai', 'On Hold', 'Perencanaan']
-
 
 const MetricIcon = ({ type }: { type: string }) => {
   const icons: Record<string, JSX.Element> = {
@@ -55,18 +52,18 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
+  const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
-  const [showProgramList, setShowProgramList] = useState(true)
   const [showLaporan, setShowLaporan] = useState(false)
-  const [listFilter, setListFilter] = useState('On Going')
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data: progData }, { data: txData }, { data: snapData }] = await Promise.all([
+      const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }] = await Promise.all([
         fetchPrograms(),
         fetchTransactions(),
         fetchSnapshots(),
+        fetchSubPrograms(),
       ])
       if (progData) setPrograms(progData)
       if (txData) {
@@ -77,6 +74,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
         setTotalRealisasi(realisasi)
       }
       if (snapData) setSnapshots(snapData)
+      if (subData) setSubPrograms(subData)
       setLoading(false)
     }
     load()
@@ -86,6 +84,12 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
+  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
+  const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const progressLapangan = progressAnggaranTotal > 0
+    ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
+    : null
+
   const mostRecentUpdate = programs.reduce((latest, p) => {
     if (!p.updated_at) return latest
     return p.updated_at > latest ? p.updated_at : latest
@@ -93,18 +97,6 @@ export default function Beranda({ isAdmin }: BerandaProps) {
   const freshnessDays = mostRecentUpdate
     ? Math.floor((Date.now() - new Date(mostRecentUpdate).getTime()) / 86400000)
     : null
-
-  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
-  const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const progressLapangan = progressAnggaranTotal > 0
-    ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
-    : '0'
-
-  const statusCount: Record<string, number> = {}
-  programs.forEach(p => {
-    statusCount[p.status] = (statusCount[p.status] || 0) + 1
-  })
-  const pieData = Object.entries(statusCount).map(([name, value]) => ({ name, value }))
 
   const summaryCards = [
     {
@@ -242,218 +234,9 @@ export default function Beranda({ isAdmin }: BerandaProps) {
         ))}
       </div>
 
-      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} />
+      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} subPrograms={subPrograms} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
       <BerandaChart transactions={rawTransactions} />
       <BerandaVendor programs={programs} />
-
-      {/* Status Pekerjaan */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14, marginBottom: 20 }}>
-        <div
-          style={{
-            backgroundColor: 'var(--card)',
-            borderRadius: 14,
-            border: '1px solid var(--border-subtle)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progress Pekerjaan</span>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{programs.length} program total</div>
-          </div>
-
-          {pieData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 13 }}>Belum ada data program.</div>
-          ) : (
-            <>
-              {/* Two bordered sections side by side */}
-              <div style={{ display: 'flex', gap: 12, padding: '18px 16px 16px' }}>
-                {/* Left: Progress Lapangan */}
-                <div style={{
-                  flex: 35,
-                  borderRadius: 11,
-                  border: '1px solid rgba(124,58,237,0.2)',
-                  borderTop: '3px solid #7C3AED',
-                  padding: '20px 18px 22px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
-                    Progress Lapangan
-                  </div>
-                  <div style={{ fontSize: 36, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: 10 }}>
-                    {progressLapangan}%
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                    rata-rata {progressPrograms.length} program aktif
-                  </div>
-                </div>
-
-                {/* Right: Horizontal status bars */}
-                <div style={{
-                  flex: 65,
-                  borderRadius: 11,
-                  border: '1px solid rgba(26,111,232,0.18)',
-                  borderTop: '3px solid var(--blue)',
-                  padding: '16px 18px 20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  gap: 12,
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
-                    Status Program
-                  </div>
-                  {STATUS_ORDER.map(statusName => {
-                    const count = statusCount[statusName] || 0
-                    const pct = programs.length > 0 ? (count / programs.length) * 100 : 0
-                    const color = STATUS_COLORS[statusName] || 'var(--text-muted)'
-                    return (
-                      <div key={statusName}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-                            <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', fontWeight: 500 }}>{statusName}</span>
-                          </div>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-primary)' }}>{count}</span>
-                        </div>
-                        <div style={{ height: 5, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                          <div style={{
-                            height: '100%',
-                            width: `${pct}%`,
-                            backgroundColor: color,
-                            borderRadius: 99,
-                          }} />
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Toggle button */}
-          <div style={{ padding: '0 16px 14px' }}>
-            <button
-              onClick={() => setShowProgramList(v => !v)}
-              style={{
-                width: '100%', padding: '7px 14px',
-                borderRadius: 8,
-                border: showProgramList ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
-                backgroundColor: showProgramList ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-                color: showProgramList ? 'var(--blue)' : 'var(--text-secondary)',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
-              }}
-            >
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"
-                style={{ transform: showProgramList ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-              {showProgramList ? 'Sembunyikan' : 'Tampilkan Pekerjaan'}
-            </button>
-          </div>
-
-          {/* Collapsible program list */}
-          {showProgramList && (
-            <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
-              {/* Filter tabs */}
-              <div style={{ padding: '10px 16px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {pieData.map(d => {
-                  const isActive = listFilter === d.name
-                  const color = STATUS_COLORS[d.name] || 'var(--text-secondary)'
-                  return (
-                    <button
-                      key={d.name}
-                      onClick={() => setListFilter(d.name)}
-                      style={{
-                        padding: '4px 12px', borderRadius: 20, border: 'none',
-                        cursor: 'pointer', fontSize: 11.5, fontWeight: 600,
-                        backgroundColor: isActive ? color : 'var(--border-subtle)',
-                        color: isActive ? '#fff' : 'var(--text-secondary)',
-                        transition: 'all 0.13s', fontFamily: 'inherit',
-                      }}
-                    >
-                      {d.name} · {d.value}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* List */}
-              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {programs.filter(p => p.status === listFilter).map(p => (
-                  <div
-                    key={p.id}
-                    style={{
-                      padding: '11px 14px', borderRadius: 10,
-                      backgroundColor: 'var(--card)',
-                      border: '1px solid var(--border-strong)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.nama_pekerjaan}
-                        </div>
-                        {p.vendor && (
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{p.vendor}</div>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[p.status] || 'var(--blue)', flexShrink: 0 }}>
-                        {p.progress_percent || 0}%
-                      </span>
-                    </div>
-                    <div style={{ height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${Math.min(100, p.progress_percent || 0)}%`,
-                        backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)',
-                        borderRadius: 99,
-                      }} />
-                    </div>
-                    {p.isu_utama && (
-                      <div style={{
-                        marginTop: 8,
-                        backgroundColor: 'rgba(217,119,6,0.07)',
-                        borderLeft: '2.5px solid #D97706',
-                        borderRadius: 7,
-                        padding: '7px 10px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 7,
-                      }}>
-                        <svg width="12" height="12" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24" style={{ marginTop: 2, flexShrink: 0 }}>
-                          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                        </svg>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
-                              <span style={{ width: 3, height: 3, borderRadius: '50%', backgroundColor: '#92400e', flexShrink: 0, marginTop: 6 }} />
-                              <span style={{ fontSize: 11, color: '#92400e', fontWeight: 500, lineHeight: 1.5 }}>{line}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {programs.filter(p => p.status === listFilter).length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 12 }}>
-                    Tidak ada program dengan status ini.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Laporan Pekanan */}
       <div>

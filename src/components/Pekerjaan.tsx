@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, Program } from '../lib/supabase'
+import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
 
 interface PekerjaanProps {
@@ -16,17 +16,27 @@ const STATUS_TABS = ['Semua', 'On Going', 'Selesai', 'Perencanaan', 'On Hold']
 
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const [programs, setPrograms] = useState<Program[]>([])
+  const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const { data } = await fetchPrograms()
+      const [{ data }, { data: subData }] = await Promise.all([fetchPrograms(), fetchSubPrograms()])
       if (data) setPrograms(data)
+      if (subData) setSubPrograms(subData)
       setLoading(false)
     }
     load()
   }, [])
+
+  const getVendorDisplay = (p: Program): string => {
+    const subs = subPrograms.filter(s => s.program_id === p.id)
+    if (subs.length === 0) return p.vendor || ''
+    const unique = [...new Set(subs.map(s => s.vendor).filter(v => v && v.trim()))]
+    if (unique.length === 0) return p.vendor || ''
+    return unique.join(' · ')
+  }
 
   const filtered = programs.filter(p => {
     const matchSearch =
@@ -248,8 +258,8 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                         <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                           {p.nama_pekerjaan}
                         </div>
-                        {p.vendor && (
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.vendor}</div>
+                        {getVendorDisplay(p) && (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{getVendorDisplay(p)}</div>
                         )}
                       </div>
                     </div>

@@ -16,6 +16,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
   const [anggaran, setAnggaran] = useState(subProgram.total_anggaran || 0)
   const [realisasi, setRealisasi] = useState(subProgram.realisasi_terkini || 0)
   const [status, setStatus] = useState(subProgram.status)
+  const [vendor, setVendor] = useState(subProgram.vendor || '')
   const [linkDokumentasi, setLinkDokumentasi] = useState(subProgram.link_dokumentasi || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +35,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
       realisasi_terkini: realisasi,
       sisa_anggaran: sisa,
       status,
+      vendor,
       link_dokumentasi: linkDokumentasi || null,
     }, subProgram.id)
 
@@ -78,6 +80,29 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
             {error}
           </div>
         )}
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+            Vendor
+          </label>
+          <input
+            type="text"
+            value={vendor}
+            onChange={e => setVendor(e.target.value)}
+            placeholder="Nama vendor"
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: '1px solid rgba(26,43,94,0.15)',
+              fontSize: 13,
+              color: '#0D1829',
+              fontFamily: 'inherit',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
 
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>

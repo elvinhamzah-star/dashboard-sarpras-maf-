@@ -208,7 +208,15 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
           {[
             { label: 'Program', value: program.program || '-' },
             { label: 'Jenis Pekerjaan', value: program.jenis_pekerjaan || '-' },
-            { label: 'Vendor', value: program.vendor || '-' },
+            {
+              label: 'Vendor',
+              value: (() => {
+                const subs = subPrograms.filter(s => s.program_id === program.id)
+                if (subs.length === 0) return program.vendor || '-'
+                const unique = [...new Set(subs.map(s => s.vendor).filter(Boolean))]
+                return unique.length > 0 ? unique.join(', ') : (program.vendor || '-')
+              })()
+            },
             { label: 'Tanggal Dibuat', value: formatTanggal(program.created_at) },
           ].map(m => (
             <div key={m.label}>
@@ -337,7 +345,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ['Total Anggaran', formatRupiah(program.total_anggaran || 0)],
                     ['Realisasi Terkini', formatRupiah(program.realisasi_terkini || 0)],
                     ['Sisa Anggaran', formatRupiah(program.sisa_anggaran || 0)],
-                    ['Vendor', program.vendor || '-'],
+                    ['Vendor', (() => { const subs = subPrograms.filter(s => s.program_id === program.id); if (subs.length === 0) return program.vendor || '-'; const u = [...new Set(subs.map(s => s.vendor).filter(Boolean))]; return u.length > 0 ? u.join(', ') : (program.vendor || '-') })()],
                     ['Catatan Pekerjaan', program.isu_utama
                       ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
                           <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: idx > 0 ? 3 : 0 }}>
@@ -448,7 +456,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                 <thead>
                   <tr>
-                    {['No', 'Nama Gedung', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
+                    {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
                       <th
                         key={h}
                         style={{
@@ -479,6 +487,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     >
                       <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
                       <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
+                      <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{sp.vendor || '-'}</td>
                       <td style={{ padding: '11px 14px', minWidth: 120 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden', minWidth: 40 }}>

@@ -91,9 +91,10 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
           </div>
 
           <svg
-            width={svgW}
+            viewBox={`0 0 ${svgW} ${chartH + 28}`}
+            width="100%"
             height={chartH + 28}
-            style={{ display: 'block', minWidth: '100%' }}
+            style={{ display: 'block' }}
             xmlns="http://www.w3.org/2000/svg"
           >
             {months.map((m, i) => {

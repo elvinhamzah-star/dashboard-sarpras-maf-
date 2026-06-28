@@ -42,6 +42,7 @@ export interface SubProgram {
   id: string
   program_id: string
   nama_gedung: string
+  vendor: string
   progress_percent: number
   total_anggaran: number
   realisasi_terkini: number
@@ -84,5 +85,6 @@ export const fetchPrograms = () => supabase.from('programs').select('*').order('
 export const fetchTransactions = () => supabase.from('transactions').select('*').order('tanggal', { ascending: false })
 export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
 export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
+export const fetchSubPrograms = () => supabase.from('sub_programs').select('*').order('id', { ascending: true })
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
