@@ -89,22 +89,25 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       overflow: 'hidden',
       marginBottom: 20,
     }}>
-      <div style={{ padding: '16px 20px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ padding: '18px 20px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Progress Program
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
             {programs.length} program total
           </div>
         </div>
         {progressLapangan && (
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            <div style={{ fontSize: 26, fontWeight: 750, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {progressLapangan}%
             </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400, marginTop: 4 }}>
+              progress lapangan
+            </div>
             {lastUpdated && (
-              <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 3 }}>
+              <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 2 }}>
                 diperbarui {formatTanggal(lastUpdated)}
               </div>
             )}
