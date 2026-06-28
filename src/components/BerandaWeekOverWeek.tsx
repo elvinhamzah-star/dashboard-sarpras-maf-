@@ -34,7 +34,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
   const now = Date.now()
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000
 
-  const wowMap: Record<number, { delta: number | null; prev: number | null }> = {}
+  const wowMap: Record<string, { delta: number | null; prev: number | null }> = {}
   programs
     .filter(p => p.status === 'On Going' && p.jenis_pekerjaan !== 'Operasional')
     .forEach(p => {
