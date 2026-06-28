@@ -61,7 +61,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
             Daftar Pekerjaan
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400 }}>
-            {programs.length} total pekerjaan
+            {programs.length} Total Pekerjaan
           </p>
         </div>
         {isAdmin && (
@@ -149,24 +149,12 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: isActive ? (tab === 'Semua' ? 'var(--blue)' : `${STATUS_COLORS[tab]}18`) : 'var(--card)',
+                  backgroundColor: isActive ? (tab === 'Semua' ? 'var(--blue)' : `${STATUS_COLORS[tab]}18`) : 'transparent',
                   color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 5,
-                }}
-                onMouseEnter={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--card)'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
-                  }
                 }}
               >
                 {tab}
@@ -200,9 +188,9 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         }}
       >
         {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat data...</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak ada pekerjaan ditemukan.</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>

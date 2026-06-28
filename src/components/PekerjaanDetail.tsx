@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, SubProgram, Program } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress } from '../lib/data'
 import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
@@ -58,7 +58,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
     )
   }
 
-  const pct = Math.min(program.progress_percent || 0, 100)
+  const pct = getEffectiveProgress(program)
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
 
   return (
@@ -114,7 +114,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 {program.status}
               </span>
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 750, color: 'var(--text-primary)', margin: '0 0 10px', lineHeight: 1.3, letterSpacing: '-0.03em' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px', lineHeight: 1.3, letterSpacing: '-0.03em' }}>
               {program.nama_pekerjaan}
             </h1>
             <div
@@ -160,7 +160,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ))}
                   </div>
                 </>
-              ) : (isAdmin ? '+ Tambah catatan...' : 'Tidak ada catatan')}
+              ) : (isAdmin ? '+ Tambah Catatan...' : 'Tidak Ada Catatan')}
             </div>
           </div>
           {isAdmin && (
@@ -250,7 +250,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {c.label}
             </div>
-            <div style={{ fontSize: 18, fontWeight: 750, color: c.color, letterSpacing: '-0.03em' }}>{c.value}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: c.color, letterSpacing: '-0.03em' }}>{c.value}</div>
           </div>
         ))}
       </div>
@@ -268,7 +268,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Progress Pekerjaan</span>
-          <span style={{ fontSize: 16, fontWeight: 750, color: statusColor, letterSpacing: '-0.02em' }}>{pct}%</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: statusColor, letterSpacing: '-0.02em' }}>{pct}%</span>
         </div>
         <div style={{ height: 8, backgroundColor: 'var(--border-subtle)', borderRadius: 10, overflow: 'hidden' }}>
           <div
@@ -296,22 +296,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: 600,
-              backgroundColor: activeTab === tab ? 'var(--blue)' : 'var(--card)',
+              backgroundColor: activeTab === tab ? 'var(--blue)' : 'transparent',
               color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
-              transition: 'all 0.15s',
+              transition: 'all 0.13s',
               letterSpacing: '-0.01em',
-            }}
-            onMouseEnter={e => {
-              if (activeTab !== tab) {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'
-              }
-            }}
-            onMouseLeave={e => {
-              if (activeTab !== tab) {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--card)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
-              }
             }}
           >
             {tab}
@@ -341,7 +329,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     ['Nama Pekerjaan', program.nama_pekerjaan],
                     ['Jenis Pekerjaan', program.jenis_pekerjaan || '-'],
                     ['Status', program.status],
-                    ['Progress', `${program.progress_percent || 0}%`],
+                    ['Progress', `${getEffectiveProgress(program)}%`],
                     ['Total Anggaran', formatRupiah(program.total_anggaran || 0)],
                     ['Realisasi Terkini', formatRupiah(program.realisasi_terkini || 0)],
                     ['Sisa Anggaran', formatRupiah(program.sisa_anggaran || 0)],

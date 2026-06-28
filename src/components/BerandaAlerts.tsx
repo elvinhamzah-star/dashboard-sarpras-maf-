@@ -47,7 +47,7 @@ export default function BerandaAlerts({ programs }: BerandaAlertsProps) {
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <span style={{ fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{p.nama_pekerjaan}</span>
                   <span style={{ fontSize: 11, color: '#DC2626', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {daysLate} hari terlambat
+                    {daysLate} Hari Terlambat
                   </span>
                 </div>
               )
@@ -79,7 +79,7 @@ export default function BerandaAlerts({ programs }: BerandaAlertsProps) {
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <span style={{ fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{p.nama_pekerjaan}</span>
                 <span style={{ fontSize: 11, color: '#D97706', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  lebih {formatRupiah(Math.abs(p.sisa_anggaran ?? 0))}
+                  Lebih {formatRupiah(Math.abs(p.sisa_anggaran ?? 0))}
                 </span>
               </div>
             ))}

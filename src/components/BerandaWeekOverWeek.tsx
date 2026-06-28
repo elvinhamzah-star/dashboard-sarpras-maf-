@@ -96,7 +96,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             Progress Program
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-            {programs.length} program total
+            {programs.length} Pekerjaan Total
           </div>
         </div>
         {progressLapangan && (
@@ -105,7 +105,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               {progressLapangan}%
             </div>
             <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 4 }}>
-              {lastUpdated ? `diperbarui ${formatTanggal(lastUpdated)}` : 'progress lapangan'}
+              {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : 'Progress Lapangan'}
             </div>
           </div>
         )}
@@ -121,11 +121,11 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
-                padding: '4px 12px', borderRadius: 20, border: 'none',
-                cursor: 'pointer', fontSize: 11.5, fontWeight: 600,
-                backgroundColor: isActive ? color : 'var(--border-subtle)',
-                color: isActive ? '#fff' : 'var(--text-secondary)',
-                transition: 'all 0.13s', fontFamily: 'inherit',
+                padding: '5px 12px', borderRadius: 8, fontFamily: 'inherit',
+                border: isActive ? 'none' : '1px solid var(--border)',
+                backgroundColor: isActive ? `${color}18` : 'transparent',
+                color: isActive ? color : 'var(--text-secondary)',
+                fontSize: 11.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s',
               }}
             >
               {tab} · {count}
@@ -137,7 +137,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filteredPrograms.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 12 }}>
-            Tidak ada program dengan status ini.
+            Tidak Ada Pekerjaan Dengan Status Ini.
           </div>
         ) : activeTab === 'Selesai' ? (
           filteredPrograms.map(p => {

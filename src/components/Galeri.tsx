@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, monthsFromDates } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, STATUS_COLORS, STATUS_BG, getEffectiveProgress } from '../lib/data'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
-import MonthSelector from './MonthSelector'
 
 interface GaleriProps {
   isAdmin?: boolean
@@ -12,10 +11,10 @@ interface GaleriProps {
   onMonthChange?: (ym: string | null) => void
 }
 
-const FASE_INFO: Record<string, { color: string; bg: string }> = {
-  'Kondisi Awal':    { color: '#DC2626', bg: 'rgba(220,38,38,0.06)' },
-  'Proses Pekerjaan':{ color: 'var(--blue)', bg: 'rgba(26,111,232,0.06)' },
-  'Kondisi Akhir':   { color: '#059669', bg: 'rgba(5,150,105,0.06)' },
+const FASE_INFO: Record<string, { color: string; bg: string; short: string }> = {
+  'Kondisi Awal':    { color: '#DC2626', bg: 'rgba(220,38,38,0.08)', short: 'Awal' },
+  'Proses Pekerjaan':{ color: 'var(--blue)', bg: 'rgba(26,111,232,0.08)', short: 'Proses' },
+  'Kondisi Akhir':   { color: '#059669', bg: 'rgba(5,150,105,0.08)', short: 'Akhir' },
 }
 
 const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'] as const
@@ -26,7 +25,8 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [loading, setLoading] = useState(true)
   const [filterProgram, setFilterProgram] = useState<string>('Semua')
   const [filterFase, setFilterFase] = useState<string>('Semua')
-  const [localMonth, setLocalMonth] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<string>('Semua')
+  const [openFolderId, setOpenFolderId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
@@ -70,14 +70,25 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     setLoading(false)
   }
 
-  const availableMonths = monthsFromDates(docs.map(d => d.tanggal))
-
+  // Level 1: filtered docs (for folder grid) — Perencanaan dikecualikan
   const filteredDocs = docs.filter(doc => {
+    const prog = programs.find(p => p.id === doc.program_id)
+    if (prog?.status === 'Perencanaan') return false
     if (filterProgram !== 'Semua' && doc.program_id !== filterProgram) return false
-    if (filterFase !== 'Semua' && doc.fase !== filterFase) return false
-    if (localMonth && doc.tanggal?.slice(0, 7) !== localMonth) return false
+    if (filterStatus !== 'Semua' && prog?.status !== filterStatus) return false
     return true
   })
+
+  // Level 2: docs inside the open folder
+  const openFolderDocs = openFolderId
+    ? docs.filter(doc => {
+        if (doc.program_id !== openFolderId) return false
+        if (filterFase !== 'Semua' && doc.fase !== filterFase) return false
+            return true
+      })
+    : []
+
+  const openFolderProgram = openFolderId ? programs.find(p => p.id === openFolderId) : null
 
   const docsByProgram = filteredDocs.reduce((acc, doc) => {
     const prog = programs.find(p => p.id === doc.program_id)
@@ -87,17 +98,18 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     return acc
   }, {} as Record<string, { program_id: string; items: Documentation[] }>)
 
-  // Keyboard navigation for lightbox — placed after filteredDocs to avoid TDZ
+  const activeDocs = openFolderId ? openFolderDocs : filteredDocs
+
   useEffect(() => {
     if (lightboxIndex === null) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') setLightboxIndex(i => i !== null ? Math.max(0, i - 1) : null)
-      if (e.key === 'ArrowRight') setLightboxIndex(i => i !== null ? Math.min(filteredDocs.length - 1, i + 1) : null)
+      if (e.key === 'ArrowRight') setLightboxIndex(i => i !== null ? Math.min(activeDocs.length - 1, i + 1) : null)
       if (e.key === 'Escape') setLightboxIndex(null)
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [lightboxIndex, filteredDocs.length])
+  }, [lightboxIndex, activeDocs.length])
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus dokumentasi ini?')) return
@@ -114,15 +126,64 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     p.nama_pekerjaan.toLowerCase().includes(programSearch.toLowerCase())
   )
 
+  const handleOpenFolder = (programId: string) => {
+    setOpenFolderId(programId)
+    setFilterFase('Semua')
+    setLightboxIndex(null)
+  }
+
+  const handleCloseFolder = () => {
+    setOpenFolderId(null)
+    setFilterFase('Semua')
+    setLightboxIndex(null)
+  }
+
   return (
     <div style={{ padding: '28px 28px 48px' }}>
+
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Galeri Dokumentasi</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0', fontWeight: 400 }}>
-            {loading ? 'Memuat...' : `${filteredDocs.length} dokumentasi`}
-          </p>
+          {openFolderId ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <button
+                  onClick={handleCloseFolder}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '4px 10px', borderRadius: 7,
+                    border: '1px solid var(--border)', backgroundColor: 'var(--card)',
+                    color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                  Galeri
+                </button>
+                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>/</span>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  {openFolderProgram?.nama_pekerjaan || openFolderId}
+                </span>
+              </div>
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+                {openFolderProgram?.nama_pekerjaan || openFolderId}
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '4px 0 0' }}>
+                {docs.filter(d => d.program_id === openFolderId).length} foto dokumentasi
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+                Galeri Dokumentasi
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
+                {loading ? 'Memuat...' : `${Object.keys(docsByProgram).length} folder · ${filteredDocs.length} foto`}
+              </p>
+            </>
+          )}
         </div>
         {isAdmin && (
           <button
@@ -148,124 +209,56 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
 
       {/* Filters */}
       <div style={{ marginBottom: 24, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-
-        {/* Custom Program Dropdown */}
-        <div style={{ position: 'relative' }} ref={dropdownRef}>
-          <button
-            onClick={() => { setShowProgramDropdown(v => !v); setProgramSearch('') }}
-            style={{
-              padding: '9px 13px', borderRadius: 10,
-              border: showProgramDropdown ? '1px solid var(--blue)' : '1px solid var(--border-strong)',
-              backgroundColor: 'var(--card)', fontSize: 12.5, cursor: 'pointer',
-              color: filterProgram === 'Semua' ? 'var(--text-secondary)' : 'var(--text-primary)',
-              fontWeight: filterProgram === 'Semua' ? 500 : 600,
-              display: 'flex', alignItems: 'center', gap: 8,
-              minWidth: 180, maxWidth: 240, fontFamily: 'inherit',
-              boxShadow: showProgramDropdown ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
-              transition: 'all 0.15s',
-            }}
-          >
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, color: 'var(--text-muted)' }}>
-              <path d="M3 3h18v4L13 13v8l-2-1v-7L3 7V3z"/>
-            </svg>
-            <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {selectedProgramName}
-            </span>
-            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-              style={{ transform: showProgramDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s', flexShrink: 0, color: 'var(--text-muted)' }}>
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-
-          {showProgramDropdown && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 30,
-              backgroundColor: 'var(--card)', borderRadius: 12,
-              border: '1px solid var(--border)',
-              boxShadow: '0 8px 28px var(--border-strong)',
-              minWidth: 240, maxWidth: 320, overflow: 'hidden',
-            }}>
-              <div style={{ padding: '10px 10px 8px' }}>
-                <input
-                  autoFocus
-                  placeholder="Cari program..."
-                  value={programSearch}
-                  onChange={e => setProgramSearch(e.target.value)}
-                  style={{
-                    width: '100%', padding: '7px 10px', borderRadius: 8,
-                    border: '1px solid var(--border)', fontSize: 12,
-                    color: 'var(--text-primary)', outline: 'none', fontFamily: 'inherit',
-                    backgroundColor: 'var(--surface-min)', boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-              <div style={{ maxHeight: 240, overflowY: 'auto' }}>
-                <button
-                  onClick={() => { setFilterProgram('Semua'); setShowProgramDropdown(false); setProgramSearch('') }}
-                  style={{
-                    width: '100%', textAlign: 'left', padding: '9px 14px',
-                    border: 'none', borderBottom: '1px solid var(--border-subtle)',
-                    backgroundColor: filterProgram === 'Semua' ? 'rgba(26,111,232,0.07)' : 'transparent',
-                    color: filterProgram === 'Semua' ? 'var(--blue)' : 'var(--text-primary)',
-                    fontWeight: filterProgram === 'Semua' ? 700 : 500,
-                    fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  Semua Program
-                </button>
-                {filteredProgramList.map(p => (
+        {openFolderId ? (
+          // Level 2: fase filter + month
+          <>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {FASE_LIST.map(fase => {
+                const isActive = filterFase === fase
+                const c = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
+                return (
                   <button
-                    key={p.id}
-                    onClick={() => { setFilterProgram(p.id); setShowProgramDropdown(false); setProgramSearch('') }}
+                    key={fase}
+                    onClick={() => setFilterFase(fase)}
                     style={{
-                      width: '100%', textAlign: 'left', padding: '9px 14px',
-                      border: 'none', borderBottom: '1px solid var(--surface-min)',
-                      backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.07)' : 'transparent',
-                      color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-secondary)',
-                      fontWeight: filterProgram === p.id ? 700 : 400,
-                      fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                      padding: '6px 13px', borderRadius: 8, fontFamily: 'inherit',
+                      border: isActive ? 'none' : '1px solid var(--border)',
+                      backgroundColor: isActive ? (fase === 'Semua' ? 'var(--blue)' : `${c}18`) : 'transparent',
+                      color: isActive ? (fase === 'Semua' ? '#fff' : c) : 'var(--text-secondary)',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s',
                     }}
                   >
-                    {p.nama_pekerjaan}
+                    {fase === 'Semua' ? 'Semua Fase' : fase}
                   </button>
-                ))}
-                {filteredProgramList.length === 0 && (
-                  <div style={{ padding: '14px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-                    Tidak ditemukan
-                  </div>
-                )}
-              </div>
+                )
+              })}
             </div>
-          )}
-        </div>
-
-        {/* Fase Filter Tabs */}
-        <div style={{ display: 'flex', gap: 7 }}>
-          {FASE_LIST.map(fase => {
-            const isActive = filterFase === fase
-            const activeColor = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
-            return (
-              <button
-                key={fase}
-                onClick={() => setFilterFase(fase)}
-                style={{
-                  padding: '8px 14px', borderRadius: 8, fontFamily: 'inherit',
-                  border: isActive ? 'none' : '1px solid var(--border-strong)',
-                  backgroundColor: isActive ? activeColor : 'var(--card)',
-                  color: isActive ? '#fff' : 'var(--text-muted)',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {fase === 'Semua' ? 'Semua Fase' : fase}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Month filter */}
-        {availableMonths.length > 0 && (
-          <MonthSelector value={localMonth} months={availableMonths} onChange={setLocalMonth} />
+          </>
+        ) : (
+          // Level 1: status tabs + month
+          <>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['Semua', 'On Going', 'On Hold', 'Selesai'] as const).map(s => {
+                const isActive = filterStatus === s
+                const c = s === 'Semua' ? 'var(--blue)' : (STATUS_COLORS[s] || 'var(--blue)')
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setFilterStatus(s)}
+                    style={{
+                      padding: '6px 13px', borderRadius: 8, fontFamily: 'inherit',
+                      border: isActive ? 'none' : '1px solid var(--border)',
+                      backgroundColor: isActive ? (s === 'Semua' ? 'var(--blue)' : `${c}18`) : 'transparent',
+                      color: isActive ? (s === 'Semua' ? '#fff' : c) : 'var(--text-secondary)',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s',
+                    }}
+                  >
+                    {s}
+                  </button>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
 
@@ -275,10 +268,148 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
         </div>
       )}
 
-      {/* Content */}
+      {/* ── CONTENT ─────────────────────────────────────────────── */}
       {loading ? (
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Memuat galeri...</div>
+
+      ) : openFolderId ? (
+        /* ── Level 2: foto per fase ── */
+        openFolderDocs.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <svg width="48" height="48" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <p style={{ margin: 0 }}>Tidak Ada Foto Untuk Filter Ini.</p>
+            <button
+              onClick={() => { setLocalMonth(null); setFilterFase('Semua') }}
+              style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Lihat semua fase
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {(['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'] as const).map(fase => {
+              const phaseItems = openFolderDocs.filter(item => item.fase === fase || !item.fase)
+              if (phaseItems.length === 0) return null
+              const fi = FASE_INFO[fase]
+              return (
+                <div key={fase}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    marginBottom: 16, paddingBottom: 12,
+                    borderBottom: `2px solid ${fi.color}22`,
+                  }}>
+                    <div style={{ width: 4, height: 20, borderRadius: 2, backgroundColor: fi.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                      {fase}
+                    </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, color: fi.color,
+                      backgroundColor: fi.bg, padding: '2px 9px', borderRadius: 20,
+                    }}>
+                      {phaseItems.length} foto
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+                    {phaseItems.map(doc => {
+                      const thumbUrl = getDriveThumbnailUrl(doc.link_foto)
+                      return (
+                        <div
+                          key={doc.id}
+                          style={{
+                            position: 'relative', borderRadius: 12, overflow: 'hidden',
+                            backgroundColor: 'var(--surface-raised)',
+                            border: '1px solid var(--border-subtle)',
+                            cursor: 'pointer', transition: 'box-shadow 0.22s, transform 0.22s',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                          }}
+                          onMouseEnter={e => {
+                            const el = e.currentTarget as HTMLDivElement
+                            el.style.boxShadow = '0 10px 28px rgba(8,88,176,0.16)'
+                            el.style.transform = 'translateY(-3px)'
+                            const img = el.querySelector('img') as HTMLImageElement | null
+                            if (img) img.style.transform = 'scale(1.06)'
+                            const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
+                            if (overlay) overlay.style.opacity = '1'
+                            const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
+                            if (actions) actions.style.opacity = '1'
+                          }}
+                          onMouseLeave={e => {
+                            const el = e.currentTarget as HTMLDivElement
+                            el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'
+                            el.style.transform = 'translateY(0)'
+                            const img = el.querySelector('img') as HTMLImageElement | null
+                            if (img) img.style.transform = 'scale(1)'
+                            const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
+                            if (overlay) overlay.style.opacity = '0'
+                            const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
+                            if (actions) actions.style.opacity = '0'
+                          }}
+                          onClick={() => setLightboxIndex(openFolderDocs.indexOf(doc))}
+                        >
+                          <div style={{ width: '100%', height: 220, backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
+                            {thumbUrl ? (
+                              <img src={thumbUrl} alt={doc.caption}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }}
+                                onError={e => {
+                                  const img = e.target as HTMLImageElement
+                                  img.style.display = 'none'
+                                  const placeholder = img.nextElementSibling as HTMLElement | null
+                                  if (placeholder) placeholder.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
+                            <div style={{ width: '100%', height: '100%', display: thumbUrl ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                              <svg width="32" height="32" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <path d="M21 15l-5-5L5 21"/>
+                              </svg>
+                              <span style={{ fontSize: 10, color: '#C8D2E0', fontWeight: 500 }}>Foto tidak tersedia</span>
+                            </div>
+                            <div
+                              className="galeri-caption-overlay"
+                              style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                background: 'linear-gradient(to top, rgba(8,18,36,0.84) 0%, rgba(8,18,36,0.45) 55%, transparent 100%)',
+                                padding: '40px 12px 12px',
+                                opacity: 0, transition: 'opacity 0.22s', pointerEvents: 'none',
+                              }}
+                            >
+                              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.6)', marginBottom: 3, fontWeight: 500 }}>
+                                {formatTanggal(doc.tanggal)}
+                              </div>
+                              {doc.caption && (
+                                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.92)', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                  {doc.caption}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <div className="galeri-admin-actions" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5, opacity: 0, transition: 'opacity 0.2s' }}>
+                              <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                                onClick={e => { e.stopPropagation(); setEditingDoc(doc) }} role="button" title="Edit">✏️</div>
+                              <div style={{ backgroundColor: 'rgba(220,38,38,0.7)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                                onClick={e => { e.stopPropagation(); handleDelete(doc.id) }} role="button" title="Hapus">✕</div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+
       ) : filteredDocs.length === 0 ? (
+        /* ── Level 1 empty state ── */
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <svg width="48" height="48" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -287,193 +418,129 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           </svg>
           {docs.length > 0 ? (
             <>
-              <p style={{ margin: 0 }}>Tidak ada foto untuk filter ini.</p>
+              <p style={{ margin: 0 }}>Tidak Ada Foto Untuk Filter Ini.</p>
               <button
-                onClick={() => { setLocalMonth(null); setFilterProgram('Semua'); setFilterFase('Semua') }}
+                onClick={() => { setLocalMonth(null); setFilterProgram('Semua') }}
                 style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(26,111,232,0.3)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Lihat semua foto
               </button>
             </>
           ) : (
-            <p style={{ margin: 0 }}>Belum ada dokumentasi foto.</p>
+            <p style={{ margin: 0 }}>Belum Ada Dokumentasi Foto.</p>
           )}
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {Object.entries(docsByProgram).map(([progName, { items }]) => (
+
+      ) : (() => {
+        /* ── Level 1: folder grid, grouped by status ── */
+        const STATUS_ORDER = ['Selesai', 'On Going', 'On Hold'] as const
+        const sortedEntries = Object.entries(docsByProgram).sort(([, a], [, b]) => {
+          const pctA = getEffectiveProgress(programs.find(p => p.id === a.program_id) as Parameters<typeof getEffectiveProgress>[0] ?? { jenis_pekerjaan: '', progress_percent: 0, total_anggaran: 0, realisasi_terkini: 0 })
+          const pctB = getEffectiveProgress(programs.find(p => p.id === b.program_id) as Parameters<typeof getEffectiveProgress>[0] ?? { jenis_pekerjaan: '', progress_percent: 0, total_anggaran: 0, realisasi_terkini: 0 })
+          return pctB - pctA
+        })
+
+        const renderCard = (progName: string, program_id: string, items: Documentation[]) => {
+          const prog = programs.find(p => p.id === program_id)
+          const coverThumb = getDriveThumbnailUrl(items[0]?.link_foto)
+          const statusColor = STATUS_COLORS[prog?.status || ''] || 'var(--blue)'
+          const pct = prog ? getEffectiveProgress(prog) : 0
+          return (
             <div
               key={progName}
+              onClick={() => handleOpenFolder(program_id)}
               style={{
-                backgroundColor: 'var(--card)',
-                borderRadius: 14,
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                overflow: 'hidden',
+                backgroundColor: 'var(--card)', borderRadius: 14,
+                border: '1px solid var(--border-subtle)', overflow: 'hidden',
+                cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLDivElement
+                el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                el.style.transform = 'translateY(-3px)'
+                const img = el.querySelector('img') as HTMLImageElement | null
+                if (img) img.style.transform = 'scale(1.05)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLDivElement
+                el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'
+                el.style.transform = 'translateY(0)'
+                const img = el.querySelector('img') as HTMLImageElement | null
+                if (img) img.style.transform = 'scale(1)'
               }}
             >
-              {/* Program Header */}
-              <div style={{
-                padding: '14px 20px',
-                borderBottom: '1px solid var(--border-subtle)',
-                display: 'flex', alignItems: 'center', gap: 10,
-              }}>
-                <div style={{
-                  width: 30, height: 30, borderRadius: 8,
-                  backgroundColor: 'var(--surface-subtle)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  <svg width="14" height="14" fill="none" stroke="#5C6B82" strokeWidth="1.75" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                  </svg>
-                </div>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', flex: 1 }}>
-                  {progName}
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, flexShrink: 0 }}>
+              <div style={{ height: 180, backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
+                {coverThumb ? (
+                  <img src={coverThumb} alt={progName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="36" height="36" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                  </div>
+                )}
+                <div style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20 }}>
                   {items.length} foto
-                </span>
+                </div>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: statusColor }} />
               </div>
-
-              {/* Fase sections */}
-              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {(['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'] as const).map(fase => {
-                  const phaseItems = items.filter(item => item.fase === fase || !item.fase)
-                  if (phaseItems.length === 0) return null
-                  const fi = FASE_INFO[fase]
-
-                  return (
-                    <div key={fase}>
-                      {/* Phase Header */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '8px 14px',
-                        backgroundColor: fi.bg,
-                        borderLeft: `3px solid ${fi.color}`,
-                        borderRadius: '0 8px 8px 0',
-                        marginBottom: 14,
-                      }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                          {fase}
-                        </span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700,
-                          color: fi.color,
-                          backgroundColor: `${fi.color}20`,
-                          padding: '2px 9px', borderRadius: 20,
-                        }}>
-                          {phaseItems.length}
-                        </span>
-                      </div>
-
-                      {/* Photo Grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
-                        {phaseItems.map(doc => {
-                          const thumbUrl = getDriveThumbnailUrl(doc.link_foto)
-                          return (
-                            <div
-                              key={doc.id}
-                              style={{
-                                position: 'relative', borderRadius: 12, overflow: 'hidden',
-                                backgroundColor: 'var(--surface-raised)',
-                                border: '1px solid var(--border-subtle)',
-                                cursor: 'pointer', transition: 'box-shadow 0.22s, transform 0.22s',
-                                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                              }}
-                              onMouseEnter={e => {
-                                const el = e.currentTarget as HTMLDivElement
-                                el.style.boxShadow = '0 10px 28px rgba(8,88,176,0.16)'
-                                el.style.transform = 'translateY(-3px)'
-                                const img = el.querySelector('img') as HTMLImageElement | null
-                                if (img) img.style.transform = 'scale(1.06)'
-                                const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
-                                if (overlay) overlay.style.opacity = '1'
-                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
-                                if (actions) actions.style.opacity = '1'
-                              }}
-                              onMouseLeave={e => {
-                                const el = e.currentTarget as HTMLDivElement
-                                el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'
-                                el.style.transform = 'translateY(0)'
-                                const img = el.querySelector('img') as HTMLImageElement | null
-                                if (img) img.style.transform = 'scale(1)'
-                                const overlay = el.querySelector('.galeri-caption-overlay') as HTMLElement | null
-                                if (overlay) overlay.style.opacity = '0'
-                                const actions = el.querySelector('.galeri-admin-actions') as HTMLElement | null
-                                if (actions) actions.style.opacity = '0'
-                              }}
-                              onClick={() => setLightboxIndex(filteredDocs.indexOf(doc))}
-                            >
-                              <div style={{ width: '100%', height: 200, backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
-                                {thumbUrl ? (
-                                  <img src={thumbUrl} alt={doc.caption}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease', display: 'block' }}
-                                    onError={e => {
-                                      const img = e.target as HTMLImageElement
-                                      img.style.display = 'none'
-                                      const placeholder = img.nextElementSibling as HTMLElement | null
-                                      if (placeholder) placeholder.style.display = 'flex'
-                                    }}
-                                  />
-                                ) : null}
-                                <div style={{ width: '100%', height: '100%', display: thumbUrl ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                  <svg width="32" height="32" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <path d="M21 15l-5-5L5 21"/>
-                                  </svg>
-                                  <span style={{ fontSize: 10, color: '#C8D2E0', fontWeight: 500 }}>Foto tidak tersedia</span>
-                                </div>
-                                {/* Caption overlay — appears on hover */}
-                                <div
-                                  className="galeri-caption-overlay"
-                                  style={{
-                                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                                    background: 'linear-gradient(to top, rgba(8,18,36,0.84) 0%, rgba(8,18,36,0.45) 55%, transparent 100%)',
-                                    padding: '40px 12px 12px',
-                                    opacity: 0,
-                                    transition: 'opacity 0.22s',
-                                    pointerEvents: 'none',
-                                  }}
-                                >
-                                  <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.6)', marginBottom: 3, fontWeight: 500 }}>
-                                    {formatTanggal(doc.tanggal)}
-                                  </div>
-                                  {doc.caption && (
-                                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.92)', lineHeight: 1.35, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                      {doc.caption}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              {isAdmin && (
-                                <div className="galeri-admin-actions" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5, opacity: 0, transition: 'opacity 0.2s' }}>
-                                  <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
-                                    onClick={e => { e.stopPropagation(); setEditingDoc(doc) }} role="button" title="Edit">✏️</div>
-                                  <div style={{ backgroundColor: 'rgba(220,38,38,0.7)', color: 'var(--card)', width: 28, height: 28, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
-                                    onClick={e => { e.stopPropagation(); handleDelete(doc.id) }} role="button" title="Hapus">✕</div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div style={{ padding: '14px 16px' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.3, marginBottom: 3 }}>
+                  {progName}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>{prog?.id}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, height: 3, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', backgroundColor: statusColor, borderRadius: 10 }} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, minWidth: 28, textAlign: 'right' }}>{pct}%</span>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          )
+        }
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && filteredDocs[lightboxIndex] && (() => {
-        const doc = filteredDocs[lightboxIndex]
+        if (filterStatus !== 'Semua') {
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+              {sortedEntries.map(([progName, { program_id, items }]) => renderCard(progName, program_id, items))}
+            </div>
+          )
+        }
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+            {STATUS_ORDER.map(status => {
+              const entries = sortedEntries.filter(([, { program_id }]) =>
+                programs.find(p => p.id === program_id)?.status === status
+              )
+              if (entries.length === 0) return null
+              const color = STATUS_COLORS[status] || 'var(--blue)'
+              return (
+                <div key={status}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, paddingBottom: 12, borderBottom: `2px solid ${color}22` }}>
+                    <div style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{status}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+                    {entries.map(([progName, { program_id, items }]) => renderCard(progName, program_id, items))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
+      {/* ── Lightbox (Level 2 only) ── */}
+      {lightboxIndex !== null && openFolderId && activeDocs[lightboxIndex] && (() => {
+        const doc = activeDocs[lightboxIndex]
         const hasPrev = lightboxIndex > 0
-        const hasNext = lightboxIndex < filteredDocs.length - 1
+        const hasNext = lightboxIndex < activeDocs.length - 1
         const navBtn = (disabled: boolean, onClick: () => void, children: React.ReactNode) => (
           <button
             onClick={onClick}
@@ -484,8 +551,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               cursor: disabled ? 'default' : 'pointer', fontSize: 20, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
               opacity: disabled ? 0.25 : 1, transition: 'background 0.15s, opacity 0.15s',
-              backdropFilter: 'blur(4px)',
-              zIndex: 102,
+              backdropFilter: 'blur(4px)', zIndex: 102,
             }}
             onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.32)' }}
             onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.18)' }}
@@ -506,17 +572,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               touchStartX.current = null
             }}
           >
-            {/* Prev button */}
-            <div
-              style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }}
-              onClick={e => e.stopPropagation()}
-            >
+            <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
               {navBtn(!hasPrev, () => setLightboxIndex(i => i !== null ? i - 1 : null),
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
               )}
             </div>
 
-            {/* Card */}
             <div
               style={{ backgroundColor: 'var(--card)', borderRadius: 16, maxWidth: 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
               onClick={e => e.stopPropagation()}
@@ -525,12 +586,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 onClick={() => setLightboxIndex(null)}
                 style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: 'var(--card)', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >✕</button>
-
-              {/* Counter */}
               <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: 'var(--card)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
-                {lightboxIndex + 1} / {filteredDocs.length}
+                {lightboxIndex + 1} / {activeDocs.length}
               </div>
-
               {getDriveViewUrl(doc.link_foto) && (
                 <img
                   src={getDriveViewUrl(doc.link_foto) || ''}
@@ -556,11 +614,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               </div>
             </div>
 
-            {/* Next button */}
-            <div
-              style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }}
-              onClick={e => e.stopPropagation()}
-            >
+            <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
               {navBtn(!hasNext, () => setLightboxIndex(i => i !== null ? i + 1 : null),
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
               )}

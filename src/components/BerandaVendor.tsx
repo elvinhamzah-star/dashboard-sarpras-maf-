@@ -1,27 +1,54 @@
-import { Program } from '../lib/supabase'
-import { formatRupiah } from '../lib/data'
+import { Program, SubProgram } from '../lib/supabase'
+import { formatRupiah, getEffectiveProgress } from '../lib/data'
 
 interface Props {
   programs: Program[]
+  subPrograms: SubProgram[]
 }
 
-export default function BerandaVendor({ programs }: Props) {
-  const byVendor: Record<string, Program[]> = {}
+export default function BerandaVendor({ programs, subPrograms }: Props) {
+  const programsWithSubs = new Set(subPrograms.map(s => s.program_id))
+
+  const byVendor: Record<string, {
+    programIds: Set<string>
+    anggaran: number
+    realisasi: number
+    progressValues: number[]
+  }> = {}
+
+  const ensure = (v: string) => {
+    if (!byVendor[v]) byVendor[v] = { programIds: new Set(), anggaran: 0, realisasi: 0, progressValues: [] }
+  }
+
+  // Sub-program vendor membawa data masing-masing
+  subPrograms.forEach(s => {
+    if (!s.vendor) return
+    ensure(s.vendor)
+    byVendor[s.vendor].programIds.add(s.program_id)
+    byVendor[s.vendor].anggaran += s.total_anggaran || 0
+    byVendor[s.vendor].realisasi += s.realisasi_terkini || 0
+    byVendor[s.vendor].progressValues.push(s.progress_percent || 0)
+  })
+
+  // Program tanpa sub-program pakai program.vendor
   programs.forEach(p => {
-    if (!p.vendor) return
-    if (!byVendor[p.vendor]) byVendor[p.vendor] = []
-    byVendor[p.vendor].push(p)
+    if (programsWithSubs.has(p.id) || !p.vendor) return
+    ensure(p.vendor)
+    byVendor[p.vendor].programIds.add(p.id)
+    byVendor[p.vendor].anggaran += p.total_anggaran || 0
+    byVendor[p.vendor].realisasi += p.realisasi_terkini || 0
+    byVendor[p.vendor].progressValues.push(getEffectiveProgress(p))
   })
 
   const vendors = Object.entries(byVendor)
-    .map(([vendor, progs]) => ({
+    .map(([vendor, d]) => ({
       vendor,
-      count: progs.length,
-      totalAnggaran: progs.reduce((s, p) => s + (p.total_anggaran || 0), 0),
-      totalRealisasi: progs.reduce((s, p) => s + (p.realisasi_terkini || 0), 0),
-      avgProgress: Math.round(
-        progs.reduce((s, p) => s + (p.progress_percent || 0), 0) / progs.length
-      ),
+      count: d.programIds.size,
+      totalAnggaran: d.anggaran,
+      totalRealisasi: d.realisasi,
+      avgProgress: d.progressValues.length > 0
+        ? Math.round(d.progressValues.reduce((s, v) => s + v, 0) / d.progressValues.length)
+        : 0,
     }))
     .sort((a, b) => b.totalAnggaran - a.totalAnggaran)
 
@@ -38,10 +65,10 @@ export default function BerandaVendor({ programs }: Props) {
     }}>
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-          Ringkasan per Vendor
+          Ringkasan Per Vendor
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-          {vendors.length} vendor aktif
+          {vendors.length} Vendor Terdaftar
         </div>
       </div>
 
@@ -50,21 +77,13 @@ export default function BerandaVendor({ programs }: Props) {
           <thead>
             <tr>
               {['Vendor', 'Program', 'Progress', 'Anggaran', 'Realisasi'].map(h => (
-                <th
-                  key={h}
-                  style={{
-                    padding: '9px 16px',
-                    textAlign: 'left',
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    backgroundColor: 'var(--surface-subtle)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
+                <th key={h} style={{
+                  padding: '9px 16px', textAlign: 'left',
+                  fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--surface-subtle)', whiteSpace: 'nowrap',
+                }}>
                   {h}
                 </th>
               ))}
@@ -72,10 +91,7 @@ export default function BerandaVendor({ programs }: Props) {
           </thead>
           <tbody>
             {vendors.map((v, i) => (
-              <tr
-                key={v.vendor}
-                style={{ borderBottom: i < vendors.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
-              >
+              <tr key={v.vendor} style={{ borderBottom: i < vendors.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
                 <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                   {v.vendor}
                 </td>
@@ -85,30 +101,17 @@ export default function BerandaVendor({ programs }: Props) {
                 <td style={{ padding: '11px 16px', minWidth: 120 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{
-                        width: `${v.avgProgress}%`,
-                        height: '100%',
-                        backgroundColor: '#1A6FE8',
-                        borderRadius: 99,
-                      }} />
+                      <div style={{ width: `${v.avgProgress}%`, height: '100%', backgroundColor: '#1A6FE8', borderRadius: 99 }} />
                     </div>
                     <span style={{ fontSize: 11.5, fontWeight: 600, color: '#1A6FE8', minWidth: 32 }}>
                       {v.avgProgress}%
                     </span>
                   </div>
                 </td>
-                <td style={{
-                  padding: '11px 16px', fontSize: 12.5,
-                  color: 'var(--text-primary)', whiteSpace: 'nowrap',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
+                <td style={{ padding: '11px 16px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                   {formatRupiah(v.totalAnggaran)}
                 </td>
-                <td style={{
-                  padding: '11px 16px', fontSize: 12.5,
-                  color: '#059669', fontWeight: 600, whiteSpace: 'nowrap',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
+                <td style={{ padding: '11px 16px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                   {formatRupiah(v.totalRealisasi)}
                 </td>
               </tr>

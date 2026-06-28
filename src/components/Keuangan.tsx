@@ -99,14 +99,14 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
     {
       title: 'Dana Masuk',
       value: formatRupiah(totalMasuk),
-      subtitle: `${masukList.length} transaksi diterima`,
+      subtitle: `${masukList.length} Transaksi Diterima`,
       color: '#059669',
       borderColor: '#059669',
     },
     {
       title: 'Saldo Kas',
       value: formatRupiah(saldoKas),
-      subtitle: selectedMonth ? 'Sisa saldo kas (total keseluruhan)' : 'Sisa saldo kas Sarpras',
+      subtitle: selectedMonth ? 'Sisa Saldo Kas (Total Keseluruhan)' : 'Sisa Saldo Kas Sarpras',
       color: saldoKas >= 0 ? '#059669' : '#DC2626',
       borderColor: saldoKas >= 0 ? '#059669' : '#DC2626',
     },
@@ -116,13 +116,13 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
     {
       title: 'Dana Keluar',
       value: formatRupiah(totalKeluar),
-      subtitle: `${keluarList.length} transaksi`,
+      subtitle: `${keluarList.length} Transaksi`,
       color: '#DC2626',
     },
     {
       title: 'Keluar PBB',
       value: formatRupiah(totalKeluarPBB),
-      subtitle: `${keluarPBBList.length} transaksi`,
+      subtitle: `${keluarPBBList.length} Transaksi`,
       color: '#D97706',
     },
     {
@@ -161,8 +161,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5 }}>
             {selectedMonth
-              ? `Transaksi bulan ${monthLabelFromYM(selectedMonth)}`
-              : 'Riwayat transaksi keuangan Sarpras MAF'}
+              ? `Transaksi Bulan ${monthLabelFromYM(selectedMonth)}`
+              : 'Riwayat Transaksi Keuangan Sarpras MAF'}
           </p>
         </div>
         {isAdmin && (
@@ -234,7 +234,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <MonthSelector value={selectedMonth} months={availableMonths} onChange={onMonthChange} />
           {selectedMonth && (
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {monthTransactions.length} transaksi · {formatRupiah(totalMasuk)} masuk · {formatRupiah(totalKeluar + totalKeluarPBB)} keluar
+              {monthTransactions.length} Transaksi · {formatRupiah(totalMasuk)} Masuk · {formatRupiah(totalKeluar + totalKeluarPBB)} Keluar
             </span>
           )}
         </div>
@@ -268,7 +268,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
               {card.title}
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
               {card.value}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{card.subtitle}</div>
@@ -311,7 +311,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         ))}
       </div>
 
-      {/* Serapan per Bulan */}
+      {/* Serapan Per Bulan */}
       {serapanBulanan.length > 0 && (
         <div
           style={{
@@ -336,8 +336,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             }}
           >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Serapan per Bulan</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Realisasi pengeluaran bulanan</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Serapan Per Bulan</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Realisasi Pengeluaran Bulanan</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 }}>
               <span>{showSerapan ? 'Sembunyikan' : 'Tampilkan Detail'}</span>
@@ -368,8 +368,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
                     >
                       <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
+                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
                       <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
                     </tr>
                   ))}
@@ -394,7 +394,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} transaksi</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} Transaksi</div>
           </div>
           <div style={{ display: 'flex', gap: 5 }}>
             {JENIS_TABS.map(tab => (
@@ -408,7 +408,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   cursor: 'pointer',
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: filterJenis === tab ? 'var(--blue)' : 'var(--card)',
+                  backgroundColor: filterJenis === tab ? 'var(--blue)' : 'transparent',
                   color: filterJenis === tab ? '#fff' : 'var(--text-secondary)',
                   transition: 'all 0.13s',
                 }}
@@ -420,9 +420,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         </div>
 
         {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat data...</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum ada transaksi.</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
@@ -471,7 +471,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                         {formatTanggal(t.tanggal)}
                       </td>
                       <td style={{ padding: '12px 16px', maxWidth: 160 }}>
-                        <div style={{ fontSize: 12.5, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                        <div style={{ fontSize: 12.5, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                           {t.nama_pekerjaan || '-'}
                         </div>
                       </td>
@@ -581,7 +581,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         {!loading && filtered.length > itemsPerPage && (
           <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {start + 1}–{Math.min(start + itemsPerPage, filtered.length)} dari {filtered.length} transaksi
+              {start + 1}–{Math.min(start + itemsPerPage, filtered.length)} Dari {filtered.length} Transaksi
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <button

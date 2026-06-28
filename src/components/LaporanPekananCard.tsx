@@ -122,21 +122,21 @@ const SECTIONS = [
   {
     field: 'dikerjakan' as const,
     label: 'Sudah Dikerjakan',
-    placeholder: 'Progres atau pencapaian pekan ini...',
+    placeholder: 'Progres Atau Pencapaian Pekan Ini...',
     color: '#059669',
     bg: 'rgba(5,150,105,0.07)',
   },
   {
     field: 'kendala' as const,
-    label: 'Kendala / Update Penting',
-    placeholder: 'Kendala atau hal penting yang perlu dilaporkan...',
+    label: 'Kendala / Update',
+    placeholder: 'Kendala Atau Hal Penting Yang Perlu Dilaporkan...',
     color: '#D97706',
     bg: 'rgba(217,119,6,0.07)',
   },
   {
     field: 'rencana' as const,
     label: 'Rencana Pekan Depan',
-    placeholder: 'Target atau rencana untuk pekan berikutnya...',
+    placeholder: 'Target Atau Rencana Untuk Pekan Berikutnya...',
     color: 'var(--blue)',
     bg: 'rgba(26,111,232,0.07)',
   },
@@ -517,17 +517,17 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
       {/* ── Empty states ── */}
       {isPastWeek && !note && !isAdmin && (
         <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          Belum ada laporan disimpan untuk minggu ini
+          Belum Ada Laporan Disimpan Untuk Minggu Ini
         </div>
       )}
       {isPastWeek && note && !hasAnyPrograms && !isAdmin && (
         <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          Laporan minggu ini belum memiliki catatan program
+          Laporan Minggu Ini Belum Memiliki Catatan Program
         </div>
       )}
       {!isPastWeek && activePrograms.length === 0 && displayedPlanningPrograms.length === 0 && !isAdmin && (
         <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          Tidak ada pekerjaan aktif
+          Tidak Ada Pekerjaan Aktif
         </div>
       )}
 
@@ -613,7 +613,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                           <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
-                          {availableSelesai.length === 0 ? 'Semua sudah ditambahkan' : 'Tambah program'}
+                          {availableSelesai.length === 0 ? 'Semua Sudah Ditambahkan' : 'Tambah Pekerjaan'}
                         </button>
                         {showDropdown === 'selesai' && availableSelesai.length > 0 && (
                           <div style={{
@@ -668,7 +668,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                           <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
-                          {availablePlanning.length === 0 ? 'Semua sudah ditambahkan' : 'Tambah program'}
+                          {availablePlanning.length === 0 ? 'Semua Sudah Ditambahkan' : 'Tambah Pekerjaan'}
                         </button>
                         {showDropdown === 'planning' && availablePlanning.length > 0 && (
                           <div style={{
@@ -754,7 +754,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   {(isSelectedPlanning ? [SECTIONS[2]] : SECTIONS).map(s => {
                     const sColor = isSelectedPlanning ? '#B91C1C' : s.color
                     const sBg = isSelectedPlanning ? 'rgba(185,28,28,0.07)' : s.bg
-                    const sLabel = isSelectedPlanning ? 'Rencana Eksekusi' : s.label
+                    const sLabel = isSelectedPlanning ? 'Rencana Pekan Depan' : s.label
                     return (
                     <div key={s.field}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 12px', backgroundColor: sBg, borderRadius: 8, marginBottom: 10 }}>

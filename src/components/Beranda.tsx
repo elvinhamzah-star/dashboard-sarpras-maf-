@@ -122,7 +122,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
       valueColor: 'var(--blue)',
-      trend: `${programs.length} program`,
+      trend: `${programs.length} Pekerjaan`,
     },
     {
       label: 'Total Realisasi',
@@ -131,7 +131,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconBg: 'rgba(5,150,105,0.1)',
       iconColor: '#059669',
       valueColor: '#059669',
-      trend: `${penyerapan}% terserap`,
+      trend: `${penyerapan}% Terserap`,
     },
     {
       label: 'Sisa Anggaran',
@@ -140,7 +140,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconBg: 'rgba(217,119,6,0.1)',
       iconColor: '#D97706',
       valueColor: '#D97706',
-      trend: 'Belum digunakan',
+      trend: 'Belum Digunakan',
     },
     {
       label: 'Penyerapan',
@@ -149,7 +149,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
       valueColor: 'var(--text-primary)',
-      trend: 'Dari total anggaran',
+      trend: 'Dari Total Anggaran',
     },
   ]
 
@@ -190,7 +190,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
                 color: freshnessDays === 0 ? '#059669' : freshnessDays <= 3 ? '#D97706' : '#DC2626',
                 fontWeight: 700,
               }}>
-                · data diperbarui {freshnessDays === 0 ? 'hari ini' : `${freshnessDays} hari lalu`}
+                · Data Diperbarui {freshnessDays === 0 ? 'Hari Ini' : `${freshnessDays} Hari Lalu`}
               </span>
             )}
           </p>
@@ -239,10 +239,10 @@ export default function Beranda({ isAdmin }: BerandaProps) {
             >
               <MetricIcon type={card.iconType} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
               {card.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 750, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 6 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 6 }}>
               {card.value}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.trend}</div>
@@ -252,7 +252,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
 
       <BerandaWeekOverWeek programs={programs} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
       <BerandaChart transactions={rawTransactions} />
-      <BerandaVendor programs={programs} />
+      <BerandaVendor programs={programs} subPrograms={subPrograms} />
 
       {/* Laporan Pekanan */}
       <div>

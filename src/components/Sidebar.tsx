@@ -199,7 +199,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
               )}
               <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
               {expanded && (
-                <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 450, letterSpacing: '-0.01em' }}>
+                <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 400, letterSpacing: '-0.01em' }}>
                   {item.label}
                 </span>
               )}

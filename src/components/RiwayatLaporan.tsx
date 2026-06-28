@@ -50,14 +50,15 @@ const getMonthYear = (weekStart: string) => {
 const parseContent = (content: string): {
   programs: Record<string, LaporanPerProgram>
   pinnedPlanning: string[]
+  pinnedSelesai: string[]
   programMeta: Record<string, ProgramMeta>
 } => {
   try {
     const p = JSON.parse(content)
-    if (p.v === 2) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], programMeta: {} }
-    if (p.v === 3) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], programMeta: p.program_meta || {} }
+    if (p.v === 2) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], pinnedSelesai: [], programMeta: {} }
+    if (p.v === 3) return { programs: p.programs || {}, pinnedPlanning: p.pinned_planning || [], pinnedSelesai: p.pinned_selesai || [], programMeta: p.program_meta || {} }
   } catch {}
-  return { programs: {}, pinnedPlanning: [], programMeta: {} }
+  return { programs: {}, pinnedPlanning: [], pinnedSelesai: [], programMeta: {} }
 }
 
 const hasAnyData = (d: LaporanPerProgram) =>
@@ -178,25 +179,13 @@ interface WeekReportProps {
 }
 
 function WeekReport({ note, livePrograms }: WeekReportProps) {
-  const { programs, pinnedPlanning, programMeta } = parseContent(note.content)
-
-  const build = (category: 'ongoing' | 'onhold' | 'planning') =>
-    Object.entries(programs)
-      .filter(([id, data]) => {
-        if (!hasAnyData(data)) return false
-        const meta = programMeta[id]
-        if (meta) return meta.category === category
-        const live = livePrograms.find(p => p.id === id)
-        if (!live) return category === 'ongoing'
-        if (category === 'ongoing') return live.status === 'On Going' || !['On Hold', 'Perencanaan'].includes(live.status || '')
-        return false
-      })
+  const { programs, pinnedPlanning, pinnedSelesai, programMeta } = parseContent(note.content)
 
   const ongoingEntries = Object.entries(programs).filter(([id, data]) => {
     if (!hasAnyData(data)) return false
     const meta = programMeta[id]
     if (meta) return meta.category === 'ongoing'
-    return !pinnedPlanning.includes(id)
+    return !pinnedPlanning.includes(id) && !pinnedSelesai.includes(id)
   })
 
   const onholdEntries = Object.entries(programs).filter(([id, data]) => {
@@ -213,9 +202,14 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
     return pinnedPlanning.includes(id)
   })
 
-  void build
+  const selesaiEntries = Object.entries(programs).filter(([id, data]) => {
+    if (!hasAnyData(data)) return false
+    const meta = programMeta[id]
+    if (meta) return meta.category === 'selesai'
+    return pinnedSelesai.includes(id)
+  })
 
-  const totalPrograms = ongoingEntries.length + onholdEntries.length + planningEntries.length
+  const totalPrograms = ongoingEntries.length + onholdEntries.length + planningEntries.length + selesaiEntries.length
 
   if (totalPrograms === 0) {
     return (
@@ -224,7 +218,7 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
-        <div style={{ fontSize: 14 }}>Belum ada program tercatat minggu ini</div>
+        <div style={{ fontSize: 14 }}>Belum Ada Program Tercatat Minggu Ini</div>
       </div>
     )
   }
@@ -235,7 +229,7 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
       marginBottom: 12, marginTop: 4,
     }}>
       <div style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{label}</span>
       <div style={{
         fontSize: 11, fontWeight: 700, color, backgroundColor: bg,
         padding: '2px 8px', borderRadius: 20,
@@ -268,6 +262,15 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
           <SectionDivider label="Perencanaan" count={planningEntries.length} color="#B91C1C" bg="rgba(185,28,28,0.1)" />
           {planningEntries.map(([id, data]) => (
             <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#B91C1C" />
+          ))}
+        </div>
+      )}
+
+      {selesaiEntries.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <SectionDivider label="Selesai" count={selesaiEntries.length} color="#059669" bg="rgba(5,150,105,0.1)" />
+          {selesaiEntries.map(([id, data]) => (
+            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#059669" />
           ))}
         </div>
       )}
@@ -323,7 +326,7 @@ export default function RiwayatLaporan() {
   if (loading) {
     return (
       <div style={{ padding: 32, color: 'var(--text-muted)', fontSize: 14, textAlign: 'center' }}>
-        Memuat riwayat laporan...
+        Memuat Riwayat Laporan...
       </div>
     )
   }
@@ -334,11 +337,11 @@ export default function RiwayatLaporan() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
       <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
           Riwayat Laporan
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>
-          Arsip laporan pekanan per minggu
+          Arsip Laporan Pekanan Per Minggu
         </div>
       </div>
 
@@ -394,7 +397,7 @@ export default function RiwayatLaporan() {
                           backgroundColor: isSelected ? 'rgba(26,111,232,0.06)' : 'transparent',
                           color: isSelected ? 'var(--blue)' : '#3D5070',
                           fontSize: 12.5,
-                          fontWeight: isSelected ? 700 : 450,
+                          fontWeight: isSelected ? 700 : 500,
                           cursor: 'pointer',
                           letterSpacing: '-0.01em',
                           display: 'block',
@@ -450,7 +453,7 @@ export default function RiwayatLaporan() {
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>
                           Laporan Pekanan
                         </div>
-                        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                           {formatWeekRange(selectedNote.week_start, selectedNote.week_end)}
                         </div>
                       </div>
