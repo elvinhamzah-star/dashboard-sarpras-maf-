@@ -65,11 +65,11 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 2 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#059669' }} />
+            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Masuk</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
+            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#94A3B8' }} />
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
           </div>
         </div>
@@ -99,13 +99,13 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#059669', flexShrink: 0 }} />
+              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 600 }}>
                 {hovered && hovered.masuk > 0 ? formatRupiah(hovered.masuk) : '—'}
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
+              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#94A3B8', flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 600 }}>
                 {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
               </span>
@@ -131,7 +131,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
                   <div style={{
                     width: BAR_W,
                     height: masukPct > 0 ? `${masukPct}%` : 3,
-                    backgroundColor: masukPct > 0 ? '#059669' : 'var(--border-subtle)',
+                    backgroundColor: masukPct > 0 ? '#1A6FE8' : 'var(--border-subtle)',
                     borderRadius: '3px 3px 0 0',
                     opacity: isHovered ? 1 : 0.72,
                     transition: 'opacity 0.15s ease',
@@ -139,7 +139,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
                   <div style={{
                     width: BAR_W,
                     height: keluarPct > 0 ? `${keluarPct}%` : 3,
-                    backgroundColor: keluarPct > 0 ? '#1A6FE8' : 'var(--border-subtle)',
+                    backgroundColor: keluarPct > 0 ? '#94A3B8' : 'var(--border-subtle)',
                     borderRadius: '3px 3px 0 0',
                     opacity: isHovered ? 1 : keluarPct > 0 ? 0.72 : 0.4,
                     transition: 'opacity 0.15s ease',
