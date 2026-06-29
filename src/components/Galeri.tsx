@@ -33,7 +33,10 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
   const [programSearch, setProgramSearch] = useState('')
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef<number | null>(null)
 
   useEffect(() => { load() }, [])
@@ -49,6 +52,18 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showProgramDropdown])
+
+  useEffect(() => {
+    if (showProgramDropdown) setTimeout(() => searchRef.current?.focus(), 50)
+  }, [showProgramDropdown])
+
+  const openProgramDropdown = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: Math.max(rect.width, 260) })
+    }
+    setShowProgramDropdown(true)
+  }
 
   const load = async () => {
     setLoading(true)
@@ -177,7 +192,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           ) : (
             <>
               <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
-                Galeri Dokumentasi
+                Galeri Dokumentasi Pekerjaan
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
                 {loading ? 'Memuat...' : `${Object.keys(docsByProgram).length} folder · ${filteredDocs.length} foto`}
@@ -235,7 +250,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             </div>
           </>
         ) : (
-          // Level 1: status tabs + month
+          // Level 1: status tabs + program dropdown
           <>
             <div style={{ display: 'flex', gap: 6 }}>
               {(['Semua', 'On Going', 'On Hold', 'Selesai'] as const).map(s => {
@@ -257,6 +272,107 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Program filter dropdown */}
+            <div ref={dropdownRef}>
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => showProgramDropdown ? (setShowProgramDropdown(false), setProgramSearch('')) : openProgramDropdown()}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, fontFamily: 'inherit',
+                  border: `1px solid ${showProgramDropdown ? 'var(--blue)' : 'var(--border)'}`,
+                  backgroundColor: filterProgram !== 'Semua' ? 'rgba(26,111,232,0.06)' : 'var(--card)',
+                  color: filterProgram !== 'Semua' ? 'var(--blue)' : 'var(--text-secondary)',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  boxShadow: showProgramDropdown ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M4 6h16M7 12h10M10 18h4"/>
+                </svg>
+                <span style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {selectedProgramName}
+                </span>
+                <svg width="11" height="11" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
+                  style={{ transform: showProgramDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              {showProgramDropdown && (
+                <div style={{
+                  position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width,
+                  zIndex: 200, backgroundColor: 'var(--card)', borderRadius: 12,
+                  border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
+                }}>
+                  <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div style={{ position: 'relative' }}>
+                      <svg width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                        style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                      <input
+                        ref={searchRef}
+                        type="text"
+                        value={programSearch}
+                        onChange={e => setProgramSearch(e.target.value)}
+                        placeholder="Cari program..."
+                        style={{
+                          width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8,
+                          border: '1px solid var(--border-subtle)', fontSize: 12.5,
+                          color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none',
+                          boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+                    <button type="button"
+                      onClick={() => { setFilterProgram('Semua'); setShowProgramDropdown(false); setProgramSearch('') }}
+                      style={{
+                        width: '100%', padding: '10px 14px', border: 'none',
+                        borderBottom: '1px solid var(--border-subtle)',
+                        backgroundColor: filterProgram === 'Semua' ? 'rgba(26,111,232,0.06)' : 'transparent',
+                        color: filterProgram === 'Semua' ? 'var(--blue)' : 'var(--text-primary)',
+                        fontSize: 13, fontWeight: filterProgram === 'Semua' ? 600 : 500,
+                        fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}
+                      onMouseEnter={e => { if (filterProgram !== 'Semua') (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
+                      onMouseLeave={e => { if (filterProgram !== 'Semua') (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                    >
+                      {filterProgram === 'Semua' && <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>}
+                      <span style={{ marginLeft: filterProgram === 'Semua' ? 0 : 21 }}>Semua Program</span>
+                    </button>
+                    {filteredProgramList.length === 0 ? (
+                      <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>Tidak ada hasil</div>
+                    ) : filteredProgramList.map(p => (
+                      <button key={p.id} type="button"
+                        onClick={() => { setFilterProgram(p.id); setShowProgramDropdown(false); setProgramSearch('') }}
+                        style={{
+                          width: '100%', padding: '10px 14px', border: 'none', borderBottom: 'none',
+                          backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.06)' : 'transparent',
+                          color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-primary)',
+                          fontSize: 13, fontWeight: filterProgram === p.id ? 600 : 400,
+                          fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left',
+                          display: 'flex', alignItems: 'center', gap: 8,
+                        }}
+                        onMouseEnter={e => { if (filterProgram !== p.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
+                        onMouseLeave={e => { if (filterProgram !== p.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                      >
+                        {filterProgram === p.id && <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>}
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginLeft: filterProgram === p.id ? 0 : 21 }}>
+                          {p.nama_pekerjaan}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
