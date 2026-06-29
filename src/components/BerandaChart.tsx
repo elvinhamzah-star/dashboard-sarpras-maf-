@@ -7,7 +7,8 @@ interface BerandaChartProps {
 }
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-const CHART_H = 110
+const CHART_H = 120
+const BAR_W = 22
 
 export default function BerandaChart({ transactions }: BerandaChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
@@ -26,7 +27,6 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
     const d = new Date()
     d.setDate(1)
     d.setMonth(d.getMonth() - i)
-    // Gunakan local time (bukan toISOString/UTC) supaya bulan tidak geser karena timezone
     const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     months.push({
       ym,
@@ -69,7 +69,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Masuk</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#DC2626' }} />
+            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#DC2626', flexShrink: 0 }} />
+              <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 600 }}>
                 {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
               </span>
@@ -113,8 +113,8 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
           </div>
         </div>
 
-        {/* Bar groups */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+        {/* Bar groups — flex:1 per group, bars di-center agar tidak melebar */}
+        <div style={{ display: 'flex', alignItems: 'stretch' }}>
           {months.map((m, i) => {
             const masukPct = m.masuk > 0 ? Math.max(4 / CHART_H * 100, (m.masuk / maxVal) * 100) : 0
             const keluarPct = m.keluar > 0 ? Math.max(4 / CHART_H * 100, (m.keluar / maxVal) * 100) : 0
@@ -123,13 +123,13 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
             return (
               <div
                 key={m.ym}
-                style={{ flex: 1, cursor: 'default' }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
-                <div style={{ display: 'flex', gap: 3, height: CHART_H, alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: 4, height: CHART_H, alignItems: 'flex-end' }}>
                   <div style={{
-                    flex: 1,
+                    width: BAR_W,
                     height: masukPct > 0 ? `${masukPct}%` : 3,
                     backgroundColor: masukPct > 0 ? '#059669' : 'var(--border-subtle)',
                     borderRadius: '3px 3px 0 0',
@@ -137,22 +137,22 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
                     transition: 'opacity 0.15s ease',
                   }} />
                   <div style={{
-                    flex: 1,
+                    width: BAR_W,
                     height: keluarPct > 0 ? `${keluarPct}%` : 3,
-                    backgroundColor: keluarPct > 0 ? '#DC2626' : 'var(--border-subtle)',
+                    backgroundColor: keluarPct > 0 ? '#1A6FE8' : 'var(--border-subtle)',
                     borderRadius: '3px 3px 0 0',
                     opacity: isHovered ? 1 : keluarPct > 0 ? 0.72 : 0.4,
                     transition: 'opacity 0.15s ease',
                   }} />
                 </div>
                 <div style={{
-                  textAlign: 'center',
                   fontSize: 10,
                   marginTop: 7,
                   color: isHovered ? 'var(--blue)' : 'var(--text-muted)',
                   fontWeight: isHovered ? 700 : 400,
                   transition: 'color 0.12s ease',
                   userSelect: 'none',
+                  whiteSpace: 'nowrap',
                 }}>
                   {m.label}
                 </div>
