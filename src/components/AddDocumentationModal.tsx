@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
@@ -52,6 +52,41 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const [saveProgress, setSaveProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState('')
   const lastInputRef = useRef<HTMLInputElement>(null)
+
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false); setSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [dropdownOpen])
+
+  useEffect(() => {
+    if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
+  }, [dropdownOpen])
+
+  const openDropdown = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+    }
+    setDropdownOpen(true)
+  }
+
+  const selectedProgramName = programs.find(p => p.id === programId)?.nama_pekerjaan ?? ''
+  const filteredPrograms = programs.filter(p =>
+    p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
+  )
 
   const updateRow = (id: string, field: 'link' | 'caption', value: string) => {
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
@@ -171,16 +206,86 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         {/* Program */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Program</label>
-          <select
-            value={programId}
-            onChange={e => setProgramId(e.target.value)}
-            style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-          >
-            <option value="">-- Pilih Program --</option>
-            {programs.map(p => (
-              <option key={p.id} value={p.id}>{p.nama_pekerjaan}</option>
-            ))}
-          </select>
+          <div ref={dropdownRef}>
+            <button
+              ref={triggerRef}
+              type="button"
+              onClick={() => dropdownOpen ? (setDropdownOpen(false), setSearch('')) : openDropdown()}
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 10,
+                border: `1px solid ${dropdownOpen ? 'var(--blue)' : 'var(--border)'}`,
+                backgroundColor: 'var(--card)', fontSize: 13,
+                color: programId ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontFamily: 'inherit', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                textAlign: 'left', outline: 'none',
+                boxShadow: dropdownOpen ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
+                transition: 'border-color 0.15s, box-shadow 0.15s', boxSizing: 'border-box',
+              }}
+            >
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedProgramName || 'Pilih program...'}
+              </span>
+              <svg width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
+                style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {dropdownOpen && (
+              <div style={{
+                position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width,
+                zIndex: 200, backgroundColor: 'var(--card)', borderRadius: 12,
+                border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
+              }}>
+                <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ position: 'relative' }}>
+                    <svg width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Cari program..."
+                      style={{
+                        width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8,
+                        border: '1px solid var(--border-subtle)', fontSize: 12.5,
+                        color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none',
+                        boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)',
+                      }}
+                    />
+                  </div>
+                </div>
+                <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                  {filteredPrograms.length === 0 ? (
+                    <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>Tidak ada hasil</div>
+                  ) : filteredPrograms.map(p => (
+                    <button key={p.id} type="button"
+                      onClick={() => { setProgramId(p.id); setDropdownOpen(false); setSearch('') }}
+                      style={{
+                        width: '100%', padding: '10px 14px', border: 'none', borderBottom: 'none',
+                        backgroundColor: p.id === programId ? 'rgba(26,111,232,0.06)' : 'transparent',
+                        color: p.id === programId ? 'var(--blue)' : 'var(--text-primary)',
+                        fontSize: 13, fontWeight: p.id === programId ? 600 : 400,
+                        fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}
+                      onMouseEnter={e => { if (p.id !== programId) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
+                      onMouseLeave={e => { if (p.id !== programId) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                    >
+                      {p.id === programId && <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginLeft: p.id === programId ? 0 : 21 }}>
+                        {p.nama_pekerjaan}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Fase + Tanggal side by side */}
