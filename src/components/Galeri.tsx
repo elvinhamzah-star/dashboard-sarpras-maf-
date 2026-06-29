@@ -161,26 +161,24 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
         <div>
           {openFolderId ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ marginBottom: 4 }}>
                 <button
                   onClick={handleCloseFolder}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    padding: '4px 10px', borderRadius: 7,
-                    border: '1px solid var(--border)', backgroundColor: 'var(--card)',
-                    color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    color: 'var(--text-secondary)', background: 'none', border: 'none',
+                    cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    padding: 0, letterSpacing: '-0.01em',
+                    transition: 'color 0.15s', fontFamily: 'inherit',
                   }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)' }}
                 >
-                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <polyline points="15 18 9 12 15 6"/>
                   </svg>
-                  Galeri
+                  Kembali ke Galeri
                 </button>
-                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>/</span>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-                  {openFolderProgram?.nama_pekerjaan || openFolderId}
-                </span>
               </div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
                 {openFolderProgram?.nama_pekerjaan || openFolderId}
