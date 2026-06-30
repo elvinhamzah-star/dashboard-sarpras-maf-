@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { verifyLogin } from '../lib/adminApi'
+import { setMafCredentials } from '../lib/supabase'
 
 interface LoginPageProps {
-  onLogin: () => void
+  onLogin: (role: 'pbb' | 'maf') => void
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
@@ -17,11 +18,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     if (!canSubmit) return
     setLoading(true)
     setError('')
-    const ok = await verifyLogin(username.trim(), pin)
+    const { ok, role } = await verifyLogin(username.trim(), pin)
     setLoading(false)
-    if (ok) {
+    if (ok && role) {
+      if (role === 'maf') setMafCredentials(username.trim(), pin)
       sessionStorage.setItem('dashboard_auth', '1')
-      onLogin()
+      sessionStorage.setItem('dashboard_role', role)
+      onLogin(role)
     } else {
       setError('Username atau PIN salah.')
       setPin('')
