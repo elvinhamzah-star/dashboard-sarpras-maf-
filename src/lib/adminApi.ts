@@ -17,10 +17,15 @@ export function hasAdminPin() {
   return !!adminPin
 }
 
-export async function verifyLogin(username: string, pin: string): Promise<boolean> {
+export async function verifyLogin(
+  username: string,
+  pin: string,
+): Promise<{ ok: boolean; role: 'pbb' | 'maf' | null }> {
   const { data, error } = await supabase.rpc('verify_login', { p_username: username, p_pin: pin })
-  if (error) return false
-  return data === true
+  if (error || !data) return { ok: false, role: null }
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row || row.ok !== true) return { ok: false, role: null }
+  return { ok: true, role: row.role as 'pbb' | 'maf' }
 }
 
 // Verify a PIN against the server (bcrypt hash stored in a locked table).
