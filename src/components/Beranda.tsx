@@ -9,6 +9,7 @@ import BerandaVendor from './BerandaVendor'
 
 interface BerandaProps {
   isAdmin: boolean
+  role: 'pbb' | 'maf' | null
 }
 
 const MetricIcon = ({ type }: { type: string }) => {
@@ -47,7 +48,7 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-export default function Beranda({ isAdmin }: BerandaProps) {
+export default function Beranda({ isAdmin, role }: BerandaProps) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
@@ -255,6 +256,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
       <BerandaVendor programs={programs} subPrograms={subPrograms} />
 
       {/* Laporan Pekanan */}
+      {role !== 'maf' && (
       <div>
         <button
           onClick={() => setShowLaporan(v => !v)}
@@ -281,6 +283,7 @@ export default function Beranda({ isAdmin }: BerandaProps) {
           </div>
         )}
       </div>
+      )}
 
     </div>
   )
