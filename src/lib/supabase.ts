@@ -78,21 +78,27 @@ export interface Documentation {
   updated_at?: string
 }
 
-// MAF management role credentials, held in memory only for the session
-// (never persisted), mirroring the admin PIN pattern in adminApi.ts.
-// Presence of these credentials routes programs/sub_programs/transactions
-// reads through the maf-data Edge Function instead of direct table queries.
-let mafUsername: string | null = null
-let mafPin: string | null = null
+// MAF management role credentials. Mirrors the sessionStorage-backed
+// dashboard_role flag in App.tsx: that flag survives a page reload, so these
+// credentials must too, or a reload would leave the UI rendering in MAF mode
+// while silently falling back to unfiltered direct table queries (the
+// Man Power exclusion would be bypassed entirely). Cleared on logout, same
+// as dashboard_auth/dashboard_role.
+let mafUsername: string | null = sessionStorage.getItem('maf_username')
+let mafPin: string | null = sessionStorage.getItem('maf_pin')
 
 export function setMafCredentials(username: string, pin: string) {
   mafUsername = username
   mafPin = pin
+  sessionStorage.setItem('maf_username', username)
+  sessionStorage.setItem('maf_pin', pin)
 }
 
 export function clearMafCredentials() {
   mafUsername = null
   mafPin = null
+  sessionStorage.removeItem('maf_username')
+  sessionStorage.removeItem('maf_pin')
 }
 
 export function hasMafCredentials() {
