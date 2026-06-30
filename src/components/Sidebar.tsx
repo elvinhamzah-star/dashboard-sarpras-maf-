@@ -5,6 +5,7 @@ interface SidebarProps {
   isMobile?: boolean
   onToggle: () => void
   isAdmin: boolean
+  role: 'pbb' | 'maf' | null
   onLogout: () => void
   onShowPinModal: () => void
   onLogoutDashboard: () => void
@@ -67,7 +68,7 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, onLogout, onShowPinModal, onLogoutDashboard }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onLogoutDashboard }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
   return (
     <div
@@ -148,7 +149,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto' }}>
-        {menuItems.map(item => {
+        {menuItems.filter(item => role !== 'maf' || item.id !== 'riwayat').map(item => {
           const isActive = currentPage === item.id
           return (
             <button
@@ -228,9 +229,9 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 }}
               >
                 <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: isAdmin ? '#60A5FA' : 'rgba(255,255,255,0.3)', display: 'inline-block' }} />
-                {isAdmin ? 'Mode Admin' : 'Mode Viewer'}
+                {role === 'maf' ? 'Mode MAF' : isAdmin ? 'Mode Admin' : 'Mode Viewer'}
               </div>
-              {!isAdmin && (
+              {!isAdmin && role !== 'maf' && (
                 <button
                   onClick={onShowPinModal}
                   title="Masuk Mode Admin"
@@ -338,28 +339,30 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <button
-              onClick={isAdmin ? onLogout : onShowPinModal}
-              title={isAdmin ? 'Keluar Mode Admin' : 'Masuk Mode Admin'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                backgroundColor: isAdmin ? 'rgba(248,113,113,0.1)' : 'rgba(26,111,232,0.15)',
-                border: `1px solid ${isAdmin ? 'rgba(248,113,113,0.2)' : 'rgba(26,111,232,0.2)'}`,
-                cursor: 'pointer',
-                color: isAdmin ? '#F87171' : '#60A5FA',
-                padding: 0,
-              }}
-            >
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-            </button>
+            {role !== 'maf' && (
+              <button
+                onClick={isAdmin ? onLogout : onShowPinModal}
+                title={isAdmin ? 'Keluar Mode Admin' : 'Masuk Mode Admin'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 34,
+                  height: 34,
+                  borderRadius: 8,
+                  backgroundColor: isAdmin ? 'rgba(248,113,113,0.1)' : 'rgba(26,111,232,0.15)',
+                  border: `1px solid ${isAdmin ? 'rgba(248,113,113,0.2)' : 'rgba(26,111,232,0.2)'}`,
+                  cursor: 'pointer',
+                  color: isAdmin ? '#F87171' : '#60A5FA',
+                  padding: 0,
+                }}
+              >
+                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              </button>
+            )}
             <button
               onClick={onLogoutDashboard}
               title="Keluar Dashboard"

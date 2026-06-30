@@ -10,11 +10,15 @@ import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
+import { clearMafCredentials } from './lib/supabase'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat'
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
+  const [role, setRole] = useState<'pbb' | 'maf' | null>(
+    () => (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null,
+  )
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   const [isAdmin, setIsAdmin] = useState(false)
   const [showPinModal, setShowPinModal] = useState(false)
@@ -48,6 +52,7 @@ export default function App() {
   }
 
   const handleSelectProgram = (id: string) => {
+    if (role === 'maf' && id === 'P-024') return
     setSelectedProgramId(id)
   }
 
@@ -62,9 +67,12 @@ export default function App() {
 
   const handleLogoutDashboard = () => {
     sessionStorage.removeItem('dashboard_auth')
+    sessionStorage.removeItem('dashboard_role')
     clearAdminPin()
+    clearMafCredentials()
     setIsAdmin(false)
     setIsLoggedIn(false)
+    setRole(null)
   }
 
   const sidebarWidth = isMobile ? 0 : sidebarOpen ? 248 : 68
@@ -82,7 +90,7 @@ export default function App() {
 
     switch (currentPage) {
       case 'beranda':
-        return <Beranda isAdmin={isAdmin} />
+        return <Beranda isAdmin={isAdmin} role={role} />
       case 'pekerjaan':
         return (
           <Pekerjaan
@@ -100,9 +108,9 @@ export default function App() {
       case 'galeri':
         return <Galeri isAdmin={isAdmin} />
       case 'riwayat':
-        return <RiwayatLaporan />
+        return role === 'maf' ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       default:
-        return <Beranda isAdmin={isAdmin} />
+        return <Beranda isAdmin={isAdmin} role={role} />
     }
   }
 
@@ -115,7 +123,14 @@ export default function App() {
   }
 
   if (!isLoggedIn) {
-    return <LoginPage onLogin={() => setIsLoggedIn(true)} />
+    return (
+      <LoginPage
+        onLogin={resolvedRole => {
+          setRole(resolvedRole)
+          setIsLoggedIn(true)
+        }}
+      />
+    )
   }
 
   return (
@@ -128,6 +143,7 @@ export default function App() {
         isMobile={isMobile}
         onToggle={() => setSidebarOpen(o => !o)}
         isAdmin={isAdmin}
+        role={role}
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
@@ -218,7 +234,7 @@ export default function App() {
               }}
             >
               <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: isAdmin ? 'var(--blue)' : '#9CAABB' }} />
-              {isAdmin ? 'Admin' : 'Viewer'}
+              {role === 'maf' ? 'MAF' : isAdmin ? 'Admin' : 'Viewer'}
             </span>
             <button
               onClick={handleLogoutDashboard}
@@ -253,7 +269,7 @@ export default function App() {
       </div>
 
       {/* Mobile FAB for admin access */}
-      {isMobile && !isAdmin && !showPinModal && !showAddModal && (
+      {isMobile && !isAdmin && role !== 'maf' && !showPinModal && !showAddModal && (
         <button
           onClick={() => setShowPinModal(true)}
           aria-label="Masuk Mode Admin"
