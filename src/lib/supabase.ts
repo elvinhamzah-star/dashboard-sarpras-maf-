@@ -78,14 +78,59 @@ export interface Documentation {
   updated_at?: string
 }
 
+// MAF management role credentials, held in memory only for the session
+// (never persisted), mirroring the admin PIN pattern in adminApi.ts.
+// Presence of these credentials routes programs/sub_programs/transactions
+// reads through the maf-data Edge Function instead of direct table queries.
+let mafUsername: string | null = null
+let mafPin: string | null = null
+
+export function setMafCredentials(username: string, pin: string) {
+  mafUsername = username
+  mafPin = pin
+}
+
+export function clearMafCredentials() {
+  mafUsername = null
+  mafPin = null
+}
+
+export function hasMafCredentials() {
+  return !!(mafUsername && mafPin)
+}
+
+async function fetchMafData<T>(resource: 'programs' | 'sub_programs' | 'transactions') {
+  if (!mafUsername || !mafPin) {
+    return { data: null as T[] | null, error: new Error('MAF credentials not set') }
+  }
+  const { data, error } = await supabase.functions.invoke('maf-data', {
+    body: { resource, username: mafUsername, pin: mafPin },
+  })
+  if (error) return { data: null as T[] | null, error }
+  return { data: (data as { data: T[] }).data, error: null }
+}
+
 export const fetchAppConfig = (key: string) =>
   supabase.from('app_config').select('value').eq('key', key).single()
 
-export const fetchPrograms = () => supabase.from('programs').select('*').order('id', { ascending: true })
-export const fetchTransactions = () => supabase.from('transactions').select('*').order('tanggal', { ascending: false })
+export async function fetchPrograms() {
+  if (hasMafCredentials()) return fetchMafData<Program>('programs')
+  const { data, error } = await supabase.from('programs').select('*').order('id', { ascending: true })
+  return { data, error }
+}
+
+export async function fetchTransactions() {
+  if (hasMafCredentials()) return fetchMafData<Transaction>('transactions')
+  const { data, error } = await supabase.from('transactions').select('*').order('tanggal', { ascending: false })
+  return { data, error }
+}
 export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
 export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
-export const fetchSubPrograms = () => supabase.from('sub_programs').select('*').order('id', { ascending: true })
+export async function fetchSubPrograms() {
+  if (hasMafCredentials()) return fetchMafData<SubProgram>('sub_programs')
+  const { data, error } = await supabase.from('sub_programs').select('*').order('id', { ascending: true })
+  return { data, error }
+}
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
 
