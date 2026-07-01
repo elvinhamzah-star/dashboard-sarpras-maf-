@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, SubProgram, Program } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
@@ -15,6 +16,9 @@ interface PekerjaanDetailProps {
 type Tab = 'Ringkasan' | 'Dokumen' | 'Sub Pekerjaan'
 
 export default function PekerjaanDetail({ programId, isAdmin, onBack }: PekerjaanDetailProps) {
+  const width = useWindowWidth()
+  const isMobile = width < 600
+  const isNarrow = width < 900
   const [program, setProgram] = useState<Program | null>(null)
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,7 +66,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
 
   return (
-    <div style={{ padding: '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}>
 
       {/* Back button */}
       <button
@@ -440,142 +444,220 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>
               Sub Pekerjaan <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({subPrograms.length})</span>
             </h3>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-                <thead>
-                  <tr>
-                    {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
-                      <th
-                        key={h}
-                        style={{
-                          padding: '10px 14px',
-                          textAlign: 'left',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: 'var(--text-muted)',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
-                          borderBottom: '1px solid var(--border-subtle)',
-                          backgroundColor: 'var(--surface-raised)',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {subPrograms.map((sp, i) => (
-                    <tr
-                      key={sp.id}
-                      style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#F8FAFC' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
-                    >
-                      <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
-                      <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
-                      <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{sp.vendor || '-'}</td>
-                      <td style={{ padding: '11px 14px', minWidth: 120 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden', minWidth: 40 }}>
-                            <div
-                              style={{
-                                width: `${Math.min(sp.progress_percent || 0, 100)}%`,
-                                height: '100%',
-                                backgroundColor: STATUS_COLORS[sp.status] || 'var(--blue)',
-                                borderRadius: 10,
-                              }}
-                            />
-                          </div>
-                          <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
+            {isNarrow ? (
+              <div>
+                {subPrograms.map((sp, i) => (
+                  <div key={sp.id} style={{
+                    padding: '12px 0',
+                    borderBottom: i < subPrograms.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>
+                          {i + 1}. {sp.nama_gedung}
                         </div>
-                      </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                        {formatRupiah(sp.total_anggaran || 0)}
-                      </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {formatRupiah(sp.realisasi_terkini || 0)}
-                      </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#D97706', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {formatRupiah(sp.sisa_anggaran || 0)}
-                      </td>
-                      <td style={{ padding: '11px 14px' }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '2px 9px',
-                            borderRadius: 20,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
-                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        {sp.vendor && (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{sp.vendor}</div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                        <span style={{
+                          display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                          fontSize: 10.5, fontWeight: 700,
+                          backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                          color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                        }}>
                           {sp.status}
                         </span>
-                      </td>
-                      <td style={{ padding: '11px 14px' }}>
-                        {sp.link_dokumentasi ? (
+                        {sp.link_dokumentasi && (
                           <a
                             href={sp.link_dokumentasi}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              backgroundColor: 'rgba(26,111,232,0.08)',
-                              color: 'var(--blue)',
-                              padding: '5px 11px',
-                              borderRadius: 7,
-                              fontSize: 11.5,
-                              fontWeight: 600,
-                              textDecoration: 'none',
-                              border: '1px solid rgba(26,111,232,0.15)',
-                              whiteSpace: 'nowrap',
+                              fontSize: 11, color: 'var(--blue)', textDecoration: 'none', fontWeight: 600,
                             }}
                           >
                             Buka ↗
                           </a>
-                        ) : (
-                          <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
                         )}
-                      </td>
-                      {isAdmin && (
-                        <td style={{ padding: '11px 14px', textAlign: 'right' }}>
-                          <button
-                            onClick={() => setEditingSubProgram(sp)}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                      <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
+                        <div style={{ width: `${Math.min(sp.progress_percent || 0, 100)}%`, height: '100%', backgroundColor: STATUS_COLORS[sp.status] || 'var(--blue)', borderRadius: 10 }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 28 }}>
+                        {sp.progress_percent || 0}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isAdmin ? 8 : 0 }}>
+                      <div>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
+                        <div style={{ fontSize: 12, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
+                        <div style={{ fontSize: 12, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => setEditingSubProgram(sp)}
+                        style={{
+                          background: 'none', border: '1px solid var(--border)', borderRadius: 7,
+                          padding: '5px 12px', cursor: 'pointer', color: 'var(--text-secondary)',
+                          fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+                  <thead>
+                    <tr>
+                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
+                        <th
+                          key={h}
+                          style={{
+                            padding: '10px 14px',
+                            textAlign: 'left',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                            borderBottom: '1px solid var(--border-subtle)',
+                            backgroundColor: 'var(--surface-raised)',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subPrograms.map((sp, i) => (
+                      <tr
+                        key={sp.id}
+                        style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#F8FAFC' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
+                      >
+                        <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
+                        <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{sp.vendor || '-'}</td>
+                        <td style={{ padding: '11px 14px', minWidth: 120 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden', minWidth: 40 }}>
+                              <div
+                                style={{
+                                  width: `${Math.min(sp.progress_percent || 0, 100)}%`,
+                                  height: '100%',
+                                  backgroundColor: STATUS_COLORS[sp.status] || 'var(--blue)',
+                                  borderRadius: 10,
+                                }}
+                              />
+                            </div>
+                            <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          {formatRupiah(sp.total_anggaran || 0)}
+                        </td>
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {formatRupiah(sp.realisasi_terkini || 0)}
+                        </td>
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#D97706', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {formatRupiah(sp.sisa_anggaran || 0)}
+                        </td>
+                        <td style={{ padding: '11px 14px' }}>
+                          <span
                             style={{
-                              background: 'none',
-                              border: '1px solid var(--border)',
-                              borderRadius: 7,
-                              padding: '5px 10px',
-                              cursor: 'pointer',
-                              color: 'var(--text-secondary)',
-                              fontSize: 12,
-                              fontWeight: 600,
-                              transition: 'all 0.12s',
-                            }}
-                            onMouseEnter={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)'
-                            }}
-                            onMouseLeave={e => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'
-                              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
+                              display: 'inline-block',
+                              padding: '2px 9px',
+                              borderRadius: 20,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                              color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                              whiteSpace: 'nowrap',
                             }}
                           >
-                            Edit
-                          </button>
+                            {sp.status}
+                          </span>
                         </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <td style={{ padding: '11px 14px' }}>
+                          {sp.link_dokumentasi ? (
+                            <a
+                              href={sp.link_dokumentasi}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                backgroundColor: 'rgba(26,111,232,0.08)',
+                                color: 'var(--blue)',
+                                padding: '5px 11px',
+                                borderRadius: 7,
+                                fontSize: 11.5,
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                border: '1px solid rgba(26,111,232,0.15)',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Buka ↗
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
+                          )}
+                        </td>
+                        {isAdmin && (
+                          <td style={{ padding: '11px 14px', textAlign: 'right' }}>
+                            <button
+                              onClick={() => setEditingSubProgram(sp)}
+                              style={{
+                                background: 'none',
+                                border: '1px solid var(--border)',
+                                borderRadius: 7,
+                                padding: '5px 10px',
+                                cursor: 'pointer',
+                                color: 'var(--text-secondary)',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                transition: 'all 0.12s',
+                              }}
+                              onMouseEnter={e => {
+                                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'
+                                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)'
+                              }}
+                              onMouseLeave={e => {
+                                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'
+                                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
+                              }}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

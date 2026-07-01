@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, getEffectiveProgress } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 
 interface PekerjaanProps {
   isAdmin: boolean
@@ -15,6 +16,9 @@ interface PekerjaanProps {
 const STATUS_TABS = ['Semua', 'On Going', 'On Hold', 'Selesai', 'Perencanaan']
 
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
+  const width = useWindowWidth()
+  const isMobile = width < 600
+  const isNarrow = width < 900
   const [programs, setPrograms] = useState<Program[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +57,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
   })
 
   return (
-    <div style={{ padding: '28px 28px 48px' }}>
+    <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
@@ -191,6 +195,72 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
+        ) : isNarrow ? (
+          <div>
+            {filtered.map((p, i) => {
+              const pct = getEffectiveProgress(p)
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => onSelectProgram(p.id)}
+                  style={{
+                    padding: '14px 16px',
+                    borderBottom: i < filtered.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        {p.isu_utama && (
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />
+                        )}
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.nama_pekerjaan}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {p.id}{getVendorDisplay(p) ? ` · ${getVendorDisplay(p)}` : ''}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      <span style={{
+                        display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                        fontSize: 10.5, fontWeight: 700,
+                        backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)',
+                        color: STATUS_COLORS[p.status] || 'var(--text-secondary)',
+                      }}>
+                        {p.status}
+                      </span>
+                      <svg width="13" height="13" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                    <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)', borderRadius: 10 }} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLORS[p.status] || 'var(--blue)', minWidth: 28, textAlign: 'right' }}>
+                      {pct}%
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(p.total_anggaran || 0)}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: (p.realisasi_terkini || 0) > 0 ? '#059669' : 'var(--text-muted)' }}>
+                        {formatRupiah(p.realisasi_terkini || 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>

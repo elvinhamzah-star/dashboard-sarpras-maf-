@@ -9,19 +9,10 @@ import {
 } from '../lib/supabase'
 import { upsertMonthlyReport } from '../lib/adminApi'
 import { formatRupiah, monthLabelFromYM, monthsFromDates, STATUS_COLORS, getTodayFormatted } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 
 interface LaporanBulananProps {
   isAdmin: boolean
-}
-
-function useWindowWidth() {
-  const [w, setW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024)
-  useEffect(() => {
-    const h = () => setW(window.innerWidth)
-    window.addEventListener('resize', h)
-    return () => window.removeEventListener('resize', h)
-  }, [])
-  return w
 }
 
 function prevMonthYM(ym: string): string {

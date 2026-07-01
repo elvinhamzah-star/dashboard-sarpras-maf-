@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Program, ProgramSnapshot, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, formatRupiah, getEffectiveProgress } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
@@ -54,6 +55,8 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
 
 export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated }: Props) {
   const [activeTab, setActiveTab] = useState('On Going')
+  const width = useWindowWidth()
+  const isNarrow = width < 900
 
   const now = Date.now()
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000
@@ -108,7 +111,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
     <>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(150px, 1.15fr) repeat(4, minmax(110px, 1fr))',
+        gridTemplateColumns: isNarrow ? 'repeat(2, 1fr)' : 'minmax(150px, 1.15fr) repeat(4, minmax(110px, 1fr))',
         gap: 10,
         marginBottom: 14,
       }}>
@@ -118,6 +121,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             borderRadius: 14,
             padding: '14px 16px',
             border: '1.5px solid rgba(124,58,237,0.25)',
+            gridColumn: isNarrow ? '1 / -1' : 'auto',
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
@@ -49,6 +50,8 @@ const MetricIcon = ({ type }: { type: string }) => {
 }
 
 export default function Beranda({ isAdmin, role }: BerandaProps) {
+  const width = useWindowWidth()
+  const isMobile = width < 600
   const [programs, setPrograms] = useState<Program[]>([])
   const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
@@ -176,7 +179,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
   }
 
   return (
-    <div style={{ padding: '28px 28px 48px' }}>
+    <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
