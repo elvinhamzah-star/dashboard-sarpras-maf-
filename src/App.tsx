@@ -6,13 +6,14 @@ import PekerjaanDetail from './components/PekerjaanDetail'
 import Keuangan from './components/Keuangan'
 import Galeri from './components/Galeri'
 import RiwayatLaporan from './components/RiwayatLaporan'
+import LaporanBulanan from './components/LaporanBulanan'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
 import { clearMafCredentials } from './lib/supabase'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan'
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
@@ -109,6 +110,10 @@ export default function App() {
         return <Galeri isAdmin={isAdmin} />
       case 'riwayat':
         return role === 'maf' ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
+      case 'laporan':
+        return role === 'maf'
+          ? <Beranda isAdmin={isAdmin} role={role} />
+          : <LaporanBulanan isAdmin={isAdmin} />
       default:
         return <Beranda isAdmin={isAdmin} role={role} />
     }
@@ -120,6 +125,7 @@ export default function App() {
     keuangan: 'Keuangan',
     galeri: 'Galeri',
     riwayat: 'Riwayat Laporan',
+    laporan: 'Laporan Bulanan',
   }
 
   if (!isLoggedIn) {
