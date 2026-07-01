@@ -121,7 +121,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
             return (
               <div
                 key={m.ym}
-                style={{ flex: '0 0 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
+                style={{ flex: 1, minWidth: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
