@@ -22,19 +22,17 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
     else if (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB') byMonth[ym].keluar += t.nominal || 0
   })
 
-  const months: { ym: string; label: string; masuk: number; keluar: number }[] = []
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(1)
-    d.setMonth(d.getMonth() - i)
-    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    months.push({
-      ym,
-      label: `${MONTHS_ID[d.getMonth()]} '${d.getFullYear().toString().slice(2)}`,
-      masuk: byMonth[ym]?.masuk || 0,
-      keluar: byMonth[ym]?.keluar || 0,
+  const months = Object.keys(byMonth)
+    .sort()
+    .map(ym => {
+      const d = new Date(ym + '-01')
+      return {
+        ym,
+        label: `${MONTHS_ID[d.getMonth()]} '${d.getFullYear().toString().slice(2)}`,
+        masuk: byMonth[ym].masuk,
+        keluar: byMonth[ym].keluar,
+      }
     })
-  }
 
   const maxVal = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
 
@@ -60,7 +58,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
             Pengeluaran Per Bulan
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-            6 Bulan Terakhir
+            {months.length} Bulan
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 2 }}>
@@ -113,8 +111,8 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
           </div>
         </div>
 
-        {/* Bar groups — flex:1 per group, bars di-center agar tidak melebar */}
-        <div style={{ display: 'flex', alignItems: 'stretch' }}>
+        {/* Bar groups — min 56px per group, scroll jika overflow */}
+        <div style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', paddingBottom: 2 }}>
           {months.map((m, i) => {
             const masukPct = m.masuk > 0 ? Math.max(4 / CHART_H * 100, (m.masuk / maxVal) * 100) : 0
             const keluarPct = m.keluar > 0 ? Math.max(4 / CHART_H * 100, (m.keluar / maxVal) * 100) : 0
@@ -123,7 +121,7 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
             return (
               <div
                 key={m.ym}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
+                style={{ flex: '0 0 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
