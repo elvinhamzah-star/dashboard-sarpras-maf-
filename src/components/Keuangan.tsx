@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS, monthsFromDates, monthLabelFromYM } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
+import { useWindowWidth } from '../lib/useWindowWidth'
 import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
 import MonthSelector from './MonthSelector'
@@ -10,6 +11,7 @@ interface KeuanganProps {
   isAdmin?: boolean
   selectedMonth?: string | null
   onMonthChange?: (ym: string | null) => void
+  role?: 'pbb' | 'maf' | null
 }
 
 const JENIS_ICONS: Record<string, JSX.Element> = {
@@ -30,7 +32,10 @@ const JENIS_ICONS: Record<string, JSX.Element> = {
   ),
 }
 
-export default function Keuangan({ isAdmin = false, selectedMonth = null, onMonthChange }: KeuanganProps) {
+export default function Keuangan({ isAdmin = false, selectedMonth = null, onMonthChange, role }: KeuanganProps) {
+  const width = useWindowWidth()
+  const isMobile = width < 600
+  const isNarrow = width < 900
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Semua')
@@ -86,9 +91,15 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
     0,
   )
 
-  const filtered = filterJenis === 'Semua'
+  const isManPowerTx = (t: Transaction) => {
+    const n = (t.nama_pekerjaan || '').toLowerCase()
+    return n.includes('man power') || n.includes('honor')
+  }
+
+  const filtered = (filterJenis === 'Semua'
     ? monthTransactions
     : monthTransactions.filter(t => t.jenis_transaksi === filterJenis)
+  ).filter(t => role !== 'maf' || !isManPowerTx(t))
 
   const itemsPerPage = 20
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -154,7 +165,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
   const JENIS_TABS = ['Semua', 'Masuk', 'Keluar', 'Keluar PBB']
 
   return (
-    <div style={{ padding: '28px 28px 48px' }}>
+    <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
@@ -348,34 +359,61 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
             </div>
           </div>
           {showSerapan && (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
-                <thead>
-                  <tr>
-                    {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-raised)', whiteSpace: 'nowrap' }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {serapanBulanan.map((row, i) => (
-                    <tr
-                      key={row.label}
-                      style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid var(--surface-min)' : 'none', transition: 'background 0.1s' }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
-                    >
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+            isNarrow ? (
+              <div style={{ padding: '4px 0' }}>
+                {serapanBulanan.map((row, i) => (
+                  <div key={row.label} style={{
+                    padding: '12px 16px',
+                    borderBottom: i < serapanBulanan.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>{row.label}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Dana Keluar</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#DC2626', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Keluar PBB</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#D97706', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Total</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
+                  <thead>
+                    <tr>
+                      {['Bulan', 'Dana Keluar', 'Keluar PBB', 'Total Serapan'].map(h => (
+                        <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Bulan' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-raised)', whiteSpace: 'nowrap' }}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {serapanBulanan.map((row, i) => (
+                      <tr
+                        key={row.label}
+                        style={{ borderBottom: i < serapanBulanan.length - 1 ? '1px solid var(--surface-min)' : 'none', transition: 'background 0.1s' }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
+                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--card)')}
+                      >
+                        <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#DC2626', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluar > 0 ? formatRupiah(row.keluar) : '—'}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 600, color: '#D97706', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.keluarPBB > 0 ? formatRupiah(row.keluarPBB) : '—'}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(row.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </div>
       )}
@@ -423,6 +461,71 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
+        ) : isNarrow ? (
+          <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {paged.map(t => {
+              const isMasukTx = t.jenis_transaksi === 'Masuk'
+              const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
+              const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#DC2626'
+              const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
+              return (
+                <div key={t.id} style={{
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                        {t.nama_pekerjaan || '-'}
+                      </div>
+                      {t.deskripsi && (
+                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {t.deskripsi}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                      {isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{
+                        display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                        fontSize: 10.5, fontWeight: 700,
+                        backgroundColor: badgeColor.bg, color: 'var(--card)', whiteSpace: 'nowrap',
+                      }}>
+                        {t.jenis_transaksi}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatTanggal(t.tanggal)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {t.link_bukti && (
+                        <button
+                          onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
+                          style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Bukti ↗
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => setEditingTransaction(t)}
+                          style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>

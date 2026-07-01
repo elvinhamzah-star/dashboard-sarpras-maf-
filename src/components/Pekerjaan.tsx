@@ -196,7 +196,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         ) : filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
         ) : isNarrow ? (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map((p, i) => {
               const pct = getEffectiveProgress(p)
               return (
@@ -205,7 +205,9 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   onClick={() => onSelectProgram(p.id)}
                   style={{
                     padding: '14px 16px',
-                    borderBottom: i < filtered.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 12,
+                    backgroundColor: 'var(--card)',
                     cursor: 'pointer',
                   }}
                 >

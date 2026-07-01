@@ -126,7 +126,8 @@ export async function fetchPrograms() {
 }
 
 export async function fetchTransactions() {
-  if (hasMafCredentials()) return fetchMafData<Transaction>('transactions')
+  // Always fetch directly so totals include Man Power regardless of role.
+  // Keuangan display filters Man Power rows for the maf role on the frontend.
   const { data, error } = await supabase.from('transactions').select('*').order('tanggal', { ascending: false })
   return { data, error }
 }

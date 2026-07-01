@@ -445,16 +445,26 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               Sub Pekerjaan <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({subPrograms.length})</span>
             </h3>
             {isNarrow ? (
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {subPrograms.map((sp, i) => (
                   <div key={sp.id} style={{
-                    padding: '12px 0',
-                    borderBottom: i < subPrograms.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    padding: '12px 14px',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 12,
+                    backgroundColor: 'var(--card)',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>
-                          {i + 1}. {sp.nama_gedung}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            minWidth: 22, height: 22, borderRadius: 6,
+                            backgroundColor: 'var(--blue)', color: '#fff',
+                            fontSize: 11, fontWeight: 700, flexShrink: 0,
+                          }}>{i + 1}</span>
+                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                            {sp.nama_gedung}
+                          </div>
                         </div>
                         {sp.vendor && (
                           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{sp.vendor}</div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useWindowWidth } from '../lib/useWindowWidth'
 import { supabase } from '../lib/supabase'
 import { adminInsert, adminUpdate } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
@@ -247,6 +248,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const [pinnedSelesaiIds, setPinnedSelesaiIds] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState<'planning' | 'selesai' | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [mobileDetailView, setMobileDetailView] = useState(false)
+  const width = useWindowWidth()
+  const isNarrow = width < 700
   const mountedRef = useRef(false)
   const dropdownPlanningRef = useRef<HTMLDivElement>(null)
   const dropdownSelesaiRef = useRef<HTMLDivElement>(null)
@@ -383,6 +387,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
 
     setSelectedId(defaultId)
     setIsEditing(false)
+    setMobileDetailView(false)
     mountedRef.current = true
     setLoading(false)
     setWeekLoading(false)
@@ -531,15 +536,16 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
         </div>
       )}
 
-      {/* ── Two-pane ── */}
+      {/* ── Two-pane (list + detail) ── */}
       {(hasAnyPrograms || isAdmin) && (
-        <div style={{ display: 'flex', minHeight: 380 }}>
+        <div style={{ display: 'flex', minHeight: isNarrow ? 0 : 380, flexDirection: isNarrow ? 'column' : 'row' }}>
 
-          {/* Left panel */}
+          {/* Left panel — list of programs */}
+          {(!isNarrow || !mobileDetailView) && (
           <div style={{
-            width: 242,
+            width: isNarrow ? '100%' : 242,
             flexShrink: 0,
-            borderRight: '1px solid var(--border-subtle)',
+            borderRight: isNarrow ? 'none' : '1px solid var(--border-subtle)',
             overflowY: 'auto',
           }}>
             {(isPastWeek && !isAdmin) ? (
@@ -549,7 +555,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Pekerjaan Berjalan" count={histOngoing.length} color="#1A6FE8" bg="rgba(26,111,232,0.04)" />
                     {histOngoing.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -557,7 +563,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Selesai" count={histSelesai.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {histSelesai.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -565,7 +571,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="On Hold" count={histOnhold.length} color="#D97706" bg="rgba(217,119,6,0.04)" />
                     {histOnhold.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#D97706" statusBg="rgba(217,119,6,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#D97706" statusBg="rgba(217,119,6,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -573,7 +579,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Perencanaan" count={histPlanning.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
                     {histPlanning.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -585,7 +591,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Pekerjaan Berjalan" count={activePrograms.length} color="#1A6FE8" bg="rgba(26,111,232,0.04)" />
                     {activePrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1A6FE8" statusBg="rgba(26,111,232,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -593,7 +599,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Selesai" count={displayedSelesaiPrograms.length} color="#1B5E2B" bg="rgba(27,94,43,0.04)" />
                     {displayedSelesaiPrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#1B5E2B" statusBg="rgba(27,94,43,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                     {isAdmin && (
                       <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownSelesaiRef}>
@@ -648,7 +654,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                   <>
                     <LeftSectionHeader label="Perencanaan Pekan Depan" count={displayedPlanningPrograms.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
                     {displayedPlanningPrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => setSelectedId(prog.id)} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                     {isAdmin && (
                       <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownPlanningRef}>
@@ -702,15 +708,28 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               </>
             )}
           </div>
+          )}
 
-          {/* Right panel */}
+          {/* Right panel — detail view */}
+          {(!isNarrow || mobileDetailView) && (
           <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
+            {isNarrow && (
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+                <button
+                  onClick={() => setMobileDetailView(false)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, padding: 0 }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg>
+                  Kembali
+                </button>
+              </div>
+            )}
             {!selectedProgram ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 200, color: '#C8D2E0', fontSize: 13 }}>
                 Pilih program di sebelah kiri
               </div>
             ) : (
-              <div style={{ padding: '20px 24px' }}>
+              <div style={{ padding: isNarrow ? '16px 14px' : '20px 24px' }}>
                 {/* Program header */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -784,6 +803,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               </div>
             )}
           </div>
+          )}
         </div>
       )}
 
