@@ -14,6 +14,16 @@ interface LaporanBulananProps {
   isAdmin: boolean
 }
 
+function useWindowWidth() {
+  const [w, setW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024)
+  useEffect(() => {
+    const h = () => setW(window.innerWidth)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return w
+}
+
 function prevMonthYM(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
   const d = new Date(y, m - 2, 1)
@@ -48,6 +58,9 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [exporting, setExporting] = useState(false)
+  const width = useWindowWidth()
+  const isMobile = width < 600
+  const isNarrow = width < 900
 
   useEffect(() => {
     setLoading(true)
@@ -194,7 +207,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
   )
 
   return (
-    <div style={{ padding: '20px 20px 60px', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '14px 12px 60px' : '20px 20px 60px', maxWidth: 900, margin: '0 auto' }}>
 
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
@@ -206,7 +219,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
             {monthLabelFromYM(bulan)} · Evaluasi, status & rencana eksekusi
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <MonthSelector value={selectedMonth} onChange={setSelectedMonth} months={allMonths} allLabel="Pilih Bulan" />
           <button
             onClick={handleExportPDF}
@@ -254,11 +267,11 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
       {/* ── STATUS OVERVIEW ── */}
       <Card>
         <SectionTitle sub={`Kondisi keseluruhan per ${monthLabelFromYM(bulan)}`}>Status Proyek</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10 }}>
           {/* Penyerapan */}
           <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '14px 16px' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Anggaran Terserap</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#1A6FE8', letterSpacing: '-0.04em', lineHeight: 1 }}>{penyerapanPct.toFixed(1)}%</div>
+            <div style={{ fontSize: isMobile ? 18 : 26, fontWeight: 800, color: '#1A6FE8', letterSpacing: '-0.04em', lineHeight: 1 }}>{penyerapanPct.toFixed(1)}%</div>
             <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>{formatRupiah(realisasiKumulatif)}</div>
             {/* Progress bar */}
             <div style={{ marginTop: 8, height: 4, background: '#BFDBFE', borderRadius: 2 }}>
@@ -268,7 +281,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
           {/* Progress fisik */}
           <div style={{ background: '#F0FDF4', border: '1px solid #A7F3D0', borderRadius: 10, padding: '14px 16px' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Progress Fisik</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#059669', letterSpacing: '-0.04em', lineHeight: 1 }}>{avgProgress.toFixed(1)}%</div>
+            <div style={{ fontSize: isMobile ? 18 : 26, fontWeight: 800, color: '#059669', letterSpacing: '-0.04em', lineHeight: 1 }}>{avgProgress.toFixed(1)}%</div>
             <div style={{ fontSize: 11, color: dColor(avgProgress, avgProgressPrev), marginTop: 6, fontWeight: 600 }}>
               {deltaText(avgProgress, avgProgressPrev)} vs {monthLabelFromYM(prevBulan)}
             </div>
@@ -279,7 +292,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
           {/* Sisa Anggaran */}
           <div style={{ background: 'var(--surface-min)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '14px 16px' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Sisa Anggaran</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>{formatRupiah(sisaAnggaran)}</div>
+            <div style={{ fontSize: isMobile ? 14 : 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>{formatRupiah(sisaAnggaran)}</div>
             <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>dari {formatRupiah(totalAnggaran)}</div>
           </div>
           {/* Bermasalah */}
@@ -289,13 +302,13 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
             borderRadius: 10, padding: '14px 16px',
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Bermasalah</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: isAtRisk ? '#D97706' : '#059669', letterSpacing: '-0.04em', lineHeight: 1 }}>{overBudget.length}</div>
+            <div style={{ fontSize: isMobile ? 18 : 26, fontWeight: 800, color: isAtRisk ? '#D97706' : '#059669', letterSpacing: '-0.04em', lineHeight: 1 }}>{overBudget.length}</div>
             <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>{isAtRisk ? 'pekerjaan over budget' : 'semua dalam batas'}</div>
           </div>
         </div>
 
         {/* Status counts */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
           {Object.entries(STATUS_COLORS).map(([status, color]) => (
             <div key={status} style={{
               borderLeft: `3px solid ${color}`,
@@ -317,7 +330,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
       {/* ── KEUANGAN ── */}
       <Card>
         <SectionTitle sub={`Transaksi ${monthLabelFromYM(bulan)} + anggaran kumulatif`}>Keuangan</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 12 }}>
           {/* Left: monthly */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -384,68 +397,124 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
       {/* ── TABEL PEKERJAAN ── */}
       <Card>
         <SectionTitle sub={`Progress dan anggaran per pekerjaan — ${monthLabelFromYM(bulan)}`}>Status Pekerjaan</SectionTitle>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: 'var(--surface-min)' }}>
-                {[
-                  { label: 'Pekerjaan', align: 'left' as const, style: { minWidth: 160 } },
-                  { label: 'Vendor', align: 'left' as const, style: { minWidth: 100 } },
-                  { label: 'Progress', align: 'center' as const, style: { width: 110 } },
-                  { label: `Delta vs ${monthLabelFromYM(prevBulan)}`, align: 'right' as const, style: { width: 100 } },
-                  { label: 'RAB', align: 'right' as const, style: { width: 120 } },
-                  { label: 'Realisasi', align: 'right' as const, style: { width: 120 } },
-                  { label: 'Status', align: 'center' as const, style: { width: 90 } },
-                ].map(h => (
-                  <th key={h.label} style={{ padding: '8px 10px', textAlign: h.align, fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap', ...h.style }}>
-                    {h.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {programs.map((p, i) => {
-                const prog = progressByProgram[p.id] ?? 0
-                const prevProg = prevProgressByProgram[p.id] ?? 0
-                const diff = prog - prevProg
-                const color = STATUS_COLORS[p.status] || '#64748B'
-                const isOver = (p.realisasi_terkini || 0) > (p.total_anggaran || 0) && (p.total_anggaran || 0) > 0
-                return (
-                  <tr key={p.id} style={{
-                    borderBottom: '1px solid var(--border-subtle)',
-                    background: isOver ? '#FFFBEB' : i % 2 === 1 ? 'var(--surface-min)' : 'transparent',
-                  }}>
-                    <td style={{ padding: '9px 10px', fontWeight: 600, color: isOver ? '#D97706' : 'var(--text-primary)' }}>
+        {isNarrow ? (
+          /* Card list for narrow screens */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {programs.map((p) => {
+              const prog = progressByProgram[p.id] ?? 0
+              const prevProg = prevProgressByProgram[p.id] ?? 0
+              const diff = prog - prevProg
+              const color = STATUS_COLORS[p.status] || '#64748B'
+              const isOver = (p.realisasi_terkini || 0) > (p.total_anggaran || 0) && (p.total_anggaran || 0) > 0
+              return (
+                <div key={p.id} style={{
+                  borderRadius: 10, border: `1px solid ${isOver ? '#FCD34D' : 'var(--border-subtle)'}`,
+                  background: isOver ? '#FFFBEB' : 'var(--surface-min)',
+                  padding: '12px 14px',
+                }}>
+                  {/* Header row: name + status badge */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: isOver ? '#D97706' : 'var(--text-primary)', flex: 1, lineHeight: 1.4 }}>
                       {isOver && <span style={{ marginRight: 4 }}>⚠</span>}{p.nama_pekerjaan}
-                    </td>
-                    <td style={{ padding: '9px 10px', color: 'var(--text-muted)', fontSize: 11 }}>{p.vendor || '—'}</td>
-                    {/* Progress bar cell */}
-                    <td style={{ padding: '9px 10px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                        <div style={{ width: 72, height: 5, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ height: 5, width: `${prog}%`, background: prog >= 100 ? '#059669' : '#1A6FE8', borderRadius: 3 }} />
+                    </div>
+                    <span style={{ background: color + '20', color, borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>{p.status}</span>
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Progress fisik</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: prog >= 100 ? '#059669' : '#1A6FE8' }}>
+                        {prog}%
+                        {diff !== 0 && <span style={{ fontWeight: 600, color: diff > 0 ? '#059669' : '#DC2626', marginLeft: 4 }}>({diff > 0 ? '+' : ''}{diff.toFixed(0)}%)</span>}
+                      </span>
+                    </div>
+                    <div style={{ height: 5, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: 5, width: `${prog}%`, background: prog >= 100 ? '#059669' : '#1A6FE8', borderRadius: 3 }} />
+                    </div>
+                  </div>
+                  {/* Vendor + financials */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11 }}>
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', marginBottom: 1 }}>Vendor</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{p.vendor || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', marginBottom: 1 }}>RAB</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{formatRupiah(p.total_anggaran || 0)}</div>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <div style={{ color: 'var(--text-muted)', marginBottom: 1 }}>Realisasi</div>
+                      <div style={{ fontWeight: 700, color: isOver ? '#D97706' : 'var(--text-primary)' }}>{formatRupiah(p.realisasi_terkini || 0)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          /* Full table for desktop */
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-min)' }}>
+                  {[
+                    { label: 'Pekerjaan', align: 'left' as const, style: { minWidth: 160 } },
+                    { label: 'Vendor', align: 'left' as const, style: { minWidth: 100 } },
+                    { label: 'Progress', align: 'center' as const, style: { width: 110 } },
+                    { label: `Delta vs ${monthLabelFromYM(prevBulan)}`, align: 'right' as const, style: { width: 100 } },
+                    { label: 'RAB', align: 'right' as const, style: { width: 120 } },
+                    { label: 'Realisasi', align: 'right' as const, style: { width: 120 } },
+                    { label: 'Status', align: 'center' as const, style: { width: 90 } },
+                  ].map(h => (
+                    <th key={h.label} style={{ padding: '8px 10px', textAlign: h.align, fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap', ...h.style }}>
+                      {h.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {programs.map((p, i) => {
+                  const prog = progressByProgram[p.id] ?? 0
+                  const prevProg = prevProgressByProgram[p.id] ?? 0
+                  const diff = prog - prevProg
+                  const color = STATUS_COLORS[p.status] || '#64748B'
+                  const isOver = (p.realisasi_terkini || 0) > (p.total_anggaran || 0) && (p.total_anggaran || 0) > 0
+                  return (
+                    <tr key={p.id} style={{
+                      borderBottom: '1px solid var(--border-subtle)',
+                      background: isOver ? '#FFFBEB' : i % 2 === 1 ? 'var(--surface-min)' : 'transparent',
+                    }}>
+                      <td style={{ padding: '9px 10px', fontWeight: 600, color: isOver ? '#D97706' : 'var(--text-primary)' }}>
+                        {isOver && <span style={{ marginRight: 4 }}>⚠</span>}{p.nama_pekerjaan}
+                      </td>
+                      <td style={{ padding: '9px 10px', color: 'var(--text-muted)', fontSize: 11 }}>{p.vendor || '—'}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                          <div style={{ width: 72, height: 5, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ height: 5, width: `${prog}%`, background: prog >= 100 ? '#059669' : '#1A6FE8', borderRadius: 3 }} />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: prog >= 100 ? '#059669' : '#1A6FE8' }}>{prog}%</span>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: prog >= 100 ? '#059669' : '#1A6FE8' }}>{prog}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: diff > 0 ? '#059669' : diff < 0 ? '#DC2626' : 'var(--text-muted)', fontSize: 11 }}>
-                      {diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) + '%' : '—'}
-                    </td>
-                    <td style={{ padding: '9px 10px', textAlign: 'right', color: 'var(--text-muted)', fontSize: 11 }}>{formatRupiah(p.total_anggaran || 0)}</td>
-                    <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: isOver ? '#D97706' : 'var(--text-primary)', fontSize: 11 }}>{formatRupiah(p.realisasi_terkini || 0)}</td>
-                    <td style={{ padding: '9px 10px', textAlign: 'center' }}>
-                      <span style={{ background: color + '20', color, borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{p.status}</span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: diff > 0 ? '#059669' : diff < 0 ? '#DC2626' : 'var(--text-muted)', fontSize: 11 }}>
+                        {diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) + '%' : '—'}
+                      </td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', color: 'var(--text-muted)', fontSize: 11 }}>{formatRupiah(p.total_anggaran || 0)}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: isOver ? '#D97706' : 'var(--text-primary)', fontSize: 11 }}>{formatRupiah(p.realisasi_terkini || 0)}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'center' }}>
+                        <span style={{ background: color + '20', color, borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{p.status}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       {/* ── EVALUASI & RENCANA ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
         {/* Catatan Evaluasi */}
         <div style={{
           backgroundColor: 'var(--card)', borderRadius: 14,
