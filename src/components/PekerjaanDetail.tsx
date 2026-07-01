@@ -449,9 +449,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                 {subPrograms.map((sp, i) => (
                   <div key={sp.id} style={{
                     padding: '12px 14px',
-                    border: '1px solid var(--card)',
+                    border: '1px solid #D8DDE8',
                     borderRadius: 12,
-                    backgroundColor: 'var(--bg)',
+                    backgroundColor: 'var(--card)',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>

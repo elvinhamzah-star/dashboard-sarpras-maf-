@@ -205,9 +205,9 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   onClick={() => onSelectProgram(p.id)}
                   style={{
                     padding: '14px 16px',
-                    border: '1px solid var(--card)',
+                    border: '1px solid #D8DDE8',
                     borderRadius: 12,
-                    backgroundColor: 'var(--bg)',
+                    backgroundColor: 'var(--card)',
                     cursor: 'pointer',
                   }}
                 >

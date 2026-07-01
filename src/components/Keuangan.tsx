@@ -512,8 +512,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
               return (
                 <div key={t.id} style={{
-                  backgroundColor: 'var(--bg)',
-                  border: '1px solid var(--card)',
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid #D8DDE8',
                   borderRadius: 12,
                   padding: '12px 14px',
                 }}>
