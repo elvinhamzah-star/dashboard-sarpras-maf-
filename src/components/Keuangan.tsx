@@ -463,11 +463,11 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {/* Transactions Table */}
       {showRiwayat && <div
         style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 14,
-          border: '1px solid var(--border-subtle)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          overflow: 'hidden',
+          backgroundColor: isNarrow ? 'transparent' : 'var(--card)',
+          borderRadius: isNarrow ? 0 : 14,
+          border: isNarrow ? 'none' : '1px solid var(--border-subtle)',
+          boxShadow: isNarrow ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
+          overflow: isNarrow ? 'visible' : 'hidden',
         }}
       >
         {/* Table header */}
@@ -504,7 +504,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         ) : filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
         ) : isNarrow ? (
-          <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {paged.map(t => {
               const isMasukTx = t.jenis_transaksi === 'Masuk'
               const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
@@ -512,8 +512,8 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
               const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
               return (
                 <div key={t.id} style={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--bg)',
+                  border: '1px solid var(--card)',
                   borderRadius: 12,
                   padding: '12px 14px',
                 }}>

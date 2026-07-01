@@ -117,31 +117,52 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       }}>
         {progressLapangan && (
           <div style={{
-            backgroundColor: 'var(--card)',
+            backgroundColor: isNarrow ? 'var(--bg)' : 'var(--card)',
             borderRadius: 14,
-            padding: '14px 16px',
-            border: '1.5px solid rgba(124,58,237,0.25)',
+            padding: isNarrow ? '10px 14px' : '14px 16px',
+            border: isNarrow ? '1px solid var(--card)' : '1.5px solid rgba(124,58,237,0.25)',
             gridColumn: isNarrow ? '1 / -1' : 'auto',
+            display: 'flex',
+            flexDirection: isNarrow ? 'row' : 'column',
+            alignItems: isNarrow ? 'center' : 'flex-start',
+            gap: isNarrow ? 12 : 0,
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: isNarrow ? 26 : 32, height: isNarrow ? 26 : 32, borderRadius: 8,
               backgroundColor: 'rgba(124,58,237,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#7C3AED', marginBottom: 10,
+              color: '#7C3AED', marginBottom: isNarrow ? 0 : 10,
+              flexShrink: 0,
             }}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
               </svg>
             </div>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-              Progress Keseluruhan
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 4 }}>
+                Progress Keseluruhan
+              </div>
+              {isNarrow ? null : (
+                <>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                    {progressLapangan}%
+                  </div>
+                  <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 4 }}>
+                    {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : `${programs.length} Pekerjaan`}
+                  </div>
+                </>
+              )}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              {progressLapangan}%
-            </div>
-            <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 4 }}>
-              {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : `${programs.length} Pekerjaan`}
-            </div>
+            {isNarrow && (
+              <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                  {progressLapangan}%
+                </div>
+                <div style={{ fontSize: 9.5, color: freshnessColor, fontWeight: 500, marginTop: 2, whiteSpace: 'nowrap' }}>
+                  {freshnessDays === 0 ? 'Hari ini' : freshnessDays !== null ? `${freshnessDays}h lalu` : ''}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -155,10 +176,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               onClick={() => setActiveTab(tab)}
               style={{
                 textAlign: 'left',
-                backgroundColor: isActive ? `${color}10` : 'var(--card)',
-                borderRadius: 14,
-                padding: '14px 16px',
-                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border-subtle)',
+                backgroundColor: isActive ? `${color}10` : 'var(--bg)',
+                borderRadius: isNarrow ? 12 : 14,
+                padding: isNarrow ? '10px 12px' : '14px 16px',
+                border: isActive ? `1.5px solid ${color}` : '1px solid var(--card)',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
@@ -171,20 +192,20 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               }}
             >
               <div style={{
-                width: 32, height: 32, borderRadius: 8,
+                width: isNarrow ? 24 : 32, height: isNarrow ? 24 : 32, borderRadius: 7,
                 backgroundColor: isActive ? `${color}26` : `${color}14`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color, marginBottom: 10,
+                color, marginBottom: isNarrow ? 6 : 10,
               }}>
                 {TAB_ICONS[tab]}
               </div>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 2 : 4 }}>
                 {tab}
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              <div style={{ fontSize: isNarrow ? 16 : 20, fontWeight: 700, color, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 {count}
               </div>
-              <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: 4, opacity: isActive ? 0.8 : 1 }}>
+              <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: isNarrow ? 2 : 4, opacity: isActive ? 0.8 : 1 }}>
                 Pekerjaan
               </div>
             </button>

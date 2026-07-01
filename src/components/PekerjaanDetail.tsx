@@ -445,13 +445,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
               Sub Pekerjaan <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({subPrograms.length})</span>
             </h3>
             {isNarrow ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {subPrograms.map((sp, i) => (
                   <div key={sp.id} style={{
                     padding: '12px 14px',
-                    border: '1px solid var(--border-subtle)',
+                    border: '1px solid var(--card)',
                     borderRadius: 12,
-                    backgroundColor: 'var(--card)',
+                    backgroundColor: 'var(--bg)',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>

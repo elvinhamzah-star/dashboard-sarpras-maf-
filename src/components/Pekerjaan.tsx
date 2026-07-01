@@ -184,11 +184,11 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
       {/* Table */}
       <div
         style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 14,
-          border: '1px solid var(--border-subtle)',
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          backgroundColor: isNarrow ? 'transparent' : 'var(--card)',
+          borderRadius: isNarrow ? 0 : 14,
+          border: isNarrow ? 'none' : '1px solid var(--border-subtle)',
+          overflow: isNarrow ? 'visible' : 'hidden',
+          boxShadow: isNarrow ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
         {loading ? (
@@ -196,7 +196,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         ) : filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
         ) : isNarrow ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map((p, i) => {
               const pct = getEffectiveProgress(p)
               return (
@@ -205,9 +205,9 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                   onClick={() => onSelectProgram(p.id)}
                   style={{
                     padding: '14px 16px',
-                    border: '1px solid var(--border-subtle)',
+                    border: '1px solid var(--card)',
                     borderRadius: 12,
-                    backgroundColor: 'var(--card)',
+                    backgroundColor: 'var(--bg)',
                     cursor: 'pointer',
                   }}
                 >
