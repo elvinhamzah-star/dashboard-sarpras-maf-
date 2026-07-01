@@ -142,3 +142,21 @@ export const fetchProgramSnapshots = (programId: string) =>
 
 export const fetchWeeklyNotes = () =>
   supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })
+
+export interface MonthlyReport {
+  id: number
+  bulan: string
+  catatan_evaluasi: string
+  rencana: string
+  created_at: string
+  updated_at: string
+}
+
+export async function fetchMonthlyReport(bulan: string): Promise<{ data: MonthlyReport | null; error: unknown }> {
+  const { data, error } = await supabase
+    .from('monthly_reports')
+    .select('*')
+    .eq('bulan', bulan)
+    .maybeSingle()
+  return { data: data as MonthlyReport | null, error }
+}

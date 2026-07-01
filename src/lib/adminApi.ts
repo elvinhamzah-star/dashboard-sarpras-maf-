@@ -84,3 +84,13 @@ export async function adminDelete(table: string, id: string | number) {
   })
   return { error }
 }
+
+export async function upsertMonthlyReport(bulan: string, catatan: string, rencana: string) {
+  const { data, error } = await supabase.rpc('admin_upsert_monthly_report', {
+    p_pin: adminPin,
+    p_bulan: bulan,
+    p_catatan: catatan,
+    p_rencana: rencana,
+  })
+  return { ok: data === true, error }
+}
