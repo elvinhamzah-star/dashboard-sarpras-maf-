@@ -169,7 +169,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
+          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5 }}>
             {selectedMonth
               ? `Transaksi Bulan ${monthLabelFromYM(selectedMonth)}`
@@ -251,76 +251,118 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         </div>
       )}
 
-      {/* Hero Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
-        {heroCards.map(card => (
-          <div
-            key={card.title}
-            style={{
+      {/* Summary Cards — unified 2×2 grid on mobile, hero+small split on desktop */}
+      {isMobile ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
+          {heroCards.map(card => (
+            <div key={card.title} style={{
               backgroundColor: 'var(--card)',
-              borderRadius: 14,
-              padding: '22px 24px',
+              borderRadius: 12,
+              padding: '12px 13px',
               border: '1px solid var(--border-subtle)',
-              borderLeft: `3px solid ${card.borderColor}`,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.18s, transform 0.18s',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'
-              el.style.transform = 'translateY(-2px)'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-              el.style.transform = 'translateY(0)'
-            }}
-          >
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-              {card.title}
+              borderTop: `2px solid ${card.borderColor}`,
+            }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                {card.title}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                {card.value}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{card.subtitle}</div>
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
-              {card.value}
+          ))}
+          {smallCards.map((card, i) => (
+            <div key={card.title} style={{
+              backgroundColor: 'var(--card)',
+              borderRadius: 12,
+              padding: '12px 13px',
+              border: '1px solid var(--border-subtle)',
+              gridColumn: i === smallCards.length - 1 && smallCards.length % 2 === 1 ? '1 / -1' : undefined,
+            }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                {card.title}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                {card.value}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{card.subtitle}</div>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Hero Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+            {heroCards.map(card => (
+              <div
+                key={card.title}
+                style={{
+                  backgroundColor: 'var(--card)',
+                  borderRadius: 14,
+                  padding: '22px 24px',
+                  border: '1px solid var(--border-subtle)',
+                  borderLeft: `3px solid ${card.borderColor}`,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  transition: 'box-shadow 0.18s, transform 0.18s',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'
+                  el.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
+                  el.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+                  {card.title}
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+                  {card.value}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Small Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 22 }}>
-        {smallCards.map(card => (
-          <div
-            key={card.title}
-            style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: 14,
-              padding: '16px 18px',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.18s, transform 0.18s',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'
-              el.style.transform = 'translateY(-2px)'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-              el.style.transform = 'translateY(0)'
-            }}
-          >
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              {card.title}
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
-              {card.value}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+          {/* Small Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 22 }}>
+            {smallCards.map(card => (
+              <div
+                key={card.title}
+                style={{
+                  backgroundColor: 'var(--card)',
+                  borderRadius: 14,
+                  padding: '16px 18px',
+                  border: '1px solid var(--border-subtle)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  transition: 'box-shadow 0.18s, transform 0.18s',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'
+                  el.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
+                  el.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  {card.title}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                  {card.value}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {/* Serapan Per Bulan */}
       {serapanBulanan.length > 0 && (

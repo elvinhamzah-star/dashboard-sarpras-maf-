@@ -183,7 +183,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
             Dashboard Sarpras MAF
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -204,14 +204,14 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       <BerandaAlerts programs={programs} />
 
       {/* Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
         {summaryCards.map(card => (
           <div
             key={card.label}
             style={{
               backgroundColor: 'var(--card)',
-              borderRadius: 14,
-              padding: '18px 20px',
+              borderRadius: 12,
+              padding: isMobile ? '12px 13px' : '18px 20px',
               border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s ease, transform 0.18s ease',
@@ -229,27 +229,27 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
           >
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 9,
+                width: isMobile ? 28 : 36,
+                height: isMobile ? 28 : 36,
+                borderRadius: 8,
                 backgroundColor: card.iconBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: card.iconColor,
-                marginBottom: 14,
+                marginBottom: isMobile ? 8 : 14,
                 flexShrink: 0,
               }}
             >
               <MetricIcon type={card.iconType} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+            <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>
               {card.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 6 }}>
+            <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6, wordBreak: 'break-word' }}>
               {card.value}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.trend}</div>
+            <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.trend}</div>
           </div>
         ))}
       </div>
