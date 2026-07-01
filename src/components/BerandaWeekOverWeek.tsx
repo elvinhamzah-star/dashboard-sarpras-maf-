@@ -21,6 +21,29 @@ interface Props {
 
 const TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
 
+const TAB_ICONS: Record<string, JSX.Element> = {
+  'On Going': (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  ),
+  'On Hold': (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+    </svg>
+  ),
+  'Selesai': (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  'Perencanaan': (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+}
+
 function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   const subs = subPrograms.filter(s => s.program_id === program.id)
   if (subs.length === 0) return program.vendor || ''
@@ -82,36 +105,42 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
         : '#DC2626'
 
   return (
-    <div style={{
-      backgroundColor: 'var(--card)',
-      borderRadius: 14,
-      border: '1px solid var(--border-subtle)',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      overflow: 'hidden',
-      marginBottom: 20,
-    }}>
-      <div style={{ padding: '16px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            Progress Program
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-            {programs.length} Pekerjaan Total
-          </div>
-        </div>
+    <>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(150px, 1.15fr) repeat(4, minmax(110px, 1fr))',
+        gap: 10,
+        marginBottom: 14,
+      }}>
         {progressLapangan && (
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1 }}>
+          <div style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: 14,
+            padding: '14px 16px',
+            border: '1.5px solid rgba(124,58,237,0.25)',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              backgroundColor: 'rgba(124,58,237,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#7C3AED', marginBottom: 10,
+            }}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
+              </svg>
+            </div>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+              Progress Keseluruhan
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               {progressLapangan}%
             </div>
             <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 4 }}>
-              {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : 'Progress Lapangan'}
+              {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : `${programs.length} Pekerjaan`}
             </div>
           </div>
         )}
-      </div>
 
-      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {TABS.map(tab => {
           const isActive = activeTab === tab
           const color = STATUS_COLORS[tab] || '#888'
@@ -121,20 +150,55 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
-                padding: '5px 12px', borderRadius: 8, fontFamily: 'inherit',
-                border: isActive ? 'none' : '1px solid var(--border)',
-                backgroundColor: isActive ? `${color}18` : 'transparent',
-                color: isActive ? color : 'var(--text-secondary)',
-                fontSize: 11.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.13s',
+                textAlign: 'left',
+                backgroundColor: isActive ? `${color}10` : 'var(--card)',
+                borderRadius: 14,
+                padding: '14px 16px',
+                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border-subtle)',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+              }}
+              onMouseLeave={e => {
+                if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
               }}
             >
-              {tab} · {count}
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                backgroundColor: isActive ? `${color}26` : `${color}14`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color, marginBottom: 10,
+              }}>
+                {TAB_ICONS[tab]}
+              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                {tab}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                {count}
+              </div>
+              <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: 4, opacity: isActive ? 0.8 : 1 }}>
+                Pekerjaan
+              </div>
             </button>
           )
         })}
       </div>
 
-      <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{
+        backgroundColor: 'var(--card)',
+        borderRadius: 14,
+        border: '1px solid var(--border-subtle)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        padding: '14px 16px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        marginBottom: 20,
+      }}>
         {filteredPrograms.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 12 }}>
             Tidak Ada Pekerjaan Dengan Status Ini.
@@ -340,6 +404,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
           })
         )}
       </div>
-    </div>
+    </>
   )
 }
