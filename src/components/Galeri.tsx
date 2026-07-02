@@ -38,6 +38,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [lightboxImgLoaded, setLightboxImgLoaded] = useState(false)
   const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
+  const [videoIframeLoaded, setVideoIframeLoaded] = useState(false)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
@@ -197,6 +198,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     if (lightboxIndex === null) return
     setLightboxImgLoaded(false)
     setLightboxIsVideo(false)
+    setVideoIframeLoaded(false)
     ;[lightboxIndex - 1, lightboxIndex + 1].forEach(idx => {
       const d = activeDocs[idx]
       if (!d) return
@@ -658,7 +660,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           >{children}</button>
         )
         return (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: isMobile ? '0' : '16px 72px' }}
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 100, overflowY: 'auto', padding: isMobile ? '0' : '24px 72px' }}
             onClick={() => setLightboxIndex(null)}
             onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
             onTouchEnd={e => {
@@ -670,12 +672,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             }}
           >
             {!isMobile && (
-              <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
+              <div style={{ position: 'fixed', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
                 {navBtn(!hasPrev, () => setLightboxIndex(i => i !== null ? i - 1 : null),
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>)}
               </div>
             )}
-            <div style={{ backgroundColor: 'var(--card)', borderRadius: isMobile ? 0 : 16, maxWidth: isMobile ? '100%' : 880, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+            <div style={{ backgroundColor: 'var(--card)', borderRadius: isMobile ? 0 : 16, maxWidth: isMobile ? '100%' : 880, width: '100%', position: 'relative', marginTop: 'auto', marginBottom: 'auto' }}
               onClick={e => e.stopPropagation()}>
               <button onClick={() => setLightboxIndex(null)}
                 style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>✕</button>
@@ -683,13 +685,32 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 {lightboxIndex + 1} / {activeDocs.length}
               </div>
               {isVideoFile ? (
-                <iframe
-                  key={doc.id}
-                  src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
-                  style={{ width: '100%', height: isMobile ? 260 : 480, border: 'none', borderRadius: isMobile ? 0 : '16px 16px 0 0', display: 'block' }}
-                  allow="autoplay"
-                  allowFullScreen
-                />
+                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 280 : 600 }}>
+                  {/* Thumbnail instan dari cache grid */}
+                  <img
+                    src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoIframeLoaded ? 0 : 1, transition: 'opacity 0.3s' }}
+                  />
+                  {/* Loading overlay */}
+                  {!videoIframeLoaded && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, pointerEvents: 'none' }}>
+                      <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="20" height="20" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      </div>
+                      <div style={{ color: '#fff', fontSize: 12, opacity: 0.75, backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 12px', borderRadius: 20 }}>Memuat video…</div>
+                    </div>
+                  )}
+                  {/* Iframe video player */}
+                  <iframe
+                    key={doc.id}
+                    src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', opacity: videoIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
+                    allow="autoplay"
+                    allowFullScreen
+                    onLoad={() => setVideoIframeLoaded(true)}
+                  />
+                </div>
               ) : (
                 <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
                   {/* Thumbnail dari cache grid — muncul instan */}
@@ -723,7 +744,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               </div>
             </div>
             {!isMobile && (
-              <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
+              <div style={{ position: 'fixed', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
                 {navBtn(!hasNext, () => setLightboxIndex(i => i !== null ? i + 1 : null),
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>)}
               </div>
