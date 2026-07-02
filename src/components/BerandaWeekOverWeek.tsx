@@ -140,15 +140,15 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 4 }}>
-                Progress Keseluruhan
+                Progress Pekerjaan
               </div>
               {isNarrow ? null : (
                 <>
                   <div style={{ fontSize: 20, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                     {progressLapangan}%
                   </div>
-                  <div style={{ fontSize: 10, color: freshnessColor, fontWeight: 500, marginTop: 4 }}>
-                    {lastUpdated ? `Diperbarui ${formatTanggal(lastUpdated)}` : `${programs.length} Pekerjaan`}
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, marginTop: 4 }}>
+                    Dari {programs.length} Pekerjaan
                   </div>
                 </>
               )}
@@ -157,6 +157,9 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: 17, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                   {progressLapangan}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>
+                  Dari {programs.length} Pekerjaan
                 </div>
               </div>
             )}
