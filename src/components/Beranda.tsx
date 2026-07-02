@@ -13,6 +13,8 @@ interface BerandaProps {
   role: 'pbb' | 'maf' | null
 }
 
+const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+
 const MetricIcon = ({ type }: { type: string }) => {
   const icons: Record<string, JSX.Element> = {
     anggaran: (
@@ -119,6 +121,9 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
   const freshnessDays = mostRecentUpdate
     ? Math.floor((Date.now() - new Date(mostRecentUpdate).getTime()) / 86400000)
     : null
+  const formattedLastUpdated = mostRecentUpdate
+    ? (() => { const d = new Date(mostRecentUpdate); return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}` })()
+    : null
 
   const summaryCards = [
     {
@@ -183,25 +188,54 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Page Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-            Dashboard Sarpras MAF
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
-            {getTodayFormatted()}
-            {freshnessDays !== null && (
-              <span style={{
-                fontSize: 11,
-                color: freshnessDays === 0 ? '#059669' : freshnessDays <= 3 ? '#D97706' : '#DC2626',
-                fontWeight: 700,
-              }}>
-                · Data Diperbarui {freshnessDays === 0 ? 'Hari Ini' : `${freshnessDays} Hari Lalu`}
-              </span>
-            )}
-          </p>
+      {isMobile ? (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <h1 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+              Dashboard Sarpras MAF
+            </h1>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
+              {getTodayFormatted()}
+            </span>
+          </div>
+          {formattedLastUpdated && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              fontSize: 10,
+              color: 'rgba(185,28,28,.6)',
+              fontWeight: 500,
+              border: '0.5px solid rgba(220,38,38,.22)',
+              borderRadius: 5,
+              padding: '2px 7px',
+              background: 'rgba(220,38,38,.055)',
+              marginTop: 5,
+            }}>
+              Diperbarui {formattedLastUpdated}
+            </span>
+          )}
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+              Dashboard Sarpras MAF
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {getTodayFormatted()}
+              {freshnessDays !== null && (
+                <span style={{
+                  fontSize: 11,
+                  color: freshnessDays === 0 ? '#059669' : freshnessDays <= 3 ? '#D97706' : '#DC2626',
+                  fontWeight: 700,
+                }}>
+                  · Data Diperbarui {freshnessDays === 0 ? 'Hari Ini' : `${freshnessDays} Hari Lalu`}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <BerandaAlerts programs={displayPrograms} />
 
