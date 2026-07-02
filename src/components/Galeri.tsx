@@ -683,19 +683,12 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   allowFullScreen
                 />
               ) : (
-                <div style={{ position: 'relative', width: '100%', maxHeight: 620, overflow: 'hidden', borderRadius: isMobile ? 0 : '16px 16px 0 0', background: '#000', lineHeight: 0 }}>
-                  {/* Blurred thumbnail — instant from cache */}
-                  <img
-                    src={getDriveThumbnailUrl(doc.link_foto, 'w800') || ''}
-                    alt=""
-                    style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', filter: 'blur(14px)', transform: 'scale(1.08)', pointerEvents: 'none', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.3s' }}
-                  />
-                  {/* Full-res fades in on top */}
+                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, minHeight: lightboxImgLoaded ? 0 : (isMobile ? 240 : 360) }}>
                   <img
                     key={doc.id}
                     src={getDriveViewUrl(doc.link_foto) || ''}
                     alt={doc.caption || ''}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                    style={{ width: '100%', maxHeight: isMobile ? 500 : 620, objectFit: 'cover', display: 'block', borderRadius: isMobile ? 0 : '16px 16px 0 0', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
                     onLoad={() => setLightboxImgLoaded(true)}
                     onError={() => setLightboxIsVideo(true)}
                   />
