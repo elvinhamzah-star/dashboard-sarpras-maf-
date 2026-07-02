@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchSubPrograms, hasMafCredentials, Program, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 
@@ -27,7 +27,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
     const load = async () => {
       setLoading(true)
       const [{ data }, { data: subData }] = await Promise.all([fetchPrograms(), fetchSubPrograms()])
-      if (data) setPrograms(data)
+      if (data) setPrograms(hasMafCredentials() ? data.filter(p => p.jenis_pekerjaan !== 'Operasional') : data)
       if (subData) setSubPrograms(subData)
       setLoading(false)
     }

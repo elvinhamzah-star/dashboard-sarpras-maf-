@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, hasMafCredentials, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import LaporanPekananCard from './LaporanPekananCard'
@@ -100,6 +100,8 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
     load()
   }, [])
 
+  const displayPrograms = hasMafCredentials() ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+
   const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
@@ -126,7 +128,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
       valueColor: 'var(--text-primary)',
-      trend: `${programs.length} Pekerjaan`,
+      trend: `${displayPrograms.length} Pekerjaan`,
     },
     {
       label: 'Total Realisasi',
@@ -201,7 +203,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
         </div>
       </div>
 
-      <BerandaAlerts programs={programs} />
+      <BerandaAlerts programs={displayPrograms} />
 
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
@@ -254,9 +256,9 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
         ))}
       </div>
 
-      <BerandaWeekOverWeek programs={programs} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
+      <BerandaWeekOverWeek programs={displayPrograms} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
       <BerandaChart transactions={rawTransactions} />
-      <BerandaVendor programs={programs} subPrograms={subPrograms} />
+      <BerandaVendor programs={displayPrograms} subPrograms={subPrograms} />
 
       {/* Laporan Pekanan */}
       {role !== 'maf' && (

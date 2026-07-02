@@ -120,7 +120,6 @@ export const fetchAppConfig = (key: string) =>
   supabase.from('app_config').select('value').eq('key', key).single()
 
 export async function fetchPrograms() {
-  if (hasMafCredentials()) return fetchMafData<Program>('programs')
   const { data, error } = await supabase.from('programs').select('*').order('id', { ascending: true })
   return { data, error }
 }
