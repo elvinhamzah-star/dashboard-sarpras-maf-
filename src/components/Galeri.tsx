@@ -354,18 +354,6 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     const totalProgDocs = docs.filter(d => d.program_id === openFolderId).length
     return (
       <>
-        {/* Summary chips */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-raised)', border: '0.5px solid var(--border-subtle)', borderRadius: 5, padding: '2px 8px' }}>
-            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            {currentDistinctTitik.length} titik
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-raised)', border: '0.5px solid var(--border-subtle)', borderRadius: 5, padding: '2px 8px' }}>
-            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            {totalProgDocs} foto
-          </span>
-        </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 12 : 16 }}>
           {currentDistinctTitik.map(titik => {
             const titikDocs = docs.filter(d => d.program_id === openFolderId && (d.titik?.trim() || '') === titik)
@@ -454,9 +442,13 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             <>
               <button
                 onClick={closeFolder}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 6, fontFamily: 'inherit' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 8, fontFamily: 'inherit', transition: 'color 0.15s' }}
+                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'rgba(26,111,232,0.3)'; ic.style.background = 'rgba(26,111,232,0.06)' } }}
+                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'var(--border-subtle)'; ic.style.background = 'var(--card)' } }}
               >
-                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                <span className="bk-ic" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s, background 0.15s', flexShrink: 0 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
                 Kembali
               </button>
               <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
@@ -472,9 +464,13 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             <>
               <button
                 onClick={backFromLevel3}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 6, fontFamily: 'inherit' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 8, fontFamily: 'inherit', transition: 'color 0.15s' }}
+                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'rgba(26,111,232,0.3)'; ic.style.background = 'rgba(26,111,232,0.06)' } }}
+                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'var(--border-subtle)'; ic.style.background = 'var(--card)' } }}
               >
-                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                <span className="bk-ic" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s, background 0.15s', flexShrink: 0 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
                 Kembali
               </button>
               {openFolderHasManyTitik && titikDisplayName !== null ? (

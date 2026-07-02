@@ -717,9 +717,13 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
                 <button
                   onClick={() => setMobileDetailView(false)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, padding: 0 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, padding: 0, fontFamily: 'inherit', transition: 'color 0.15s' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'rgba(26,111,232,0.3)'; ic.style.background = 'rgba(26,111,232,0.06)' } }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'var(--border-subtle)'; ic.style.background = 'var(--card)' } }}
                 >
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg>
+                  <span className="bk-ic" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s, background 0.15s', flexShrink: 0 }}>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </span>
                   Kembali
                 </button>
               </div>
