@@ -434,174 +434,177 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
         </div>
       )}
 
-      {/* Transactions Grid */}
-      {showRiwayat && <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
-          <div>
-            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} Transaksi</div>
+      {/* Transactions */}
+      {showRiwayat && (isNarrow ? (
+        /* ── MOBILE / TABLET: original card style inside transparent wrapper ── */
+        <div style={{ backgroundColor: 'transparent', borderRadius: 0, border: 'none', overflow: 'visible' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} Transaksi</div>
+            </div>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {JENIS_TABS.map(tab => (
+                <button key={tab} onClick={() => { setFilterJenis(tab); setPage(1) }}
+                  style={{ padding: '5px 11px', borderRadius: 7, border: filterJenis === tab ? 'none' : '1px solid var(--border)', cursor: 'pointer', fontSize: 12, fontWeight: 600, backgroundColor: filterJenis === tab ? 'var(--blue)' : 'transparent', color: filterJenis === tab ? '#fff' : 'var(--text-secondary)', transition: 'all 0.13s', fontFamily: 'inherit' }}>
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {JENIS_TABS.map(tab => (
-              <button
-                key={tab}
-                onClick={() => { setFilterJenis(tab); setPage(1) }}
-                style={{
-                  padding: '5px 11px',
-                  borderRadius: 7,
-                  border: filterJenis === tab ? 'none' : '1px solid var(--border)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  backgroundColor: filterJenis === tab ? 'var(--blue)' : 'transparent',
-                  color: filterJenis === tab ? '#fff' : 'var(--text-secondary)',
-                  transition: 'all 0.13s',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: isMobile ? 10 : 12,
-          }}>
-            {paged.map(t => {
-              const isMasukTx = t.jenis_transaksi === 'Masuk'
-              const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
-              const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#DC2626'
-              const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
-              return (
-                <div key={t.id} style={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid #D8DDE8',
-                  borderRadius: 12,
-                  padding: isMobile ? '12px 14px' : '14px 16px',
-                  transition: 'box-shadow 0.15s',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 14px rgba(0,0,0,0.08)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                      <div style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>
-                        {t.nama_pekerjaan || '-'}
+          {loading ? (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
+          ) : (
+            <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {paged.map(t => {
+                const isMasukTx = t.jenis_transaksi === 'Masuk'
+                const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
+                const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#DC2626'
+                const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
+                return (
+                  <div key={t.id} style={{ backgroundColor: 'var(--card)', border: '1px solid #D8DDE8', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>{t.nama_pekerjaan || '-'}</div>
+                        {t.deskripsi && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.deskripsi}</div>}
                       </div>
-                      {t.deskripsi && (
-                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {t.deskripsi}
-                        </div>
-                      )}
+                      <div style={{ fontSize: 14, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                        {isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}
+                      </div>
                     </div>
-                    <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                      {isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: 20,
-                        fontSize: 10.5, fontWeight: 700,
-                        backgroundColor: badgeColor.bg, color: 'var(--card)', whiteSpace: 'nowrap',
-                      }}>
-                        {t.jenis_transaksi}
-                      </span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
-                        {formatTanggal(t.tanggal)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {t.link_bukti && (
-                        <button
-                          onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
-                          style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(26,111,232,0.12)' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(26,111,232,0.06)' }}
-                        >
-                          Bukti ↗
-                        </button>
-                      )}
-                      {isAdmin && (
-                        <button
-                          onClick={() => setEditingTransaction(t)}
-                          style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = 'rgba(26,111,232,0.06)'; b.style.color = 'var(--blue)' }}
-                          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = 'var(--card)'; b.style.color = 'var(--text-secondary)' }}
-                        >
-                          Edit
-                        </button>
-                      )}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10.5, fontWeight: 700, backgroundColor: badgeColor.bg, color: 'var(--card)', whiteSpace: 'nowrap' }}>{t.jenis_transaksi}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>{formatTanggal(t.tanggal)}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {t.link_bukti && (
+                          <button onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
+                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Bukti ↗
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button onClick={() => setEditingTransaction(t)}
+                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Edit
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {!loading && filtered.length > itemsPerPage && (
-          <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {start + 1}–{Math.min(start + itemsPerPage, filtered.length)} Dari {filtered.length} Transaksi
+                )
+              })}
             </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: 7,
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card)',
-                  cursor: page === 1 ? 'default' : 'pointer',
-                  opacity: page === 1 ? 0.4 : 1,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  transition: 'all 0.12s',
-                }}
-              >
-                ← Sebelumnya
-              </button>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '0 4px' }}>
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: 7,
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card)',
-                  cursor: page === totalPages ? 'default' : 'pointer',
-                  opacity: page === totalPages ? 0.4 : 1,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  transition: 'all 0.12s',
-                }}
-              >
-                Berikutnya →
-              </button>
+          )}
+          {!loading && filtered.length > itemsPerPage && (
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{start + 1}–{Math.min(start + itemsPerPage, filtered.length)} Dari {filtered.length} Transaksi</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  ← Sebelumnya
+                </button>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '0 4px' }}>{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Berikutnya →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ── DESKTOP: standalone header + card grid with hover ── */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} Transaksi</div>
+            </div>
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {JENIS_TABS.map(tab => (
+                <button key={tab} onClick={() => { setFilterJenis(tab); setPage(1) }}
+                  style={{ padding: '5px 11px', borderRadius: 7, border: filterJenis === tab ? 'none' : '1px solid var(--border)', cursor: 'pointer', fontSize: 12, fontWeight: 600, backgroundColor: filterJenis === tab ? 'var(--blue)' : 'transparent', color: filterJenis === tab ? '#fff' : 'var(--text-secondary)', transition: 'all 0.13s', fontFamily: 'inherit' }}>
+                  {tab}
+                </button>
+              ))}
             </div>
           </div>
-        )}
-      </div>
-
-      }
+          {loading ? (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat Data...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+              {paged.map(t => {
+                const isMasukTx = t.jenis_transaksi === 'Masuk'
+                const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
+                const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#DC2626'
+                const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: 'var(--card)' }
+                return (
+                  <div key={t.id} style={{ backgroundColor: 'var(--card)', border: '1px solid #D8DDE8', borderRadius: 12, padding: '14px 16px', transition: 'box-shadow 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 14px rgba(0,0,0,0.08)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>{t.nama_pekerjaan || '-'}</div>
+                        {t.deskripsi && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.deskripsi}</div>}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                        {isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10.5, fontWeight: 700, backgroundColor: badgeColor.bg, color: 'var(--card)', whiteSpace: 'nowrap' }}>{t.jenis_transaksi}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>{formatTanggal(t.tanggal)}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {t.link_bukti && (
+                          <button onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
+                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(26,111,232,0.12)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(26,111,232,0.06)' }}>
+                            Bukti ↗
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button onClick={() => setEditingTransaction(t)}
+                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                            onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = 'rgba(26,111,232,0.06)'; b.style.color = 'var(--blue)' }}
+                            onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = 'var(--card)'; b.style.color = 'var(--text-secondary)' }}>
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {!loading && filtered.length > itemsPerPage && (
+            <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{start + 1}–{Math.min(start + itemsPerPage, filtered.length)} Dari {filtered.length} Transaksi</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', transition: 'all 0.12s' }}>
+                  ← Sebelumnya
+                </button>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '0 4px' }}>{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', transition: 'all 0.12s' }}>
+                  Berikutnya →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
 
       {isAdmin && showAddModal && (
         <AddTransactionModal
