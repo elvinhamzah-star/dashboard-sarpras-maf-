@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
-import { isValidDriveLink } from '../lib/data'
+import { isValidDriveLink, extractDriveFileId } from '../lib/data'
 
 interface AddDocumentationModalProps {
   programs: Program[]
@@ -14,6 +14,7 @@ interface LinkRow {
   id: string
   link: string
   caption: string
+  tipeFile: 'foto' | 'video' | null // null = belum terdeteksi
 }
 
 const inputStyle: React.CSSProperties = {
@@ -39,7 +40,18 @@ const labelStyle: React.CSSProperties = {
 }
 
 function newRow(): LinkRow {
-  return { id: crypto.randomUUID(), link: '', caption: '' }
+  return { id: crypto.randomUUID(), link: '', caption: '', tipeFile: null }
+}
+
+function detectFileType(link: string): Promise<'foto' | 'video'> {
+  return new Promise(resolve => {
+    const fileId = extractDriveFileId(link)
+    if (!fileId) { resolve('foto'); return }
+    const img = new Image()
+    img.onload = () => resolve('foto')
+    img.onerror = () => resolve('video')
+    img.src = `https://lh3.googleusercontent.com/d/${fileId}`
+  })
 }
 
 export default function AddDocumentationModal({ programs, onClose, onSuccess }: AddDocumentationModalProps) {
@@ -48,7 +60,6 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const [fase, setFase] = useState('Kondisi Awal')
   const [titik, setTitik] = useState('')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
-  const [tipeFile, setTipeFile] = useState<'foto' | 'video'>('foto')
   const [rows, setRows] = useState<LinkRow[]>([newRow()])
   const [saving, setSaving] = useState(false)
   const [saveProgress, setSaveProgress] = useState<{ done: number; total: number } | null>(null)
@@ -90,8 +101,17 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
     p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
   )
 
+  const triggerDetect = (id: string, link: string) => {
+    if (!isValidDriveLink(link.trim())) return
+    setRows(prev => prev.map(r => r.id === id ? { ...r, tipeFile: null } : r))
+    detectFileType(link.trim()).then(tipeFile => {
+      setRows(prev => prev.map(r => r.id === id ? { ...r, tipeFile } : r))
+    })
+  }
+
   const updateRow = (id: string, field: 'link' | 'caption', value: string) => {
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+    if (field === 'link') triggerDetect(id, value)
   }
 
   const addRow = () => {
@@ -109,13 +129,15 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
     if (links.length <= 1) return
 
     e.preventDefault()
+    const pasted: LinkRow[] = links.map(link => ({ id: crypto.randomUUID(), link, caption: '', tipeFile: null }))
     setRows(prev => {
       const idx = prev.findIndex(r => r.id === id)
       const before = prev.slice(0, idx)
       const after = prev.slice(idx + 1)
-      const pasted = links.map(link => ({ id: crypto.randomUUID(), link, caption: '' }))
       return [...before, ...pasted, ...after]
     })
+    // Detect type untuk setiap link yang dipaste
+    pasted.forEach(row => triggerDetect(row.id, row.link))
   }
 
   const handleSave = async () => {
@@ -146,7 +168,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         fase,
         titik: titik.trim() || null,
         link_foto: row.link.trim(),
-        tipe_file: tipeFile,
+        tipe_file: row.tipeFile ?? 'foto',
         caption: row.caption.trim() || null,
         tanggal,
       })
@@ -158,7 +180,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
     setSaveProgress(null)
 
     if (failed > 0) {
-      setError(`${failed} dari ${validRows.length} foto gagal disimpan. Coba lagi.`)
+      setError(`${failed} dari ${validRows.length} item gagal disimpan. Coba lagi.`)
       return
     }
 
@@ -167,6 +189,9 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   }
 
   const validCount = rows.filter(r => r.link.trim()).length
+  const detectedCount = rows.filter(r => r.tipeFile !== null && r.link.trim()).length
+  const videoCount = rows.filter(r => r.tipeFile === 'video').length
+  const fotoCount = rows.filter(r => r.tipeFile === 'foto').length
 
   return (
     <div
@@ -197,23 +222,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Dokumentasi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Upload foto atau video dari Google Drive
-          </div>
-        </div>
-
-        {/* Tipe File toggle */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Tipe File</label>
-          <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border)', borderRadius: 9, overflow: 'hidden', width: 'fit-content' }}>
-            {(['foto', 'video'] as const).map(t => (
-              <button key={t} type="button" onClick={() => setTipeFile(t)}
-                style={{ padding: '8px 22px', border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s', backgroundColor: tipeFile === t ? 'var(--blue)' : 'var(--card)', color: tipeFile === t ? '#fff' : 'var(--text-secondary)' }}>
-                {t === 'foto'
-                  ? <><svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Foto</>
-                  : <><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Video</>
-                }
-              </button>
-            ))}
+            Tipe foto/video terdeteksi otomatis dari link Drive
           </div>
         </div>
 
@@ -308,7 +317,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
           </div>
         </div>
 
-        {/* Fase + Titik + Tanggal */}
+        {/* Fase + Tanggal */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={labelStyle}>Fase</label>
@@ -354,14 +363,24 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                 </span>
               )}
             </label>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              Bisa paste beberapa link sekaligus
-            </span>
+            {validCount > 0 && detectedCount === validCount && (videoCount > 0 || fotoCount > 0) && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {fotoCount > 0 && <span>{fotoCount} foto</span>}
+                {videoCount > 0 && <span style={{ color: '#7C3AED', fontWeight: 600 }}>{videoCount} video</span>}
+              </span>
+            )}
+            {validCount > 0 && detectedCount < validCount && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Mendeteksi tipe...</span>
+            )}
+            {validCount === 0 && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Bisa paste beberapa link sekaligus</span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {rows.map((row, i) => {
               const isInvalid = row.link.trim() && !isValidDriveLink(row.link.trim())
+              const isDetecting = row.link.trim() && isValidDriveLink(row.link.trim()) && row.tipeFile === null
               return (
                 <div key={row.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   {/* Row number */}
@@ -373,20 +392,48 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                   </div>
 
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {/* Drive link */}
-                    <input
-                      ref={i === rows.length - 1 ? lastInputRef : undefined}
-                      type="url"
-                      value={row.link}
-                      onChange={e => updateRow(row.id, 'link', e.target.value)}
-                      onPaste={e => handlePaste(row.id, e)}
-                      placeholder="https://drive.google.com/file/d/…/view"
-                      style={{
-                        ...inputStyle,
-                        borderColor: isInvalid ? '#F87171' : 'var(--border)',
-                        backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : 'var(--card)',
-                      }}
-                    />
+                    {/* Drive link + type indicator */}
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        ref={i === rows.length - 1 ? lastInputRef : undefined}
+                        type="url"
+                        value={row.link}
+                        onChange={e => updateRow(row.id, 'link', e.target.value)}
+                        onPaste={e => handlePaste(row.id, e)}
+                        placeholder="https://drive.google.com/file/d/…/view"
+                        style={{
+                          ...inputStyle,
+                          paddingRight: row.link.trim() ? 36 : 12,
+                          borderColor: isInvalid ? '#F87171' : 'var(--border)',
+                          backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : 'var(--card)',
+                        }}
+                      />
+                      {/* Type indicator icon */}
+                      {row.link.trim() && !isInvalid && (
+                        <div style={{
+                          position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          width: 20, height: 20,
+                        }}>
+                          {isDetecting ? (
+                            /* Spinner */
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CAABB" strokeWidth="2.5" style={{ animation: 'spin 0.8s linear infinite' }}>
+                              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                            </svg>
+                          ) : row.tipeFile === 'video' ? (
+                            /* Play icon — video */
+                            <div title="Video" style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(124,58,237,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="9" height="9" fill="#7C3AED" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </div>
+                          ) : (
+                            /* Camera icon — foto */
+                            <div title="Foto" style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(16,185,129,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="10" height="10" fill="none" stroke="#10B981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {/* Caption */}
                     <input
                       type="text"
@@ -514,11 +561,13 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             {saving
               ? `Menyimpan ${saveProgress?.done ?? 0}/${saveProgress?.total ?? validCount}...`
               : validCount > 1
-                ? `Simpan ${validCount} ${tipeFile === 'video' ? 'Video' : 'Foto'}`
+                ? `Simpan ${validCount} Item`
                 : 'Simpan'}
           </button>
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
