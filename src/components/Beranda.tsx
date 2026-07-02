@@ -125,7 +125,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconType: 'anggaran',
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
-      valueColor: 'var(--blue)',
+      valueColor: 'var(--text-primary)',
       trend: `${programs.length} Pekerjaan`,
     },
     {
@@ -134,7 +134,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconType: 'realisasi',
       iconBg: 'rgba(5,150,105,0.1)',
       iconColor: '#059669',
-      valueColor: '#059669',
+      valueColor: 'var(--text-primary)',
       trend: `${penyerapan}% Terserap`,
     },
     {
@@ -143,7 +143,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconType: 'sisa',
       iconBg: 'rgba(217,119,6,0.1)',
       iconColor: '#D97706',
-      valueColor: '#D97706',
+      valueColor: 'var(--text-primary)',
       trend: 'Belum Digunakan',
     },
     {

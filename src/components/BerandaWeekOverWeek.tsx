@@ -117,10 +117,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       }}>
         {progressLapangan && (
           <div style={{
-            backgroundColor: isNarrow ? 'var(--bg)' : 'var(--card)',
+            backgroundColor: 'var(--card)',
             borderRadius: 14,
             padding: isNarrow ? '10px 14px' : '14px 16px',
-            border: isNarrow ? '1px solid var(--card)' : '1.5px solid rgba(124,58,237,0.25)',
+            border: isNarrow ? '1px solid #D8DDE8' : '1.5px solid rgba(124,58,237,0.25)',
             gridColumn: isNarrow ? '1 / -1' : 'auto',
             display: 'flex',
             flexDirection: isNarrow ? 'row' : 'column',
@@ -158,9 +158,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ fontSize: 17, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                   {progressLapangan}%
                 </div>
-                <div style={{ fontSize: 9.5, color: freshnessColor, fontWeight: 500, marginTop: 2, whiteSpace: 'nowrap' }}>
-                  {freshnessDays === 0 ? 'Hari ini' : freshnessDays !== null ? `${freshnessDays}h lalu` : ''}
-                </div>
               </div>
             )}
           </div>
@@ -176,10 +173,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               onClick={() => setActiveTab(tab)}
               style={{
                 textAlign: 'left',
-                backgroundColor: isActive ? `${color}10` : 'var(--bg)',
+                backgroundColor: isActive ? `${color}10` : 'var(--card)',
                 borderRadius: isNarrow ? 12 : 14,
                 padding: isNarrow ? '10px 12px' : '14px 16px',
-                border: isActive ? `1.5px solid ${color}` : '1px solid var(--card)',
+                border: isActive ? `1.5px solid ${color}` : '1px solid #D8DDE8',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
@@ -193,16 +190,16 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             >
               <div style={{
                 width: isNarrow ? 24 : 32, height: isNarrow ? 24 : 32, borderRadius: 7,
-                backgroundColor: isActive ? `${color}26` : `${color}14`,
+                backgroundColor: isActive ? `${color}26` : 'rgba(0,0,0,0.05)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color, marginBottom: isNarrow ? 6 : 10,
+                color: isActive ? color : 'var(--text-muted)', marginBottom: isNarrow ? 6 : 10,
               }}>
                 {TAB_ICONS[tab]}
               </div>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 2 : 4 }}>
                 {tab}
               </div>
-              <div style={{ fontSize: isNarrow ? 16 : 20, fontWeight: 700, color, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              <div style={{ fontSize: isNarrow ? 16 : 20, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 {count}
               </div>
               <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: isNarrow ? 2 : 4, opacity: isActive ? 0.8 : 1 }}>

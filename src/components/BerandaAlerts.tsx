@@ -58,8 +58,8 @@ export default function BerandaAlerts({ programs }: BerandaAlertsProps) {
 
       {overBudget.length > 0 && (
         <div style={{
-          backgroundColor: 'rgba(217,119,6,0.05)',
-          border: '1px solid rgba(217,119,6,0.18)',
+          backgroundColor: 'var(--card)',
+          border: '1px solid var(--border-subtle)',
           borderLeft: '3px solid #D97706',
           borderRadius: 10,
           padding: '12px 16px',
@@ -70,7 +70,7 @@ export default function BerandaAlerts({ programs }: BerandaAlertsProps) {
               <line x1="12" y1="9" x2="12" y2="13"/>
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {overBudget.length} Program Melebihi Anggaran
             </span>
           </div>

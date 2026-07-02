@@ -129,18 +129,21 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       value: formatRupiah(totalKeluar),
       subtitle: `${keluarList.length} Transaksi`,
       color: '#DC2626',
+      borderColor: '#DC2626',
     },
     {
       title: 'Keluar PBB',
       value: formatRupiah(totalKeluarPBB),
       subtitle: `${keluarPBBList.length} Transaksi`,
       color: '#D97706',
+      borderColor: '#D97706',
     },
     {
       title: 'Total Deployment',
       value: formatRupiah(totalDeployment),
       subtitle: 'Masuk + Keluar PBB',
       color: 'var(--blue)',
+      borderColor: 'var(--blue)',
     },
   ]
 
@@ -253,41 +256,42 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
 
       {/* Summary Cards — unified 2×2 grid on mobile, hero+small split on desktop */}
       {isMobile ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
-          {heroCards.map(card => (
-            <div key={card.title} style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: 12,
-              padding: '12px 13px',
-              border: '1px solid var(--border-subtle)',
-              borderTop: `2px solid ${card.borderColor}`,
-            }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                {card.title}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 10 }}>
+            {[...heroCards, ...smallCards.slice(0, 2)].map(card => (
+              <div key={card.title} style={{
+                backgroundColor: 'var(--card)',
+                borderRadius: 12,
+                padding: '12px 13px',
+                border: '1px solid var(--border-subtle)',
+                borderTop: `2px solid ${card.borderColor}`,
+              }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                  {card.title}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                  {card.value}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{card.subtitle}</div>
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                {card.value}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+            ))}
+          </div>
+          <div style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: 12,
+            padding: '12px 13px',
+            border: '1px solid var(--border-subtle)',
+            borderTop: `2px solid var(--blue)`,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              Total Deployment
             </div>
-          ))}
-          {smallCards.map((card, i) => (
-            <div key={card.title} style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: 12,
-              padding: '12px 13px',
-              border: '1px solid var(--border-subtle)',
-              gridColumn: i === smallCards.length - 1 && smallCards.length % 2 === 1 ? '1 / -1' : undefined,
-            }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                {card.title}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                {card.value}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{card.subtitle}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+              {formatRupiah(totalDeployment)}
             </div>
-          ))}
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Masuk + Keluar PBB</div>
+          </div>
         </div>
       ) : (
         <>
@@ -319,7 +323,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
                   {card.title}
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
                   {card.value}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{card.subtitle}</div>
@@ -337,6 +341,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   borderRadius: 14,
                   padding: '16px 18px',
                   border: '1px solid var(--border-subtle)',
+                  borderLeft: `3px solid ${card.borderColor}`,
                   boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                   transition: 'box-shadow 0.18s, transform 0.18s',
                 }}
@@ -354,7 +359,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                   {card.title}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: card.color, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
                   {card.value}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{card.subtitle}</div>
