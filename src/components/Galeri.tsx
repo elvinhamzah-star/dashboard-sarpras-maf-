@@ -683,12 +683,19 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                   allowFullScreen
                 />
               ) : (
-                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, minHeight: lightboxImgLoaded ? 0 : (isMobile ? 240 : 360) }}>
+                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
+                  {/* Thumbnail dari cache grid — muncul instan */}
+                  <img
+                    src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }}
+                  />
+                  {/* Full-res fade in saat siap */}
                   <img
                     key={doc.id}
                     src={getDriveViewUrl(doc.link_foto) || ''}
                     alt={doc.caption || ''}
-                    style={{ width: '100%', maxHeight: isMobile ? 500 : 620, objectFit: 'cover', display: 'block', borderRadius: isMobile ? 0 : '16px 16px 0 0', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
                     onLoad={() => setLightboxImgLoaded(true)}
                     onError={() => setLightboxIsVideo(true)}
                   />
