@@ -55,14 +55,14 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
     return (
       <div style={{ padding: 24 }}>
         <button onClick={onBack}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, fontFamily: 'inherit', transition: 'color 0.15s' }}
-          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'rgba(26,111,232,0.3)'; ic.style.background = 'rgba(26,111,232,0.06)' } }}
-          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'var(--border-subtle)'; ic.style.background = 'var(--card)' } }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
         >
-          <span className="bk-ic" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s, background 0.15s', flexShrink: 0 }}>
-            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           </span>
-          Kembali
+          Kembali ke Daftar
         </button>
         <p style={{ color: 'var(--text-muted)', marginTop: 20 }}>Pekerjaan tidak ditemukan.</p>
       </div>
@@ -78,12 +78,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       {/* Back button */}
       <button
         onClick={onBack}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, marginBottom: 20, padding: 0, fontFamily: 'inherit', transition: 'color 0.15s' }}
-        onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'rgba(26,111,232,0.3)'; ic.style.background = 'rgba(26,111,232,0.06)' } }}
-        onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) { ic.style.borderColor = 'var(--border-subtle)'; ic.style.background = 'var(--card)' } }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, marginBottom: 20, fontFamily: 'inherit', transition: 'all 0.15s' }}
+        onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
+        onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
       >
-        <span className="bk-ic" style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s, background 0.15s', flexShrink: 0 }}>
-          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </span>
         Kembali ke Daftar
       </button>
