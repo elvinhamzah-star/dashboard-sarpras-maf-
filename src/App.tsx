@@ -123,7 +123,7 @@ export default function App() {
     beranda: 'Beranda',
     pekerjaan: 'Pekerjaan',
     keuangan: 'Keuangan',
-    galeri: 'Galeri',
+    galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
   }

@@ -106,7 +106,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     : []
 
   // Docs used for lightbox
-  const activeDocs = (isMobile && openFolderId) ? folderDocs : filteredDocs
+  const activeDocs = openFolderId ? folderDocs : filteredDocs
 
   const openFolder = (pid: string) => {
     setOpenFolderId(pid)
@@ -328,7 +328,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          {isMobile && openFolderId ? (
+          {openFolderId ? (
             <>
               <button
                 onClick={closeFolder}
@@ -337,7 +337,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 Kembali
               </button>
-              <h1 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+              <h1 style={{ fontSize: isMobile ? 17 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
                 {programs.find(p => p.id === openFolderId)?.nama_pekerjaan || openFolderId}
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '4px 0 0' }}>
@@ -350,10 +350,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 Galeri Dokumentasi
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
-                {loading ? 'Memuat...' : isMobile
-                  ? `${mobilePrograms.length} program · ${docs.filter(d => mobilePrograms.some(p => p.id === d.program_id)).length} foto`
-                  : `${programOrder.length} program · ${filteredDocs.length} foto`
-                }
+                {loading ? 'Memuat...' : `${mobilePrograms.length} program · ${docs.filter(d => mobilePrograms.some(p => p.id === d.program_id)).length} foto`}
               </p>
             </>
           )}
@@ -375,151 +372,92 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
 
       {error && <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>{error}</div>}
 
-      {/* ── MOBILE ── */}
-      {isMobile ? (
-        loading ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Memuat...</div>
-        ) : openFolderId ? (
-          /* Inside folder: fase filter + photo grid */
-          <>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-              {FASE_LIST.map(fase => {
-                const isActive = filterFase === fase
-                const c = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
-                const hasFase = fase === 'Semua' || docs.some(d => d.program_id === openFolderId && d.fase === fase)
-                if (!hasFase) return null
-                return (
-                  <button key={fase} onClick={() => setFilterFase(fase)}
-                    style={{
-                      padding: '5px 12px', borderRadius: 99, fontFamily: 'inherit',
-                      border: isActive ? 'none' : '1px solid var(--border-subtle)',
-                      backgroundColor: isActive ? (fase === 'Semua' ? 'var(--blue)' : `${c}18`) : 'transparent',
-                      color: isActive ? (fase === 'Semua' ? '#fff' : c) : 'var(--text-secondary)',
-                      fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
-                    }}>
-                    {fase === 'Semua' ? 'Semua' : fase === 'Proses Pekerjaan' ? 'Proses' : fase}
-                  </button>
-                )
-              })}
+      {/* ── FOLDER GRID → DRILL-DOWN (mobile & desktop) ── */}
+      {loading ? (
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Memuat...</div>
+      ) : openFolderId ? (
+        /* Inside folder: fase filter + photo grid */
+        <>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+            {FASE_LIST.map(fase => {
+              const isActive = filterFase === fase
+              const c = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
+              const hasFase = fase === 'Semua' || docs.some(d => d.program_id === openFolderId && d.fase === fase)
+              if (!hasFase) return null
+              return (
+                <button key={fase} onClick={() => setFilterFase(fase)}
+                  style={{
+                    padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
+                    border: isActive ? 'none' : '1px solid var(--border-subtle)',
+                    backgroundColor: isActive ? (fase === 'Semua' ? 'var(--blue)' : `${c}18`) : 'transparent',
+                    color: isActive ? (fase === 'Semua' ? '#fff' : c) : 'var(--text-secondary)',
+                    fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer',
+                  }}>
+                  {fase === 'Semua' ? 'Semua' : fase === 'Proses Pekerjaan' ? 'Proses' : fase}
+                </button>
+              )
+            })}
+          </div>
+          {folderDocs.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Tidak ada foto untuk fase ini.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 14 }}>
+              {folderDocs.map(doc => renderPhotoCard(doc, folderDocs.indexOf(doc)))}
             </div>
-            {folderDocs.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Tidak ada foto untuk fase ini.</div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                {folderDocs.map(doc => renderPhotoCard(doc, folderDocs.indexOf(doc)))}
-              </div>
-            )}
-          </>
-        ) : (
-          /* Folder grid */
-          <>
-            {renderFilterBar()}
-            {mobilePrograms.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada dokumentasi foto.</div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                {mobilePrograms.map(prog => {
-                  const progDocs = docs.filter(d => d.program_id === prog.id)
-                  const cover = getDriveThumbnailUrl(progDocs[0]?.link_foto)
-                  const statusColor = STATUS_COLORS[prog.status] || 'var(--blue)'
-                  return (
-                    <div
-                      key={prog.id}
-                      onClick={() => openFolder(prog.id)}
-                      style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s' }}
-                    >
-                      {/* Cover */}
-                      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
-                        {cover ? (
-                          <img src={cover} alt={prog.nama_pekerjaan} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                            onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="28" height="28" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
-                              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                            </svg>
-                          </div>
-                        )}
-                        {/* N foto badge */}
-                        <div style={{ position: 'absolute', bottom: 7, right: 7, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-                          {progDocs.length} foto
-                        </div>
-                        {/* Status stripe */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: statusColor }} />
-                      </div>
-                      {/* Info */}
-                      <div style={{ padding: '10px 12px' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                          {prog.nama_pekerjaan}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{prog.id}</span>
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99, backgroundColor: `${statusColor}15`, color: statusColor }}>
-                            {prog.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )
+          )}
+        </>
       ) : (
-        /* ── DESKTOP: flat grouped grid ── */
+        /* Folder grid */
         <>
           {renderFilterBar()}
-          {filteredDocs.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <svg width="48" height="48" fill="none" stroke="#ccc" strokeWidth="1.5" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-              </svg>
-              <p style={{ margin: 0 }}>{docs.length > 0 ? 'Tidak ada foto untuk filter ini.' : 'Belum ada dokumentasi foto.'}</p>
-            </div>
+          {mobilePrograms.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada dokumentasi foto.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {programOrder.map((pid, progIdx) => {
-                const prog = programs.find(p => p.id === pid)
-                const titikGroups = grouped[pid]
-                const titikKeys = Object.keys(titikGroups).sort()
-                const hasNamedTitik = titikKeys.some(t => t !== '')
-                const totalFotos = Object.values(titikGroups).reduce((s, d) => s + d.length, 0)
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 12 : 16 }}>
+              {mobilePrograms.map(prog => {
+                const progDocs = docs.filter(d => d.program_id === prog.id)
+                const cover = getDriveThumbnailUrl(progDocs[0]?.link_foto)
+                const statusColor = STATUS_COLORS[prog.status] || 'var(--blue)'
                 return (
-                  <div key={pid}>
-                    {progIdx > 0 && <div style={{ height: 1, backgroundColor: 'var(--border-subtle)', margin: '28px 0' }} />}
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{prog?.nama_pekerjaan || pid}</span>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{totalFotos} foto</span>
+                  <div
+                    key={prog.id}
+                    onClick={() => openFolder(prog.id)}
+                    style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s, transform 0.18s' }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)'; el.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'; el.style.transform = 'translateY(0)' }}
+                  >
+                    {/* Cover */}
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
+                      {cover ? (
+                        <img src={cover} alt={prog.nama_pekerjaan} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.3s' }}
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          onMouseEnter={e => { (e.target as HTMLImageElement).style.transform = 'scale(1.05)' }}
+                          onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = 'scale(1)' }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="32" height="32" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                          </svg>
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20 }}>
+                        {progDocs.length} foto
                       </div>
-                      {prog?.id && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{prog.id}</div>}
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: statusColor }} />
                     </div>
-                    {hasNamedTitik ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {titikKeys.map(titik => {
-                          const titikDocs = titikGroups[titik]
-                          return (
-                            <div key={titik}>
-                              {titik && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                                  <div style={{ width: 3, height: 14, borderRadius: 2, backgroundColor: '#7C3AED', flexShrink: 0 }} />
-                                  <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' }}>{titik}</span>
-                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{titikDocs.length} foto</span>
-                                </div>
-                              )}
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-                                {titikDocs.map(doc => renderPhotoCard(doc, filteredDocs.indexOf(doc)))}
-                              </div>
-                            </div>
-                          )
-                        })}
+                    {/* Info */}
+                    <div style={{ padding: isMobile ? '10px 12px' : '12px 14px' }}>
+                      <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        {prog.nama_pekerjaan}
                       </div>
-                    ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-                        {(titikGroups[''] || []).map(doc => renderPhotoCard(doc, filteredDocs.indexOf(doc)))}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{prog.id}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: `${statusColor}15`, color: statusColor }}>
+                          {prog.status}
+                        </span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )
               })}
