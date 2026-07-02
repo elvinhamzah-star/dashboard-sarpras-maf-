@@ -19,6 +19,9 @@ const FASE_INFO: Record<string, { color: string; bg: string }> = {
 
 const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'] as const
 
+// Sentinel: entered Level 3 directly (program has only 1 or 0 distinct titik — skip Level 2)
+const TITIK_ALL = '__all__'
+
 export default function Galeri({ isAdmin = false }: GaleriProps) {
   const width = useWindowWidth()
   const isMobile = width < 900
@@ -28,6 +31,8 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [loading, setLoading] = useState(true)
   const [filterProgram, setFilterProgram] = useState<string>('Semua')
   const [openFolderId, setOpenFolderId] = useState<string | null>(null)
+  // null = Level 2 (titik selection); string = Level 3 ('' = no-titik bucket, TITIK_ALL = all)
+  const [selectedTitik, setSelectedTitik] = useState<string | null>(null)
   const [filterFase, setFilterFase] = useState<string>('Semua')
   const [showAddModal, setShowAddModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -88,6 +93,14 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     else setDocs(docs.filter(d => d.id !== id))
   }
 
+  // Returns sorted unique titik values for a program ('' = docs with no titik)
+  const getDistinctTitik = (pid: string) => {
+    const pd = docs.filter(d => d.program_id === pid)
+    const set = [...new Set(pd.map(d => d.titik?.trim() || ''))]
+    // Put '' (no-titik bucket) at end if present
+    return set.sort((a, b) => a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, 'id'))
+  }
+
   // Docs that pass the top-level program filter
   const filteredDocs = docs.filter(doc => {
     const prog = programs.find(p => p.id === doc.program_id)
@@ -96,25 +109,55 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     return true
   })
 
-  // Docs inside the open folder (mobile), also filtered by fase
-  const folderDocs = openFolderId
+  // Docs inside Level 3 (filtered by program, titik, and fase)
+  const folderDocs = (openFolderId && selectedTitik !== null)
     ? docs.filter(d => {
         if (d.program_id !== openFolderId) return false
+        if (selectedTitik !== TITIK_ALL) {
+          if ((d.titik?.trim() || '') !== selectedTitik) return false
+        }
         if (filterFase !== 'Semua' && d.fase !== filterFase) return false
         return true
       })
     : []
 
-  // Docs used for lightbox
-  const activeDocs = openFolderId ? folderDocs : filteredDocs
+  // For lightbox — only used in Level 3
+  const activeDocs = (openFolderId && selectedTitik !== null) ? folderDocs : filteredDocs
+
+  // Distinct titik of the currently open program
+  const currentDistinctTitik = openFolderId ? getDistinctTitik(openFolderId) : []
+  const openFolderHasManyTitik = currentDistinctTitik.length > 1
 
   const openFolder = (pid: string) => {
+    const uniqueTitik = getDistinctTitik(pid)
     setOpenFolderId(pid)
     setFilterFase('Semua')
     setLightboxIndex(null)
+    if (uniqueTitik.length > 1) {
+      setSelectedTitik(null)     // → Level 2 (show titik folders)
+    } else {
+      setSelectedTitik(TITIK_ALL) // → Level 3 directly (skip Level 2)
+    }
   }
+
+  const openTitikFolder = (titik: string) => {
+    setSelectedTitik(titik)
+    setFilterFase('Semua')
+    setLightboxIndex(null)
+  }
+
+  const backFromLevel3 = () => {
+    if (openFolderHasManyTitik) {
+      setSelectedTitik(null)   // → back to Level 2
+      setLightboxIndex(null)
+    } else {
+      closeFolder()            // → back to Level 1
+    }
+  }
+
   const closeFolder = () => {
     setOpenFolderId(null)
+    setSelectedTitik(null)
     setFilterFase('Semua')
     setLightboxIndex(null)
   }
@@ -127,24 +170,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     .filter(p => p.status !== 'Perencanaan' && docs.some(d => d.program_id === p.id))
     .filter(p => p.nama_pekerjaan.toLowerCase().includes(programSearch.toLowerCase()))
 
-  // Desktop: group by program → titik
-  const grouped = filteredDocs.reduce((acc, doc) => {
-    const pid = doc.program_id
-    if (!acc[pid]) acc[pid] = {}
-    const titik = doc.titik?.trim() || ''
-    if (!acc[pid][titik]) acc[pid][titik] = []
-    acc[pid][titik].push(doc)
-    return acc
-  }, {} as Record<string, Record<string, Documentation[]>>)
-
-  const programOrder = Object.keys(grouped).sort((a, b) => {
-    const order = ['Selesai', 'On Going', 'On Hold']
-    const sa = programs.find(p => p.id === a)?.status || ''
-    const sb = programs.find(p => p.id === b)?.status || ''
-    return order.indexOf(sa) - order.indexOf(sb)
-  })
-
-  // Mobile: all programs that have docs
+  // All programs that have docs (for Level 1 grid)
   const mobilePrograms = programs
     .filter(p => p.status !== 'Perencanaan' && docs.some(d => d.program_id === p.id))
     .filter(p => filterProgram === 'Semua' || p.id === filterProgram)
@@ -224,7 +250,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
         </div>
         <div style={{ padding: '8px 10px' }}>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 4 }}>
-            {doc.titik && (
+            {doc.titik && selectedTitik === TITIK_ALL && (
               <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED', whiteSpace: 'nowrap' }}>{doc.titik}</span>
             )}
             {fi && (
@@ -247,7 +273,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     )
   }
 
-  // ── Filter bar (shared) ──────────────────────────────────────────
+  // ── Filter bar (Level 1) ──────────────────────────────────────────
   const renderFilterBar = () => (
     <div style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
       <button
@@ -322,29 +348,98 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     </div>
   )
 
+  // ── Level 2: Titik folder grid ────────────────────────────────────
+  const renderTitikGrid = () => {
+    if (!openFolderId) return null
+    const totalProgDocs = docs.filter(d => d.program_id === openFolderId).length
+    return (
+      <>
+        {/* Summary chips */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-raised)', border: '0.5px solid var(--border-subtle)', borderRadius: 5, padding: '2px 8px' }}>
+            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {currentDistinctTitik.length} titik
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-raised)', border: '0.5px solid var(--border-subtle)', borderRadius: 5, padding: '2px 8px' }}>
+            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            {totalProgDocs} foto
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 12 : 16 }}>
+          {currentDistinctTitik.map(titik => {
+            const titikDocs = docs.filter(d => d.program_id === openFolderId && (d.titik?.trim() || '') === titik)
+            const cover = getDriveThumbnailUrl(titikDocs[0]?.link_foto)
+            const titikLabel = titik || 'Dokumentasi Umum'
+            const faseSet = [...new Set(titikDocs.map(d => d.fase).filter((f): f is string => !!f))]
+            return (
+              <div
+                key={titik}
+                onClick={() => openTitikFolder(titik)}
+                style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s, transform 0.18s' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)'; el.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'; el.style.transform = 'translateY(0)' }}
+              >
+                {/* Cover */}
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
+                  {cover ? (
+                    <img src={cover} alt={titikLabel}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="28" height="28" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20 }}>
+                    {titikDocs.length} foto
+                  </div>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: '#7C3AED' }} />
+                </div>
+                {/* Body */}
+                <div style={{ padding: isMobile ? '10px 12px' : '12px 14px' }}>
+                  <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 6 }}>
+                    {titikLabel}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {faseSet.slice(0, 3).map(f => {
+                      const fi = FASE_INFO[f]
+                      return fi ? (
+                        <span key={f} style={{ fontSize: 9.5, fontWeight: 600, padding: '1px 6px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color }}>
+                          {f === 'Proses Pekerjaan' ? 'Proses' : f === 'Kondisi Awal' ? 'Awal' : f === 'Kondisi Akhir' ? 'Akhir' : f}
+                        </span>
+                      ) : null
+                    })}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </>
+    )
+  }
+
+  // ── Resolve header content based on current level ─────────────────
+  const openProgram = openFolderId ? programs.find(p => p.id === openFolderId) : null
+  const openProgramName = openProgram?.nama_pekerjaan || openFolderId || ''
+  const isLevel1 = !openFolderId
+  const isLevel2 = !!openFolderId && selectedTitik === null
+  const isLevel3 = !!openFolderId && selectedTitik !== null
+  const titikDisplayName = selectedTitik === TITIK_ALL || selectedTitik === ''
+    ? (selectedTitik === '' ? 'Dokumentasi Umum' : null)
+    : selectedTitik
+
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
 
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          {openFolderId ? (
-            <>
-              <button
-                onClick={closeFolder}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 6, fontFamily: 'inherit' }}
-              >
-                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                Kembali
-              </button>
-              <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
-                {programs.find(p => p.id === openFolderId)?.nama_pekerjaan || openFolderId}
-              </h1>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '4px 0 0' }}>
-                {docs.filter(d => d.program_id === openFolderId).length} foto dokumentasi
-              </p>
-            </>
-          ) : (
+        <div style={{ minWidth: 0, flex: 1 }}>
+          {isLevel1 && (
             <>
               <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
                 Galeri Dokumentasi
@@ -354,7 +449,59 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               </p>
             </>
           )}
+
+          {isLevel2 && (
+            <>
+              <button
+                onClick={closeFolder}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 6, fontFamily: 'inherit' }}
+              >
+                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Kembali
+              </button>
+              <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                {openProgramName}
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '4px 0 0' }}>
+                {currentDistinctTitik.length} titik · {docs.filter(d => d.program_id === openFolderId).length} foto
+              </p>
+            </>
+          )}
+
+          {isLevel3 && (
+            <>
+              <button
+                onClick={backFromLevel3}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 6, fontFamily: 'inherit' }}
+              >
+                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Kembali
+              </button>
+              {openFolderHasManyTitik && titikDisplayName !== null ? (
+                /* Breadcrumb: Program · Titik */
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: isMobile ? 12 : 15, fontWeight: 500, color: 'var(--text-secondary)', letterSpacing: '-0.01em' }}>{openProgramName}</span>
+                    <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span style={{ fontSize: isMobile ? 13 : 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{titikDisplayName}</span>
+                  </div>
+                </div>
+              ) : (
+                <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                  {openProgramName}
+                </h1>
+              )}
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '4px 0 0' }}>
+                {docs.filter(d => {
+                  if (d.program_id !== openFolderId) return false
+                  if (selectedTitik !== TITIK_ALL && (d.titik?.trim() || '') !== selectedTitik) return false
+                  return true
+                }).length} foto dokumentasi
+              </p>
+            </>
+          )}
         </div>
+
         {isAdmin && (
           <button
             onClick={() => setShowAddModal(true)}
@@ -372,17 +519,21 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
 
       {error && <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>{error}</div>}
 
-      {/* ── FOLDER GRID → DRILL-DOWN (mobile & desktop) ── */}
+      {/* ── Navigation levels ── */}
       {loading ? (
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Memuat...</div>
-      ) : openFolderId ? (
-        /* Inside folder: fase filter + photo grid */
+      ) : isLevel3 ? (
+        /* ── Level 3: Fase filter + photo grid ── */
         <>
           <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
             {FASE_LIST.map(fase => {
               const isActive = filterFase === fase
               const c = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
-              const hasFase = fase === 'Semua' || docs.some(d => d.program_id === openFolderId && d.fase === fase)
+              const hasFase = fase === 'Semua' || docs.some(d =>
+                d.program_id === openFolderId &&
+                d.fase === fase &&
+                (selectedTitik === TITIK_ALL || (d.titik?.trim() || '') === selectedTitik)
+              )
               if (!hasFase) return null
               return (
                 <button key={fase} onClick={() => setFilterFase(fase)}
@@ -406,8 +557,11 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
             </div>
           )}
         </>
+      ) : isLevel2 ? (
+        /* ── Level 2: Titik folder grid ── */
+        renderTitikGrid()
       ) : (
-        /* Folder grid */
+        /* ── Level 1: Program folder grid ── */
         <>
           {renderFilterBar()}
           {mobilePrograms.length === 0 ? (
@@ -418,6 +572,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                 const progDocs = docs.filter(d => d.program_id === prog.id)
                 const cover = getDriveThumbnailUrl(progDocs[0]?.link_foto)
                 const statusColor = STATUS_COLORS[prog.status] || 'var(--blue)'
+                const titikCount = getDistinctTitik(prog.id).length
                 return (
                   <div
                     key={prog.id}
@@ -451,11 +606,15 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
                       <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                         {prog.nama_pekerjaan}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{prog.id}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: `${statusColor}15`, color: statusColor }}>
                           {prog.status}
                         </span>
+                        {titikCount > 1 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}>
+                            {titikCount} titik
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
