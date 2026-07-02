@@ -435,22 +435,14 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       )}
 
       {/* Transactions Grid */}
-      {showRiwayat && <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 14,
-          border: '1px solid #D8DDE8',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Table header */}
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      {showRiwayat && <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Riwayat Transaksi</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{filtered.length} Transaksi</div>
           </div>
-          <div style={{ display: 'flex', gap: 5 }}>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
             {JENIS_TABS.map(tab => (
               <button
                 key={tab}
@@ -465,6 +457,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
                   backgroundColor: filterJenis === tab ? 'var(--blue)' : 'transparent',
                   color: filterJenis === tab ? '#fff' : 'var(--text-secondary)',
                   transition: 'all 0.13s',
+                  fontFamily: 'inherit',
                 }}
               >
                 {tab}
@@ -479,13 +472,9 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
         ) : (
           <div style={{
-            padding: isMobile ? '8px 0' : '12px 0',
             display: 'grid',
             gridTemplateColumns: '1fr',
             gap: isMobile ? 10 : 12,
-            paddingLeft: isMobile ? 0 : 16,
-            paddingRight: isMobile ? 0 : 16,
-            paddingBottom: 12,
           }}>
             {paged.map(t => {
               const isMasukTx = t.jenis_transaksi === 'Masuk'
@@ -563,7 +552,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
 
         {/* Pagination */}
         {!loading && filtered.length > itemsPerPage && (
-          <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {start + 1}–{Math.min(start + itemsPerPage, filtered.length)} Dari {filtered.length} Transaksi
             </div>
