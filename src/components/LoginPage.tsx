@@ -91,7 +91,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
               border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
-              fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit',
+              fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit',
               outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
             }}

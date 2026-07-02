@@ -18,7 +18,7 @@ type Tab = 'Ringkasan' | 'Dokumen' | 'Sub Pekerjaan'
 export default function PekerjaanDetail({ programId, isAdmin, onBack }: PekerjaanDetailProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
   const [program, setProgram] = useState<Program | null>(null)
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)

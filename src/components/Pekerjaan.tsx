@@ -18,7 +18,7 @@ const STATUS_TABS = ['Semua', 'On Going', 'On Hold', 'Selesai', 'Perencanaan']
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
   const [programs, setPrograms] = useState<Program[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
@@ -199,7 +199,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, overflow: 'hidden' }}>
                       {p.isu_utama && <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />}
                       <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.nama_pekerjaan}
@@ -253,7 +253,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, overflow: 'hidden' }}>
                       {p.isu_utama && <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />}
                       <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                         {p.nama_pekerjaan}

@@ -35,7 +35,7 @@ const JENIS_ICONS: Record<string, JSX.Element> = {
 export default function Keuangan({ isAdmin = false, selectedMonth = null, onMonthChange, role }: KeuanganProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Semua')

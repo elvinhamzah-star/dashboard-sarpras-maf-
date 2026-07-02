@@ -9,7 +9,7 @@ interface Props {
 
 export default function BerandaVendor({ programs, subPrograms }: Props) {
   const width = useWindowWidth()
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
   const programsWithSubs = new Set(subPrograms.map(s => s.program_id))
 
   const byVendor: Record<string, {

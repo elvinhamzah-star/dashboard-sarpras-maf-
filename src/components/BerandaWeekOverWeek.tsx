@@ -56,7 +56,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
 export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated }: Props) {
   const [activeTab, setActiveTab] = useState('On Going')
   const width = useWindowWidth()
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
 
   const now = Date.now()
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000

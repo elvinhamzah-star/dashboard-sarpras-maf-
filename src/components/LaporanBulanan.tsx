@@ -51,7 +51,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
   const [exporting, setExporting] = useState(false)
   const width = useWindowWidth()
   const isMobile = width < 600
-  const isNarrow = width < 900
+  const isNarrow = width < 1100
 
   useEffect(() => {
     setLoading(true)
