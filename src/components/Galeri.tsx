@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, STATUS_COLORS } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
@@ -36,6 +36,8 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const [filterFase, setFilterFase] = useState<string>('Semua')
   const [showAddModal, setShowAddModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [lightboxImgLoaded, setLightboxImgLoaded] = useState(false)
+  const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
@@ -190,6 +192,19 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [lightboxIndex, activeDocs.length])
 
+  // Reset image state + preload prev/next when lightbox navigates
+  useEffect(() => {
+    if (lightboxIndex === null) return
+    setLightboxImgLoaded(false)
+    setLightboxIsVideo(false)
+    ;[lightboxIndex - 1, lightboxIndex + 1].forEach(idx => {
+      const d = activeDocs[idx]
+      if (!d) return
+      const url = getDriveViewUrl(d.link_foto)
+      if (url) new Image().src = url
+    })
+  }, [lightboxIndex])
+
   const renderPhotoCard = (doc: Documentation, globalIndex: number) => {
     const thumbUrl = getDriveThumbnailUrl(doc.link_foto)
     const fi = doc.fase ? FASE_INFO[doc.fase] : null
@@ -212,6 +227,9 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
           if (ov) ov.style.opacity = '1'
           const ac = el.querySelector('.adm-ac') as HTMLElement | null
           if (ac) ac.style.opacity = '1'
+          // Preload full-res on hover so click is instant
+          const viewUrl = getDriveViewUrl(doc.link_foto)
+          if (viewUrl) new Image().src = viewUrl
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLDivElement
@@ -656,9 +674,32 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
                 {lightboxIndex + 1} / {activeDocs.length}
               </div>
-              {getDriveViewUrl(doc.link_foto) && (
-                <img src={getDriveViewUrl(doc.link_foto) || ''} alt={doc.caption || ''}
-                  style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', borderRadius: isMobile ? 0 : '16px 16px 0 0' }} />
+              {lightboxIsVideo ? (
+                <iframe
+                  key={doc.id}
+                  src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
+                  style={{ width: '100%', height: isMobile ? 260 : 480, border: 'none', borderRadius: isMobile ? 0 : '16px 16px 0 0', display: 'block' }}
+                  allow="autoplay"
+                  allowFullScreen
+                />
+              ) : (
+                <div style={{ position: 'relative', width: '100%', maxHeight: 620, overflow: 'hidden', borderRadius: isMobile ? 0 : '16px 16px 0 0', background: '#000', lineHeight: 0 }}>
+                  {/* Blurred thumbnail — instant from cache */}
+                  <img
+                    src={getDriveThumbnailUrl(doc.link_foto, 'w800') || ''}
+                    alt=""
+                    style={{ width: '100%', maxHeight: 620, objectFit: 'cover', display: 'block', filter: 'blur(14px)', transform: 'scale(1.08)', pointerEvents: 'none', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.3s' }}
+                  />
+                  {/* Full-res fades in on top */}
+                  <img
+                    key={doc.id}
+                    src={getDriveViewUrl(doc.link_foto) || ''}
+                    alt={doc.caption || ''}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                    onLoad={() => setLightboxImgLoaded(true)}
+                    onError={() => setLightboxIsVideo(true)}
+                  />
+                </div>
               )}
               <div style={{ padding: 20 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{formatTanggal(doc.tanggal)}</div>
