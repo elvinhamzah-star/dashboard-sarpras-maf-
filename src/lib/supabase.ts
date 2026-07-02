@@ -71,6 +71,7 @@ export interface Documentation {
   fase?: string
   titik?: string
   link_foto: string
+  tipe_file?: 'foto' | 'video'
   drive_link?: string
   caption?: string
   deskripsi?: string

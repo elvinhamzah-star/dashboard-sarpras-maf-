@@ -36,6 +36,7 @@ const labelStyle: React.CSSProperties = {
 export default function EditDocumentationModal({ doc, programs: _programs, onClose, onSuccess }: EditDocumentationModalProps) {
   useEscapeKey(onClose)
   const [fase, setFase] = useState(doc.fase || 'Kondisi Awal')
+  const [tipeFile, setTipeFile] = useState<'foto' | 'video'>(doc.tipe_file || 'foto')
   const [tanggal, setTanggal] = useState(doc.tanggal || '')
   const [titik, setTitik] = useState(doc.titik || '')
   const [linkFoto, setLinkFoto] = useState(doc.link_foto || '')
@@ -58,6 +59,7 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
     setSaving(true)
     const { error: err } = await adminUpdate('documentation', {
       fase,
+      tipe_file: tipeFile,
       tanggal,
       titik: titik.trim() || null,
       link_foto: linkFoto.trim() || doc.link_foto,
@@ -88,6 +90,22 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
             {error}
           </div>
         )}
+
+        {/* Tipe File toggle */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Tipe File</label>
+          <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border)', borderRadius: 9, overflow: 'hidden', width: 'fit-content' }}>
+            {(['foto', 'video'] as const).map(t => (
+              <button key={t} type="button" onClick={() => setTipeFile(t)}
+                style={{ padding: '8px 22px', border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s', backgroundColor: tipeFile === t ? 'var(--blue)' : 'var(--card)', color: tipeFile === t ? '#fff' : 'var(--text-secondary)' }}>
+                {t === 'foto'
+                  ? <><svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Foto</>
+                  : <><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Video</>
+                }
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Fase + Tanggal */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>

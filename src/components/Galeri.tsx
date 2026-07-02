@@ -260,6 +260,13 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
             </svg>
           </div>
+          {doc.tipe_file === 'video' && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ width: 42, height: 42, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
+                <svg width="16" height="16" fill="#fff" viewBox="0 0 24 24" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+            </div>
+          )}
           {doc.caption && (
             <div className="cap-ov" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(8,18,36,0.82) 0%, transparent 100%)', padding: '28px 10px 10px', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none' }}>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.88)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{doc.caption}</div>
@@ -642,6 +649,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
         const hasPrev = lightboxIndex > 0
         const hasNext = lightboxIndex < activeDocs.length - 1
         const fi = doc.fase ? FASE_INFO[doc.fase] : null
+        const isVideoFile = doc.tipe_file === 'video' || lightboxIsVideo
         const navBtn = (disabled: boolean, onClick: () => void, children: React.ReactNode) => (
           <button onClick={onClick} disabled={disabled}
             style={{ backgroundColor: disabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.18)', border: 'none', color: '#fff', width: 44, height: 44, borderRadius: 50, cursor: disabled ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: disabled ? 0.25 : 1, zIndex: 102, fontFamily: 'inherit' }}
@@ -674,7 +682,7 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
               <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
                 {lightboxIndex + 1} / {activeDocs.length}
               </div>
-              {lightboxIsVideo ? (
+              {isVideoFile ? (
                 <iframe
                   key={doc.id}
                   src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}

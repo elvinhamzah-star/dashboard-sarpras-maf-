@@ -48,6 +48,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const [fase, setFase] = useState('Kondisi Awal')
   const [titik, setTitik] = useState('')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
+  const [tipeFile, setTipeFile] = useState<'foto' | 'video'>('foto')
   const [rows, setRows] = useState<LinkRow[]>([newRow()])
   const [saving, setSaving] = useState(false)
   const [saveProgress, setSaveProgress] = useState<{ done: number; total: number } | null>(null)
@@ -145,6 +146,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         fase,
         titik: titik.trim() || null,
         link_foto: row.link.trim(),
+        tipe_file: tipeFile,
         caption: row.caption.trim() || null,
         tanggal,
       })
@@ -195,7 +197,23 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Dokumentasi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Upload beberapa foto sekaligus dari Google Drive
+            Upload foto atau video dari Google Drive
+          </div>
+        </div>
+
+        {/* Tipe File toggle */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Tipe File</label>
+          <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border)', borderRadius: 9, overflow: 'hidden', width: 'fit-content' }}>
+            {(['foto', 'video'] as const).map(t => (
+              <button key={t} type="button" onClick={() => setTipeFile(t)}
+                style={{ padding: '8px 22px', border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s', backgroundColor: tipeFile === t ? 'var(--blue)' : 'var(--card)', color: tipeFile === t ? '#fff' : 'var(--text-secondary)' }}>
+                {t === 'foto'
+                  ? <><svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Foto</>
+                  : <><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Video</>
+                }
+              </button>
+            ))}
           </div>
         </div>
 
@@ -496,7 +514,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             {saving
               ? `Menyimpan ${saveProgress?.done ?? 0}/${saveProgress?.total ?? validCount}...`
               : validCount > 1
-                ? `Simpan ${validCount} Foto`
+                ? `Simpan ${validCount} ${tipeFile === 'video' ? 'Video' : 'Foto'}`
                 : 'Simpan'}
           </button>
         </div>
