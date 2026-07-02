@@ -221,18 +221,26 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Dashboard Sarpras MAF
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
-              {getTodayFormatted()}
-              {freshnessDays !== null && (
+            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>
+                {getTodayFormatted()}
+              </span>
+              {formattedLastUpdated && (
                 <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
                   fontSize: 11,
-                  color: freshnessDays === 0 ? '#059669' : freshnessDays <= 3 ? '#D97706' : '#DC2626',
-                  fontWeight: 700,
+                  color: 'rgba(185,28,28,.6)',
+                  fontWeight: 500,
+                  border: '0.5px solid rgba(220,38,38,.22)',
+                  borderRadius: 5,
+                  padding: '2px 8px',
+                  background: 'rgba(220,38,38,.055)',
                 }}>
-                  · Data Diperbarui {freshnessDays === 0 ? 'Hari Ini' : `${freshnessDays} Hari Lalu`}
+                  Diperbarui {formattedLastUpdated}
                 </span>
               )}
-            </p>
+            </div>
           </div>
         </div>
       )}
