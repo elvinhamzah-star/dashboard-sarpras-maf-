@@ -69,6 +69,7 @@ export interface Documentation {
   program_id: string
   nama_pekerjaan?: string
   fase?: string
+  titik?: string
   link_foto: string
   drive_link?: string
   caption?: string

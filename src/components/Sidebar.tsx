@@ -46,7 +46,7 @@ const menuItems = [
   },
   {
     id: 'galeri',
-    label: 'Galeri',
+    label: 'Galeri Dokumentasi',
     icon: (
       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="2"/>

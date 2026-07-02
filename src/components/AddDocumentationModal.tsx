@@ -46,6 +46,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   useEscapeKey(onClose)
   const [programId, setProgramId] = useState('')
   const [fase, setFase] = useState('Kondisi Awal')
+  const [titik, setTitik] = useState('')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
   const [rows, setRows] = useState<LinkRow[]>([newRow()])
   const [saving, setSaving] = useState(false)
@@ -142,6 +143,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         program_id: programId,
         nama_pekerjaan: program?.nama_pekerjaan,
         fase,
+        titik: titik.trim() || null,
         link_foto: row.link.trim(),
         caption: row.caption.trim() || null,
         tanggal,
@@ -288,8 +290,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
           </div>
         </div>
 
-        {/* Fase + Tanggal side by side */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+        {/* Fase + Titik + Tanggal */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={labelStyle}>Fase</label>
             <select
@@ -297,7 +299,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
               onChange={e => setFase(e.target.value)}
               style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
             >
-              {['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir'].map(f => (
+              {['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => (
                 <option key={f}>{f}</option>
               ))}
             </select>
@@ -311,6 +313,16 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
               style={inputStyle}
             />
           </div>
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>Titik / Lokasi <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }}>(opsional — contoh: "Gedung A", "Titik 1")</span></label>
+          <input
+            type="text"
+            value={titik}
+            onChange={e => setTitik(e.target.value)}
+            placeholder="Kosongkan jika tidak ada titik spesifik"
+            style={inputStyle}
+          />
         </div>
 
         {/* Link rows */}
