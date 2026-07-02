@@ -172,7 +172,7 @@ export default function Keuangan({ isAdmin = false, selectedMonth = null, onMont
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
+          <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Keuangan</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5 }}>
             {selectedMonth
               ? `Transaksi Bulan ${monthLabelFromYM(selectedMonth)}`

@@ -185,7 +185,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+          <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
             Dashboard Sarpras MAF
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 8 }}>
