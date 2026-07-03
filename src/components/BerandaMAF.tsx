@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Program } from '../lib/supabase'
-import { formatRupiah, getTodayFormatted, getEffectiveProgress } from '../lib/data'
+import { formatRupiah, getTodayFormatted, getEffectiveProgress, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import BerandaAlerts from './BerandaAlerts'
+import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 
 interface Props {
   programs: Program[]
@@ -12,17 +13,17 @@ interface Props {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  'On Going':    { label: 'Berjalan',    color: '#1A6FE8', bg: 'rgba(26,111,232,0.08)',  border: 'rgba(26,111,232,0.25)' },
-  'Selesai':     { label: 'Selesai',     color: '#059669', bg: 'rgba(5,150,105,0.08)',   border: 'rgba(5,150,105,0.25)' },
+  'On Going':    { label: 'Berjalan',    color: '#0A7BC8', bg: 'rgba(10,123,200,0.08)',  border: 'rgba(10,123,200,0.25)' },
+  'Selesai':     { label: 'Selesai',     color: '#1B5E2B', bg: 'rgba(27,94,43,0.08)',    border: 'rgba(27,94,43,0.25)' },
   'On Hold':     { label: 'Tertunda',    color: '#D97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.25)' },
-  'Perencanaan': { label: 'Perencanaan', color: '#6B7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' },
+  'Perencanaan': { label: 'Perencanaan', color: '#DC2626', bg: 'rgba(220,38,38,0.08)',   border: 'rgba(220,38,38,0.2)' },
 }
 
 const STATUS_TABS = [
-  { key: 'On Going',    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> },
-  { key: 'On Hold',     icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> },
-  { key: 'Selesai',     icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> },
-  { key: 'Perencanaan', icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  { key: 'On Going',    icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> },
+  { key: 'On Hold',     icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> },
+  { key: 'Selesai',     icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> },
+  { key: 'Perencanaan', icon: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
 ]
 
 const STATUS_ORDER = ['On Going', 'Selesai', 'On Hold', 'Perencanaan']
@@ -33,6 +34,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
   const width = useWindowWidth()
   const isMobile = width < 600
   const [activeTab, setActiveTab] = useState('On Going')
+  const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
 
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
   const selesai = programs.filter(p => p.status === 'Selesai').length
@@ -127,21 +129,28 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
 
       {/* 3 Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
-        {summaryCards.map(card => (
-          <div
-            key={card.label}
-            style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: isMobile ? '12px 13px' : '18px 20px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s ease, transform 0.18s ease' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}
-          >
-            <div style={{ width: isMobile ? 28 : 36, height: isMobile ? 28 : 36, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, marginBottom: isMobile ? 8 : 14 }}>
-              {card.icon}
+        {summaryCards.map((card, idx) => {
+          const modalType: MetricModalType = idx === 0 ? 'anggaran' : idx === 1 ? 'realisasi' : 'penyerapan'
+          return (
+            <div
+              key={card.label}
+              onClick={() => setActiveModal(modalType)}
+              style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: isMobile ? '12px 13px' : '18px 20px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s ease, transform 0.18s ease', cursor: 'pointer' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 8 : 14 }}>
+                <div style={{ width: isMobile ? 28 : 36, height: isMobile ? 28 : 36, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
+                  {card.icon}
+                </div>
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
+              <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6 }}>{card.value}</div>
+              <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)' }}>{card.trend}</div>
             </div>
-            <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
-            <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6 }}>{card.value}</div>
-            <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)' }}>{card.trend}</div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Anggaran Program PBB */}
@@ -178,14 +187,17 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
       {/* Status Tabs + Program List */}
       <div style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
-        {/* Status Cards sebagai filter tab */}
+        {/* Status Cards — same style as BerandaWeekOverWeek */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${STATUS_TABS.length}, 1fr)`,
+          gap: 10,
+          padding: isMobile ? '10px 12px' : '12px 16px',
           borderBottom: '1px solid var(--border-subtle)',
+          backgroundColor: 'var(--surface-subtle)',
         }}>
-          {STATUS_TABS.map((tab, i) => {
-            const cfg = STATUS_CFG[tab.key]
+          {STATUS_TABS.map(tab => {
+            const color = STATUS_COLORS[tab.key] || '#888'
             const isActive = activeTab === tab.key
             const count = tabCounts[tab.key]
             return (
@@ -193,31 +205,34 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 style={{
-                  padding: isMobile ? '10px 6px' : '14px 12px',
-                  border: 'none',
-                  borderRight: i < STATUS_TABS.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  borderBottom: isActive ? `2px solid ${cfg.color}` : '2px solid transparent',
-                  backgroundColor: isActive ? cfg.bg : 'transparent',
+                  textAlign: 'left',
+                  backgroundColor: isActive ? `${color}10` : 'var(--card)',
+                  borderRadius: isMobile ? 12 : 14,
+                  padding: isMobile ? '10px 12px' : '14px 16px',
+                  border: isActive ? `1.5px solid ${color}` : '1px solid #D8DDE8',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: isMobile ? 4 : 6,
-                  transition: 'all 0.15s',
-                  color: isActive ? cfg.color : 'var(--text-muted)',
+                  transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
                 }}
-                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)' }}
-                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)' }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
               >
-                <div style={{ color: isActive ? cfg.color : 'var(--text-muted)', transition: 'color 0.15s' }}>
+                <div style={{
+                  width: isMobile ? 24 : 32, height: isMobile ? 24 : 32, borderRadius: 7,
+                  backgroundColor: isActive ? `${color}26` : 'rgba(0,0,0,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: isActive ? color : 'var(--text-muted)', marginBottom: isMobile ? 6 : 10,
+                }}>
                   {tab.icon}
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: isActive ? cfg.color : 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isMobile ? 2 : 4 }}>
+                  {tab.key}
+                </div>
+                <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                   {count}
                 </div>
-                <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 600, color: isActive ? cfg.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', lineHeight: 1.2 }}>
-                  {cfg.label}
+                <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: isMobile ? 2 : 4, opacity: isActive ? 0.8 : 1 }}>
+                  Program
                 </div>
               </button>
             )
@@ -298,6 +313,16 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
           </span>
         </div>
       </div>
+
+      {activeModal && (
+        <MetricDetailModal
+          type={activeModal}
+          programs={programs}
+          totalAnggaran={totalAnggaran}
+          totalRealisasi={totalRealisasi}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
 
     </div>
   )

@@ -6,8 +6,8 @@ import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
-import BerandaVendor from './BerandaVendor'
 import BerandaMAF from './BerandaMAF'
+import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -63,6 +63,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
   const [showLaporan, setShowLaporan] = useState(false)
+  const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -264,6 +265,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
         {summaryCards.map(card => (
           <div
             key={card.label}
+            onClick={() => setActiveModal(card.iconType as MetricModalType)}
             style={{
               backgroundColor: 'var(--card)',
               borderRadius: 12,
@@ -271,6 +273,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
               border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               transition: 'box-shadow 0.18s ease, transform 0.18s ease',
+              cursor: 'pointer',
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLDivElement
@@ -283,21 +286,25 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div
-              style={{
-                width: isMobile ? 28 : 36,
-                height: isMobile ? 28 : 36,
-                borderRadius: 8,
-                backgroundColor: card.iconBg,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: card.iconColor,
-                marginBottom: isMobile ? 8 : 14,
-                flexShrink: 0,
-              }}
-            >
-              <MetricIcon type={card.iconType} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 8 : 14 }}>
+              <div
+                style={{
+                  width: isMobile ? 28 : 36,
+                  height: isMobile ? 28 : 36,
+                  borderRadius: 8,
+                  backgroundColor: card.iconBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: card.iconColor,
+                  flexShrink: 0,
+                }}
+              >
+                <MetricIcon type={card.iconType} />
+              </div>
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', opacity: 0.5, flexShrink: 0 }}>
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
             </div>
             <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>
               {card.label}
@@ -310,9 +317,18 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
         ))}
       </div>
 
-      <BerandaWeekOverWeek programs={displayPrograms} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
       <BerandaChart transactions={rawTransactions} />
-      <BerandaVendor programs={displayPrograms} subPrograms={subPrograms} />
+      <BerandaWeekOverWeek programs={displayPrograms} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
+
+      {activeModal && (
+        <MetricDetailModal
+          type={activeModal}
+          programs={displayPrograms}
+          totalAnggaran={totalAnggaran}
+          totalRealisasi={totalRealisasi}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
 
       {/* Laporan Pekanan */}
       {role !== 'maf' && (
