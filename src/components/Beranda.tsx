@@ -7,6 +7,7 @@ import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
 import BerandaVendor from './BerandaVendor'
+import BerandaMAF from './BerandaMAF'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -163,6 +164,17 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       trend: 'Dari Total Anggaran',
     },
   ]
+
+  if (!loading && role === 'maf') {
+    return (
+      <BerandaMAF
+        programs={displayPrograms}
+        totalAnggaran={totalAnggaran}
+        totalRealisasi={totalRealisasi}
+        formattedLastUpdated={formattedLastUpdated}
+      />
+    )
+  }
 
   if (loading) {
     return (
