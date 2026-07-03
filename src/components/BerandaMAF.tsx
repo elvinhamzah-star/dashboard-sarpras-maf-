@@ -11,27 +11,28 @@ interface Props {
   formattedLastUpdated: string | null
 }
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  'On Going':    { label: 'Berjalan',    color: '#1A6FE8', bg: 'rgba(26,111,232,0.1)',  dot: '#1A6FE8' },
-  'Selesai':     { label: 'Selesai',     color: '#059669', bg: 'rgba(5,150,105,0.1)',   dot: '#059669' },
-  'On Hold':     { label: 'Tertunda',    color: '#D97706', bg: 'rgba(217,119,6,0.1)',   dot: '#D97706' },
-  'Perencanaan': { label: 'Perencanaan', color: '#6B7280', bg: 'rgba(107,114,128,0.1)', dot: '#9CA3AF' },
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  'On Going':    { label: 'Berjalan',    color: '#1A6FE8', bg: 'rgba(26,111,232,0.08)',  border: 'rgba(26,111,232,0.25)' },
+  'Selesai':     { label: 'Selesai',     color: '#059669', bg: 'rgba(5,150,105,0.08)',   border: 'rgba(5,150,105,0.25)' },
+  'On Hold':     { label: 'Tertunda',    color: '#D97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.25)' },
+  'Perencanaan': { label: 'Perencanaan', color: '#6B7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' },
 }
 
-const FILTERS = [
-  { key: 'Semua',      status: null },
-  { key: 'Berjalan',   status: 'On Going' },
-  { key: 'Selesai',    status: 'Selesai' },
-  { key: 'Tertunda',   status: 'On Hold' },
-  { key: 'Perencanaan',status: 'Perencanaan' },
+const STATUS_TABS = [
+  { key: 'On Going',    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> },
+  { key: 'On Hold',     icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> },
+  { key: 'Selesai',     icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> },
+  { key: 'Perencanaan', icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
 ]
 
 const STATUS_ORDER = ['On Going', 'Selesai', 'On Hold', 'Perencanaan']
 
+const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+
 export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, formattedLastUpdated }: Props) {
   const width = useWindowWidth()
   const isMobile = width < 600
-  const [activeFilter, setActiveFilter] = useState('Semua')
+  const [activeTab, setActiveTab] = useState('On Going')
 
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
   const selesai = programs.filter(p => p.status === 'Selesai').length
@@ -77,10 +78,12 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
 
-  const activeStatus = FILTERS.find(f => f.key === activeFilter)?.status ?? null
-  const filteredPrograms = activeStatus
-    ? sortedPrograms.filter(p => p.status === activeStatus)
-    : sortedPrograms
+  const filteredPrograms = sortedPrograms.filter(p => p.status === activeTab)
+
+  const tabCounts: Record<string, number> = {}
+  STATUS_TABS.forEach(t => {
+    tabCounts[t.key] = programs.filter(p => p.status === t.key).length
+  })
 
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
@@ -134,12 +137,8 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
             <div style={{ width: isMobile ? 28 : 36, height: isMobile ? 28 : 36, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, marginBottom: isMobile ? 8 : 14 }}>
               {card.icon}
             </div>
-            <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>
-              {card.label}
-            </div>
-            <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6 }}>
-              {card.value}
-            </div>
+            <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
+            <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6 }}>{card.value}</div>
             <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)' }}>{card.trend}</div>
           </div>
         ))}
@@ -176,124 +175,110 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
         </div>
       </div>
 
-      {/* Status per Program — dengan filter + grid */}
-      <div style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden', marginBottom: 20 }}>
+      {/* Status Tabs + Program List */}
+      <div style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
-        {/* Header + filter */}
-        <div style={{ padding: isMobile ? '12px 14px 0' : '14px 20px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Status per Program</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              {filteredPrograms.length} dari {programs.length}
-            </div>
-          </div>
-
-          {/* Filter pills */}
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none' }}>
-            {FILTERS.map(f => {
-              const count = f.status
-                ? programs.filter(p => p.status === f.status).length
-                : programs.length
-              const isActive = activeFilter === f.key
-              const cfg = f.status ? STATUS_CFG[f.status] : null
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setActiveFilter(f.key)}
-                  style={{
-                    padding: '5px 12px',
-                    borderRadius: 20,
-                    border: isActive
-                      ? `1.5px solid ${cfg?.color ?? 'var(--blue)'}`
-                      : '1px solid var(--border-subtle)',
-                    backgroundColor: isActive
-                      ? (cfg?.bg ?? 'rgba(26,111,232,0.1)')
-                      : 'var(--card)',
-                    color: isActive ? (cfg?.color ?? '#1A6FE8') : 'var(--text-secondary)',
-                    fontSize: 11.5,
-                    fontWeight: isActive ? 700 : 500,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {cfg && (
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: cfg.dot, display: 'inline-block', flexShrink: 0 }} />
-                  )}
-                  {f.key}
-                  <span style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    backgroundColor: isActive ? (cfg?.color ?? '#1A6FE8') : 'var(--border-subtle)',
-                    color: isActive ? '#fff' : 'var(--text-muted)',
-                    borderRadius: 10,
-                    padding: '1px 5px',
-                    minWidth: 18,
-                    textAlign: 'center',
-                    lineHeight: 1.6,
-                  }}>
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Grid cards */}
+        {/* Status Cards sebagai filter tab */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-          gap: 1,
-          backgroundColor: 'var(--border-subtle)',
+          gridTemplateColumns: `repeat(${STATUS_TABS.length}, 1fr)`,
+          borderBottom: '1px solid var(--border-subtle)',
         }}>
+          {STATUS_TABS.map((tab, i) => {
+            const cfg = STATUS_CFG[tab.key]
+            const isActive = activeTab === tab.key
+            const count = tabCounts[tab.key]
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  padding: isMobile ? '10px 6px' : '14px 12px',
+                  border: 'none',
+                  borderRight: i < STATUS_TABS.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  borderBottom: isActive ? `2px solid ${cfg.color}` : '2px solid transparent',
+                  backgroundColor: isActive ? cfg.bg : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: isMobile ? 4 : 6,
+                  transition: 'all 0.15s',
+                  color: isActive ? cfg.color : 'var(--text-muted)',
+                }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)' }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+              >
+                <div style={{ color: isActive ? cfg.color : 'var(--text-muted)', transition: 'color 0.15s' }}>
+                  {tab.icon}
+                </div>
+                <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: isActive ? cfg.color : 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                  {count}
+                </div>
+                <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 600, color: isActive ? cfg.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', lineHeight: 1.2 }}>
+                  {cfg.label}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Program list — vertikal */}
+        <div>
           {filteredPrograms.length === 0 ? (
-            <div style={{ gridColumn: '1/-1', padding: '32px 20px', textAlign: 'center', backgroundColor: 'var(--card)' }}>
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Tidak ada program dengan status ini</div>
             </div>
           ) : (
-            filteredPrograms.map(p => {
+            filteredPrograms.map((p, i) => {
               const progress = getEffectiveProgress(p)
-              const st = STATUS_CFG[p.status || ''] ?? { label: p.status || '-', color: '#6B7280', bg: 'rgba(107,114,128,0.1)', dot: '#9CA3AF' }
+              const cfg = STATUS_CFG[p.status || ''] ?? STATUS_CFG['Perencanaan']
               const barColor = p.status === 'Selesai' ? '#059669' : p.status === 'On Hold' ? '#D97706' : '#1A6FE8'
+
+              const updatedAt = p.updated_at ? (() => {
+                const d = new Date(p.updated_at)
+                return `${d.getDate()} ${BULAN_ID[d.getMonth()]}`
+              })() : null
+
               return (
                 <div
                   key={p.id}
                   style={{
-                    backgroundColor: 'var(--card)',
                     padding: isMobile ? '14px 14px' : '16px 20px',
+                    borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                   }}
                 >
-                  {/* Status badge + nama */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-                    <div style={{ fontSize: isMobile ? 12.5 : 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
-                      {p.nama_pekerjaan}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, marginBottom: 4 }}>
+                        {p.nama_pekerjaan}
+                      </div>
+                      {updatedAt && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Diperbarui {updatedAt}</div>
+                      )}
                     </div>
                     <span style={{
-                      fontSize: 10,
+                      fontSize: 10.5,
                       fontWeight: 700,
-                      color: st.color,
-                      backgroundColor: st.bg,
+                      color: cfg.color,
+                      backgroundColor: cfg.bg,
+                      border: `1px solid ${cfg.border}`,
                       borderRadius: 6,
-                      padding: '3px 8px',
+                      padding: '3px 9px',
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
                     }}>
-                      {st.label}
+                      {cfg.label}
                     </span>
                   </div>
 
                   {/* Progress bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ flex: 1, height: 5, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ width: `${progress}%`, height: '100%', backgroundColor: barColor, borderRadius: 99, transition: 'width 0.4s ease' }} />
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: barColor, minWidth: 36, textAlign: 'right' }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: barColor, minWidth: 38, textAlign: 'right', flexShrink: 0 }}>
                       {progress}%
                     </span>
                   </div>
@@ -301,6 +286,16 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
               )
             })
           )}
+        </div>
+
+        {/* Footer count */}
+        <div style={{ padding: isMobile ? '10px 14px' : '10px 20px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {filteredPrograms.length} program · {STATUS_CFG[activeTab]?.label}
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            Total {programs.length} program
+          </span>
         </div>
       </div>
 
