@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 function FileIcon({ color, size = 16 }: { color: string; size?: number }) {
   return (
@@ -40,7 +41,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
       ? `https://drive.google.com/uc?export=download&id=${fileId}`
       : driveOpenUrl
 
-  return (
+  return createPortal(
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
       style={{
@@ -163,6 +164,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
