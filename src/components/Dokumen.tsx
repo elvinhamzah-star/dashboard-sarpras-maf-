@@ -6,6 +6,7 @@ import {
 import { adminInsert, adminDelete } from '../lib/adminApi'
 import { STATUS_COLORS, STATUS_BG, getFileEmbedUrl, formatRupiah, formatTanggal } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import PdfViewerModal from './PdfViewerModal'
 
 interface Props {
   isAdmin: boolean
@@ -14,7 +15,7 @@ interface Props {
   initialCategory?: DocCategory | null
 }
 
-const CATS: DocCategory[] = ['rab_detail', 'kontrak', 'bukti_transaksi']
+const BASE_CATS: DocCategory[] = ['rab_detail', 'bukti_transaksi']
 const CAT_LABEL: Record<DocCategory, string> = {
   rab_detail: 'RAB',
   kontrak: 'Kontrak',
@@ -34,135 +35,6 @@ function FileIcon({ color, size = 16 }: { color: string; size?: number }) {
       <line x1="16" y1="13" x2="8" y2="13"/>
       <line x1="16" y1="17" x2="8" y2="17"/>
     </svg>
-  )
-}
-
-function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
-  const [iframeLoaded, setIframeLoaded] = useState(false)
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
-
-  const sheetMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
-  const driveOpenUrl = sheetMatch
-    ? `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}`
-    : url.replace('/preview', '/view')
-
-  return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 500,
-        backgroundColor: 'rgba(0,0,0,0.78)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '20px 16px',
-      }}
-    >
-      <div style={{
-        width: '100%', maxWidth: 1060,
-        display: 'flex', flexDirection: 'column',
-        backgroundColor: 'var(--bg)',
-        borderRadius: 18,
-        overflow: 'hidden',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)',
-        maxHeight: '92vh',
-      }}>
-        {/* Modal header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)',
-          backgroundColor: 'var(--card)', gap: 12, flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <FileIcon color="var(--blue)" size={16} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {name}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <a
-              href={driveOpenUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 12, fontWeight: 600, color: 'var(--blue)',
-                backgroundColor: 'rgba(26,111,232,0.08)',
-                border: '1px solid rgba(26,111,232,0.18)',
-                borderRadius: 7, padding: '5px 11px', textDecoration: 'none',
-              }}
-            >
-              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-              Buka di Drive
-            </a>
-            <button
-              onClick={onClose}
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                border: '1px solid var(--border-subtle)',
-                backgroundColor: 'var(--bg)', color: 'var(--text-muted)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, lineHeight: 1, fontFamily: 'inherit',
-              }}
-            >×</button>
-          </div>
-        </div>
-        {/* iframe area — document viewer */}
-        <div style={{
-          flex: 1, minHeight: 0,
-          backgroundColor: '#dde1e8',
-          padding: '14px 16px 16px',
-          overflowX: 'hidden',
-          overflowY: 'hidden',
-          position: 'relative',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          {!iframeLoaded && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 12, backgroundColor: '#dde1e8', zIndex: 2,
-            }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                border: '3px solid rgba(0,0,0,0.12)',
-                borderTopColor: 'var(--blue)',
-                animation: 'spin 0.8s linear infinite',
-              }} />
-              <span style={{ fontSize: 13, color: '#666' }}>Memuat dokumen...</span>
-              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-            </div>
-          )}
-          {/* Document card with depth */}
-          <div style={{
-            flex: 1,
-            borderRadius: 10,
-            overflow: 'hidden',
-            boxShadow: '0 6px 28px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
-            opacity: iframeLoaded ? 1 : 0,
-            transition: 'opacity 0.25s ease',
-          }}>
-            <iframe
-              src={url}
-              style={{
-                width: '100%', height: 'calc(92vh - 112px)',
-                border: 'none', display: 'block',
-              }}
-              allow="autoplay"
-              title={name}
-              onLoad={() => setIframeLoaded(true)}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -229,13 +101,22 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
     docs.filter(d => d.program_id === programId && d.category === cat)
         .sort((a, b) => a.urutan - b.urutan)
 
-  const getCat = (programId: string): DocCategory => catMap[programId] ?? 'rab_detail'
+  const getCatsFor = (programId: string): DocCategory[] => {
+    const hasKontrak = getDocsFor(programId, 'kontrak').length > 0
+    return hasKontrak ? ['rab_detail', 'kontrak', 'bukti_transaksi'] : BASE_CATS
+  }
+
+  const getCat = (programId: string): DocCategory => {
+    const cats = getCatsFor(programId)
+    const stored = catMap[programId]
+    return stored && cats.includes(stored) ? stored : 'rab_detail'
+  }
 
   const setCat = (programId: string, cat: DocCategory) =>
     setCatMap(prev => ({ ...prev, [programId]: cat }))
 
   const totalDocs = (programId: string) =>
-    CATS.reduce((sum, c) => sum + getDocsFor(programId, c).length, 0)
+    (['rab_detail', 'kontrak', 'bukti_transaksi'] as DocCategory[]).reduce((sum, c) => sum + getDocsFor(programId, c).length, 0)
 
   const openFile = (url: string, name: string) => {
     const embedUrl = getFileEmbedUrl(url)
@@ -292,7 +173,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
           Dokumen Pekerjaan
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
-          RAB, Kontrak, dan Bukti Transaksi per pekerjaan
+          RAB dan Bukti Transaksi per pekerjaan · Kontrak tampil bila ada
         </p>
       </div>
 
@@ -400,7 +281,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
                   <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
                     {/* Category tabs */}
                     <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderBottom: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
-                      {CATS.map(c => {
+                      {getCatsFor(p.id).map(c => {
                         const autoBonus = c === 'rab_detail' && p.link_rab_detail ? 1 : c === 'bukti_transaksi' ? getTxBukti(p.id).length : 0
                         const cnt = getDocsFor(p.id, c).length + autoBonus
                         const isActive = cat === c

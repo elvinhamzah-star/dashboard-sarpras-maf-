@@ -39,6 +39,7 @@ export default function App() {
   const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
   const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
+  const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function App() {
     setDokumenProgramId(null)
     setDokumenCategory(null)
     setGaleriProgramId(null)
+    if (page !== 'beranda') setBerandaReturnDetailId(null)
     if (isMobile) setSidebarOpen(false)
   }
 
@@ -110,10 +112,10 @@ export default function App() {
 
     switch (currentPage) {
       case 'beranda':
-        return <Beranda isAdmin={isAdmin} role={role} onNavigate={(page, pid, cat) => {
+        return <Beranda isAdmin={isAdmin} role={role} initialDetailId={berandaReturnDetailId} onInitialDetailConsumed={() => setBerandaReturnDetailId(null)} onNavigate={(page, pid, cat) => {
           setCurrentPage(page as Page)
           if (page === 'dokumen') { setDokumenProgramId(pid ?? null); setDokumenCategory((cat as DocCategory) ?? null) }
-          if (page === 'galeri') { setGaleriProgramId(pid ?? null) }
+          if (page === 'galeri') { setGaleriProgramId(pid ?? null); setBerandaReturnDetailId(pid ?? null) }
         }} />
       case 'pekerjaan':
         return (

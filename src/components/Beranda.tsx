@@ -14,6 +14,8 @@ interface BerandaProps {
   isAdmin: boolean
   role: 'pbb' | 'maf' | null
   onNavigate?: (page: string, programId?: string, category?: string) => void
+  initialDetailId?: string | null
+  onInitialDetailConsumed?: () => void
 }
 
 const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
@@ -54,7 +56,7 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-export default function Beranda({ isAdmin, role, onNavigate }: BerandaProps) {
+export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed }: BerandaProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [programs, setPrograms] = useState<Program[]>([])
@@ -67,6 +69,13 @@ export default function Beranda({ isAdmin, role, onNavigate }: BerandaProps) {
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (initialDetailId) {
+      setDetailProgramId(initialDetailId)
+      onInitialDetailConsumed?.()
+    }
+  }, [initialDetailId])
 
   useEffect(() => {
     const load = async () => {
