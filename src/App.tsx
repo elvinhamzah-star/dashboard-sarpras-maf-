@@ -110,7 +110,11 @@ export default function App() {
 
     switch (currentPage) {
       case 'beranda':
-        return <Beranda isAdmin={isAdmin} role={role} />
+        return <Beranda isAdmin={isAdmin} role={role} onNavigate={(page, pid, cat) => {
+          setCurrentPage(page as Page)
+          if (page === 'dokumen') { setDokumenProgramId(pid ?? null); setDokumenCategory((cat as DocCategory) ?? null) }
+          if (page === 'galeri') { setGaleriProgramId(pid ?? null) }
+        }} />
       case 'pekerjaan':
         return (
           <Pekerjaan

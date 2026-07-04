@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
-  fetchPrograms, fetchProgramDocuments,
-  Program, ProgramDocument, DocCategory, hasMafCredentials,
+  fetchPrograms, fetchProgramDocuments, fetchTransactions,
+  Program, ProgramDocument, Transaction, DocCategory, hasMafCredentials,
 } from '../lib/supabase'
 import { adminInsert, adminDelete } from '../lib/adminApi'
-import { STATUS_COLORS, STATUS_BG, extractDriveFileId } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, getFileEmbedUrl, formatRupiah, formatTanggal } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 
 interface Props {
@@ -38,13 +38,18 @@ function FileIcon({ color, size = 16 }: { color: string; size?: number }) {
 }
 
 function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
+  const [iframeLoaded, setIframeLoaded] = useState(false)
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const driveOpenUrl = url.replace('/preview', '/view')
+  const sheetMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
+  const driveOpenUrl = sheetMatch
+    ? `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}`
+    : url.replace('/preview', '/view')
 
   return (
     <div
@@ -58,13 +63,13 @@ function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onC
       }}
     >
       <div style={{
-        width: '100%', maxWidth: 920,
+        width: '100%', maxWidth: 1060,
         display: 'flex', flexDirection: 'column',
         backgroundColor: 'var(--bg)',
-        borderRadius: 16,
+        borderRadius: 18,
         overflow: 'hidden',
-        boxShadow: '0 40px 100px rgba(0,0,0,0.55)',
-        maxHeight: '90vh',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)',
+        maxHeight: '92vh',
       }}>
         {/* Modal header */}
         <div style={{
@@ -109,14 +114,52 @@ function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onC
             >×</button>
           </div>
         </div>
-        {/* iframe area */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <iframe
-            src={url}
-            style={{ width: '100%', height: '76vh', border: 'none', display: 'block' }}
-            allow="autoplay"
-            title={name}
-          />
+        {/* iframe area — document viewer */}
+        <div style={{
+          flex: 1, minHeight: 0,
+          backgroundColor: '#dde1e8',
+          padding: '14px 16px 16px',
+          overflowX: 'hidden',
+          overflowY: 'hidden',
+          position: 'relative',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {!iframeLoaded && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 12, backgroundColor: '#dde1e8', zIndex: 2,
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                border: '3px solid rgba(0,0,0,0.12)',
+                borderTopColor: 'var(--blue)',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              <span style={{ fontSize: 13, color: '#666' }}>Memuat dokumen...</span>
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+            </div>
+          )}
+          {/* Document card with depth */}
+          <div style={{
+            flex: 1,
+            borderRadius: 10,
+            overflow: 'hidden',
+            boxShadow: '0 6px 28px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
+            opacity: iframeLoaded ? 1 : 0,
+            transition: 'opacity 0.25s ease',
+          }}>
+            <iframe
+              src={url}
+              style={{
+                width: '100%', height: 'calc(92vh - 112px)',
+                border: 'none', display: 'block',
+              }}
+              allow="autoplay"
+              title={name}
+              onLoad={() => setIframeLoaded(true)}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -126,6 +169,7 @@ function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onC
 export default function Dokumen({ isAdmin, role, initialProgramId, initialCategory }: Props) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [docs, setDocs] = useState<ProgramDocument[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(initialProgramId ?? null)
@@ -141,10 +185,20 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const width = useWindowWidth()
   const isMobile = width < 768
+  const expandedElRef = useRef<HTMLDivElement | null>(null)
+
+  // When switching accordion items, scroll the newly-opened one into view
+  useEffect(() => {
+    if (!expandedId) return
+    const timer = setTimeout(() => {
+      expandedElRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 30)
+    return () => clearTimeout(timer)
+  }, [expandedId])
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [pRes, dRes] = await Promise.all([fetchPrograms(), fetchProgramDocuments()])
+    const [pRes, dRes, tRes] = await Promise.all([fetchPrograms(), fetchProgramDocuments(), fetchTransactions()])
     if (pRes.data) {
       const hasMaf = hasMafCredentials()
       setPrograms(
@@ -155,6 +209,8 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
     }
     // Graceful: table may not exist yet, treat as empty
     setDocs((dRes.data as ProgramDocument[] | null) ?? [])
+    // Only keep transactions that have bukti links
+    setTransactions((tRes.data ?? []).filter(t => t.link_bukti))
     setLoading(false)
   }, [role])
 
@@ -181,13 +237,19 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
   const totalDocs = (programId: string) =>
     CATS.reduce((sum, c) => sum + getDocsFor(programId, c).length, 0)
 
-  const openPdf = (doc: ProgramDocument) => {
-    const fileId = extractDriveFileId(doc.file_url)
-    if (fileId) {
-      setPdfViewer({ url: `https://drive.google.com/file/d/${fileId}/preview`, name: doc.nama_file })
-    } else {
-      window.open(doc.file_url, '_blank')
-    }
+  const openFile = (url: string, name: string) => {
+    const embedUrl = getFileEmbedUrl(url)
+    if (embedUrl) setPdfViewer({ url: embedUrl, name })
+    else window.open(url, '_blank')
+  }
+
+  // Auto-populate Bukti Transaksi from transactions table (matched by program name)
+  const getTxBukti = (programId: string): Transaction[] => {
+    const program = programs.find(p => p.id === programId)
+    if (!program) return []
+    return transactions.filter(tx =>
+      tx.nama_pekerjaan === program.nama_pekerjaan && tx.link_bukti
+    )
   }
 
   const handleAdd = async () => {
@@ -264,12 +326,17 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
             const isExpanded = expandedId === p.id
             const cat = getCat(p.id)
             const catDocs = getDocsFor(p.id, cat)
-            const total = totalDocs(p.id)
+            const txBukti = cat === 'bukti_transaksi' ? getTxBukti(p.id) : []
+            const rabLink = p.link_rab_detail ?? null
+            const rabAutoEntry = cat === 'rab_detail' && rabLink ? rabLink : null
+            const rabCount = rabLink ? 1 : 0
+            const total = CATS.reduce((sum, c) => sum + getDocsFor(p.id, c).length, 0) + getTxBukti(p.id).length + rabCount
             const isAddingHere = !!(addForm && addForm.programId === p.id && addForm.category === cat)
 
             return (
               <div
                 key={p.id}
+                ref={isExpanded ? expandedElRef : null}
                 style={{
                   borderRadius: 12,
                   border: isExpanded ? '1.5px solid rgba(26,111,232,0.3)' : '1.5px solid var(--border-subtle)',
@@ -334,7 +401,8 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
                     {/* Category tabs */}
                     <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderBottom: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
                       {CATS.map(c => {
-                        const cnt = getDocsFor(p.id, c).length
+                        const autoBonus = c === 'rab_detail' && p.link_rab_detail ? 1 : c === 'bukti_transaksi' ? getTxBukti(p.id).length : 0
+                        const cnt = getDocsFor(p.id, c).length + autoBonus
                         const isActive = cat === c
                         return (
                           <button
@@ -366,32 +434,35 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
 
                     {/* Document list for active category */}
                     <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {catDocs.length === 0 && !isAddingHere && (
+                      {catDocs.length === 0 && txBukti.length === 0 && !rabAutoEntry && !isAddingHere && (
                         <div style={{
                           padding: '24px 16px', textAlign: 'center',
                           color: 'var(--text-muted)', fontSize: 13,
                           borderRadius: 10, border: '1px dashed var(--border-subtle)',
-                          backgroundColor: 'var(--bg)',
+                          backgroundColor: 'var(--bg)', fontStyle: cat === 'kontrak' ? 'italic' : 'normal',
                         }}>
-                          Belum ada {CAT_LABEL[cat]}
+                          {cat === 'kontrak'
+                            ? 'Tidak ada kontrak untuk pekerjaan ini'
+                            : `Belum ada ${CAT_LABEL[cat]}`}
                         </div>
                       )}
 
                       {catDocs.map(doc => {
-                        const fileId = extractDriveFileId(doc.file_url)
                         const isDeleting = deletingIds.has(doc.id)
                         return (
                           <div
                             key={doc.id}
+                            onClick={() => openFile(doc.file_url, doc.nama_file)}
+                            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = `${CAT_COLOR[cat]}10` }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--bg)' }}
                             style={{
                               display: 'flex', alignItems: 'center', gap: 10,
-                              padding: '10px 14px',
+                              padding: '10px 14px', cursor: 'pointer',
                               backgroundColor: 'var(--bg)',
                               border: '1px solid var(--border-subtle)',
-                              borderRadius: 10,
+                              borderRadius: 10, transition: 'background-color 0.12s',
                             }}
                           >
-                            {/* File icon */}
                             <div style={{
                               width: 36, height: 36, borderRadius: 9, flexShrink: 0,
                               backgroundColor: `${CAT_COLOR[cat]}18`,
@@ -399,7 +470,6 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
                             }}>
                               <FileIcon color={CAT_COLOR[cat]} size={16} />
                             </div>
-                            {/* Name */}
                             <span style={{
                               flex: 1, minWidth: 0,
                               fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
@@ -407,41 +477,99 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
                             }}>
                               {doc.nama_file}
                             </span>
-                            {/* Actions */}
-                            <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+                            {isAdmin && (
                               <button
-                                onClick={() => openPdf(doc)}
+                                onClick={e => { e.stopPropagation(); handleDelete(doc) }}
+                                disabled={isDeleting}
                                 style={{
-                                  padding: '5px 14px', borderRadius: 7, border: 'none',
-                                  cursor: 'pointer', fontFamily: 'inherit',
-                                  backgroundColor: fileId ? CAT_COLOR[cat] : 'rgba(26,111,232,0.1)',
-                                  color: fileId ? '#fff' : 'var(--blue)',
-                                  fontSize: 12, fontWeight: 600,
+                                  width: 28, height: 28, borderRadius: 7,
+                                  border: '1px solid var(--border-subtle)',
+                                  backgroundColor: 'var(--card)',
+                                  color: isDeleting ? 'var(--text-muted)' : '#dc2626',
+                                  cursor: isDeleting ? 'default' : 'pointer',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 16, lineHeight: 1, fontFamily: 'inherit', flexShrink: 0,
                                 }}
                               >
-                                {fileId ? 'Preview' : 'Buka ↗'}
+                                {isDeleting ? '…' : '×'}
                               </button>
-                              {isAdmin && (
-                                <button
-                                  onClick={() => handleDelete(doc)}
-                                  disabled={isDeleting}
-                                  style={{
-                                    width: 28, height: 28, borderRadius: 7,
-                                    border: '1px solid var(--border-subtle)',
-                                    backgroundColor: 'var(--card)',
-                                    color: isDeleting ? 'var(--text-muted)' : '#dc2626',
-                                    cursor: isDeleting ? 'default' : 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 16, lineHeight: 1, fontFamily: 'inherit',
-                                  }}
-                                >
-                                  {isDeleting ? '…' : '×'}
-                                </button>
-                              )}
-                            </div>
+                            )}
                           </div>
                         )
                       })}
+
+                      {/* Auto-entry: RAB Detail from programs.link_rab_detail */}
+                      {rabAutoEntry && (
+                        <div
+                          onClick={() => openFile(rabAutoEntry, `RAB ${p.nama_pekerjaan}`)}
+                          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = `${CAT_COLOR.rab_detail}10` }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--bg)' }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 14px', cursor: 'pointer',
+                            backgroundColor: 'var(--bg)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 10, transition: 'background-color 0.12s',
+                          }}
+                        >
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                            backgroundColor: 'rgba(26,111,232,0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <FileIcon color={CAT_COLOR.rab_detail} size={16} />
+                          </div>
+                          <span style={{
+                            flex: 1, minWidth: 0,
+                            fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            RAB {p.nama_pekerjaan}
+                          </span>
+                          <svg width="14" height="14" fill="none" stroke={CAT_COLOR.rab_detail} strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, opacity: 0.6 }}>
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </div>
+                      )}
+
+                      {/* Auto-populated Bukti Transaksi from transactions */}
+                      {txBukti.map(tx => (
+                        <div
+                          key={tx.id}
+                          onClick={() => openFile(tx.link_bukti!, tx.deskripsi || 'Bukti Transaksi')}
+                          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = `${CAT_COLOR.bukti_transaksi}10` }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--bg)' }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 14px', cursor: 'pointer',
+                            backgroundColor: 'var(--bg)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 10, transition: 'background-color 0.12s',
+                          }}
+                        >
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                            backgroundColor: 'rgba(217,119,6,0.12)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <FileIcon color={CAT_COLOR.bukti_transaksi} size={16} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {tx.deskripsi || 'Bukti Transaksi'}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                              {tx.tanggal ? formatTanggal(tx.tanggal) : ''}{tx.jumlah ? ` · ${formatRupiah(tx.jumlah)}` : ''}
+                            </div>
+                          </div>
+                          <svg width="14" height="14" fill="none" stroke={CAT_COLOR.bukti_transaksi} strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, opacity: 0.6 }}>
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </div>
+                      ))}
 
                       {/* Admin: add form */}
                       {isAdmin && isAddingHere && (

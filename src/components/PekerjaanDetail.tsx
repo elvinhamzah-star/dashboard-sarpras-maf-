@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, SubProgram, Program } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress, getFileEmbedUrl } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
@@ -29,6 +29,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   const [showEditCatatan, setShowEditCatatan] = useState(false)
   const [showEditDokumen, setShowEditDokumen] = useState(false)
   const [showEditProgram, setShowEditProgram] = useState(false)
+  const [fileViewer, setFileViewer] = useState<{ url: string; name: string } | null>(null)
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
 
   const load = async () => {
@@ -401,75 +402,67 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'RAB Detail', url: program.link_rab_detail, navPage: 'dokumen', category: 'rab_detail' },
-                { label: 'Kontrak', url: program.link_kontrak, navPage: 'dokumen', category: 'kontrak' },
-                { label: 'Dokumentasi', url: program.link_dokumentasi, navPage: 'galeri', category: undefined },
-                { label: 'Bukti Transaksi', url: program.link_bukti_transaksi, navPage: 'dokumen', category: 'bukti_transaksi' },
-              ].map(doc => (
-                <div
-                  key={doc.label}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '13px 16px',
-                    borderRadius: 10,
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid var(--border-subtle)',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{doc.label}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, wordBreak: 'break-all' }}>
-                      {doc.url ? doc.url.substring(0, 60) + (doc.url.length > 60 ? '...' : '') : 'Dokumen tidak tersedia'}
+                { label: 'RAB Detail', url: program.link_rab_detail, type: 'file' as const, emptyText: 'Akan dilengkapi' },
+                { label: 'Kontrak', url: program.link_kontrak, type: 'file' as const, emptyText: 'Tidak ada kontrak untuk pekerjaan ini' },
+                { label: 'Dokumentasi', url: program.link_dokumentasi, type: 'galeri' as const, emptyText: 'Belum ada dokumentasi' },
+                { label: 'Bukti Transaksi', url: program.link_bukti_transaksi, type: 'file' as const, emptyText: 'Akan dilengkapi' },
+              ].map(doc => {
+                const embedUrl = doc.url ? getFileEmbedUrl(doc.url) : null
+                const hasFile = !!doc.url
+                return (
+                  <div
+                    key={doc.label}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      gap: 12, padding: '13px 16px', borderRadius: 10,
+                      backgroundColor: hasFile ? 'var(--bg)' : 'var(--surface-min)',
+                      border: `1px solid ${hasFile ? 'var(--border-subtle)' : 'var(--border-subtle)'}`,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: hasFile ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>
+                        {doc.label}
+                      </div>
+                      {!hasFile && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontStyle: 'italic' }}>
+                          {doc.emptyText}
+                        </div>
+                      )}
                     </div>
+                    {hasFile && (
+                      doc.type === 'galeri' ? (
+                        <button
+                          onClick={() => onNavigate?.('galeri', program.id)}
+                          style={{
+                            backgroundColor: 'rgba(124,58,237,0.08)', color: '#7C3AED',
+                            padding: '6px 13px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            cursor: 'pointer', flexShrink: 0, border: '1px solid rgba(124,58,237,0.15)',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          Lihat Foto
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (embedUrl) setFileViewer({ url: embedUrl, name: doc.label })
+                            else if (doc.url) window.open(doc.url, '_blank')
+                          }}
+                          style={{
+                            backgroundColor: 'rgba(26,111,232,0.08)', color: 'var(--blue)',
+                            padding: '6px 13px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            cursor: 'pointer', flexShrink: 0, border: '1px solid rgba(26,111,232,0.15)',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          Preview
+                        </button>
+                      )
+                    )}
                   </div>
-                  {doc.url ? (
-                    onNavigate ? (
-                      <button
-                        onClick={() => onNavigate(doc.navPage, program.id, doc.category)}
-                        style={{
-                          backgroundColor: 'rgba(26,111,232,0.08)',
-                          color: 'var(--blue)',
-                          padding: '6px 13px',
-                          borderRadius: 8,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                          border: '1px solid rgba(26,111,232,0.15)',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        Buka
-                      </button>
-                    ) : (
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          backgroundColor: 'rgba(26,111,232,0.08)',
-                          color: 'var(--blue)',
-                          padding: '6px 13px',
-                          borderRadius: 8,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          textDecoration: 'none',
-                          flexShrink: 0,
-                          border: '1px solid rgba(26,111,232,0.15)',
-                        }}
-                      >
-                        Buka ↗
-                      </a>
-                    )
-                  ) : (
-                    <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
@@ -766,6 +759,53 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
             load()
           }}
         />
+      )}
+
+      {/* Inline file / sheet viewer */}
+      {fileViewer && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setFileViewer(null) }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 600,
+            backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px 16px',
+          }}
+        >
+          <div style={{
+            width: '100%', maxWidth: 940,
+            display: 'flex', flexDirection: 'column',
+            backgroundColor: 'var(--bg)', borderRadius: 16,
+            overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.55)',
+            maxHeight: '90vh',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '13px 18px', borderBottom: '1px solid var(--border-subtle)',
+              backgroundColor: 'var(--card)', gap: 12, flexShrink: 0,
+            }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                {fileViewer.name}
+              </span>
+              <button
+                onClick={() => setFileViewer(null)}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--bg)', color: 'var(--text-muted)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, lineHeight: 1, fontFamily: 'inherit',
+                }}
+              >×</button>
+            </div>
+            <iframe
+              src={fileViewer.url}
+              style={{ width: '100%', height: '76vh', border: 'none', display: 'block' }}
+              allow="autoplay"
+              title={fileViewer.name}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

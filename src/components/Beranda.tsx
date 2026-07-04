@@ -13,6 +13,7 @@ import PekerjaanDetail from './PekerjaanDetail'
 interface BerandaProps {
   isAdmin: boolean
   role: 'pbb' | 'maf' | null
+  onNavigate?: (page: string, programId?: string, category?: string) => void
 }
 
 const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
@@ -53,7 +54,7 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-export default function Beranda({ isAdmin, role }: BerandaProps) {
+export default function Beranda({ isAdmin, role, onNavigate }: BerandaProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [programs, setPrograms] = useState<Program[]>([])
@@ -379,6 +380,10 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
               programId={detailProgramId}
               isAdmin={isAdmin}
               onBack={() => setDetailProgramId(null)}
+              onNavigate={onNavigate ? (page, pid, cat) => {
+                setDetailProgramId(null)
+                onNavigate(page, pid, cat)
+              } : undefined}
             />
           </div>
         </div>

@@ -73,6 +73,18 @@ export function isValidDriveLink(link: string): boolean {
   return link.includes('/d/') && link.includes('drive.google.com')
 }
 
+// Returns an embeddable iframe URL for Drive files, Google Sheets, or null if unknown
+export function getFileEmbedUrl(url: string): string | null {
+  if (!url) return null
+  // Google Sheets → htmlview is designed for iframe embedding (export?format=pdf triggers download, not inline)
+  const sheetMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
+  if (sheetMatch) return `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}/htmlview?embedded=true`
+  // Google Drive file (PDF, image, video)
+  const fileId = extractDriveFileId(url)
+  if (fileId) return `https://drive.google.com/file/d/${fileId}/preview`
+  return null
+}
+
 // Untuk jenis_pekerjaan 'Operasional' (Man Power), progress dihitung dari realisasi dana
 export function getEffectiveProgress(p: { jenis_pekerjaan: string; progress_percent: number | string; total_anggaran: number; realisasi_terkini: number }): number {
   if (p.jenis_pekerjaan === 'Operasional' && p.total_anggaran > 0) {
