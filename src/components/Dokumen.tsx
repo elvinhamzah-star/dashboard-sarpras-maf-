@@ -75,7 +75,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
       const hasMaf = hasMafCredentials()
       setPrograms(
         role === 'maf' && hasMaf
-          ? pRes.data.filter(p => p.jenis_pekerjaan === 'Operasional' && p.id !== 'P-024')
+          ? pRes.data.filter(p => p.id !== 'P-024')
           : pRes.data
       )
     }
