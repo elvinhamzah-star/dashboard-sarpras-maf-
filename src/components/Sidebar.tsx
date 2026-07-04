@@ -35,16 +35,6 @@ const menuItems = [
     ),
   },
   {
-    id: 'keuangan',
-    label: 'Keuangan',
-    icon: (
-      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-        <rect x="2" y="5" width="20" height="14" rx="2"/>
-        <line x1="2" y1="10" x2="22" y2="10"/>
-      </svg>
-    ),
-  },
-  {
     id: 'dokumen',
     label: 'Dokumen',
     icon: (
@@ -64,6 +54,16 @@ const menuItems = [
         <rect x="3" y="3" width="18" height="18" rx="2"/>
         <circle cx="8.5" cy="8.5" r="1.5"/>
         <path d="M21 15l-5-5L5 21"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'keuangan',
+    label: 'Keuangan',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <line x1="2" y1="10" x2="22" y2="10"/>
       </svg>
     ),
   },

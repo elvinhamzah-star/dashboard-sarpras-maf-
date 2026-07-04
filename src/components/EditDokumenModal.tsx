@@ -38,7 +38,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
   }
 
   const fields = [
-    { label: 'Link RAB Detail', value: rabDetail, onChange: setRabDetail, placeholder: 'https://drive.google.com/...' },
+    { label: 'Link RAB', value: rabDetail, onChange: setRabDetail, placeholder: 'https://drive.google.com/...' },
     { label: 'Link Dokumentasi', value: dokumentasi, onChange: setDokumentasi, placeholder: 'https://drive.google.com/...' },
     { label: 'Link Bukti Transaksi', value: buktiTransaksi, onChange: setBuktiTransaksi, placeholder: 'https://drive.google.com/...' },
   ]

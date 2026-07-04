@@ -82,7 +82,7 @@ const ICONS: Record<string, React.ReactNode> = {
 export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose }: Props) {
   const width = useWindowWidth()
   const isMobile = width < 600
-  const ps = isMobile ? 16 : 20
+  const ps = isMobile ? 16 : 24
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
   const withRealisasi = programs.filter(p => (p.realisasi_terkini || 0) > 0)
@@ -100,7 +100,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
   const rowSt = (isLast: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: 12,
-    padding: `10px ${ps}px`,
+    padding: `13px ${ps}px`,
     borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
   })
 
@@ -300,7 +300,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     transform: 'translate(-50%, -50%)',
     backgroundColor: 'var(--card)',
     borderRadius: 16,
-    width: '92%', maxWidth: 480, maxHeight: '82vh',
+    width: '92%', maxWidth: 640, maxHeight: '82vh',
     display: 'flex', flexDirection: 'column',
     boxShadow: '0 24px 64px rgba(0,0,0,0.16)',
     zIndex: 1001,
@@ -365,7 +365,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         </div>
 
         {/* Footer */}
-        <div style={{ padding: `10px ${ps}px`, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', flexShrink: 0 }}>
+        <div style={{ padding: `12px ${ps}px`, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />

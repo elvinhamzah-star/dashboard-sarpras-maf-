@@ -16,7 +16,7 @@ interface Props {
 
 const CATS: DocCategory[] = ['rab_detail', 'kontrak', 'bukti_transaksi']
 const CAT_LABEL: Record<DocCategory, string> = {
-  rab_detail: 'RAB Detail',
+  rab_detail: 'RAB',
   kontrak: 'Kontrak',
   bukti_transaksi: 'Bukti Transaksi',
 }
@@ -292,7 +292,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
           Dokumen Pekerjaan
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
-          RAB Detail, Kontrak, dan Bukti Transaksi per pekerjaan
+          RAB, Kontrak, dan Bukti Transaksi per pekerjaan
         </p>
       </div>
 

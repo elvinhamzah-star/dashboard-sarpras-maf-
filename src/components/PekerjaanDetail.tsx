@@ -402,7 +402,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'RAB Detail', url: program.link_rab_detail, type: 'file' as const, emptyText: 'Akan dilengkapi' },
+                { label: 'RAB', url: program.link_rab_detail, type: 'file' as const, emptyText: 'Akan dilengkapi' },
                 { label: 'Kontrak', url: program.link_kontrak, type: 'file' as const, emptyText: 'Tidak ada kontrak untuk pekerjaan ini' },
                 { label: 'Dokumentasi', url: program.link_dokumentasi, type: 'galeri' as const, emptyText: 'Belum ada dokumentasi' },
                 { label: 'Bukti Transaksi', url: program.link_bukti_transaksi, type: 'file' as const, emptyText: 'Akan dilengkapi' },

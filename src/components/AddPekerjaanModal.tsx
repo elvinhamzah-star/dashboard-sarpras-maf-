@@ -100,7 +100,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     { key: 'realisasi_terkini', label: 'Realisasi Terkini (Rp)', type: 'number' },
     { key: 'vendor', label: 'Vendor' },
     { key: 'isu_utama', label: 'Isu Utama' },
-    { key: 'link_rab_detail', label: 'Link RAB Detail (opsional)' },
+    { key: 'link_rab_detail', label: 'Link RAB (opsional)' },
     { key: 'link_dokumentasi', label: 'Link Dokumentasi (opsional)' },
     { key: 'link_bukti_transaksi', label: 'Link Bukti Transaksi (opsional)' },
   ]
