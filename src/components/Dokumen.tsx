@@ -562,7 +562,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
                               {tx.deskripsi || 'Bukti Transaksi'}
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                              {tx.tanggal ? formatTanggal(tx.tanggal) : ''}{tx.jumlah ? ` · ${formatRupiah(tx.jumlah)}` : ''}
+                              {tx.tanggal ? formatTanggal(tx.tanggal) : ''}{tx.nominal ? ` · ${formatRupiah(tx.nominal)}` : ''}
                             </div>
                           </div>
                           <svg width="14" height="14" fill="none" stroke={CAT_COLOR.bukti_transaksi} strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, opacity: 0.6 }}>
