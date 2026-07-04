@@ -6,16 +6,18 @@ import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
 import EditDokumenModal from './EditDokumenModal'
+import EditProgramModal from './EditProgramModal'
 
 interface PekerjaanDetailProps {
   programId: string
   isAdmin: boolean
   onBack: () => void
+  onNavigate?: (page: string, programId?: string, category?: string) => void
 }
 
 type Tab = 'Ringkasan' | 'Dokumen' | 'Sub Pekerjaan'
 
-export default function PekerjaanDetail({ programId, isAdmin, onBack }: PekerjaanDetailProps) {
+export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate }: PekerjaanDetailProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const isNarrow = width < 1100
@@ -26,6 +28,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [showEditCatatan, setShowEditCatatan] = useState(false)
   const [showEditDokumen, setShowEditDokumen] = useState(false)
+  const [showEditProgram, setShowEditProgram] = useState(false)
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
 
   const load = async () => {
@@ -323,7 +326,19 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
       >
         {activeTab === 'Ringkasan' && (
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, marginTop: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowEditProgram(true)}
+                  style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <tbody>
@@ -386,9 +401,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'RAB Detail', url: program.link_rab_detail },
-                { label: 'Dokumentasi', url: program.link_dokumentasi },
-                { label: 'Bukti Transaksi', url: program.link_bukti_transaksi },
+                { label: 'RAB Detail', url: program.link_rab_detail, navPage: 'dokumen', category: 'rab_detail' },
+                { label: 'Kontrak', url: program.link_kontrak, navPage: 'dokumen', category: 'kontrak' },
+                { label: 'Dokumentasi', url: program.link_dokumentasi, navPage: 'galeri', category: undefined },
+                { label: 'Bukti Transaksi', url: program.link_bukti_transaksi, navPage: 'dokumen', category: 'bukti_transaksi' },
               ].map(doc => (
                 <div
                   key={doc.label}
@@ -411,25 +427,44 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
                     </div>
                   </div>
                   {doc.url ? (
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        backgroundColor: 'rgba(26,111,232,0.08)',
-                        color: 'var(--blue)',
-                        padding: '6px 13px',
-                        borderRadius: 8,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        flexShrink: 0,
-                        border: '1px solid rgba(26,111,232,0.15)',
-                        transition: 'all 0.12s',
-                      }}
-                    >
-                      Buka ↗
-                    </a>
+                    onNavigate ? (
+                      <button
+                        onClick={() => onNavigate(doc.navPage, program.id, doc.category)}
+                        style={{
+                          backgroundColor: 'rgba(26,111,232,0.08)',
+                          color: 'var(--blue)',
+                          padding: '6px 13px',
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          border: '1px solid rgba(26,111,232,0.15)',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        Buka
+                      </button>
+                    ) : (
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          backgroundColor: 'rgba(26,111,232,0.08)',
+                          color: 'var(--blue)',
+                          padding: '6px 13px',
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          flexShrink: 0,
+                          border: '1px solid rgba(26,111,232,0.15)',
+                        }}
+                      >
+                        Buka ↗
+                      </a>
+                    )
                   ) : (
                     <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
                   )}
@@ -717,6 +752,17 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack }: Pekerjaa
           onClose={() => setShowEditDokumen(false)}
           onSuccess={() => {
             setShowEditDokumen(false)
+            load()
+          }}
+        />
+      )}
+
+      {showEditProgram && program && (
+        <EditProgramModal
+          program={program}
+          onClose={() => setShowEditProgram(false)}
+          onSuccess={() => {
+            setShowEditProgram(false)
             load()
           }}
         />

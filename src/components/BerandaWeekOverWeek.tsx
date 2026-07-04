@@ -18,6 +18,7 @@ interface Props {
   progressLapangan: string | null
   freshnessDays: number | null
   lastUpdated: string
+  onProgramClick?: (id: string) => void
 }
 
 const TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
@@ -53,7 +54,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated }: Props) {
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick }: Props) {
   const [activeTab, setActiveTab] = useState('On Going')
   const width = useWindowWidth()
   const isNarrow = width < 1100
@@ -185,10 +186,18 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
               }}
               onMouseEnter={e => {
-                if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                if (!isActive) {
+                  const el = e.currentTarget as HTMLButtonElement
+                  el.style.borderColor = `${color}55`
+                  el.style.backgroundColor = `${color}0D`
+                }
               }}
               onMouseLeave={e => {
-                if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'
+                if (!isActive) {
+                  const el = e.currentTarget as HTMLButtonElement
+                  el.style.borderColor = '#D8DDE8'
+                  el.style.backgroundColor = 'var(--card)'
+                }
               }}
             >
               <div style={{
@@ -237,13 +246,21 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               ? Math.min(100, Math.round(((p.realisasi_terkini ?? 0) / p.total_anggaran) * 100))
               : 0
             return (
-              <div key={p.id} style={{
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: '1.5px solid var(--border-subtle)',
-                borderLeft: '3px solid #059669',
-                backgroundColor: 'var(--card)',
-              }}>
+              <div
+                key={p.id}
+                onClick={() => onProgramClick?.(p.id)}
+                onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(5,150,105,0.07)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: '1.5px solid var(--border-subtle)',
+                  borderLeft: '3px solid #059669',
+                  backgroundColor: 'var(--card)',
+                  cursor: onProgramClick ? 'pointer' : 'default',
+                  transition: 'background-color 0.15s',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
@@ -301,14 +318,23 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
         ) : activeTab === 'Perencanaan' ? (
           filteredPrograms.map(p => {
             const rencana = rencanaMap[p.id] || []
+            const hoverColor = rencana.length > 0 ? 'rgba(220,38,38,0.06)' : 'rgba(0,0,0,0.04)'
             return (
-              <div key={p.id} style={{
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: '1.5px solid var(--border-subtle)',
-                borderLeft: rencana.length > 0 ? '3px solid #DC2626' : '1.5px solid var(--border-subtle)',
-                backgroundColor: 'var(--card)',
-              }}>
+              <div
+                key={p.id}
+                onClick={() => onProgramClick?.(p.id)}
+                onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = hoverColor }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: '1.5px solid var(--border-subtle)',
+                  borderLeft: rencana.length > 0 ? '3px solid #DC2626' : '1.5px solid var(--border-subtle)',
+                  backgroundColor: 'var(--card)',
+                  cursor: onProgramClick ? 'pointer' : 'default',
+                  transition: 'background-color 0.15s',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
@@ -359,13 +385,21 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             const isOnHold = p.status === 'On Hold'
             const effectivePct = getEffectiveProgress(p)
             return (
-              <div key={p.id} style={{
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: `1.5px solid var(--border-subtle)`,
-                borderLeft: isOnHold ? `3px solid ${color}` : `3px solid ${color}`,
-                backgroundColor: 'var(--card)',
-              }}>
+              <div
+                key={p.id}
+                onClick={() => onProgramClick?.(p.id)}
+                onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = `${color}0D` }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: `1.5px solid var(--border-subtle)`,
+                  borderLeft: `3px solid ${color}`,
+                  backgroundColor: 'var(--card)',
+                  cursor: onProgramClick ? 'pointer' : 'default',
+                  transition: 'background-color 0.15s',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{

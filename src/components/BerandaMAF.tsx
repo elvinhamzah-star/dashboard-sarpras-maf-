@@ -13,10 +13,10 @@ interface Props {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  'On Going':    { label: 'Berjalan',    color: '#0A7BC8', bg: 'rgba(10,123,200,0.08)',  border: 'rgba(10,123,200,0.25)' },
-  'Selesai':     { label: 'Selesai',     color: '#1B5E2B', bg: 'rgba(27,94,43,0.08)',    border: 'rgba(27,94,43,0.25)' },
-  'On Hold':     { label: 'Tertunda',    color: '#D97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.25)' },
-  'Perencanaan': { label: 'Perencanaan', color: '#DC2626', bg: 'rgba(220,38,38,0.08)',   border: 'rgba(220,38,38,0.2)' },
+  'On Going':    { label: 'Berjalan',      color: '#0A7BC8', bg: 'rgba(10,123,200,0.08)',  border: 'rgba(10,123,200,0.25)' },
+  'Selesai':     { label: 'Selesai',       color: '#1B5E2B', bg: 'rgba(27,94,43,0.08)',    border: 'rgba(27,94,43,0.25)' },
+  'On Hold':     { label: 'Ditangguhkan',  color: '#D97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.25)' },
+  'Perencanaan': { label: 'Perencanaan',   color: '#DC2626', bg: 'rgba(220,38,38,0.08)',   border: 'rgba(220,38,38,0.2)' },
 }
 
 const STATUS_TABS = [
@@ -53,6 +53,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
       value: programs.length.toString(),
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
+      accentColor: '#1A6FE8',
       trend: `${selesai} selesai`,
       icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
     },
@@ -61,6 +62,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
       value: selesai.toString(),
       iconBg: 'rgba(5,150,105,0.1)',
       iconColor: '#059669',
+      accentColor: '#059669',
       trend: `Dari ${programs.length} program`,
       icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
     },
@@ -69,7 +71,8 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
       value: `${progressOverall.toFixed(1)}%`,
       iconBg: 'rgba(26,111,232,0.1)',
       iconColor: 'var(--blue)',
-      trend: `${onGoing} berjalan · ${onHold} tertunda`,
+      accentColor: '#1A6FE8',
+      trend: `${onGoing} berjalan · ${onHold} ditangguhkan`,
       icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
     },
   ]
@@ -135,15 +138,26 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
             <div
               key={card.label}
               onClick={() => setActiveModal(modalType)}
-              style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: isMobile ? '12px 13px' : '18px 20px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s ease, transform 0.18s ease', cursor: 'pointer' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}
+              style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: isMobile ? '12px 13px' : '18px 20px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease', cursor: 'pointer' }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLDivElement
+                el.style.borderColor = card.accentColor
+                el.style.backgroundColor = card.accentColor + '0D'
+                el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
+                el.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLDivElement
+                el.style.borderColor = 'var(--border-subtle)'
+                el.style.backgroundColor = 'var(--card)'
+                el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
+                el.style.transform = 'translateY(0)'
+              }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 8 : 14 }}>
+              <div style={{ marginBottom: isMobile ? 8 : 14 }}>
                 <div style={{ width: isMobile ? 28 : 36, height: isMobile ? 28 : 36, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
                   {card.icon}
                 </div>
-                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"/></svg>
               </div>
               <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
               <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6 }}>{card.value}</div>
@@ -209,13 +223,25 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
                   backgroundColor: isActive ? `${color}10` : 'var(--card)',
                   borderRadius: isMobile ? 12 : 14,
                   padding: isMobile ? '10px 12px' : '14px 16px',
-                  border: isActive ? `1.5px solid ${color}` : '1px solid #D8DDE8',
+                  border: isActive ? `1.5px solid ${color}` : '1px solid var(--border-subtle)',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
+                  transition: 'border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
                 }}
-                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)' }}
-                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
+                onMouseEnter={e => {
+                  if (!isActive && !isMobile) {
+                    e.currentTarget.style.borderColor = `${color}55`
+                    e.currentTarget.style.backgroundColor = `${color}0D`
+                    e.currentTarget.style.opacity = '0.75'
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive && !isMobile) {
+                    e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                    e.currentTarget.style.backgroundColor = 'var(--card)'
+                    e.currentTarget.style.opacity = '1'
+                  }
+                }}
               >
                 <div style={{
                   width: isMobile ? 24 : 32, height: isMobile ? 24 : 32, borderRadius: 7,
@@ -226,7 +252,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
                   {tab.icon}
                 </div>
                 <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isMobile ? 2 : 4 }}>
-                  {tab.key}
+                  {STATUS_CFG[tab.key]?.label ?? tab.key}
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                   {count}

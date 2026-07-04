@@ -8,6 +8,7 @@ import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
 import BerandaMAF from './BerandaMAF'
 import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
+import PekerjaanDetail from './PekerjaanDetail'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -64,6 +65,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
   const [loading, setLoading] = useState(true)
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
+  const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -136,6 +138,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconColor: 'var(--blue)',
       valueColor: 'var(--text-primary)',
       trend: `${displayPrograms.length} Pekerjaan`,
+      accentColor: '#1A6FE8',
     },
     {
       label: 'Total Realisasi',
@@ -145,6 +148,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconColor: '#059669',
       valueColor: 'var(--text-primary)',
       trend: `${penyerapan}% Terserap`,
+      accentColor: '#059669',
     },
     {
       label: 'Sisa Anggaran',
@@ -154,6 +158,7 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconColor: '#D97706',
       valueColor: 'var(--text-primary)',
       trend: 'Belum Digunakan',
+      accentColor: '#D97706',
     },
     {
       label: 'Penyerapan',
@@ -163,19 +168,9 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       iconColor: 'var(--blue)',
       valueColor: 'var(--text-primary)',
       trend: 'Dari Total Anggaran',
+      accentColor: '#1A6FE8',
     },
   ]
-
-  if (!loading && role === 'maf') {
-    return (
-      <BerandaMAF
-        programs={displayPrograms}
-        totalAnggaran={totalAnggaran}
-        totalRealisasi={totalRealisasi}
-        formattedLastUpdated={formattedLastUpdated}
-      />
-    )
-  }
 
   if (loading) {
     return (
@@ -272,21 +267,25 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
               padding: isMobile ? '12px 13px' : '18px 20px',
               border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.18s ease, transform 0.18s ease',
+              transition: 'border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
               cursor: 'pointer',
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'
+              el.style.borderColor = card.accentColor
+              el.style.backgroundColor = card.accentColor + '0D'
+              el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
               el.style.transform = 'translateY(-2px)'
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLDivElement
+              el.style.borderColor = 'var(--border-subtle)'
+              el.style.backgroundColor = 'var(--card)'
               el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 8 : 14 }}>
+            <div style={{ marginBottom: isMobile ? 8 : 14 }}>
               <div
                 style={{
                   width: isMobile ? 28 : 36,
@@ -302,9 +301,6 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
               >
                 <MetricIcon type={card.iconType} />
               </div>
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', opacity: 0.5, flexShrink: 0 }}>
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
             </div>
             <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>
               {card.label}
@@ -318,7 +314,19 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
       </div>
 
       <BerandaChart transactions={rawTransactions} />
-      <BerandaWeekOverWeek programs={displayPrograms} snapshots={snapshots} subPrograms={subPrograms} rencanaMap={rencanaMap} progressLapangan={progressLapangan} freshnessDays={freshnessDays} lastUpdated={mostRecentUpdate} />
+      <BerandaWeekOverWeek
+        programs={displayPrograms}
+        snapshots={snapshots}
+        subPrograms={subPrograms}
+        rencanaMap={rencanaMap}
+        progressLapangan={progressLapangan}
+        freshnessDays={freshnessDays}
+        lastUpdated={mostRecentUpdate}
+        onProgramClick={id => {
+          if (role === 'maf' && id === 'P-024') return
+          setDetailProgramId(id)
+        }}
+      />
 
       {activeModal && (
         <MetricDetailModal
@@ -328,6 +336,52 @@ export default function Beranda({ isAdmin, role }: BerandaProps) {
           totalRealisasi={totalRealisasi}
           onClose={() => setActiveModal(null)}
         />
+      )}
+
+      {detailProgramId && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setDetailProgramId(null) }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            backgroundColor: 'rgba(10,22,40,0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            padding: '24px 16px',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{
+            width: '100%', maxWidth: 820,
+            backgroundColor: 'var(--bg)',
+            borderRadius: 16,
+            boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}>
+            <button
+              onClick={() => setDetailProgramId(null)}
+              style={{
+                position: 'absolute', top: 14, right: 14, zIndex: 10,
+                width: 32, height: 32, borderRadius: 8,
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--card)',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <PekerjaanDetail
+              programId={detailProgramId}
+              isAdmin={isAdmin}
+              onBack={() => setDetailProgramId(null)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Laporan Pekanan */}

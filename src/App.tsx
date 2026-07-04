@@ -5,6 +5,8 @@ import Pekerjaan from './components/Pekerjaan'
 import PekerjaanDetail from './components/PekerjaanDetail'
 import Keuangan from './components/Keuangan'
 import Galeri from './components/Galeri'
+import Dokumen from './components/Dokumen'
+import type { DocCategory } from './lib/supabase'
 import RiwayatLaporan from './components/RiwayatLaporan'
 import LaporanBulanan from './components/LaporanBulanan'
 import PinModal from './components/PinModal'
@@ -13,7 +15,7 @@ import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
 import { clearMafCredentials } from './lib/supabase'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan'
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
@@ -33,6 +35,10 @@ export default function App() {
   // Pekerjaan filter state — persisted across detail navigation
   const [pekerjaanStatus, setPekerjaanStatus] = useState('Semua')
   const [pekerjaanSearch, setPekerjaanSearch] = useState('')
+  // Deep link state for Dokumen and Galeri pages (set by PekerjaanDetail onNavigate)
+  const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
+  const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
+  const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
@@ -49,6 +55,9 @@ export default function App() {
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page)
     setSelectedProgramId(null)
+    setDokumenProgramId(null)
+    setDokumenCategory(null)
+    setGaleriProgramId(null)
     if (isMobile) setSidebarOpen(false)
   }
 
@@ -85,6 +94,16 @@ export default function App() {
           programId={selectedProgramId}
           isAdmin={isAdmin}
           onBack={() => setSelectedProgramId(null)}
+          onNavigate={(page, pid, cat) => {
+            setSelectedProgramId(null)
+            setCurrentPage(page as Page)
+            if (page === 'dokumen') {
+              setDokumenProgramId(pid ?? null)
+              setDokumenCategory((cat as DocCategory) ?? null)
+            } else if (page === 'galeri') {
+              setGaleriProgramId(pid ?? null)
+            }
+          }}
         />
       )
     }
@@ -106,8 +125,10 @@ export default function App() {
         )
       case 'keuangan':
         return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} role={role} />
+      case 'dokumen':
+        return <Dokumen isAdmin={isAdmin} role={role} initialProgramId={dokumenProgramId} initialCategory={dokumenCategory} />
       case 'galeri':
-        return <Galeri isAdmin={isAdmin} />
+        return <Galeri isAdmin={isAdmin} initialProgramId={galeriProgramId} />
       case 'riwayat':
         return role === 'maf' ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       case 'laporan':
@@ -123,6 +144,7 @@ export default function App() {
     beranda: 'Beranda',
     pekerjaan: 'Pekerjaan',
     keuangan: 'Keuangan',
+    dokumen: 'Dokumen',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',

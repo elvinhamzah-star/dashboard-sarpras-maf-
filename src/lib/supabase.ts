@@ -19,6 +19,7 @@ export interface Program {
   target_selesai?: string
   isu_utama: string
   link_rab_detail?: string
+  link_kontrak?: string
   link_dokumentasi?: string
   link_bukti_transaksi?: string
   created_at: string
@@ -144,6 +145,21 @@ export const fetchProgramSnapshots = (programId: string) =>
 
 export const fetchWeeklyNotes = () =>
   supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })
+
+export type DocCategory = 'rab_detail' | 'kontrak' | 'bukti_transaksi'
+
+export interface ProgramDocument {
+  id: string
+  program_id: string
+  category: DocCategory
+  nama_file: string
+  file_url: string
+  urutan: number
+  created_at: string
+}
+
+export const fetchProgramDocuments = () =>
+  supabase.from('program_documents').select('*').order('urutan', { ascending: true })
 
 export interface MonthlyReport {
   id: number

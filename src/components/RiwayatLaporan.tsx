@@ -336,13 +336,13 @@ export default function RiwayatLaporan() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
-      <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+      <div style={{ padding: isMobile ? '16px 14px 0' : '28px 28px 0', flexShrink: 0 }}>
+        <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
           Riwayat Laporan
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
           Arsip Laporan Pekanan Per Minggu
-        </div>
+        </p>
       </div>
 
       {notes.length === 0 ? (

@@ -8,6 +8,7 @@ import EditDocumentationModal from './EditDocumentationModal'
 
 interface GaleriProps {
   isAdmin?: boolean
+  initialProgramId?: string | null
 }
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
@@ -22,7 +23,7 @@ const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir',
 // Sentinel: entered Level 3 directly (program has only 1 or 0 distinct titik — skip Level 2)
 const TITIK_ALL = '__all__'
 
-export default function Galeri({ isAdmin = false }: GaleriProps) {
+export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProps) {
   const width = useWindowWidth()
   const isMobile = width < 900
 
@@ -48,8 +49,19 @@ export default function Galeri({ isAdmin = false }: GaleriProps) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef<number | null>(null)
+  const autoOpenedRef = useRef(false)
 
   useEffect(() => { load() }, [])
+
+  // Auto-open a specific program's folder when navigated from PekerjaanDetail
+  useEffect(() => {
+    if (!initialProgramId || loading || autoOpenedRef.current) return
+    autoOpenedRef.current = true
+    setFilterProgram(initialProgramId)
+    openFolder(initialProgramId)
+  // openFolder uses docs — run after docs are loaded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialProgramId, loading])
 
   useEffect(() => {
     if (!showProgramDropdown) return
