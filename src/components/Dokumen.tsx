@@ -211,7 +211,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, initialCatego
             const rabLink = p.link_rab_detail ?? null
             const rabAutoEntry = cat === 'rab_detail' && rabLink ? rabLink : null
             const rabCount = rabLink ? 1 : 0
-            const total = CATS.reduce((sum, c) => sum + getDocsFor(p.id, c).length, 0) + getTxBukti(p.id).length + rabCount
+            const total = (['rab_detail', 'kontrak', 'bukti_transaksi'] as DocCategory[]).reduce((sum, c) => sum + getDocsFor(p.id, c).length, 0) + getTxBukti(p.id).length + rabCount
             const isAddingHere = !!(addForm && addForm.programId === p.id && addForm.category === cat)
 
             return (
