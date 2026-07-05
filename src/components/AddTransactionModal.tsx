@@ -1,8 +1,20 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { supabase } from '../lib/supabase'
+
+const ACCEPTED = 'application/pdf,image/png,image/jpeg'
+const MAX_MB = 10
+
+async function uploadBukti(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('bukti-transaksi').upload(path, file, { upsert: false })
+  if (error) throw new Error(error.message)
+  const { data } = supabase.storage.from('bukti-transaksi').getPublicUrl(path)
+  return data.publicUrl
+}
 
 interface Program { id: string; nama_pekerjaan: string }
 
@@ -43,8 +55,30 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   const [nominal, setNominal] = useState('')
   const [sumber, setSumber] = useState('PBB')
   const [bukti, setBukti] = useState('')
+  const [buktiFile, setBuktiFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [dragOver, setDragOver] = useState(false)
+
+  const handleFileChange = (file: File | null) => {
+    if (!file) return
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`File terlalu besar (maks ${MAX_MB} MB)`)
+      return
+    }
+    setBuktiFile(file)
+    setBukti('')
+    setError('')
+  }
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileChange(file)
+  }, [])
 
   // Dropdown state
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -102,7 +136,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
   const handleSave = async () => {
     if (!tanggal || !pekerjaan.trim() || !keterangan.trim() || !nominal) {
-      setError('Semua field harus diisi (kecuali Link Bukti)')
+      setError('Semua field harus diisi (kecuali Bukti)')
       return
     }
 
@@ -110,6 +144,20 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     if (nominalNum <= 0) {
       setError('Nominal harus lebih dari 0')
       return
+    }
+
+    let linkBukti: string | null = bukti.trim() || null
+
+    if (buktiFile) {
+      setUploading(true)
+      try {
+        linkBukti = await uploadBukti(buktiFile)
+      } catch (e: unknown) {
+        setUploading(false)
+        setError('Gagal upload file: ' + (e instanceof Error ? e.message : String(e)))
+        return
+      }
+      setUploading(false)
     }
 
     setSaving(true)
@@ -120,7 +168,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
       jenis_transaksi: jenis,
       nominal: nominalNum,
       sumber,
-      link_bukti: bukti || null,
+      link_bukti: linkBukti,
     })
     setSaving(false)
 
@@ -433,16 +481,86 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           </div>
         </div>
 
-        {/* Link Bukti */}
+        {/* Bukti Transaksi */}
         <div style={{ marginBottom: 24 }}>
-          <label style={labelStyle}>Link Bukti (Opsional)</label>
+          <label style={labelStyle}>Bukti Transaksi (Opsional)</label>
+
+          {/* Drop zone / file picker */}
           <input
-            type="url"
-            value={bukti}
-            onChange={e => setBukti(e.target.value)}
-            placeholder="https://..."
-            style={inputStyle}
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED}
+            style={{ display: 'none' }}
+            onChange={e => handleFileChange(e.target.files?.[0] ?? null)}
           />
+
+          {!buktiFile ? (
+            <div
+              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${dragOver ? 'var(--blue)' : 'var(--border)'}`,
+                borderRadius: 10,
+                padding: '18px 14px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                backgroundColor: dragOver ? 'rgba(26,111,232,0.04)' : 'var(--bg)',
+                transition: 'border-color 0.15s, background 0.15s',
+                marginBottom: 8,
+              }}
+            >
+              <svg width="24" height="24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" viewBox="0 0 24 24" style={{ margin: '0 auto 8px' }}>
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                Klik atau drag file ke sini
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                PDF, PNG, atau JPG · maks {MAX_MB} MB
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', backgroundColor: 'var(--bg)', marginBottom: 8 }}>
+              <svg width="18" height="18" fill="none" stroke="#059669" strokeWidth="1.75" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {buktiFile.name}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
+                {(buktiFile.size / 1024 / 1024).toFixed(1)} MB
+              </span>
+              <button
+                onClick={e => { e.stopPropagation(); setBuktiFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, display: 'flex', flexShrink: 0 }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          )}
+
+          {/* Fallback: paste URL */}
+          {!buktiFile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-subtle)' }} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>atau tempel link</span>
+              <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-subtle)' }} />
+            </div>
+          )}
+          {!buktiFile && (
+            <input
+              type="url"
+              value={bukti}
+              onChange={e => setBukti(e.target.value)}
+              placeholder="https://drive.google.com/..."
+              style={{ ...inputStyle, marginTop: 8 }}
+            />
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -459,15 +577,15 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || uploading}
             style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
               backgroundColor: 'var(--blue)', color: '#fff',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              opacity: saving ? 0.7 : 1,
+              opacity: (saving || uploading) ? 0.7 : 1,
             }}
           >
-            {saving ? 'Menyimpan...' : 'Simpan'}
+            {uploading ? 'Mengupload...' : saving ? 'Menyimpan...' : 'Simpan'}
           </button>
         </div>
       </div>
