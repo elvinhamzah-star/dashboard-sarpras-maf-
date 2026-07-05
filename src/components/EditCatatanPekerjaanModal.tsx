@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import BulletInput from './BulletInput'
+import ModalShell from './ModalShell'
 
 interface EditCatatanPekerjaanModalProps {
   programId: string
@@ -33,27 +34,8 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '28px',
-          width: '100%',
-          maxWidth: 500,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-      >
+    <ModalShell onClose={onClose} maxWidth={500}>
+      <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Catatan Pekerjaan</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Catatan atau isu yang perlu diperhatikan untuk pekerjaan ini</div>
@@ -110,6 +92,6 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

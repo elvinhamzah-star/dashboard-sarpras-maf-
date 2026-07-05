@@ -664,15 +664,30 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
         const hasNext = lightboxIndex < activeDocs.length - 1
         const fi = doc.fase ? FASE_INFO[doc.fase] : null
         const isVideoFile = doc.tipe_file === 'video' || lightboxIsVideo
-        const navBtn = (disabled: boolean, onClick: () => void, children: React.ReactNode) => (
-          <button onClick={onClick} disabled={disabled}
-            style={{ backgroundColor: disabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.18)', border: 'none', color: '#fff', width: 44, height: 44, borderRadius: 50, cursor: disabled ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: disabled ? 0.25 : 1, zIndex: 102, fontFamily: 'inherit' }}
-            onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.32)' }}
-            onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.18)' }}
-          >{children}</button>
-        )
+
+        const desktopNavBtn = (dir: 'prev' | 'next') => {
+          const isPrev = dir === 'prev'
+          const disabled = isPrev ? !hasPrev : !hasNext
+          return (
+            <div style={{ position: 'fixed', [isPrev ? 'left' : 'right']: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => !disabled && setLightboxIndex(i => i !== null ? i + (isPrev ? -1 : 1) : null)}
+                disabled={disabled}
+                style={{ backgroundColor: disabled ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.18)', border: 'none', color: '#fff', width: 44, height: 44, borderRadius: 50, cursor: disabled ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: disabled ? 0.2 : 1, fontFamily: 'inherit' }}
+                onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.32)' }}
+                onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.18)' }}
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  {isPrev ? <polyline points="15 18 9 12 15 6"/> : <polyline points="9 18 15 12 9 6"/>}
+                </svg>
+              </button>
+            </div>
+          )
+        }
+
         return (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 100, overflowY: 'auto', padding: isMobile ? '0' : '24px 72px' }}
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 100, overflowY: 'auto', padding: isMobile ? 0 : '24px 72px' }}
             onClick={() => setLightboxIndex(null)}
             onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
             onTouchEnd={e => {
@@ -683,84 +698,121 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
               touchStartX.current = null
             }}
           >
-            {!isMobile && (
-              <div style={{ position: 'fixed', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
-                {navBtn(!hasPrev, () => setLightboxIndex(i => i !== null ? i - 1 : null),
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>)}
-              </div>
-            )}
-            <div style={{ backgroundColor: 'var(--card)', borderRadius: isMobile ? 0 : 16, maxWidth: isMobile ? '100%' : 880, width: '100%', position: 'relative', marginTop: 'auto', marginBottom: 'auto' }}
-              onClick={e => e.stopPropagation()}>
-              <button onClick={() => setLightboxIndex(null)}
-                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: 50, cursor: 'pointer', fontSize: 16, zIndex: 101, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>✕</button>
-              <div style={{ position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
+            {!isMobile && desktopNavBtn('prev')}
+
+            <div
+              style={{ backgroundColor: 'var(--card)', borderRadius: isMobile ? 0 : 16, maxWidth: isMobile ? '100%' : 880, width: '100%', position: 'relative', marginTop: 'auto', marginBottom: 'auto' }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Close button — larger on mobile to avoid mis-tap */}
+              <button
+                onClick={() => setLightboxIndex(null)}
+                style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.65)', border: 'none', color: '#fff', width: isMobile ? 44 : 36, height: isMobile ? 44 : 36, borderRadius: 50, cursor: 'pointer', fontSize: 17, zIndex: 103, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}
+              >✕</button>
+
+              {/* Counter badge */}
+              <div style={{ position: 'absolute', top: isMobile ? 17 : 14, left: 14, backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, zIndex: 101 }}>
                 {lightboxIndex + 1} / {activeDocs.length}
               </div>
-              {isVideoFile ? (
-                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 280 : 600 }}>
-                  {/* Thumbnail instan dari cache grid */}
-                  <img
-                    src={getDriveThumbnailUrl(doc.link_foto) || ''}
-                    alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoIframeLoaded ? 0 : 1, transition: 'opacity 0.3s' }}
-                  />
-                  {/* Loading overlay */}
-                  {!videoIframeLoaded && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, pointerEvents: 'none' }}>
-                      <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="20" height="20" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+
+              {/* Media + overlay nav */}
+              <div style={{ position: 'relative' }}>
+                {isVideoFile ? (
+                  <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
+                    <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    {isMobile ? (
+                      /* Mobile: Google Drive iframe doesn't play on iOS — open in Drive */
+                      <div
+                        style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', backgroundColor: 'rgba(0,0,0,0.45)' }}
+                        onClick={e => { e.stopPropagation(); window.open(doc.link_foto, '_blank') }}
+                      >
+                        <div style={{ width: 68, height: 68, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                          <svg width="26" height="26" fill="#111" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        </div>
+                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, backgroundColor: 'rgba(0,0,0,0.55)', padding: '7px 18px', borderRadius: 24 }}>
+                          Tap untuk putar video
+                        </div>
                       </div>
-                      <div style={{ color: '#fff', fontSize: 12, opacity: 0.75, backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 12px', borderRadius: 20 }}>Memuat video…</div>
-                    </div>
-                  )}
-                  {/* Iframe video player */}
-                  <iframe
-                    key={doc.id}
-                    src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', opacity: videoIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
-                    allow="autoplay"
-                    allowFullScreen
-                    onLoad={() => setVideoIframeLoaded(true)}
-                  />
-                </div>
-              ) : (
-                <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
-                  {/* Thumbnail dari cache grid — muncul instan */}
-                  <img
-                    src={getDriveThumbnailUrl(doc.link_foto) || ''}
-                    alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }}
-                  />
-                  {/* Full-res fade in saat siap */}
-                  <img
-                    key={doc.id}
-                    src={getDriveViewUrl(doc.link_foto) || ''}
-                    alt={doc.caption || ''}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
-                    onLoad={() => setLightboxImgLoaded(true)}
-                    onError={() => setLightboxIsVideo(true)}
-                  />
-                </div>
-              )}
-              <div style={{ padding: 20 }}>
+                    ) : (
+                      /* Desktop: iframe */
+                      <>
+                        <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoIframeLoaded ? 0 : 1, transition: 'opacity 0.3s' }} />
+                        {!videoIframeLoaded && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, pointerEvents: 'none' }}>
+                            <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="20" height="20" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </div>
+                            <div style={{ color: '#fff', fontSize: 12, opacity: 0.75, backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 12px', borderRadius: 20 }}>Memuat video…</div>
+                          </div>
+                        )}
+                        <iframe
+                          key={doc.id}
+                          src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', opacity: videoIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
+                          allow="autoplay"
+                          allowFullScreen
+                          onLoad={() => setVideoIframeLoaded(true)}
+                        />
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
+                    <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }} />
+                    <img key={doc.id} src={getDriveViewUrl(doc.link_foto) || ''} alt={doc.caption || ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }} onLoad={() => setLightboxImgLoaded(true)} onError={() => setLightboxIsVideo(true)} />
+                  </div>
+                )}
+
+                {/* Mobile nav arrows — gradient strips on left/right */}
+                {isMobile && hasPrev && (
+                  <button
+                    onClick={e => { e.stopPropagation(); setLightboxIndex(i => i !== null ? i - 1 : null) }}
+                    style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 52, zIndex: 102, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: 10, background: 'linear-gradient(to right, rgba(0,0,0,0.32), transparent)', border: 'none', cursor: 'pointer', color: '#fff' }}
+                  >
+                    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                )}
+                {isMobile && hasNext && (
+                  <button
+                    onClick={e => { e.stopPropagation(); setLightboxIndex(i => i !== null ? i + 1 : null) }}
+                    style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 52, zIndex: 102, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10, background: 'linear-gradient(to left, rgba(0,0,0,0.32), transparent)', border: 'none', cursor: 'pointer', color: '#fff' }}
+                  >
+                    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                )}
+
+                {/* Swipe hint — brief fade in/out via CSS animation */}
+                {isMobile && activeDocs.length > 1 && (
+                  <div
+                    key={`hint-${lightboxIndex}`}
+                    style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 102, color: '#fff', fontSize: 11.5, fontWeight: 500, backgroundColor: 'rgba(0,0,0,0.5)', padding: '5px 16px', borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none', animation: 'swipeHint 2.5s ease 0.4s both' }}
+                  >
+                    ← geser untuk navigasi →
+                  </div>
+                )}
+              </div>
+
+              {/* Info section */}
+              <div style={{ padding: isMobile ? '14px 16px 18px' : 20 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{formatTanggal(doc.tanggal)}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: doc.caption ? 10 : 14 }}>
                   {doc.titik && <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>{doc.titik}</span>}
                   {fi && <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color }}>{doc.fase}</span>}
                 </div>
-                {doc.caption && <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{doc.caption}</div>}
-                <a href={doc.link_foto} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: 'var(--blue)', textDecoration: 'none' }}>
-                  Buka di Google Drive →
+                {doc.caption && <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>{doc.caption}</div>}
+                <a
+                  href={doc.link_foto} target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', backgroundColor: 'var(--blue)', padding: '8px 16px', borderRadius: 9 }}
+                >
+                  Buka di Google Drive
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 </a>
               </div>
             </div>
-            {!isMobile && (
-              <div style={{ position: 'fixed', right: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 102 }} onClick={e => e.stopPropagation()}>
-                {navBtn(!hasNext, () => setLightboxIndex(i => i !== null ? i + 1 : null),
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>)}
-              </div>
-            )}
+
+            {!isMobile && desktopNavBtn('next')}
           </div>
         )
       })()}

@@ -3,6 +3,7 @@ import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
 import { isValidDriveLink, extractDriveFileId } from '../lib/data'
+import ModalShell from './ModalShell'
 
 interface AddDocumentationModalProps {
   programs: Program[]
@@ -194,30 +195,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const fotoCount = rows.filter(r => r.tipeFile === 'foto').length
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '28px',
-          width: '100%',
-          maxWidth: 580,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0,
-        }}
-      >
+    <ModalShell onClose={() => { if (!saving) onClose() }} maxWidth={580}>
+      <div style={{ padding: '28px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Dokumentasi</div>
@@ -565,9 +544,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                 : 'Simpan'}
           </button>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </div>
+    </ModalShell>
   )
 }

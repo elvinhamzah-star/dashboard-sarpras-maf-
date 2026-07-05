@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -88,6 +88,30 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
   const withRealisasi = programs.filter(p => (p.realisasi_terkini || 0) > 0)
   const accent = ACCENT[type]
 
+  // Swipe-down to close
+  const [dragY, setDragY] = useState(0)
+  const touchStartY = useRef<number | null>(null)
+  const isDragging = useRef(false)
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+    isDragging.current = true
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || touchStartY.current === null) return
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) setDragY(delta)
+  }
+  const onTouchEnd = () => {
+    if (dragY > 80) {
+      onClose()
+    } else {
+      setDragY(0)
+    }
+    isDragging.current = false
+    touchStartY.current = null
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
@@ -99,17 +123,17 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
   }, [onClose])
 
   const rowSt = (isLast: boolean): React.CSSProperties => ({
-    display: 'flex', alignItems: 'center', gap: 12,
-    padding: `13px ${ps}px`,
+    display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12,
+    padding: `${isMobile ? 10 : 13}px ${ps}px`,
     borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
   })
 
   const rankSt: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
-    minWidth: 18, textAlign: 'right', flexShrink: 0,
+    fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
+    minWidth: 16, textAlign: 'right', flexShrink: 0,
   }
   const nameSt: React.CSSProperties = {
-    flex: 1, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.35,
+    flex: 1, fontSize: isMobile ? 12.5 : 14, color: 'var(--text-primary)', lineHeight: 1.3,
   }
 
   const groupHeader = (label: string, color: string, borderTop: boolean): JSX.Element => (
@@ -125,7 +149,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
   const valBox = (primary: React.ReactNode, secondary: React.ReactNode): JSX.Element => (
     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-      <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{primary}</div>
+      <div style={{ fontSize: isMobile ? 12.5 : 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{primary}</div>
       <div style={{ fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{secondary}</div>
     </div>
   )
@@ -294,6 +318,9 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     boxShadow: '0 -12px 48px rgba(0,0,0,0.14)',
     zIndex: 1001,
     overflow: 'hidden',
+    transform: `translateY(${dragY}px)`,
+    transition: dragY === 0 ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none',
+    willChange: 'transform',
   } : {
     position: 'fixed',
     top: '50%', left: '50%',
@@ -316,14 +343,19 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     >
       <div style={panelStyle} onClick={e => e.stopPropagation()}>
 
-        {/* Header — mirrors the dashboard card style */}
-        <div style={{ padding: isMobile ? `18px ${ps}px 14px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+        {/* Header — drag zone on mobile */}
+        <div
+          onTouchStart={isMobile ? onTouchStart : undefined}
+          onTouchMove={isMobile ? onTouchMove : undefined}
+          onTouchEnd={isMobile ? onTouchEnd : undefined}
+          style={{ padding: isMobile ? `14px ${ps}px 12px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, touchAction: 'none', userSelect: 'none' }}
+        >
           {isMobile && (
-            <div style={{ width: 32, height: 4, backgroundColor: 'var(--border-subtle)', borderRadius: 99, margin: '0 auto 14px' }} />
+            <div style={{ width: 36, height: 4, backgroundColor: 'var(--border)', borderRadius: 99, margin: '0 auto 14px' }} />
           )}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
 
-            {/* Colored icon box — same style as dashboard cards */}
+            {/* Colored icon box */}
             <div style={{
               width: iconSize, height: iconSize, borderRadius: 10,
               backgroundColor: `${accent}15`,
@@ -341,13 +373,15 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
               {renderStat()}
             </div>
 
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)', marginTop: 1 }}
-            >
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            {/* Close button — desktop only; mobile uses swipe-down */}
+            {!isMobile && (
+              <button
+                onClick={onClose}
+                style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)', marginTop: 1 }}
+              >
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            )}
           </div>
         </div>
 

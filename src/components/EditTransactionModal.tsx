@@ -3,6 +3,7 @@ import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { Transaction } from '../lib/supabase'
+import ModalShell from './ModalShell'
 
 interface EditTransactionModalProps {
   transaction: Transaction
@@ -78,27 +79,8 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '28px',
-          width: '100%',
-          maxWidth: 500,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-      >
+    <ModalShell onClose={onClose} maxWidth={500}>
+      <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Transaksi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Ubah detail transaksi yang dipilih</div>
@@ -246,6 +228,6 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

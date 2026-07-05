@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Sidebar from './components/Sidebar'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
@@ -24,6 +24,8 @@ export default function App() {
   )
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   const [isAdmin, setIsAdmin] = useState(false)
+  const edgeSwipeStartX = useRef<number | null>(null)
+  const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -297,8 +299,31 @@ export default function App() {
         )}
 
         {/* Page content */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          {renderPage()}
+        <div
+          style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
+          onTouchStart={e => {
+            if (e.touches[0].clientX < 28) {
+              edgeSwipeStartX.current = e.touches[0].clientX
+              edgeSwipeStartY.current = e.touches[0].clientY
+            }
+          }}
+          onTouchEnd={e => {
+            if (edgeSwipeStartX.current === null) return
+            const dx = e.changedTouches[0].clientX - edgeSwipeStartX.current
+            const dy = Math.abs(e.changedTouches[0].clientY - (edgeSwipeStartY.current || 0))
+            if (dx > 72 && dy < 80) {
+              if (currentPage === 'pekerjaan' && selectedProgramId) setSelectedProgramId(null)
+            }
+            edgeSwipeStartX.current = null
+            edgeSwipeStartY.current = null
+          }}
+        >
+          <div
+            key={currentPage + (selectedProgramId || '')}
+            style={{ animation: 'pageSlideIn 0.22s cubic-bezier(0.4,0,0.2,1)', minHeight: '100%' }}
+          >
+            {renderPage()}
+          </div>
         </div>
       </div>
 

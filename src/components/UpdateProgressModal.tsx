@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
+import ModalShell from './ModalShell'
 import { Program } from '../lib/supabase'
 import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
@@ -70,25 +71,8 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '28px',
-          width: '100%',
-          maxWidth: 480,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-        }}
-      >
+    <ModalShell onClose={onClose} maxWidth={480}>
+      <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Update Progress</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{program.nama_pekerjaan}</div>
@@ -181,6 +165,6 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

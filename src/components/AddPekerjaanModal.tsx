@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
+import ModalShell from './ModalShell'
 
 interface AddPekerjaanModalProps {
   onClose: () => void
@@ -106,27 +107,8 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
   ]
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: 28,
-          width: '100%',
-          maxWidth: 560,
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-        }}
-      >
+    <ModalShell onClose={onClose} maxWidth={560}>
+      <div style={{ padding: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Pekerjaan</div>
@@ -208,6 +190,6 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

@@ -3,6 +3,7 @@ import { useEscapeKey } from '../lib/useEscapeKey'
 import { Documentation, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
+import ModalShell from './ModalShell'
 
 interface EditDocumentationModalProps {
   doc: Documentation
@@ -72,13 +73,8 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
   }
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(13,24,41,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
-    >
-      <div
-        style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '28px', width: '100%', maxWidth: 500, boxShadow: '0 20px 60px rgba(13,24,41,0.2)', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0 }}
-      >
+    <ModalShell onClose={() => { if (!saving) onClose() }} maxWidth={500}>
+      <div style={{ padding: '28px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Dokumentasi</div>
@@ -193,6 +189,6 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

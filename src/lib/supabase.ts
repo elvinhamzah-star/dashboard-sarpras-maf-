@@ -151,15 +151,15 @@ export type DocCategory = 'rab_detail' | 'kontrak' | 'bukti_transaksi'
 export interface ProgramDocument {
   id: string
   program_id: string
-  category: DocCategory
-  nama_file: string
-  file_url: string
-  urutan: number
+  folder: string        // 'rab' | 'kontrak' | 'bukti_transaksi'
+  subfolder: string | null  // 'invoice' | 'pembayaran' | null
+  file_name: string
+  file_url: string | null
   created_at: string
 }
 
 export const fetchProgramDocuments = () =>
-  supabase.from('program_documents').select('*').order('urutan', { ascending: true })
+  supabase.from('program_documents').select('*').order('created_at', { ascending: true })
 
 export interface MonthlyReport {
   id: number

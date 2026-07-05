@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
+import ModalShell from './ModalShell'
 
 interface EditDokumenModalProps {
   programId: string
@@ -44,27 +45,8 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
   ]
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '28px',
-          width: '100%',
-          maxWidth: 550,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-      >
+    <ModalShell onClose={onClose} maxWidth={550}>
+      <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumen & Link</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Perbarui link dokumen, RAB, dan bukti transaksi</div>
@@ -138,6 +120,6 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

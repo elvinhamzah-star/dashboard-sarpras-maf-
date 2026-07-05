@@ -137,3 +137,17 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 .table-row-hover {
   transition: background-color 0.12s ease;
 }
+
+/* Page slide-in animation */
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Swipe hint fade in/out */
+@keyframes swipeHint {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.85; }
+  75%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}

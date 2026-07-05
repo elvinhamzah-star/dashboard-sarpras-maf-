@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
+import ModalShell from './ModalShell'
 
 interface Props {
   program: Program
@@ -75,25 +76,8 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   }
 
   return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 300,
-        backgroundColor: 'rgba(13,24,41,0.6)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-    >
-      <div style={{
-        backgroundColor: 'var(--card)',
-        borderRadius: 16,
-        padding: '28px',
-        width: '100%',
-        maxWidth: 540,
-        boxShadow: '0 20px 60px rgba(13,24,41,0.25)',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-      }}>
+    <ModalShell onClose={onClose} maxWidth={540} zIndex={300} backdropColor="rgba(13,24,41,0.6)">
+      <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Edit Program</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{program.id}</div>
@@ -169,6 +153,6 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }
