@@ -98,7 +98,16 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
     countByStatus[p.status] = (countByStatus[p.status] || 0) + 1
   })
 
-  const filteredPrograms = programs.filter(p => p.status === activeTab)
+  const filteredPrograms = programs
+    .filter(p => p.status === activeTab)
+    .sort((a, b) => {
+      if (activeTab === 'Perencanaan') {
+        const aHas = (rencanaMap[a.id] || []).length > 0 ? 0 : 1
+        const bHas = (rencanaMap[b.id] || []).length > 0 ? 0 : 1
+        return aHas - bHas
+      }
+      return 0
+    })
 
   const freshnessColor = freshnessDays === null
     ? 'var(--text-muted)'
