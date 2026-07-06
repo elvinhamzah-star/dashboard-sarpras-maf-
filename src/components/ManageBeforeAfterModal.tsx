@@ -162,6 +162,14 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
           </button>
         </div>
 
+        {/* Selesai button */}
+        <button
+          onClick={onClose}
+          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
+        >
+          Selesai
+        </button>
+
         {/* Existing pairs */}
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
           Pasangan tersimpan ({pairs.length})

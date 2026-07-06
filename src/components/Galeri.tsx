@@ -650,14 +650,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
             programPairs.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada pasangan sebelum/sesudah.</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20, maxWidth: isMobile ? '100%' : 900, margin: '0 auto', width: '100%' }}>
                 {programPairs.map(pair => {
                   const beforeDoc = docById(pair.before_doc_id)
                   const afterDoc = docById(pair.after_doc_id)
                   const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
                   const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
                     const accent = kind === 'before' ? '#DC2626' : '#059669'
-                    const t = d ? getDriveThumbnailUrl(d.link_foto) : null
+                    const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     return (
                       <div style={{ flex: 1, position: 'relative' }}>
                         <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: accent, color: '#fff' }}>

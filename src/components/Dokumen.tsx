@@ -9,7 +9,7 @@ import { useWindowWidth } from '../lib/useWindowWidth'
 import PdfViewerModal from './PdfViewerModal'
 
 type Folder = 'rab' | 'kontrak' | 'bukti_transaksi'
-type Sub = 'invoice' | 'pembayaran'
+type Sub = 'invoice' | 'pembayaran' | 'struk'
 
 interface Props {
   isAdmin: boolean
@@ -28,6 +28,7 @@ const FOLDER_META: Record<Folder, { label: string; color: string; bgColor: strin
 const SUB_META: Record<Sub, { label: string; color: string; bgColor: string; desc: string }> = {
   invoice:    { label: 'Invoice Vendor',   color: '#7C3AED', bgColor: 'rgba(124,58,237,0.1)', desc: 'Tagihan dari pihak ketiga' },
   pembayaran: { label: 'Bukti Pembayaran', color: '#059669', bgColor: 'rgba(5,150,105,0.1)',  desc: 'Konfirmasi transfer & kwitansi' },
+  struk:      { label: 'Struk / Nota',     color: '#D97706', bgColor: 'rgba(217,119,6,0.1)',  desc: 'Kwitansi, nota, & bukti fisik' },
 }
 
 function FolderIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -174,6 +175,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
 
   const handleAdd = async () => {
     if (!addForm || !addName.trim() || addLoading) return
+    if (addForm.folder === 'bukti_transaksi' && !addForm.subfolder) return
     setAddLoading(true)
     await adminInsert('program_documents', {
       program_id: addForm.programId,
@@ -309,8 +311,13 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
   // ─── ADD FORM ─────────────────────────────────────────────────────
 
   const renderAddForm = (folder: Folder, subfolder: Sub | null) => {
-    const isOpen = !!(addForm && addForm.folder === folder && addForm.subfolder === subfolder)
-    const label = subfolder ? SUB_META[subfolder].label : FOLDER_META[folder].label
+    const isBuktiTx = folder === 'bukti_transaksi'
+    const isOpen = isBuktiTx
+      ? !!(addForm && addForm.folder === folder)
+      : !!(addForm && addForm.folder === folder && addForm.subfolder === subfolder)
+    const label = isBuktiTx ? FOLDER_META.bukti_transaksi.label : (subfolder ? SUB_META[subfolder].label : FOLDER_META[folder].label)
+    const selectedSub = addForm?.subfolder ?? null
+    const canSave = !addLoading && !!addName.trim() && (!isBuktiTx || !!selectedSub)
     return (
       <div style={{ marginTop: 10 }}>
         {isOpen ? (
@@ -318,6 +325,35 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
               Tambah {label}
             </div>
+            {isBuktiTx && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 7 }}>
+                  Jenis Dokumen <span style={{ color: '#dc2626' }}>*</span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {(['invoice', 'pembayaran', 'struk'] as Sub[]).map(s => {
+                    const sm = SUB_META[s]
+                    const sel = selectedSub === s
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setAddForm(prev => prev ? { ...prev, subfolder: s } : prev)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 20,
+                          border: `1.5px solid ${sel ? sm.color : 'var(--border)'}`,
+                          backgroundColor: sel ? sm.bgColor : 'transparent',
+                          color: sel ? sm.color : 'var(--text-muted)',
+                          fontSize: 11, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                      >
+                        {sm.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <input
               value={addName}
               onChange={e => setAddName(e.target.value)}
@@ -335,8 +371,8 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={handleAdd}
-                disabled={addLoading || !addName.trim()}
-                style={{ padding: '7px 16px', borderRadius: 7, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: addLoading || !addName.trim() ? 0.6 : 1 }}
+                disabled={!canSave}
+                style={{ padding: '7px 16px', borderRadius: 7, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: canSave ? 1 : 0.6 }}
               >
                 {addLoading ? 'Menyimpan...' : 'Simpan'}
               </button>
@@ -350,7 +386,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
           </div>
         ) : (
           <button
-            onClick={() => { setAddForm({ programId: selProgramId!, folder, subfolder }); setAddName(''); setAddUrl('') }}
+            onClick={() => { setAddForm({ programId: selProgramId!, folder, subfolder: isBuktiTx ? null : subfolder }); setAddName(''); setAddUrl('') }}
             style={{ width: '100%', padding: 10, borderRadius: 10, border: '1.5px dashed rgba(26,111,232,0.3)', backgroundColor: 'transparent', color: 'var(--blue)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             + Tambah {label}
@@ -372,6 +408,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     onDelete?: () => void,
     isDeleting?: boolean,
     subtitle?: string,
+    badge?: React.ReactNode,
   ) => (
     <div
       key={key}
@@ -384,15 +421,18 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
         <div style={{ width: 38, height: 38, borderRadius: 9, backgroundColor: accentBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {icon}
         </div>
-        {onDelete && (
-          <button
-            onClick={e => { e.stopPropagation(); onDelete() }}
-            disabled={isDeleting}
-            style={{ width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1, fontFamily: 'inherit', flexShrink: 0 }}
-          >
-            {isDeleting ? '…' : '×'}
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {badge}
+          {onDelete && (
+            <button
+              onClick={e => { e.stopPropagation(); onDelete() }}
+              disabled={isDeleting}
+              style={{ width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1, fontFamily: 'inherit', flexShrink: 0 }}
+            >
+              {isDeleting ? '…' : '×'}
+            </button>
+          )}
+        </div>
       </div>
       <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.35 }}>{name}</div>
       {subtitle && (
@@ -506,7 +546,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
           {folders.map(f => {
             const meta = FOLDER_META[f]
             const count = f === 'bukti_transaksi'
-              ? getDocsFor(p.id, f, 'invoice').length + getTxBukti(p.id).length
+              ? getDocsFor(p.id, f, 'invoice').length + getDocsFor(p.id, f, 'pembayaran').length + getDocsFor(p.id, f, 'struk').length + getTxBukti(p.id).length
               : getDocsFor(p.id, f).length + (f === 'rab' && p.link_rab_detail ? 1 : 0)
             const isEmpty = count === 0
             const disabled = isEmpty && !isAdmin
@@ -533,7 +573,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                 <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', flex: 1 }}>
                   {disabled
                     ? 'Belum ada dokumen'
-                    : f === 'bukti_transaksi' ? '2 subfolder' : `${count} file`
+                    : `${count} file`
                   }
                 </div>
                 {!disabled && (
@@ -590,39 +630,76 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     const meta = FOLDER_META[f]
 
     if (f === 'bukti_transaksi') {
-      const subs: Sub[] = ['invoice', 'pembayaran']
+      const invoiceDocs = getDocsFor(p.id, f, 'invoice')
+      const pembayaranDocs = getDocsFor(p.id, f, 'pembayaran')
+      const strukDocs = getDocsFor(p.id, f, 'struk')
+      const txFiles = getTxBukti(p.id)
+      const totalCount = invoiceDocs.length + pembayaranDocs.length + strukDocs.length + txFiles.length
+      const isEmpty = totalCount === 0
+
+      const renderTypeBadge = (sub: Sub) => {
+        const sm = SUB_META[sub]
+        return (
+          <span style={{
+            display: 'inline-block', padding: '2px 7px', borderRadius: 99,
+            fontSize: 10, fontWeight: 700,
+            backgroundColor: sm.bgColor, color: sm.color,
+          }}>
+            {sm.label}
+          </span>
+        )
+      }
+
       return (
         <>
           {renderBack(1)}
           {renderBreadcrumb()}
-          <div style={GRID}>
-            {subs.map(s => {
-              const smeta = SUB_META[s]
-              const count = s === 'pembayaran'
-                ? getTxBukti(p.id).length
-                : getDocsFor(p.id, f, s).length
-              return (
-                <div
-                  key={s}
-                  onClick={() => { setSelSub(s); setLevel(3) }}
-                  style={{ ...CARD }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = smeta.color + '55' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
-                >
-                  <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: smeta.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ReceiptIcon color={smeta.color} />
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{smeta.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
-                    {count > 0 ? `${count} file` : smeta.desc}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    <ChevronRight />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          {isEmpty && !addForm ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: 13, border: '1.5px dashed var(--border-subtle)', borderRadius: 12, marginBottom: 12 }}>
+              Belum ada bukti transaksi
+            </div>
+          ) : (
+            <div style={{ ...GRID, marginBottom: 12 }}>
+              {invoiceDocs.map(doc => renderFileCard(
+                doc.id, doc.file_name, doc.file_url,
+                SUB_META.invoice.color, SUB_META.invoice.bgColor,
+                <ReceiptIcon color={SUB_META.invoice.color} />,
+                isAdmin ? () => handleDelete(doc) : undefined,
+                deletingIds.has(doc.id),
+                undefined,
+                renderTypeBadge('invoice'),
+              ))}
+              {pembayaranDocs.map(doc => renderFileCard(
+                doc.id, doc.file_name, doc.file_url,
+                SUB_META.pembayaran.color, SUB_META.pembayaran.bgColor,
+                <ReceiptIcon color={SUB_META.pembayaran.color} />,
+                isAdmin ? () => handleDelete(doc) : undefined,
+                deletingIds.has(doc.id),
+                undefined,
+                renderTypeBadge('pembayaran'),
+              ))}
+              {txFiles.map(tx => renderFileCard(
+                tx.id,
+                tx.deskripsi || 'Bukti Pembayaran',
+                tx.link_bukti ?? null,
+                SUB_META.pembayaran.color, SUB_META.pembayaran.bgColor,
+                <ReceiptIcon color={SUB_META.pembayaran.color} />,
+                undefined, false,
+                [tx.tanggal ? formatTanggal(tx.tanggal) : '', tx.nominal ? formatRupiah(tx.nominal) : ''].filter(Boolean).join(' · '),
+                renderTypeBadge('pembayaran'),
+              ))}
+              {strukDocs.map(doc => renderFileCard(
+                doc.id, doc.file_name, doc.file_url,
+                SUB_META.struk.color, SUB_META.struk.bgColor,
+                <ReceiptIcon color={SUB_META.struk.color} />,
+                isAdmin ? () => handleDelete(doc) : undefined,
+                deletingIds.has(doc.id),
+                undefined,
+                renderTypeBadge('struk'),
+              ))}
+            </div>
+          )}
+          {isAdmin && renderAddForm('bukti_transaksi', null)}
         </>
       )
     }
