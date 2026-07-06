@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase, SubProgram, Program, Transaction } from '../lib/supabase'
+import { supabase, SubProgram, Program, Transaction, ProgramDocument } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress, getFileEmbedUrl } from '../lib/data'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -7,7 +7,6 @@ import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import AddSubPekerjaanModal from './AddSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
-import EditDokumenModal from './EditDokumenModal'
 import EditProgramModal from './EditProgramModal'
 
 interface PekerjaanDetailProps {
@@ -29,9 +28,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('Ringkasan')
+  const [programDocs, setProgramDocs] = useState<ProgramDocument[]>([])
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [showEditCatatan, setShowEditCatatan] = useState(false)
-  const [showEditDokumen, setShowEditDokumen] = useState(false)
   const [showEditProgram, setShowEditProgram] = useState(false)
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -49,9 +48,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
   const load = async () => {
     setLoading(true)
-    const [pRes, sRes] = await Promise.all([
+    const [pRes, sRes, pdRes] = await Promise.all([
       supabase.from('programs').select('*').eq('id', programId).single(),
       supabase.from('sub_programs').select('*').eq('program_id', programId).order('id', { ascending: true }),
+      supabase.from('program_documents').select('*').eq('program_id', programId).order('created_at', { ascending: true }),
     ])
     if (pRes.data) {
       setProgram(pRes.data)
@@ -65,6 +65,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
       setTransactions((tRes.data ?? []).filter(t => t.link_bukti))
     }
     if (sRes.data) setSubPrograms(sRes.data)
+    if (pdRes.data) setProgramDocs(pdRes.data as ProgramDocument[])
     setLoading(false)
   }
 
@@ -437,46 +438,74 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                   <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
-                  {isAdmin && (
-                    <button onClick={() => setShowEditDokumen(true)} style={{ backgroundColor: 'var(--blue)', color: 'var(--card)', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      Edit
+                  {isAdmin && onNavigate && (
+                    <button
+                      onClick={() => onNavigate('dokumen', program.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Kelola
+                      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* RAB */}
+                  {/* RAB — program link + program_documents */}
                   {(() => {
-                    const has = !!program.link_rab_detail
+                    const files = programDocs.filter(d => d.folder === 'rab')
+                    const autoUrl = program.link_rab_detail
+                    const allFiles: { key: string; name: string; url: string | null }[] = [
+                      ...(autoUrl ? [{ key: '__rab_auto', name: 'RAB', url: autoUrl }] : []),
+                      ...files.map(d => ({ key: d.id, name: d.file_name, url: d.file_url ?? null })),
+                    ]
                     return (
-                      <div onClick={has ? () => openFile(program.link_rab_detail!, 'RAB') : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: has ? 'pointer' : 'default' }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: has ? 'rgba(217,119,6,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="18" height="18" fill="none" stroke={has ? '#D97706' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <div style={{ borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: allFiles.length > 0 ? '1px solid var(--border-subtle)' : 'none', backgroundColor: 'rgba(217,119,6,0.04)' }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="14" height="14" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>RAB</span>
+                          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{allFiles.length > 0 ? `${allFiles.length} file` : 'Kosong'}</span>
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>RAB</div>
-                          {!has && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Akan dilengkapi</div>}
-                        </div>
-                        {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                        {allFiles.length === 0 && <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>Belum ada file RAB</div>}
+                        {allFiles.map((f, i) => (
+                          <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                            <svg width="14" height="14" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
+                            {f.url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                          </div>
+                        ))}
                       </div>
                     )
                   })()}
-                  {/* Kontrak */}
+                  {/* Kontrak — program link + program_documents */}
                   {(() => {
-                    const has = !!program.link_kontrak
+                    const files = programDocs.filter(d => d.folder === 'kontrak')
+                    const autoUrl = program.link_kontrak
+                    const allFiles: { key: string; name: string; url: string | null }[] = [
+                      ...(autoUrl ? [{ key: '__kontrak_auto', name: 'Kontrak', url: autoUrl }] : []),
+                      ...files.map(d => ({ key: d.id, name: d.file_name, url: d.file_url ?? null })),
+                    ]
                     return (
-                      <div onClick={has ? () => openFile(program.link_kontrak!, 'Kontrak') : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: has ? 'pointer' : 'default' }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: has ? 'rgba(217,119,6,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="18" height="18" fill="none" stroke={has ? '#D97706' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <div style={{ borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: allFiles.length > 0 ? '1px solid var(--border-subtle)' : 'none', backgroundColor: 'rgba(37,99,235,0.04)' }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(37,99,235,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>Kontrak</span>
+                          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{allFiles.length > 0 ? `${allFiles.length} file` : 'Kosong'}</span>
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Kontrak</div>
-                          {!has && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Tidak ada kontrak untuk pekerjaan ini</div>}
-                        </div>
-                        {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                        {allFiles.length === 0 && <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>Tidak ada kontrak untuk pekerjaan ini</div>}
+                        {allFiles.map((f, i) => (
+                          <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                            <svg width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
+                            {f.url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                          </div>
+                        ))}
                       </div>
                     )
                   })()}
-                  {/* Dokumentasi */}
+                  {/* Dokumentasi Foto → Galeri */}
                   {(() => {
                     const has = !!program.link_dokumentasi
                     return (
@@ -485,16 +514,17 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                           <svg width="18" height="18" fill="none" stroke={has ? '#7C3AED' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Dokumentasi</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Dokumentasi Foto</div>
                           {!has && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada dokumentasi</div>}
                         </div>
                         {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                       </div>
                     )
                   })()}
-                  {/* Bukti Transaksi */}
+                  {/* Bukti Transaksi — program_documents + transactions */}
                   {(() => {
-                    const has = transactions.length > 0
+                    const txDocs = programDocs.filter(d => d.folder === 'bukti_transaksi')
+                    const has = txDocs.length > 0 || transactions.length > 0
                     return (
                       <div onClick={has ? () => setBuktiExpanded(true) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: has ? 'pointer' : 'default' }}>
                         <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: has ? 'rgba(5,150,105,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -502,7 +532,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Bukti Transaksi</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{has ? `${transactions.length} transaksi dengan bukti` : 'Belum ada bukti transaksi'}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{has ? `${txDocs.length + transactions.length} file` : 'Belum ada bukti transaksi'}</div>
                         </div>
                         {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                       </div>
@@ -512,36 +542,61 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
               </>
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <button onClick={() => setBuktiExpanded(false)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px 6px 8px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    Kembali
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Bukti Transaksi</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{transactions.length} transaksi</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '148px'}, 1fr))`, gap: 10 }}>
-                  {transactions.map((tx, i) => (
-                    <div
-                      key={tx.id}
-                      onClick={() => openFile(tx.link_bukti!, tx.deskripsi || `Transaksi ${i + 1}`)}
-                      style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: 'pointer', minHeight: 110 }}
-                    >
-                      <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="18" height="18" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                {(() => {
+                  const txDocs = programDocs.filter(d => d.folder === 'bukti_transaksi')
+                  const totalCount = txDocs.length + transactions.length
+                  return (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <button onClick={() => setBuktiExpanded(false)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px 6px 8px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                          Kembali
+                        </button>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Bukti Transaksi</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{totalCount} file</div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
-                        {tx.deskripsi || `Transaksi ${i + 1}`}
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '148px'}, 1fr))`, gap: 10 }}>
+                        {txDocs.map(doc => (
+                          <div
+                            key={doc.id}
+                            onClick={doc.file_url ? () => openFile(doc.file_url!, doc.file_name) : undefined}
+                            style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: doc.file_url ? 'pointer' : 'default', minHeight: 110 }}
+                          >
+                            <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(5,150,105,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke="#059669" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
+                              {doc.file_name}
+                            </div>
+                            {doc.subfolder && (
+                              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{doc.subfolder}</div>
+                            )}
+                          </div>
+                        ))}
+                        {transactions.map((tx, i) => (
+                          <div
+                            key={tx.id}
+                            onClick={() => openFile(tx.link_bukti!, tx.deskripsi || `Transaksi ${i + 1}`)}
+                            style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: 'pointer', minHeight: 110 }}
+                          >
+                            <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            </div>
+                            <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
+                              {tx.deskripsi || `Transaksi ${i + 1}`}
+                            </div>
+                            <div>
+                              {tx.tanggal && <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{formatTanggal(tx.tanggal)}</div>}
+                              {tx.nominal && <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        {tx.tanggal && <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{formatTanggal(tx.tanggal)}</div>}
-                        {tx.nominal && <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    </>
+                  )
+                })()}
               </>
             )}
           </div>
@@ -849,22 +904,6 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           onClose={() => setShowEditCatatan(false)}
           onSuccess={() => {
             setShowEditCatatan(false)
-            load()
-          }}
-        />
-      )}
-
-      {showEditDokumen && program && (
-        <EditDokumenModal
-          programId={program.id}
-          links={{
-            rabDetail: program.link_rab_detail ?? null,
-            dokumentasi: program.link_dokumentasi ?? null,
-            buktiTransaksi: program.link_bukti_transaksi ?? null,
-          }}
-          onClose={() => setShowEditDokumen(false)}
-          onSuccess={() => {
-            setShowEditDokumen(false)
             load()
           }}
         />

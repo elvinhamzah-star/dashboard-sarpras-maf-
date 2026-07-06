@@ -160,7 +160,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', flexShrink: 0, marginBottom: 6 }} />
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto' }}>
+      <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {menuItems.filter(item => item.id !== 'riwayat' || isAdmin).map(item => {
           const isActive = currentPage === item.id
           return (
@@ -219,6 +219,31 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
             </button>
           )
         })}
+        <div style={{ flex: 1, minHeight: 12 }} />
+        {role === 'maf' && expanded && (
+          <div style={{ padding: '0 4px 10px' }}>
+            <div style={{
+              borderRadius: 10,
+              backgroundColor: 'rgba(96,165,250,0.05)',
+              border: '1px solid rgba(96,165,250,0.1)',
+              padding: '10px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: 'rgba(96,165,250,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="13" height="13" fill="none" stroke="#60A5FA" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#60A5FA', letterSpacing: '0.04em', textTransform: 'uppercase' }}>MAF Access</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Viewer · Read Only</div>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Bottom section */}

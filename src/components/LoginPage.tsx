@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { verifyLogin } from '../lib/adminApi'
 import { setMafCredentials } from '../lib/supabase'
 
@@ -11,6 +11,14 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const usernameRef = useRef<HTMLInputElement>(null)
+
+  // Auto-focus username only on desktop — prevents iOS viewport zoom
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+      usernameRef.current?.focus()
+    }
+  }, [])
 
   const canSubmit = username.trim().length > 0 && pin.length > 0 && !loading
 
@@ -81,12 +89,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             Username
           </label>
           <input
+            ref={usernameRef}
             type="text"
             value={username}
             onChange={e => { setUsername(e.target.value); setError('') }}
             onKeyDown={handleKeyDown}
             placeholder="Masukkan username"
-            autoFocus
             autoComplete="off"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
@@ -119,7 +127,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
               border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
-              fontSize: 10, letterSpacing: '0.15em', color: 'var(--text-primary)',
+              fontSize: 16, letterSpacing: '0.15em', color: 'var(--text-primary)',
               fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
             }}

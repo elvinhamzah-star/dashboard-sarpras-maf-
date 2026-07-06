@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { verifyPin, setAdminPin } from '../lib/adminApi'
 import ModalShell from './ModalShell'
@@ -13,6 +13,14 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-focus only on desktop to prevent iOS viewport zoom
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+      inputRef.current?.focus()
+    }
+  }, [])
 
   const handleSubmit = async () => {
     if (checking) return
@@ -66,7 +74,10 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
         </div>
 
         <input
+          ref={inputRef}
           type="password"
+          inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={4}
           value={pin}
           onChange={e => {
@@ -90,8 +101,8 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
             marginBottom: 8,
             boxSizing: 'border-box',
             fontFamily: 'inherit',
+            backgroundColor: 'var(--card)',
           }}
-          autoFocus
         />
 
         {error && (

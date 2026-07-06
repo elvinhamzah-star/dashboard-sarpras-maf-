@@ -204,6 +204,18 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     )
   }
 
+  if (hasMafCredentials()) {
+    const mafTotalAnggaran = displayPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+    return (
+      <BerandaMAF
+        programs={displayPrograms}
+        totalAnggaran={mafTotalAnggaran}
+        totalRealisasi={totalRealisasi}
+        formattedLastUpdated={formattedLastUpdated}
+      />
+    )
+  }
+
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Page Header */}
