@@ -25,7 +25,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const isMobile = width < 600
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
-  const [filterJenis, setFilterJenis] = useState<string>('Semua')
+  const [filterJenis, setFilterJenis] = useState<string>('Masuk')
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -255,6 +255,26 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             <button
               key={card.jenis}
               onClick={() => { setFilterJenis(isActive ? 'Semua' : card.jenis); setPage(1) }}
+              onMouseEnter={e => {
+                const el = e.currentTarget
+                if (!isActive) {
+                  el.style.backgroundColor = card.color + '12'
+                  el.style.borderColor = card.color + '88'
+                  el.style.borderTopColor = card.color
+                }
+                el.style.transform = 'translateY(-2px)'
+                el.style.boxShadow = `0 4px 16px ${card.color}28`
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget
+                if (!isActive) {
+                  el.style.backgroundColor = 'var(--card)'
+                  el.style.borderColor = 'var(--border)'
+                  el.style.borderTopColor = 'var(--border-subtle)'
+                }
+                el.style.transform = 'translateY(0)'
+                el.style.boxShadow = 'none'
+              }}
               style={{
                 backgroundColor: isActive ? card.bgActive : 'var(--card)',
                 borderRadius: isMobile ? 10 : 12,
@@ -415,28 +435,41 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       {showRiwayat && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
           {/* Riwayat header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div>
               <div style={{ fontSize: isMobile ? 13 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                 Riwayat Transaksi
-                {filterJenis !== 'Semua' && (
-                  <span style={{ fontWeight: 500, color: 'var(--text-muted)', marginLeft: 6, fontSize: isMobile ? 11 : 13 }}>
-                    · {filterJenis}
-                  </span>
-                )}
               </div>
-              <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 0 }}>
+              <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
                 {filtered.length} Transaksi
-                {filterJenis !== 'Semua' && (
-                  <button
-                    onClick={() => { setFilterJenis('Semua'); setPage(1) }}
-                    style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--blue)', fontSize: isMobile ? 11 : 12, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
-                  >
-                    · Tampilkan Semua
-                  </button>
-                )}
               </div>
             </div>
+            {filterJenis !== 'Semua' && (() => {
+              const color = filterJenis === 'Masuk' ? '#059669' : filterJenis === 'Keluar PBB' ? '#D97706' : '#DC2626'
+              return (
+                <button
+                  onClick={() => { setFilterJenis('Semua'); setPage(1) }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '4px 10px 4px 10px',
+                    borderRadius: 99,
+                    border: `1px solid ${color}55`,
+                    backgroundColor: `${color}12`,
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                    flexShrink: 0,
+                  }}
+                >
+                  {filterJenis}
+                  <span style={{ fontSize: 13, lineHeight: 1, opacity: 0.7 }}>×</span>
+                </button>
+              )
+            })()}
           </div>
 
           {/* Loading / empty */}

@@ -221,18 +221,18 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     background: 'var(--card)',
     border: '1px solid var(--border-subtle)',
     borderRadius: 12,
-    padding: '14px 13px 12px',
+    padding: isMobile ? '14px 13px 12px' : '18px 16px',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
-    gap: 7,
-    minHeight: 105,
+    gap: isMobile ? 7 : 10,
+    minHeight: isMobile ? 105 : 125,
     transition: 'border-color 0.12s',
   }
 
   const GRID: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '135px' : '150px'}, 1fr))`,
+    gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '135px' : '210px'}, 1fr))`,
     gap: 10,
   }
 
@@ -443,12 +443,12 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
             <div
               key={p.id}
               onClick={() => { setSelProgramId(p.id); setLevel(1) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 12, cursor: 'pointer', transition: 'border-color 0.12s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(26,111,232,0.3)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '11px 14px' : '14px 16px', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 12, cursor: 'pointer', transition: 'border-color 0.12s, box-shadow 0.12s' }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'rgba(26,111,232,0.3)'; if (!isMobile) { el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.06)' } }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'var(--border-subtle)'; el.style.boxShadow = 'none' }}
             >
-              <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(26,111,232,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <FolderIcon color="var(--blue)" size={17} />
+              <div style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 10, backgroundColor: 'rgba(26,111,232,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <FolderIcon color="var(--blue)" size={isMobile ? 17 : 20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
@@ -462,17 +462,27 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                     {p.status}
                   </span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.nama_pekerjaan}
                 </div>
+                {!isMobile && p.vendor && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.vendor}
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
                 {total > 0 ? (
                   <span style={{ fontSize: 11, fontWeight: 600, color: '#059669', backgroundColor: 'rgba(5,150,105,0.08)', padding: '2px 8px', borderRadius: 99 }}>
                     {total} file
                   </span>
                 ) : (
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Kosong</span>
+                )}
+                {!isMobile && typeof p.progress === 'number' && (
+                  <div style={{ width: 64, height: 3, borderRadius: 99, backgroundColor: 'var(--border)', overflow: 'hidden' }}>
+                    <div style={{ width: `${p.progress}%`, height: '100%', borderRadius: 99, backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)' }} />
+                  </div>
                 )}
                 <ChevronRight />
               </div>
@@ -513,14 +523,14 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                 onMouseEnter={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = meta.color + '55' }}
                 onMouseLeave={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : meta.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : meta.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {f === 'bukti_transaksi'
-                    ? <ReceiptIcon color={disabled ? 'var(--text-muted)' : meta.color} />
-                    : <FolderIcon color={disabled ? 'var(--text-muted)' : meta.color} />
+                    ? <ReceiptIcon color={disabled ? 'var(--text-muted)' : meta.color} size={isMobile ? 22 : 26} />
+                    : <FolderIcon color={disabled ? 'var(--text-muted)' : meta.color} size={isMobile ? 24 : 28} />
                   }
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>{meta.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                <div style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>{meta.label}</div>
+                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', flex: 1 }}>
                   {disabled
                     ? 'Belum ada dokumen'
                     : f === 'bukti_transaksi' ? '2 subfolder' : `${count} file`
@@ -550,13 +560,13 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                 onMouseEnter={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = color + '55' }}
                 onMouseLeave={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="22" height="22" fill="none" stroke={disabled ? 'var(--text-muted)' : color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <div style={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} fill="none" stroke={disabled ? 'var(--text-muted)' : color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
                   </svg>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>Dokumentasi</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                <div style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>Dokumentasi</div>
+                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', flex: 1 }}>
                   {disabled ? 'Belum ada foto' : 'Lihat galeri foto'}
                 </div>
                 {!disabled && (

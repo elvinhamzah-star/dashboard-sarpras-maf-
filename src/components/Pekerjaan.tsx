@@ -13,7 +13,7 @@ interface PekerjaanProps {
   onSearchChange: (s: string) => void
 }
 
-const STATUS_TABS = ['Semua', 'On Going', 'On Hold', 'Selesai', 'Perencanaan']
+const STATUS_TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
 
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const width = useWindowWidth()
@@ -47,11 +47,11 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
       p.nama_pekerjaan?.toLowerCase().includes(search.toLowerCase()) ||
       p.id?.toLowerCase().includes(search.toLowerCase()) ||
       p.vendor?.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = activeStatus === 'Semua' || p.status === activeStatus
+    const matchStatus = activeStatus === '' || p.status === activeStatus
     return matchSearch && matchStatus
   })
 
-  const statusCounts: Record<string, number> = { Semua: programs.length }
+  const statusCounts: Record<string, number> = {}
   programs.forEach(p => {
     statusCounts[p.status] = (statusCounts[p.status] || 0) + 1
   })
@@ -103,82 +103,98 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         )}
       </div>
 
-      {/* Search + Filter Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: 340 }}>
-          <svg
-            width="15" height="15"
-            fill="none" stroke="#9CAABB" strokeWidth="2"
-            viewBox="0 0 24 24"
-            style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-          >
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            type="text"
-            placeholder="Cari pekerjaan, vendor..."
-            value={search}
-            onChange={e => onSearchChange(e.target.value)}
-            style={{
-              width: '100%',
-              paddingLeft: 34,
-              paddingRight: 12,
-              paddingTop: 9,
-              paddingBottom: 9,
-              border: '1px solid var(--border)',
-              borderRadius: 9,
-              fontSize: 16,
-              color: 'var(--text-primary)',
-              backgroundColor: 'var(--card)',
-              outline: 'none',
-              transition: 'border-color 0.15s, box-shadow 0.15s',
-            }}
-          />
-        </div>
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: 10 }}>
+        <svg
+          width="15" height="15"
+          fill="none" stroke="#9CAABB" strokeWidth="2"
+          viewBox="0 0 24 24"
+          style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+        >
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Cari pekerjaan, vendor..."
+          value={search}
+          onChange={e => onSearchChange(e.target.value)}
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            paddingLeft: 34,
+            paddingRight: 12,
+            paddingTop: 9,
+            paddingBottom: 9,
+            border: '1px solid var(--border)',
+            borderRadius: 9,
+            fontSize: isMobile ? 16 : 14,
+            color: 'var(--text-primary)',
+            backgroundColor: 'var(--card)',
+            outline: 'none',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+          }}
+        />
+      </div>
 
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-          {STATUS_TABS.map(tab => {
-            const isActive = activeStatus === tab
-            const tabColor = tab === 'Semua' ? 'var(--blue)' : STATUS_COLORS[tab] || 'var(--text-secondary)'
-            const count = statusCounts[tab] || 0
-            return (
-              <button
-                key={tab}
-                onClick={() => onStatusChange(tab)}
-                style={{
-                  padding: '6px 13px',
-                  borderRadius: 8,
-                  border: isActive ? 'none' : '1px solid var(--border)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  backgroundColor: isActive ? (tab === 'Semua' ? 'var(--blue)' : `${STATUS_COLORS[tab]}18`) : 'transparent',
-                  color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-secondary)',
-                  transition: 'all 0.13s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
-                }}
-              >
+      {/* Filter Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
+        gap: 8,
+        marginBottom: 16,
+      }}>
+        {STATUS_TABS.map(tab => {
+          const isActive = activeStatus === tab
+          const color = STATUS_COLORS[tab] || '#6B7280'
+          const count = statusCounts[tab] || 0
+          return (
+            <button
+              key={tab}
+              onClick={() => onStatusChange(isActive ? '' : tab)}
+              style={{
+                borderRadius: 10,
+                padding: '10px 12px',
+                borderWidth: '3px 1px 1px 1px',
+                borderStyle: 'solid',
+                borderColor: isActive
+                  ? `${color} ${color}AA ${color}AA ${color}AA`
+                  : `${color} var(--border) var(--border) var(--border)`,
+                cursor: 'pointer',
+                backgroundColor: isActive ? `${color}15` : 'var(--card)',
+                textAlign: 'left',
+                fontFamily: 'inherit',
+                transition: 'background 0.13s, box-shadow 0.13s, transform 0.13s, border-color 0.13s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget
+                if (!isActive) {
+                  el.style.backgroundColor = `${color}0D`
+                  el.style.borderColor = `${color} ${color}55 ${color}55 ${color}55`
+                }
+                el.style.transform = 'translateY(-2px)'
+                el.style.boxShadow = `0 4px 16px ${color}28`
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget
+                if (!isActive) {
+                  el.style.backgroundColor = 'var(--card)'
+                  el.style.borderColor = `${color} var(--border) var(--border) var(--border)`
+                }
+                el.style.transform = 'translateY(0)'
+                el.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: 9, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
                 {tab}
-                {count > 0 && (
-                  <span style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    backgroundColor: isActive && tab !== 'Semua' ? `${STATUS_COLORS[tab]}25` : isActive ? 'rgba(255,255,255,0.2)' : 'var(--surface-2)',
-                    color: isActive ? (tab === 'Semua' ? '#fff' : tabColor) : 'var(--text-muted)',
-                    padding: '1px 5px',
-                    borderRadius: 5,
-                    lineHeight: 1.6,
-                  }}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                {count}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>Pekerjaan</div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Card List */}
