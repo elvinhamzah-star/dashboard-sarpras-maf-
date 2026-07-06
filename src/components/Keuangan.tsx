@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
@@ -30,6 +30,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [showRiwayat, setShowRiwayat] = useState(true)
   const [togglingRiwayat, setTogglingRiwayat] = useState(false)
+  const [hoveredChartIdx, setHoveredChartIdx] = useState<number | null>(null)
+  const chartScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -113,6 +115,12 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
 
   const maxChartVal = Math.max(...chartData.map(m => m.total), 1)
   const chartBarH = isMobile ? 72 : 96
+
+  useEffect(() => {
+    if (chartScrollRef.current) {
+      chartScrollRef.current.scrollLeft = chartScrollRef.current.scrollWidth
+    }
+  }, [chartData.length])
 
   const filterCards = [
     { jenis: 'Masuk', label: 'Dana Masuk', value: totalMasuk, count: masukList.length, color: '#059669', bgActive: 'rgba(5,150,105,0.09)' },
@@ -258,10 +266,10 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <div style={{ fontSize: isMobile ? 8.5 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>
-                {card.label}
+              <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {isMobile ? card.label.replace('Dana ', '') : card.label}
               </div>
-              <div style={{ fontSize: isMobile ? 12 : 16, fontWeight: 700, color: isActive ? card.color : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, wordBreak: 'break-word' }}>
+              <div style={{ fontSize: isMobile ? 12 : 16, fontWeight: 700, color: isActive ? card.color : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {formatRupiah(card.value)}
               </div>
               <div style={{ fontSize: isMobile ? 9 : 10.5, color: isActive ? card.color : 'var(--text-muted)', marginTop: 3 }}>
@@ -273,69 +281,133 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       </div>
 
       {/* === CHART: Pengeluaran Per Bulan === */}
-      {chartData.length > 0 && (
-        <div style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: isMobile ? 12 : 14,
-          padding: isMobile ? '14px 14px 12px' : '18px 20px 14px',
-          border: '1px solid var(--border)',
-          marginBottom: isMobile ? 16 : 22,
-        }}>
-          <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 2 }}>
-            Pengeluaran Per Bulan
-          </div>
-          <div style={{ fontSize: isMobile ? 10.5 : 11, color: 'var(--text-muted)', marginBottom: isMobile ? 14 : 18 }}>
-            Realisasi Dana Keluar dari Sarpras
-          </div>
+      {chartData.length > 0 && (() => {
+        const CHART_H = 120
+        const BAR_W = 22
+        const hovered = hoveredChartIdx !== null ? chartData[hoveredChartIdx] : null
+        const tooltipLeft = hoveredChartIdx !== null
+          ? Math.min(Math.max((hoveredChartIdx + 0.5) / chartData.length * 100, 13), 87)
+          : 0
+        return (
+          <div style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: isMobile ? 12 : 14,
+            padding: '16px 20px 18px',
+            border: '1px solid var(--border-subtle)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            marginBottom: isMobile ? 16 : 22,
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                  Pengeluaran Per Bulan
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {chartData.length} Bulan
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#DC2626' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#D97706' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar PBB</span>
+                </div>
+              </div>
+            </div>
 
-          {/* Bars */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 5 : 8, height: chartBarH }}>
-            {chartData.map(m => {
-              const barH = Math.max((m.total / maxChartVal) * chartBarH, m.total > 0 ? 3 : 0)
-              return (
-                <div key={m.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                  <div title={`${m.label}: ${formatRupiah(m.total)}`} style={{
-                    width: '100%',
-                    height: barH,
-                    display: 'flex',
-                    flexDirection: 'column-reverse',
-                    borderRadius: '3px 3px 0 0',
-                    overflow: 'hidden',
-                  }}>
-                    {m.keluar > 0 && (
-                      <div style={{ flex: m.keluar, backgroundColor: '#DC2626', minHeight: 2 }} />
-                    )}
-                    {m.keluarPBB > 0 && (
-                      <div style={{ flex: m.keluarPBB, backgroundColor: '#D97706', minHeight: 2 }} />
-                    )}
+            {/* Bars + Tooltip */}
+            <div style={{ position: 'relative' }}>
+              {/* Tooltip */}
+              <div style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: `${tooltipLeft}%`,
+                transform: 'translateX(-50%)',
+                marginBottom: 8,
+                backgroundColor: '#1E293B',
+                color: '#fff',
+                borderRadius: 8,
+                padding: '7px 12px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                opacity: hovered ? 1 : 0,
+                transition: 'opacity 0.12s ease',
+                whiteSpace: 'nowrap',
+              }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 5, fontWeight: 600 }}>
+                  {hovered?.abbr ?? ''}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#DC2626', flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 600 }}>
+                      {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#D97706', flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 600 }}>
+                      {hovered && hovered.keluarPBB > 0 ? formatRupiah(hovered.keluarPBB) : '—'}
+                    </span>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-
-          {/* Month labels */}
-          <div style={{ display: 'flex', gap: isMobile ? 5 : 8, marginTop: 5 }}>
-            {chartData.map(m => (
-              <div key={m.label} style={{ flex: 1, textAlign: 'center', fontSize: isMobile ? 8 : 9, color: 'var(--text-muted)', fontWeight: 600 }}>
-                {m.abbr}
               </div>
-            ))}
-          </div>
 
-          {/* Legend */}
-          <div style={{ display: 'flex', gap: 14, marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#DC2626', flexShrink: 0 }} />
-              Dana Keluar
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#D97706', flexShrink: 0 }} />
-              Dana Keluar PBB
+              {/* Bar groups */}
+              <div ref={chartScrollRef} style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', paddingBottom: 2 }}>
+                {chartData.map((m, i) => {
+                  const keluarPct = m.keluar > 0 ? Math.max(4 / CHART_H * 100, (m.keluar / maxChartVal) * 100) : 0
+                  const pbbPct = m.keluarPBB > 0 ? Math.max(4 / CHART_H * 100, (m.keluarPBB / maxChartVal) * 100) : 0
+                  const isHov = hoveredChartIdx === i
+                  return (
+                    <div
+                      key={m.label}
+                      style={{ flex: 1, minWidth: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
+                      onMouseEnter={() => setHoveredChartIdx(i)}
+                      onMouseLeave={() => setHoveredChartIdx(null)}
+                    >
+                      <div style={{ display: 'flex', gap: 4, height: CHART_H, alignItems: 'flex-end' }}>
+                        <div style={{
+                          width: BAR_W,
+                          height: keluarPct > 0 ? `${keluarPct}%` : 3,
+                          backgroundColor: keluarPct > 0 ? '#DC2626' : 'var(--border-subtle)',
+                          borderRadius: '3px 3px 0 0',
+                          opacity: isHov ? 1 : 0.72,
+                          transition: 'opacity 0.15s ease',
+                        }} />
+                        <div style={{
+                          width: BAR_W,
+                          height: pbbPct > 0 ? `${pbbPct}%` : 3,
+                          backgroundColor: pbbPct > 0 ? '#D97706' : 'var(--border-subtle)',
+                          borderRadius: '3px 3px 0 0',
+                          opacity: isHov ? 1 : pbbPct > 0 ? 0.72 : 0.4,
+                          transition: 'opacity 0.15s ease',
+                        }} />
+                      </div>
+                      <div style={{
+                        fontSize: 10,
+                        marginTop: 7,
+                        color: isHov ? 'var(--blue)' : 'var(--text-muted)',
+                        fontWeight: isHov ? 700 : 400,
+                        transition: 'color 0.12s ease',
+                        userSelect: 'none',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {m.abbr}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* === RIWAYAT TRANSAKSI === */}
       {showRiwayat && (
