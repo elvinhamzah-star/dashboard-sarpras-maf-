@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
-  fetchPrograms, fetchProgramDocuments, fetchTransactions,
+  fetchPrograms, fetchProgramDocuments, fetchTransactions, fetchDocumentationProgramIds,
   Program, ProgramDocument, Transaction, DocCategory, hasMafCredentials,
 } from '../lib/supabase'
 import { adminInsert, adminDelete } from '../lib/adminApi'
@@ -16,6 +16,7 @@ interface Props {
   role: 'pbb' | 'maf' | null
   initialProgramId?: string | null
   initialCategory?: DocCategory | null
+  onNavigate?: (page: string, programId?: string) => void
 }
 
 const FOLDER_META: Record<Folder, { label: string; color: string; bgColor: string; desc: string }> = {
@@ -85,10 +86,11 @@ function ChevronLeft() {
   )
 }
 
-export default function Dokumen({ isAdmin, role, initialProgramId }: Props) {
+export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }: Props) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [docs, setDocs] = useState<ProgramDocument[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [docPhotoProgramIds, setDocPhotoProgramIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
@@ -121,11 +123,13 @@ export default function Dokumen({ isAdmin, role, initialProgramId }: Props) {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [pRes, dRes, tRes] = await Promise.all([
+    const [pRes, dRes, tRes, docPhotoRes] = await Promise.all([
       fetchPrograms(),
       fetchProgramDocuments(),
       fetchTransactions(),
+      fetchDocumentationProgramIds(),
     ])
+    setDocPhotoProgramIds(new Set((docPhotoRes.data ?? []).map((r: { program_id: string }) => r.program_id)))
     if (pRes.data) {
       const hasMaf = hasMafCredentials()
       setPrograms(
@@ -530,6 +534,39 @@ export default function Dokumen({ isAdmin, role, initialProgramId }: Props) {
               </div>
             )
           })}
+          {(() => {
+            const hasPhotos = docPhotoProgramIds.has(p.id)
+            const disabled = !hasPhotos && !isAdmin
+            const color = '#7C3AED'
+            return (
+              <div
+                onClick={disabled ? undefined : () => onNavigate?.('galeri', p.id)}
+                style={{
+                  ...CARD,
+                  cursor: disabled ? 'default' : 'pointer',
+                  opacity: disabled ? 0.5 : 1,
+                  filter: disabled ? 'grayscale(0.4)' : 'none',
+                }}
+                onMouseEnter={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = color + '55' }}
+                onMouseLeave={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="22" height="22" fill="none" stroke={disabled ? 'var(--text-muted)' : color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                  </svg>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>Dokumentasi</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                  {disabled ? 'Belum ada foto' : 'Lihat galeri foto'}
+                </div>
+                {!disabled && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    <ChevronRight />
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
       </>
     )

@@ -81,6 +81,16 @@ export interface Documentation {
   updated_at?: string
 }
 
+export interface BeforeAfterPair {
+  id: string
+  program_id: string
+  before_doc_id: string | null
+  after_doc_id: string | null
+  label?: string | null
+  urutan: number
+  created_at?: string
+}
+
 // MAF management role credentials. Mirrors the sessionStorage-backed
 // dashboard_role flag in App.tsx: that flag survives a page reload, so these
 // credentials must too, or a reload would leave the UI rendering in MAF mode
@@ -134,6 +144,8 @@ export async function fetchTransactions() {
   return { data, error }
 }
 export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
+export const fetchDocumentationProgramIds = () => supabase.from('documentation').select('program_id')
+export const fetchBeforeAfterPairs = () => supabase.from('before_after_pairs').select('*').order('urutan', { ascending: true })
 export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
 export async function fetchSubPrograms() {
   if (hasMafCredentials()) return fetchMafData<SubProgram>('sub_programs')

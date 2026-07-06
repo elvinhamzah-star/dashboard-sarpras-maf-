@@ -1,14 +1,20 @@
 import { useEffect, useState, useRef } from 'react'
-import { fetchDocumentation, Documentation, fetchPrograms, Program } from '../lib/supabase'
+import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
+import ManageBeforeAfterModal from './ManageBeforeAfterModal'
+
+// Sentinel fase value: the curated before/after comparison view
+const FASE_BA = '__ba__'
 
 interface GaleriProps {
   isAdmin?: boolean
   initialProgramId?: string | null
+  /** When set, "Kembali ke Daftar" exits to the caller (e.g. Dokumen) instead of Galeri's own program list. */
+  onExit?: () => void
 }
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
@@ -23,12 +29,14 @@ const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir',
 // Sentinel: entered Level 3 directly (program has only 1 or 0 distinct titik — skip Level 2)
 const TITIK_ALL = '__all__'
 
-export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProps) {
+export default function Galeri({ isAdmin = false, initialProgramId, onExit }: GaleriProps) {
   const width = useWindowWidth()
   const isMobile = width < 900
 
   const [docs, setDocs] = useState<Documentation[]>([])
   const [programs, setPrograms] = useState<Program[]>([])
+  const [pairs, setPairs] = useState<BeforeAfterPair[]>([])
+  const [showManageBA, setShowManageBA] = useState(false)
   const [loading, setLoading] = useState(true)
   const [filterProgram, setFilterProgram] = useState<string>('Semua')
   const [openFolderId, setOpenFolderId] = useState<string | null>(null)
@@ -39,7 +47,7 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [lightboxImgLoaded, setLightboxImgLoaded] = useState(false)
   const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
-  const [videoIframeLoaded, setVideoIframeLoaded] = useState(false)
+  const [videoPlayRequested, setVideoPlayRequested] = useState(false)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
@@ -91,10 +99,11 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
     setLoading(true)
     setError('')
     try {
-      const [docsResult, progsResult] = await Promise.all([fetchDocumentation(), fetchPrograms()])
+      const [docsResult, progsResult, pairsResult] = await Promise.all([fetchDocumentation(), fetchPrograms(), fetchBeforeAfterPairs()])
       if (docsResult.error) setError('Tabel dokumentasi belum dibuat. Hubungi admin.')
       else if (docsResult.data) setDocs(docsResult.data)
       if (progsResult.data) setPrograms(progsResult.data)
+      if (pairsResult.data) setPairs(pairsResult.data)
     } catch {
       setError('Gagal memuat galeri.')
     }
@@ -136,8 +145,21 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
       })
     : []
 
+  // Curated before/after pairs for the currently open program
+  const docById = (id: string | null | undefined) => (id ? docs.find(d => d.id === id) : undefined)
+  const programPairs = openFolderId ? pairs.filter(p => p.program_id === openFolderId) : []
+  const hasPairs = programPairs.length > 0
+  const isBAView = filterFase === FASE_BA
+
+  // Flat list of pair photos (before, after, before, after…) — drives the lightbox in BA view
+  const baDocs: Documentation[] = isBAView
+    ? programPairs.flatMap(p => [docById(p.before_doc_id), docById(p.after_doc_id)].filter((d): d is Documentation => !!d))
+    : []
+
   // For lightbox — only used in Level 3
-  const activeDocs = (openFolderId && selectedTitik !== null) ? folderDocs : filteredDocs
+  const activeDocs = isBAView
+    ? baDocs
+    : (openFolderId && selectedTitik !== null) ? folderDocs : filteredDocs
 
   // Distinct titik of the currently open program
   const currentDistinctTitik = openFolderId ? getDistinctTitik(openFolderId) : []
@@ -171,6 +193,7 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
   }
 
   const closeFolder = () => {
+    if (onExit) { onExit(); return }
     setOpenFolderId(null)
     setSelectedTitik(null)
     setFilterFase('Semua')
@@ -210,7 +233,7 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
     if (lightboxIndex === null) return
     setLightboxImgLoaded(false)
     setLightboxIsVideo(false)
-    setVideoIframeLoaded(false)
+    setVideoPlayRequested(false)
     ;[lightboxIndex - 1, lightboxIndex + 1].forEach(idx => {
       const d = activeDocs[idx]
       if (!d) return
@@ -523,13 +546,6 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
                   {openProgramName}
                 </h1>
               )}
-              <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '4px 0 0' }}>
-                {docs.filter(d => {
-                  if (d.program_id !== openFolderId) return false
-                  if (selectedTitik !== TITIK_ALL && (d.titik?.trim() || '') !== selectedTitik) return false
-                  return true
-                }).length} foto dokumentasi
-              </p>
             </>
           )}
         </div>
@@ -557,31 +573,105 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
       ) : isLevel3 ? (
         /* ── Level 3: Fase filter + photo grid ── */
         <>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-            {FASE_LIST.map(fase => {
+          <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            {FASE_LIST.filter(f => f !== 'Semua').map(fase => {
               const isActive = filterFase === fase
-              const c = fase === 'Semua' ? 'var(--blue)' : (FASE_INFO[fase]?.color || 'var(--blue)')
-              const hasFase = fase === 'Semua' || docs.some(d =>
+              const c = FASE_INFO[fase]?.color || 'var(--blue)'
+              const hasFase = docs.some(d =>
                 d.program_id === openFolderId &&
                 d.fase === fase &&
                 (selectedTitik === TITIK_ALL || (d.titik?.trim() || '') === selectedTitik)
               )
               if (!hasFase) return null
               return (
-                <button key={fase} onClick={() => setFilterFase(fase)}
+                <button key={fase} onClick={() => setFilterFase(isActive ? 'Semua' : fase)}
                   style={{
                     padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
                     border: isActive ? 'none' : '1px solid var(--border-subtle)',
-                    backgroundColor: isActive ? (fase === 'Semua' ? 'var(--blue)' : `${c}18`) : 'transparent',
-                    color: isActive ? (fase === 'Semua' ? '#fff' : c) : 'var(--text-secondary)',
+                    backgroundColor: isActive ? `${c}18` : 'transparent',
+                    color: isActive ? c : 'var(--text-secondary)',
                     fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer',
                   }}>
-                  {fase === 'Semua' ? 'Semua' : fase === 'Proses Pekerjaan' ? 'Proses' : fase}
+                  {fase === 'Proses Pekerjaan' ? 'Proses' : fase}
                 </button>
               )
             })}
+            {/* Before/after comparison chip — only when this program has curated pairs */}
+            {hasPairs && (
+              <button onClick={() => setFilterFase(isBAView ? 'Semua' : FASE_BA)}
+                style={{
+                  padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
+                  border: isBAView ? 'none' : '1px solid var(--border-subtle)',
+                  backgroundColor: isBAView ? 'rgba(124,58,237,0.14)' : 'transparent',
+                  color: isBAView ? '#7C3AED' : 'var(--text-secondary)',
+                  fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                Sebelum vs Sesudah
+              </button>
+            )}
+            {isAdmin && (
+              <button onClick={() => setShowManageBA(true)}
+                style={{
+                  marginLeft: 'auto', padding: isMobile ? '5px 12px' : '6px 14px', borderRadius: 99, fontFamily: 'inherit',
+                  border: '1px dashed var(--border-strong)', backgroundColor: 'transparent', color: 'var(--text-secondary)',
+                  fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Kelola Sebelum/Sesudah
+              </button>
+            )}
           </div>
-          {folderDocs.length === 0 ? (
+          {isBAView ? (
+            /* ── Before/after comparison view ── */
+            programPairs.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada pasangan sebelum/sesudah.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20 }}>
+                {programPairs.map(pair => {
+                  const beforeDoc = docById(pair.before_doc_id)
+                  const afterDoc = docById(pair.after_doc_id)
+                  const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
+                  const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
+                    const accent = kind === 'before' ? '#DC2626' : '#059669'
+                    const t = d ? getDriveThumbnailUrl(d.link_foto) : null
+                    return (
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: accent, color: '#fff' }}>
+                          {kind === 'before' ? 'Sebelum' : 'Sesudah'}
+                        </div>
+                        {d && t ? (
+                          <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
+                            style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', cursor: 'pointer', overflow: 'hidden', background: 'var(--surface-raised)' }}>
+                            <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </div>
+                        ) : (
+                          <div style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--surface-raised)', color: 'var(--text-muted)' }}>
+                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span style={{ fontSize: 11.5, fontWeight: 500 }}>Belum ada foto</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+                  return (
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                      {pair.label && (
+                        <div style={{ padding: isMobile ? '10px 14px' : '12px 16px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-subtle)', letterSpacing: '-0.01em' }}>
+                          {pair.label}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: 2, background: 'var(--border-subtle)' }}>
+                        {sideCell(beforeDoc, 'before')}
+                        {sideCell(afterDoc, 'after')}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          ) : folderDocs.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Tidak ada foto untuk fase ini.</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 14 }}>
@@ -719,41 +809,35 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
               <div style={{ position: 'relative' }}>
                 {isVideoFile ? (
                   <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
-                    <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    {isMobile ? (
-                      /* Mobile: Google Drive iframe doesn't play on iOS — open in Drive */
+                    {!videoPlayRequested ? (
+                      /* Poster + single tap → mounts a native <video autoPlay>.
+                         The tap is a real user gesture, so mobile browsers allow
+                         playback to start immediately — no second click. */
                       <div
-                        style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', backgroundColor: 'rgba(0,0,0,0.45)' }}
-                        onClick={e => { e.stopPropagation(); window.open(doc.link_foto, '_blank') }}
+                        style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}
+                        onClick={e => { e.stopPropagation(); setVideoPlayRequested(true) }}
                       >
-                        <div style={{ width: 68, height: 68, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                          <svg width="26" height="26" fill="#111" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                        </div>
-                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, backgroundColor: 'rgba(0,0,0,0.55)', padding: '7px 18px', borderRadius: 24 }}>
-                          Tap untuk putar video
+                        <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: 'rgba(0,0,0,0.35)' }}>
+                          <div style={{ width: isMobile ? 64 : 56, height: isMobile ? 64 : 56, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                            <svg width={isMobile ? 24 : 20} height={isMobile ? 24 : 20} fill="#111" viewBox="0 0 24 24" style={{ marginLeft: 2 }}><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                          </div>
+                          <div style={{ color: '#fff', fontSize: 12.5, fontWeight: 600, backgroundColor: 'rgba(0,0,0,0.5)', padding: '6px 16px', borderRadius: 24 }}>
+                            Tap untuk putar video
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      /* Desktop: iframe */
-                      <>
-                        <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoIframeLoaded ? 0 : 1, transition: 'opacity 0.3s' }} />
-                        {!videoIframeLoaded && (
-                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, pointerEvents: 'none' }}>
-                            <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="20" height="20" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            </div>
-                            <div style={{ color: '#fff', fontSize: 12, opacity: 0.75, backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px 12px', borderRadius: 20 }}>Memuat video…</div>
-                          </div>
-                        )}
-                        <iframe
-                          key={doc.id}
-                          src={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto)}/preview`}
-                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', opacity: videoIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
-                          allow="autoplay"
-                          allowFullScreen
-                          onLoad={() => setVideoIframeLoaded(true)}
-                        />
-                      </>
+                      <video
+                        key={doc.id}
+                        src={getDriveVideoUrl(doc.link_foto) || ''}
+                        poster={getDriveThumbnailUrl(doc.link_foto) || undefined}
+                        controls
+                        autoPlay
+                        playsInline
+                        onClick={e => e.stopPropagation()}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', display: 'block' }}
+                      />
                     )}
                   </div>
                 ) : (
@@ -787,28 +871,22 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
                     key={`hint-${lightboxIndex}`}
                     style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 102, color: '#fff', fontSize: 11.5, fontWeight: 500, backgroundColor: 'rgba(0,0,0,0.5)', padding: '5px 16px', borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none', animation: 'swipeHint 2.5s ease 0.4s both' }}
                   >
-                    ← geser untuk navigasi →
+                    ← Geser untuk foto lain →
                   </div>
                 )}
               </div>
 
               {/* Info section */}
               <div style={{ padding: isMobile ? '14px 16px 18px' : 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{formatTanggal(doc.tanggal)}</div>
-                <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>{doc.nama_pekerjaan}</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: doc.caption ? 10 : 14 }}>
-                  {doc.titik && <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>{doc.titik}</span>}
-                  {fi && <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color }}>{doc.fase}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTanggal(doc.tanggal)}</span>
+                  {fi && <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color, flexShrink: 0, whiteSpace: 'nowrap' }}>{doc.fase}</span>}
                 </div>
-                {doc.caption && <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>{doc.caption}</div>}
-                <a
-                  href={doc.link_foto} target="_blank" rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#fff', textDecoration: 'none', backgroundColor: 'var(--blue)', padding: '8px 16px', borderRadius: 9 }}
-                >
-                  Buka di Google Drive
-                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </a>
+                <div style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.35 }}>{doc.nama_pekerjaan}</div>
+                {doc.titik && (
+                  <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>{doc.titik}</span>
+                )}
+                {doc.caption && <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55, marginTop: 8 }}>{doc.caption}</div>}
               </div>
             </div>
 
@@ -824,6 +902,15 @@ export default function Galeri({ isAdmin = false, initialProgramId }: GaleriProp
       {isAdmin && editingDoc && (
         <EditDocumentationModal doc={editingDoc} programs={programs} onClose={() => setEditingDoc(null)}
           onSuccess={async () => { const { data } = await fetchDocumentation(); if (data) setDocs(data); setEditingDoc(null) }} />
+      )}
+      {isAdmin && showManageBA && openFolderId && (
+        <ManageBeforeAfterModal
+          programId={openFolderId}
+          programName={openProgramName}
+          docs={docs}
+          onClose={() => setShowManageBA(false)}
+          onSaved={async () => { const { data } = await fetchBeforeAfterPairs(); if (data) setPairs(data) }}
+        />
       )}
     </div>
   )

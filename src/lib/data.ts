@@ -69,6 +69,15 @@ export function getDriveViewUrl(driveLink: string): string | null {
   return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : null
 }
 
+// Direct-download URL for a Drive file — usable as an HTML5 <video> src
+// so the clip plays inline in the dashboard (single tap) instead of loading
+// Google Drive's own player iframe (which needs a second tap). Requires the
+// file to be shared "Anyone with the link".
+export function getDriveVideoUrl(driveLink: string): string | null {
+  const fileId = extractDriveFileId(driveLink)
+  return fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : null
+}
+
 export function isValidDriveLink(link: string): boolean {
   return link.includes('/d/') && link.includes('drive.google.com')
 }

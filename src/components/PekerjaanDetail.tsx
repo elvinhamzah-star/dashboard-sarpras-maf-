@@ -15,11 +15,13 @@ interface PekerjaanDetailProps {
   isAdmin: boolean
   onBack: () => void
   onNavigate?: (page: string, programId?: string, category?: string) => void
+  /** true when rendered inside a modal/bottom-sheet: hides the back button & edge-swipe (the shell owns closing) */
+  embedded?: boolean
 }
 
 type Tab = 'Ringkasan' | 'Dokumen' | 'Sub Pekerjaan'
 
-export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate }: PekerjaanDetailProps) {
+export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate, embedded = false }: PekerjaanDetailProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const isNarrow = width < 1100
@@ -72,8 +74,20 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <span style={{ color: 'var(--text-muted)' }}>Memuat...</span>
+      <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}>
+        {!embedded && <div className="skeleton" style={{ width: 150, height: 34, borderRadius: 99, marginBottom: 20 }} />}
+        <div style={{ backgroundColor: 'var(--card)', borderRadius: 14, padding: isMobile ? 14 : '20px 24px', border: '1px solid var(--border-subtle)', marginBottom: 14 }}>
+          <div className="skeleton" style={{ width: 90, height: 12, marginBottom: 10 }} />
+          <div className="skeleton" style={{ width: '70%', height: 22, marginBottom: 14 }} />
+          <div className="skeleton" style={{ width: '100%', height: 46 }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          {[72, 72, 96].map((w, i) => <div key={i} className="skeleton" style={{ width: w, height: 32, borderRadius: 99 }} />)}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+          <div className="skeleton" style={{ height: 180, borderRadius: 14 }} />
+          <div className="skeleton" style={{ height: 180, borderRadius: 14 }} />
+        </div>
       </div>
     )
   }
@@ -102,13 +116,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   return (
     <div
       style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}
-      onTouchStart={e => {
+      onTouchStart={embedded ? undefined : e => {
         if (e.touches[0].clientX < 28) {
           swipeTouchStartX.current = e.touches[0].clientX
           swipeTouchStartY.current = e.touches[0].clientY
         }
       }}
-      onTouchEnd={e => {
+      onTouchEnd={embedded ? undefined : e => {
         if (swipeTouchStartX.current === null) return
         const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
         const dy = Math.abs(e.changedTouches[0].clientY - (swipeTouchStartY.current || 0))
@@ -118,8 +132,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
       }}
     >
 
-      {/* Back button */}
-      <button
+      {/* Back button (hidden when embedded in a modal — the shell owns closing) */}
+      {!embedded && <button
         onClick={onBack}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, marginBottom: 20, fontFamily: 'inherit', transition: 'all 0.15s' }}
         onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
@@ -129,7 +143,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </span>
         Kembali ke Daftar
-      </button>
+      </button>}
 
       {/* Header Card */}
       <div
