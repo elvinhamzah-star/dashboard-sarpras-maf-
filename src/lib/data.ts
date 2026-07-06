@@ -70,9 +70,18 @@ export function getDriveViewUrl(driveLink: string): string | null {
 }
 
 // Direct-download URL for Drive files
+// drive.usercontent.google.com is the current proper download domain;
+// uc?export=download on drive.google.com is deprecated and returns garbled content.
+// confirm=t bypasses the virus-scan confirmation page for large files.
 export function getDriveVideoUrl(driveLink: string): string | null {
   const fileId = extractDriveFileId(driveLink)
-  return fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : null
+  return fileId ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download&authuser=0&confirm=t` : null
+}
+
+// Download URL for any Drive file (use in <a href> without download attr)
+export function getDriveDownloadUrl(driveLink: string): string | null {
+  const fileId = extractDriveFileId(driveLink)
+  return fileId ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download&authuser=0&confirm=t` : null
 }
 
 // Embed/preview URL for Drive files — use in <iframe> for cross-platform video playback

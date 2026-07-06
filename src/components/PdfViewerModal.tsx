@@ -54,10 +54,14 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
     : url.replace('/preview', '/view')
 
   const fileId = extractDriveFileId(url)
+  // Use drive.usercontent.google.com — the current proper download domain.
+  // uc?export=download on drive.google.com is deprecated and returns garbled/HTML content.
+  // cross-origin <a download> is ignored by browsers (Chrome 65+), so we rely on
+  // Content-Disposition headers from Google's server instead.
   const downloadUrl = sheetMatch
     ? `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}/export?format=pdf`
     : fileId
-      ? `https://drive.google.com/uc?export=download&id=${fileId}`
+      ? `https://drive.usercontent.google.com/download?id=${fileId}&export=download&authuser=0&confirm=t`
       : driveOpenUrl
 
   return createPortal(
@@ -101,7 +105,6 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
             {/* Download button */}
             <a
               href={downloadUrl}
-              download
               target="_blank"
               rel="noopener noreferrer"
               title="Unduh"
