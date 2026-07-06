@@ -479,9 +479,9 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                 ) : (
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Kosong</span>
                 )}
-                {!isMobile && typeof p.progress === 'number' && (
+                {!isMobile && typeof p.progress_percent === 'number' && (
                   <div style={{ width: 64, height: 3, borderRadius: 99, backgroundColor: 'var(--border)', overflow: 'hidden' }}>
-                    <div style={{ width: `${p.progress}%`, height: '100%', borderRadius: 99, backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)' }} />
+                    <div style={{ width: `${p.progress_percent}%`, height: '100%', borderRadius: 99, backgroundColor: STATUS_COLORS[p.status] || 'var(--blue)' }} />
                   </div>
                 )}
                 <ChevronRight />
