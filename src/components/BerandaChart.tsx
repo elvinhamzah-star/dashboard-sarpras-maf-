@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Transaction } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 
@@ -12,6 +12,7 @@ const BAR_W = 22
 
 export default function BerandaChart({ transactions }: BerandaChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const byMonth: Record<string, { masuk: number; keluar: number }> = {}
   transactions.forEach(t => {
@@ -35,6 +36,13 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
     })
 
   const maxVal = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
+
+  // Auto-scroll to the right so newest month is visible first
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+    }
+  }, [months.length])
 
   if (transactions.length === 0) return null
 
@@ -111,8 +119,8 @@ export default function BerandaChart({ transactions }: BerandaChartProps) {
           </div>
         </div>
 
-        {/* Bar groups — min 56px per group, scroll jika overflow */}
-        <div style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', paddingBottom: 2 }}>
+        {/* Bar groups — min 56px per group, auto-scroll to newest on mount */}
+        <div ref={scrollRef} style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', paddingBottom: 2 }}>
           {months.map((m, i) => {
             const masukPct = m.masuk > 0 ? Math.max(4 / CHART_H * 100, (m.masuk / maxVal) * 100) : 0
             const keluarPct = m.keluar > 0 ? Math.max(4 / CHART_H * 100, (m.keluar / maxVal) * 100) : 0
