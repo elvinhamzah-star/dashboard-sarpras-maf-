@@ -619,10 +619,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              fontSize: 11, color: 'var(--blue)', textDecoration: 'none', fontWeight: 600,
+                              fontSize: 10.5, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500,
+                              display: 'inline-flex', alignItems: 'center', gap: 3,
                             }}
                           >
-                            Buka ↗
+                            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                            Folder
                           </a>
                         )}
                       </div>
@@ -751,18 +753,19 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 5,
-                                backgroundColor: 'rgba(26,111,232,0.08)',
-                                color: 'var(--blue)',
-                                padding: '5px 11px',
+                                backgroundColor: 'var(--bg)',
+                                color: 'var(--text-secondary)',
+                                padding: '5px 10px',
                                 borderRadius: 7,
-                                fontSize: 11.5,
-                                fontWeight: 600,
+                                fontSize: 11,
+                                fontWeight: 500,
                                 textDecoration: 'none',
-                                border: '1px solid rgba(26,111,232,0.15)',
+                                border: '1px solid var(--border-subtle)',
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              Buka ↗
+                              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                              Folder
                             </a>
                           ) : (
                             <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>

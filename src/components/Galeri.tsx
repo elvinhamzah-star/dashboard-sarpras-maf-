@@ -513,7 +513,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         <div style={{ minWidth: 0, flex: 1 }}>
           {isLevel1 && (
             <>
-              <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+              <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
                 Galeri Dokumentasi
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
