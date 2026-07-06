@@ -41,6 +41,9 @@ export default function App() {
   const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
   const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
+  // When Galeri was entered via the "Dokumentasi" folder card in Dokumen,
+  // its back button should return to Dokumen instead of Galeri's own list.
+  const [galeriReturnToDokumen, setGaleriReturnToDokumen] = useState(false)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
 
   // Responsive: collapse to off-canvas drawer on small screens
@@ -61,6 +64,7 @@ export default function App() {
     setDokumenProgramId(null)
     setDokumenCategory(null)
     setGaleriProgramId(null)
+    setGaleriReturnToDokumen(false)
     if (page !== 'beranda') setBerandaReturnDetailId(null)
     if (isMobile) setSidebarOpen(false)
   }
@@ -134,9 +138,30 @@ export default function App() {
       case 'keuangan':
         return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} role={role} />
       case 'dokumen':
-        return <Dokumen isAdmin={isAdmin} role={role} initialProgramId={dokumenProgramId} initialCategory={dokumenCategory} />
+        return (
+          <Dokumen
+            isAdmin={isAdmin}
+            role={role}
+            initialProgramId={dokumenProgramId}
+            initialCategory={dokumenCategory}
+            onNavigate={(page, pid) => {
+              if (page === 'galeri') {
+                setDokumenProgramId(pid ?? null)
+                setGaleriProgramId(pid ?? null)
+                setGaleriReturnToDokumen(true)
+                setCurrentPage('galeri')
+              }
+            }}
+          />
+        )
       case 'galeri':
-        return <Galeri isAdmin={isAdmin} initialProgramId={galeriProgramId} />
+        return (
+          <Galeri
+            isAdmin={isAdmin}
+            initialProgramId={galeriProgramId}
+            onExit={galeriReturnToDokumen ? () => { setGaleriReturnToDokumen(false); setCurrentPage('dokumen') } : undefined}
+          />
+        )
       case 'riwayat':
         return role === 'maf' ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       case 'laporan':
@@ -272,29 +297,6 @@ export default function App() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: isAdmin ? 'var(--blue)' : '#9CAABB' }} />
               {role === 'maf' ? 'MAF' : isAdmin ? 'Admin' : 'Viewer'}
             </span>
-            <button
-              onClick={handleLogoutDashboard}
-              title="Keluar"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 34,
-                height: 34,
-                borderRadius: 9,
-                border: '1px solid var(--border)',
-                backgroundColor: 'var(--card)',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
           </header>
         )}
 
@@ -320,7 +322,7 @@ export default function App() {
         >
           <div
             key={currentPage + (selectedProgramId || '')}
-            style={{ animation: 'pageSlideIn 0.22s cubic-bezier(0.4,0,0.2,1)', minHeight: '100%' }}
+            style={{ animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)', minHeight: '100%' }}
           >
             {renderPage()}
           </div>

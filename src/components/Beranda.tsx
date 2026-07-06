@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, hasMafCredentials, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -9,6 +9,7 @@ import BerandaChart from './BerandaChart'
 import BerandaMAF from './BerandaMAF'
 import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 import PekerjaanDetail from './PekerjaanDetail'
+import ModalShell from './ModalShell'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -69,27 +70,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
-
-  // Swipe-down to close detail sheet on mobile
-  const [detailDragY, setDetailDragY] = useState(0)
-  const detailTouchStartY = useRef<number | null>(null)
-  const detailIsDragging = useRef(false)
-
-  const onDetailTouchStart = (e: React.TouchEvent) => {
-    detailTouchStartY.current = e.touches[0].clientY
-    detailIsDragging.current = true
-  }
-  const onDetailTouchMove = (e: React.TouchEvent) => {
-    if (!detailIsDragging.current || detailTouchStartY.current === null) return
-    const delta = e.touches[0].clientY - detailTouchStartY.current
-    if (delta > 0) setDetailDragY(delta)
-  }
-  const onDetailTouchEnd = () => {
-    if (detailDragY > 80) setDetailProgramId(null)
-    setDetailDragY(0)
-    detailIsDragging.current = false
-    detailTouchStartY.current = null
-  }
 
   useEffect(() => {
     if (initialDetailId) {
@@ -370,96 +350,38 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       )}
 
       {detailProgramId && (
-        <div
-          onClick={e => { if (e.target === e.currentTarget) setDetailProgramId(null) }}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            backgroundColor: 'rgba(10,22,40,0.6)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: isMobile ? 'flex-end' : 'flex-start',
-            justifyContent: 'center',
-            padding: isMobile ? 0 : '24px 16px',
-            overflowY: isMobile ? 'hidden' : 'auto',
-          }}
+        <ModalShell
+          onClose={() => setDetailProgramId(null)}
+          maxWidth={820}
+          zIndex={200}
+          panelColor="var(--bg)"
+          backdropColor="rgba(10,22,40,0.6)"
         >
-          {isMobile ? (
-            /* ── Mobile: bottom sheet ── */
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{
-                width: '100%',
-                maxHeight: '94vh',
-                backgroundColor: 'var(--bg)',
-                borderRadius: '20px 20px 0 0',
-                boxShadow: '0 -12px 48px rgba(0,0,0,0.22)',
-                display: 'flex', flexDirection: 'column',
-                overflow: 'hidden',
-                transform: `translateY(${detailDragY}px)`,
-                transition: detailDragY === 0 ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none',
-                willChange: 'transform',
-              }}
-            >
-              {/* Drag handle */}
-              <div
-                onTouchStart={onDetailTouchStart}
-                onTouchMove={onDetailTouchMove}
-                onTouchEnd={onDetailTouchEnd}
-                style={{
-                  padding: '12px 0 8px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, touchAction: 'none', cursor: 'grab',
-                  backgroundColor: 'var(--bg)',
-                }}
-              >
-                <div style={{ width: 36, height: 4, borderRadius: 99, backgroundColor: 'var(--border)' }} />
-              </div>
-              {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-                <PekerjaanDetail
-                  programId={detailProgramId}
-                  isAdmin={isAdmin}
-                  onBack={() => setDetailProgramId(null)}
-                  onNavigate={onNavigate ? (page, pid, cat) => {
-                    setDetailProgramId(null)
-                    onNavigate(page, pid, cat)
-                  } : undefined}
-                />
-              </div>
-            </div>
-          ) : (
-            /* ── Desktop: centered modal ── */
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{
-                width: '100%', maxWidth: 820,
-                backgroundColor: 'var(--bg)',
-                borderRadius: 16,
-                boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-                overflow: 'hidden',
-                position: 'relative',
-              }}
-            >
-              <button
-                onClick={() => setDetailProgramId(null)}
-                style={{
-                  position: 'absolute', top: 14, right: 14, zIndex: 10,
-                  width: 32, height: 32, borderRadius: 8,
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card)',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+          {close => (
+            <div style={{ position: 'relative' }}>
+              {!isMobile && (
+                <button
+                  onClick={close}
+                  style={{
+                    position: 'absolute', top: 14, right: 14, zIndex: 10,
+                    width: 32, height: 32, borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
               <PekerjaanDetail
                 programId={detailProgramId}
                 isAdmin={isAdmin}
-                onBack={() => setDetailProgramId(null)}
+                embedded
+                onBack={close}
                 onNavigate={onNavigate ? (page, pid, cat) => {
                   setDetailProgramId(null)
                   onNavigate(page, pid, cat)
@@ -467,11 +389,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               />
             </div>
           )}
-        </div>
+        </ModalShell>
       )}
 
-      {/* Laporan Pekanan */}
-      {role !== 'maf' && (
+      {/* Laporan Pekanan — admin only */}
+      {isAdmin && (
       <div>
         <button
           onClick={() => setShowLaporan(v => !v)}
