@@ -37,6 +37,7 @@ export default function ModalShell({
   const [dragY, setDragY] = useState(0)
   const touchStartY = useRef<number | null>(null)
   const isDragging = useRef(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // entered: false on first paint → true next frame, drives the enter transition
   const [entered, setEntered] = useState(false)
@@ -75,6 +76,23 @@ export default function ModalShell({
     touchStartY.current = null
   }
 
+  // Panel-level swipe: works from anywhere when content is scrolled to top
+  const onPanelTouchStart = (e: React.TouchEvent) => {
+    const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
+    if (scrollTop === 0) {
+      touchStartY.current = e.touches[0].clientY
+      isDragging.current = true
+    }
+  }
+  const onPanelTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || touchStartY.current === null) return
+    const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
+    if (scrollTop > 0) { isDragging.current = false; setDragY(0); return }
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) setDragY(delta)
+    else { isDragging.current = false; setDragY(0) }
+  }
+
   const visible = entered && !closing
 
   // Panel transform: drag follows the finger; otherwise enter/exit slides (mobile)
@@ -100,6 +118,9 @@ export default function ModalShell({
       }}
     >
       <div
+        onTouchStart={isMobile ? onPanelTouchStart : undefined}
+        onTouchMove={isMobile ? onPanelTouchMove : undefined}
+        onTouchEnd={isMobile ? onTouchEnd : undefined}
         style={{
           backgroundColor: panelColor,
           borderRadius: isMobile ? '20px 20px 0 0' : 16,
@@ -126,19 +147,21 @@ export default function ModalShell({
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
             style={{
-              padding: '12px 0 8px',
+              padding: '14px 0 10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, touchAction: 'none', cursor: 'grab',
-              backgroundColor: 'var(--card)',
+              backgroundColor: panelColor,
             }}
           >
-            <div style={{ width: 36, height: 4, borderRadius: 99, backgroundColor: 'var(--border)' }} />
+            <div style={{ width: 40, height: 4, borderRadius: 99, backgroundColor: 'var(--border)' }} />
           </div>
         )}
-        <div style={contentScroll
-          ? { overflowY: 'auto', flex: 1 }
-          : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }
-        }>
+        <div
+          ref={scrollContainerRef}
+          style={contentScroll
+            ? { overflowY: 'auto', flex: 1 }
+            : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }
+          }>
           <ModalCloseContext.Provider value={close}>
             {typeof children === 'function' ? children(close) : children}
           </ModalCloseContext.Provider>

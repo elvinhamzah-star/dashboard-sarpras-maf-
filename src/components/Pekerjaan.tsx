@@ -128,7 +128,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               paddingBottom: 9,
               border: '1px solid var(--border)',
               borderRadius: 9,
-              fontSize: 13,
+              fontSize: 16,
               color: 'var(--text-primary)',
               backgroundColor: 'var(--card)',
               outline: 'none',

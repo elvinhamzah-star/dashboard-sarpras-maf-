@@ -5,6 +5,7 @@ import { adminUpsertConfig } from '../lib/adminApi'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
+import PdfViewerModal from './PdfViewerModal'
 
 interface KeuanganProps {
   isAdmin?: boolean
@@ -28,6 +29,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [viewingBukti, setViewingBukti] = useState<{ url: string; name: string } | null>(null)
   const [showRiwayat, setShowRiwayat] = useState(true)
   const [togglingRiwayat, setTogglingRiwayat] = useState(false)
   const [hoveredChartIdx, setHoveredChartIdx] = useState<number | null>(null)
@@ -490,10 +492,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         {t.link_bukti && (
                           <button
-                            onClick={() => window.open(t.link_bukti ?? undefined, '_blank', 'noopener,noreferrer')}
+                            onClick={() => {
+                              const url = t.link_bukti!
+                              const name = t.nama_pekerjaan || 'Bukti Transaksi'
+                              setViewingBukti({ url, name })
+                            }}
                             style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                           >
-                            Bukti ↗
+                            Bukti
                           </button>
                         )}
                         {isAdmin && (
@@ -560,6 +566,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             const { data } = await fetchTransactions()
             if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
           }}
+        />
+      )}
+
+      {viewingBukti && (
+        <PdfViewerModal
+          url={viewingBukti.url}
+          name={viewingBukti.name}
+          onClose={() => setViewingBukti(null)}
         />
       )}
     </div>

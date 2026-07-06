@@ -163,7 +163,7 @@ export default function App() {
           />
         )
       case 'riwayat':
-        return role === 'maf' ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
+        return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       case 'laporan':
         return role === 'maf'
           ? <Beranda isAdmin={isAdmin} role={role} />
@@ -304,7 +304,7 @@ export default function App() {
         <div
           style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
           onTouchStart={e => {
-            if (e.touches[0].clientX < 28) {
+            if (e.touches[0].clientX < 44) {
               edgeSwipeStartX.current = e.touches[0].clientX
               edgeSwipeStartY.current = e.touches[0].clientY
             }
@@ -313,7 +313,7 @@ export default function App() {
             if (edgeSwipeStartX.current === null) return
             const dx = e.changedTouches[0].clientX - edgeSwipeStartX.current
             const dy = Math.abs(e.changedTouches[0].clientY - (edgeSwipeStartY.current || 0))
-            if (dx > 72 && dy < 80) {
+            if (dx > 55 && dy < 90) {
               if (currentPage === 'pekerjaan' && selectedProgramId) setSelectedProgramId(null)
             }
             edgeSwipeStartX.current = null

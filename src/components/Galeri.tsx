@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, STATUS_COLORS } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
@@ -57,6 +57,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   const triggerRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef<number | null>(null)
+  const mainSwipeStartX = useRef<number | null>(null)
+  const mainSwipeStartY = useRef<number | null>(null)
   const autoOpenedRef = useRef(false)
 
   useEffect(() => { load() }, [])
@@ -484,7 +486,27 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     : selectedTitik
 
   return (
-    <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
+    <div
+      style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}
+      onTouchStart={e => {
+        if (!openFolderId || lightboxIndex !== null) return
+        if (e.touches[0].clientX < 44) {
+          mainSwipeStartX.current = e.touches[0].clientX
+          mainSwipeStartY.current = e.touches[0].clientY
+        }
+      }}
+      onTouchEnd={e => {
+        if (mainSwipeStartX.current === null) return
+        const dx = e.changedTouches[0].clientX - mainSwipeStartX.current
+        const dy = Math.abs(e.changedTouches[0].clientY - (mainSwipeStartY.current || 0))
+        if (dx > 55 && dy < 90) {
+          if (isLevel3) backFromLevel3()
+          else if (isLevel2) closeFolder()
+        }
+        mainSwipeStartX.current = null
+        mainSwipeStartY.current = null
+      }}
+    >
 
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -810,9 +832,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 {isVideoFile ? (
                   <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
                     {!videoPlayRequested ? (
-                      /* Poster + single tap → mounts a native <video autoPlay>.
-                         The tap is a real user gesture, so mobile browsers allow
-                         playback to start immediately — no second click. */
                       <div
                         style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}
                         onClick={e => { e.stopPropagation(); setVideoPlayRequested(true) }}
@@ -828,15 +847,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                         </div>
                       </div>
                     ) : (
-                      <video
+                      /* Use Google Drive's own iframe player — works on all platforms without login for public files */
+                      <iframe
                         key={doc.id}
-                        src={getDriveVideoUrl(doc.link_foto) || ''}
-                        poster={getDriveThumbnailUrl(doc.link_foto) || undefined}
-                        controls
-                        autoPlay
-                        playsInline
+                        src={getDriveEmbedUrl(doc.link_foto) || ''}
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
                         onClick={e => e.stopPropagation()}
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#000', display: 'block' }}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', background: '#000' }}
                       />
                     )}
                   </div>
@@ -871,22 +889,26 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     key={`hint-${lightboxIndex}`}
                     style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 102, color: '#fff', fontSize: 11.5, fontWeight: 500, backgroundColor: 'rgba(0,0,0,0.5)', padding: '5px 16px', borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none', animation: 'swipeHint 2.5s ease 0.4s both' }}
                   >
-                    ← Geser untuk foto lain →
+                    ← Geser untuk lihat foto lainnya →
                   </div>
                 )}
               </div>
 
-              {/* Info section */}
-              <div style={{ padding: isMobile ? '14px 16px 18px' : 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTanggal(doc.tanggal)}</span>
-                  {fi && <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color, flexShrink: 0, whiteSpace: 'nowrap' }}>{doc.fase}</span>}
+              {/* Info section — compact */}
+              <div style={{ padding: isMobile ? '10px 14px 14px' : '12px 18px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: isMobile ? 12.5 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.3 }}>{doc.nama_pekerjaan}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{formatTanggal(doc.tanggal)}</span>
+                      {doc.titik && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>{doc.titik}</span>
+                      )}
+                    </div>
+                    {doc.caption && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.5, marginTop: 5 }}>{doc.caption}</div>}
+                  </div>
+                  {fi && <span style={{ fontSize: 10.5, fontWeight: 600, padding: '3px 9px', borderRadius: 99, backgroundColor: fi.bg, color: fi.color, flexShrink: 0, whiteSpace: 'nowrap', marginTop: 2 }}>{doc.fase === 'Proses Pekerjaan' ? 'Proses' : doc.fase}</span>}
                 </div>
-                <div style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.35 }}>{doc.nama_pekerjaan}</div>
-                {doc.titik && (
-                  <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>{doc.titik}</span>
-                )}
-                {doc.caption && <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55, marginTop: 8 }}>{doc.caption}</div>}
               </div>
             </div>
 
