@@ -35,6 +35,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
 
   return (
     <ModalShell onClose={onClose} maxWidth={500}>
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Catatan Pekerjaan</div>
@@ -59,7 +60,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               padding: '10px 16px',
               borderRadius: 10,
@@ -92,6 +93,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

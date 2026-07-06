@@ -184,6 +184,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
   return (
     <ModalShell onClose={onClose} maxWidth={500}>
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Transaksi</div>
@@ -547,7 +548,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               padding: '10px 16px', borderRadius: 10,
               border: '1px solid var(--border)',
@@ -571,6 +572,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

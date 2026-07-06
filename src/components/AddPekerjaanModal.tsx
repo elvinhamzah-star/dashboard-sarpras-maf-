@@ -108,6 +108,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
 
   return (
     <ModalShell onClose={onClose} maxWidth={560}>
+      {close => (
       <div style={{ padding: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
@@ -115,7 +116,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tambahkan program pekerjaan baru</div>
           </div>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -157,7 +158,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 24 }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               padding: '10px 16px',
               borderRadius: 10,
@@ -190,6 +191,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

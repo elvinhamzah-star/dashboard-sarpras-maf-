@@ -46,6 +46,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
 
   return (
     <ModalShell onClose={onClose} maxWidth={550}>
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumen & Link</div>
@@ -87,7 +88,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               padding: '10px 16px',
               borderRadius: 10,
@@ -120,6 +121,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

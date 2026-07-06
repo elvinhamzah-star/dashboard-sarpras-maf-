@@ -84,6 +84,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
 
   return (
     <ModalShell onClose={onClose} maxWidth={480}>
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Sub Pekerjaan</div>
@@ -188,7 +189,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             disabled={saving}
             style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.5 : 1, fontFamily: 'inherit' }}
           >
@@ -203,6 +204,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

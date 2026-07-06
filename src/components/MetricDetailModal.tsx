@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import ModalShell from './ModalShell'
 
 export type MetricModalType = 'anggaran' | 'realisasi' | 'sisa' | 'penyerapan'
 
@@ -87,30 +88,6 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
   const withRealisasi = programs.filter(p => (p.realisasi_terkini || 0) > 0)
   const accent = ACCENT[type]
-
-  // Swipe-down to close
-  const [dragY, setDragY] = useState(0)
-  const touchStartY = useRef<number | null>(null)
-  const isDragging = useRef(false)
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY
-    isDragging.current = true
-  }
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current || touchStartY.current === null) return
-    const delta = e.touches[0].clientY - touchStartY.current
-    if (delta > 0) setDragY(delta)
-  }
-  const onTouchEnd = () => {
-    if (dragY > 80) {
-      onClose()
-    } else {
-      setDragY(0)
-    }
-    isDragging.current = false
-    touchStartY.current = null
-  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -308,51 +285,23 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     type === 'sisa'       ? `${penyerapan.toFixed(1)}%` :
     formatRupiah(totalAnggaran)
 
-  const panelStyle: React.CSSProperties = isMobile ? {
-    position: 'fixed',
-    bottom: 0, left: 0, right: 0,
-    backgroundColor: 'var(--card)',
-    borderRadius: '18px 18px 0 0',
-    maxHeight: '88vh',
-    display: 'flex', flexDirection: 'column',
-    boxShadow: '0 -12px 48px rgba(0,0,0,0.14)',
-    zIndex: 1001,
-    overflow: 'hidden',
-    transform: `translateY(${dragY}px)`,
-    transition: dragY === 0 ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none',
-    willChange: 'transform',
-  } : {
-    position: 'fixed',
-    top: '50%', left: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: 'var(--card)',
-    borderRadius: 16,
-    width: '92%', maxWidth: 640, maxHeight: '82vh',
-    display: 'flex', flexDirection: 'column',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.16)',
-    zIndex: 1001,
-    overflow: 'hidden',
-  }
-
   const iconSize = isMobile ? 40 : 44
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center' }}
-      onClick={onClose}
+    <ModalShell
+      onClose={onClose}
+      maxWidth={640}
+      zIndex={1000}
+      backdropColor="rgba(0,0,0,0.4)"
+      contentScroll={false}
     >
-      <div style={panelStyle} onClick={e => e.stopPropagation()}>
+      {close => (
+      <>
 
-        {/* Header — drag zone on mobile */}
+        {/* Header */}
         <div
-          onTouchStart={isMobile ? onTouchStart : undefined}
-          onTouchMove={isMobile ? onTouchMove : undefined}
-          onTouchEnd={isMobile ? onTouchEnd : undefined}
-          style={{ padding: isMobile ? `14px ${ps}px 12px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, touchAction: 'none', userSelect: 'none' }}
+          style={{ padding: isMobile ? `2px ${ps}px 12px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}
         >
-          {isMobile && (
-            <div style={{ width: 36, height: 4, backgroundColor: 'var(--border)', borderRadius: 99, margin: '0 auto 14px' }} />
-          )}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
 
             {/* Colored icon box */}
@@ -376,7 +325,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
             {/* Close button — desktop only; mobile uses swipe-down */}
             {!isMobile && (
               <button
-                onClick={onClose}
+                onClick={close}
                 style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)', marginTop: 1 }}
               >
                 <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -412,7 +361,8 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
           </div>
         </div>
 
-      </div>
-    </div>
+      </>
+      )}
+    </ModalShell>
   )
 }

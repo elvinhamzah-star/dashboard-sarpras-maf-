@@ -1,13 +1,27 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback, createContext, useContext } from 'react'
+import { createPortal } from 'react-dom'
 import { useWindowWidth } from '../lib/useWindowWidth'
+
+/**
+ * Shared close trigger for children rendered inside a ModalShell.
+ * Calling it plays the exit animation before actually unmounting,
+ * so Batal buttons etc. get the same smooth close as backdrop taps.
+ */
+const ModalCloseContext = createContext<(() => void) | null>(null)
+export const useModalClose = () => useContext(ModalCloseContext)
 
 interface ModalShellProps {
   onClose: () => void
-  children: React.ReactNode
+  children: React.ReactNode | ((close: () => void) => React.ReactNode)
   maxWidth?: number
   zIndex?: number
   backdropColor?: string
+  panelColor?: string
+  /** false = children manage their own scroll (pinned header/footer layouts) */
+  contentScroll?: boolean
 }
+
+const EXIT_MS = 230
 
 export default function ModalShell({
   onClose,
@@ -15,12 +29,35 @@ export default function ModalShell({
   maxWidth = 480,
   zIndex = 100,
   backdropColor = 'rgba(13,24,41,0.55)',
+  panelColor = 'var(--card)',
+  contentScroll = true,
 }: ModalShellProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [dragY, setDragY] = useState(0)
   const touchStartY = useRef<number | null>(null)
   const isDragging = useRef(false)
+
+  // entered: false on first paint → true next frame, drives the enter transition
+  const [entered, setEntered] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const closeTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true))
+    return () => {
+      cancelAnimationFrame(raf)
+      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current)
+    }
+  }, [])
+
+  const closeStarted = useRef(false)
+  const close = useCallback(() => {
+    if (closeStarted.current) return
+    closeStarted.current = true
+    setClosing(true)
+    closeTimer.current = window.setTimeout(onClose, EXIT_MS)
+  }, [onClose])
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY
@@ -32,18 +69,30 @@ export default function ModalShell({
     if (delta > 0) setDragY(delta)
   }
   const onTouchEnd = () => {
-    if (dragY > 80) onClose()
+    if (dragY > 80) close()
     setDragY(0)
     isDragging.current = false
     touchStartY.current = null
   }
 
-  return (
+  const visible = entered && !closing
+
+  // Panel transform: drag follows the finger; otherwise enter/exit slides (mobile)
+  // or scale-fades (desktop).
+  const panelTransform = dragY > 0
+    ? `translateY(${dragY}px)`
+    : isMobile
+      ? (visible ? 'translateY(0)' : 'translateY(100%)')
+      : (visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(8px)')
+
+  return createPortal(
     <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => { if (e.target === e.currentTarget) close() }}
       style={{
         position: 'fixed', inset: 0, zIndex,
         backgroundColor: backdropColor,
+        opacity: visible ? 1 : 0,
+        transition: `opacity ${closing ? EXIT_MS : 200}ms ease`,
         display: 'flex',
         alignItems: isMobile ? 'flex-end' : 'center',
         justifyContent: 'center',
@@ -52,7 +101,7 @@ export default function ModalShell({
     >
       <div
         style={{
-          backgroundColor: 'var(--card)',
+          backgroundColor: panelColor,
           borderRadius: isMobile ? '20px 20px 0 0' : 16,
           width: '100%',
           maxWidth: isMobile ? '100%' : maxWidth,
@@ -62,8 +111,11 @@ export default function ModalShell({
           boxShadow: isMobile
             ? '0 -8px 32px rgba(0,0,0,0.15)'
             : '0 20px 60px rgba(13,24,41,0.2)',
-          transform: `translateY(${dragY}px)`,
-          transition: dragY === 0 ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none',
+          opacity: isMobile ? 1 : (visible ? 1 : 0),
+          transform: panelTransform,
+          transition: dragY > 0
+            ? 'none'
+            : `transform ${closing ? EXIT_MS : 300}ms cubic-bezier(0.32, 0.72, 0, 1), opacity ${closing ? EXIT_MS : 200}ms ease`,
           willChange: 'transform',
           overflow: 'hidden',
         }}
@@ -83,10 +135,16 @@ export default function ModalShell({
             <div style={{ width: 36, height: 4, borderRadius: 99, backgroundColor: 'var(--border)' }} />
           </div>
         )}
-        <div style={{ overflowY: 'auto', flex: 1 }}>
-          {children}
+        <div style={contentScroll
+          ? { overflowY: 'auto', flex: 1 }
+          : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }
+        }>
+          <ModalCloseContext.Provider value={close}>
+            {typeof children === 'function' ? children(close) : children}
+          </ModalCloseContext.Provider>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

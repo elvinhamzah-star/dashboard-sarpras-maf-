@@ -74,6 +74,7 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
 
   return (
     <ModalShell onClose={() => { if (!saving) onClose() }} maxWidth={500}>
+      {close => (
       <div style={{ padding: '28px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
@@ -174,7 +175,7 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             disabled={saving}
             style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.5 : 1, fontFamily: 'inherit' }}
           >
@@ -189,6 +190,7 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

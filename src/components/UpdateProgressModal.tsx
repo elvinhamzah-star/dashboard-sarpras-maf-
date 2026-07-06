@@ -72,6 +72,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
 
   return (
     <ModalShell onClose={onClose} maxWidth={480}>
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Update Progress</div>
@@ -132,7 +133,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 24 }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               padding: '10px 16px',
               borderRadius: 10,
@@ -165,6 +166,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }

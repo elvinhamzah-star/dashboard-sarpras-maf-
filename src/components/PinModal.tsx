@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { verifyPin, setAdminPin } from '../lib/adminApi'
+import ModalShell from './ModalShell'
 
 interface PinModalProps {
   onSuccess: () => void
@@ -35,23 +36,11 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
   const canSubmit = pin.length === 4 && !checking
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        backgroundColor: 'rgba(13,24,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
+    <ModalShell onClose={onClose} maxWidth={380}>
+      {close => (
       <div
         style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 16,
-          padding: '32px 28px',
-          width: '100%',
-          maxWidth: 380,
-          boxShadow: '0 20px 60px rgba(13,24,41,0.2)',
+          padding: '32px 28px 40px',
           textAlign: 'center',
         }}
       >
@@ -111,7 +100,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{
               flex: 1, padding: '11px',
               borderRadius: 10,
@@ -144,6 +133,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
           </button>
         </div>
       </div>
-    </div>
+      )}
+    </ModalShell>
   )
 }

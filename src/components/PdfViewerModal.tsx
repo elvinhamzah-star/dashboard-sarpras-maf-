@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 function FileIcon({ color, size = 16 }: { color: string; size?: number }) {
@@ -20,14 +20,33 @@ function extractDriveFileId(url: string): string | null {
   return null
 }
 
+const EXIT_MS = 200
+
 export default function PdfViewerModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   const [iframeLoaded, setIframeLoaded] = useState(false)
+  const [entered, setEntered] = useState(false)
+  const [closing, setClosing] = useState(false)
+
+  const closeStarted = useRef(false)
+  const close = () => {
+    if (closeStarted.current) return
+    closeStarted.current = true
+    setClosing(true)
+    window.setTimeout(onClose, EXIT_MS)
+  }
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const raf = requestAnimationFrame(() => setEntered(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [])
+
+  const visible = entered && !closing
 
   const sheetMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
   const driveOpenUrl = sheetMatch
@@ -43,13 +62,15 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
 
   return createPortal(
     <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => { if (e.target === e.currentTarget) close() }}
       style={{
         position: 'fixed', inset: 0, zIndex: 500,
         backgroundColor: 'rgba(0,0,0,0.78)',
         backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '20px 16px',
+        opacity: visible ? 1 : 0,
+        transition: `opacity ${EXIT_MS}ms ease`,
       }}
     >
       <div style={{
@@ -60,6 +81,9 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
         overflow: 'hidden',
         boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)',
         maxHeight: '92vh',
+        transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(10px)',
+        transition: `transform ${closing ? EXIT_MS : 280}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+        willChange: 'transform',
       }}>
         {/* Header */}
         <div style={{
@@ -94,28 +118,9 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
                 <path d="M5 20h14"/>
               </svg>
             </a>
-            {/* Buka di Drive */}
-            <a
-              href={driveOpenUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 12, fontWeight: 600, color: 'var(--blue)',
-                backgroundColor: 'rgba(26,111,232,0.08)',
-                border: '1px solid rgba(26,111,232,0.18)',
-                borderRadius: 7, padding: '5px 11px', textDecoration: 'none',
-              }}
-            >
-              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-              Buka di Drive
-            </a>
             {/* Close */}
             <button
-              onClick={onClose}
+              onClick={close}
               style={{
                 width: 32, height: 32, borderRadius: 8,
                 border: '1px solid var(--border-subtle)',

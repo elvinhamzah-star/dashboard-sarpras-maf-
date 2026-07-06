@@ -196,6 +196,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
 
   return (
     <ModalShell onClose={() => { if (!saving) onClose() }} maxWidth={580}>
+      {close => (
       <div style={{ padding: '28px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
@@ -512,7 +513,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
           <button
-            onClick={onClose}
+            onClick={close}
             disabled={saving}
             style={{
               padding: '10px 16px', borderRadius: 10,
@@ -546,6 +547,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
+      )}
     </ModalShell>
   )
 }

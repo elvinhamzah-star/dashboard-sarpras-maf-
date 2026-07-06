@@ -77,6 +77,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
   return (
     <ModalShell onClose={onClose} maxWidth={540} zIndex={300} backdropColor="rgba(13,24,41,0.6)">
+      {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Edit Program</div>
@@ -139,7 +140,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={close}
             style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Batal
@@ -153,6 +154,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
           </button>
         </div>
       </div>
+      )}
     </ModalShell>
   )
 }
