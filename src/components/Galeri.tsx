@@ -6,6 +6,7 @@ import { useWindowWidth } from '../lib/useWindowWidth'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
+import ModalShell from './ModalShell'
 
 // Sentinel fase value: the curated before/after comparison view
 const FASE_BA = '__ba__'
@@ -343,6 +344,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   }
 
   // ── Filter bar (Level 1) ──────────────────────────────────────────
+  const closePicker = () => { setShowProgramDropdown(false); setProgramSearch('') }
+
   const renderFilterBar = () => (
     <div style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
       <button
@@ -358,10 +361,11 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         Semua
       </button>
 
+      {/* Trigger button — same on mobile & desktop */}
       <div ref={dropdownRef} style={{ position: 'relative' }}>
         <button
           ref={triggerRef}
-          onClick={() => showProgramDropdown ? (setShowProgramDropdown(false), setProgramSearch('')) : openProgramDropdown()}
+          onClick={() => showProgramDropdown ? closePicker() : openProgramDropdown()}
           style={{
             padding: '6px 14px', borderRadius: 99, fontFamily: 'inherit',
             border: `1px solid ${filterProgram !== 'Semua' || showProgramDropdown ? 'var(--blue)' : 'var(--border-subtle)'}`,
@@ -377,12 +381,13 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           </svg>
           <span style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedProgramName}</span>
           <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-            style={{ transform: showProgramDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }}>
+            style={{ transform: (showProgramDropdown && !isMobile) ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }}>
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
 
-        {showProgramDropdown && (
+        {/* Desktop: fixed dropdown */}
+        {showProgramDropdown && !isMobile && (
           <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 200, backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden' }}>
             <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ position: 'relative' }}>
@@ -394,12 +399,12 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               </div>
             </div>
             <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-              <button type="button" onClick={() => { setFilterProgram('Semua'); setShowProgramDropdown(false); setProgramSearch('') }}
+              <button type="button" onClick={() => { setFilterProgram('Semua'); closePicker() }}
                 style={{ width: '100%', padding: '10px 14px', border: 'none', borderBottom: '1px solid var(--border-subtle)', backgroundColor: filterProgram === 'Semua' ? 'rgba(26,111,232,0.06)' : 'transparent', color: filterProgram === 'Semua' ? 'var(--blue)' : 'var(--text-primary)', fontSize: 13, fontWeight: filterProgram === 'Semua' ? 600 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' }}>
                 Semua Program
               </button>
               {filteredProgramList.map(p => (
-                <button key={p.id} type="button" onClick={() => { setFilterProgram(p.id); setShowProgramDropdown(false); setProgramSearch('') }}
+                <button key={p.id} type="button" onClick={() => { setFilterProgram(p.id); closePicker() }}
                   style={{ width: '100%', padding: '10px 14px', border: 'none', backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.06)' : 'transparent', color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-primary)', fontSize: 13, fontWeight: filterProgram === p.id ? 600 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.nama_pekerjaan}
                 </button>
@@ -413,6 +418,54 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         <button onClick={() => setFilterProgram('Semua')} style={{ padding: '4px 10px', borderRadius: 99, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
           ✕ Reset
         </button>
+      )}
+
+      {/* Mobile: bottom-sheet program picker */}
+      {showProgramDropdown && isMobile && (
+        <ModalShell onClose={closePicker} zIndex={200}>
+          <div style={{ padding: '4px 16px 36px' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 14 }}>
+              Pilih Program
+            </div>
+            {/* Search */}
+            <div style={{ position: 'relative', marginBottom: 10 }}>
+              <svg width="15" height="15" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                ref={searchRef}
+                type="text"
+                value={programSearch}
+                onChange={e => setProgramSearch(e.target.value)}
+                placeholder="Cari program..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 34px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }}
+              />
+            </div>
+            {/* List */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button
+                type="button"
+                onClick={() => { setFilterProgram('Semua'); closePicker() }}
+                style={{ padding: '13px 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'transparent', color: filterProgram === 'Semua' ? 'var(--blue)' : 'var(--text-primary)', fontSize: 14, fontWeight: filterProgram === 'Semua' ? 700 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <span>Semua Program</span>
+                {filterProgram === 'Semua' && <svg width="16" height="16" fill="none" stroke="var(--blue)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
+              </button>
+              {filteredProgramList.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => { setFilterProgram(p.id); closePicker() }}
+                  style={{ padding: '13px 4px', border: 'none', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'transparent', color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-primary)', fontSize: 14, fontWeight: filterProgram === p.id ? 700 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <span style={{ flex: 1, paddingRight: 12, lineHeight: 1.35 }}>{p.nama_pekerjaan}</span>
+                  {filterProgram === p.id && <svg width="16" height="16" fill="none" stroke="var(--blue)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </ModalShell>
       )}
     </div>
   )
