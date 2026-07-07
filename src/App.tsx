@@ -285,23 +285,25 @@ export default function App() {
               {pageTitles[currentPage]}
             </span>
             <div style={{ flex: 1 }} />
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                backgroundColor: isAdmin ? 'rgba(26,111,232,0.1)' : 'rgba(15,23,42,0.05)',
-                color: isAdmin ? 'var(--blue)' : '#9CAABB',
-                fontSize: 10.5,
-                fontWeight: 700,
-                padding: '4px 9px',
-                borderRadius: 20,
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: isAdmin ? 'var(--blue)' : '#9CAABB' }} />
-              {role === 'maf' ? 'MAF' : isAdmin ? 'Admin' : 'Viewer'}
-            </span>
+            {role !== 'maf' && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  backgroundColor: isAdmin ? 'rgba(26,111,232,0.1)' : 'rgba(15,23,42,0.05)',
+                  color: isAdmin ? 'var(--blue)' : '#9CAABB',
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  padding: '4px 9px',
+                  borderRadius: 20,
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: isAdmin ? 'var(--blue)' : '#9CAABB' }} />
+                {isAdmin ? 'Admin' : 'Viewer'}
+              </span>
+            )}
           </header>
         )}
 
