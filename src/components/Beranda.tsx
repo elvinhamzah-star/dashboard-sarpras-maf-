@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, hasMafCredentials, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
-import BerandaMAF from './BerandaMAF'
 import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 import PekerjaanDetail from './PekerjaanDetail'
 import ModalShell from './ModalShell'
@@ -117,7 +116,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  const displayPrograms = hasMafCredentials() ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  const displayPrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
 
   const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
@@ -201,18 +200,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           ))}
         </div>
       </div>
-    )
-  }
-
-  if (hasMafCredentials()) {
-    const mafTotalAnggaran = displayPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-    return (
-      <BerandaMAF
-        programs={displayPrograms}
-        totalAnggaran={mafTotalAnggaran}
-        totalRealisasi={totalRealisasi}
-        formattedLastUpdated={formattedLastUpdated}
-      />
     )
   }
 
