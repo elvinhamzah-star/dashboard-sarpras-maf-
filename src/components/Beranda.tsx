@@ -56,27 +56,8 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-const SectionDivider = ({ label, isMobile }: { label: string; isMobile: boolean }) => (
-  <div style={{
-    marginTop: isMobile ? 8 : 14,
-    marginBottom: isMobile ? 10 : 12,
-  }}>
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      fontSize: 10,
-      fontWeight: 700,
-      color: 'var(--text-muted)',
-      textTransform: 'uppercase',
-      letterSpacing: '0.08em',
-      backgroundColor: 'var(--surface-subtle)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: 6,
-      padding: '3px 8px',
-    }}>
-      {label}
-    </span>
-  </div>
+const SectionDivider = ({ isMobile }: { label: string; isMobile: boolean }) => (
+  <div style={{ height: isMobile ? 12 : 20 }} />
 )
 
 export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed }: BerandaProps) {
