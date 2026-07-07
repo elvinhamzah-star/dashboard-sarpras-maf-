@@ -3,18 +3,20 @@ import { formatRupiah } from '../lib/data'
 
 interface BerandaAlertsProps {
   programs: Program[]
+  showOverdue?: boolean
+  showOverBudget?: boolean
 }
 
-export default function BerandaAlerts({ programs }: BerandaAlertsProps) {
+export default function BerandaAlerts({ programs, showOverdue = true, showOverBudget = true }: BerandaAlertsProps) {
   const today = new Date().toISOString().split('T')[0]
 
-  const overdue = programs.filter(p =>
+  const overdue = showOverdue ? programs.filter(p =>
     p.target_selesai &&
     p.target_selesai < today &&
     !['Selesai', 'On Hold', 'Perencanaan'].includes(p.status)
-  )
+  ) : []
 
-  const overBudget = programs.filter(p => (p.sisa_anggaran ?? 0) < 0)
+  const overBudget = showOverBudget ? programs.filter(p => (p.sisa_anggaran ?? 0) < 0) : []
 
   if (overdue.length === 0 && overBudget.length === 0) return null
 

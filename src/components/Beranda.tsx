@@ -56,6 +56,29 @@ const MetricIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
+const SectionDivider = ({ label, isMobile }: { label: string; isMobile: boolean }) => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: isMobile ? 4 : 8,
+    marginBottom: isMobile ? 12 : 14,
+  }}>
+    <span style={{
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: 'var(--text-muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.08em',
+      whiteSpace: 'nowrap',
+      flexShrink: 0,
+    }}>
+      {label}
+    </span>
+    <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border)' }} />
+  </div>
+)
+
 export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed }: BerandaProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
@@ -263,7 +286,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         </div>
       )}
 
-      <BerandaAlerts programs={displayPrograms} />
+      {/* ── KEUANGAN ── */}
+      <SectionDivider label="Keuangan" isMobile={isMobile} />
 
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
@@ -324,6 +348,16 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </div>
 
       <BerandaChart transactions={rawTransactions} />
+
+      {/* Over-budget alert — sits below chart inside Keuangan section */}
+      <BerandaAlerts programs={displayPrograms} showOverdue={false} />
+
+      {/* ── PEKERJAAN ── */}
+      <SectionDivider label="Pekerjaan" isMobile={isMobile} />
+
+      {/* Deadline overdue alert — sits inside Pekerjaan section */}
+      <BerandaAlerts programs={displayPrograms} showOverBudget={false} />
+
       <BerandaWeekOverWeek
         programs={displayPrograms}
         snapshots={snapshots}
