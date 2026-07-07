@@ -64,12 +64,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const width = useWindowWidth()
   const isMobile = width < 600
   const [programs, setPrograms] = useState<Program[]>([])
-  const [totalRealisasi, setTotalRealisasi] = useState(0)
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
+  const [filterYear, setFilterYear] = useState<number | null>(null)
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
@@ -106,13 +106,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         })
         setRencanaMap(map)
       }
-      if (txData) {
-        setRawTransactions(txData)
-        const realisasi = txData
-          .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
-          .reduce((s, t) => s + (t.nominal || 0), 0)
-        setTotalRealisasi(realisasi)
-      }
+      if (txData) setRawTransactions(txData)
       if (snapData) setSnapshots(snapData)
       if (subData) setSubPrograms(subData)
       setLoading(false)
@@ -120,13 +114,36 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  const displayPrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  // Tahun yang tersedia dari data transaksi
+  const availableYears = [...new Set(
+    rawTransactions.map(t => t.tanggal?.slice(0, 4)).filter(Boolean) as string[]
+  )].sort().reverse().map(Number)
 
-  const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  // Filter transaksi berdasarkan tahun
+  const filteredTransactions = filterYear
+    ? rawTransactions.filter(t => t.tanggal?.startsWith(String(filterYear)))
+    : rawTransactions
+
+  // Filter program: aktif di tahun yang dipilih
+  const filteredPrograms = filterYear
+    ? programs.filter(p => {
+        if (!p.tanggal_mulai) return true
+        const mulaiYear = parseInt(p.tanggal_mulai.slice(0, 4))
+        const selesaiYear = p.tanggal_selesai ? parseInt(p.tanggal_selesai.slice(0, 4)) : 9999
+        return mulaiYear <= filterYear && selesaiYear >= filterYear
+      })
+    : programs
+
+  const displayPrograms = role === 'maf' ? filteredPrograms.filter(p => p.jenis_pekerjaan !== 'Operasional') : filteredPrograms
+
+  const totalAnggaran = filteredPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const totalRealisasi = filteredTransactions
+    .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
+    .reduce((s, t) => s + (t.nominal || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
-  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
+  const progressPrograms = filteredPrograms.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
     ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
@@ -267,6 +284,32 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         </div>
       )}
 
+      {/* Filter Tahun */}
+      {availableYears.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          {[null, ...availableYears].map(year => (
+            <button
+              key={year ?? 'all'}
+              onClick={() => setFilterYear(year)}
+              style={{
+                padding: isMobile ? '4px 11px' : '5px 13px',
+                borderRadius: 20,
+                border: filterYear === year ? 'none' : '1px solid var(--border)',
+                backgroundColor: filterYear === year ? 'var(--blue)' : 'var(--card)',
+                color: filterYear === year ? '#fff' : 'var(--text-muted)',
+                fontSize: isMobile ? 11.5 : 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all 0.15s',
+              }}
+            >
+              {year ?? 'Semua'}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── KEUANGAN ── */}
       <SectionDivider label="Keuangan" isMobile={isMobile} />
 
@@ -328,7 +371,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         ))}
       </div>
 
-      <BerandaChart transactions={rawTransactions} />
+      <BerandaChart transactions={filteredTransactions} />
 
       {/* ── PEKERJAAN ── */}
       <SectionDivider label="Pekerjaan" isMobile={isMobile} />
