@@ -282,7 +282,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                 return unique.length > 0 ? unique.join(', ') : (program.vendor || '-')
               })()
             },
-            { label: 'Tanggal Dibuat', value: formatTanggal(program.created_at) },
+            { label: 'Tanggal Mulai', value: formatTanggal(program.tanggal_mulai || '') },
+            { label: 'Tanggal Selesai', value: formatTanggal(program.tanggal_selesai || '') },
           ].map(m => (
             <div key={m.label}>
               <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
