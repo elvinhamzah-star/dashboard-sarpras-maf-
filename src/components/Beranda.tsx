@@ -58,24 +58,24 @@ const MetricIcon = ({ type }: { type: string }) => {
 
 const SectionDivider = ({ label, isMobile }: { label: string; isMobile: boolean }) => (
   <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: isMobile ? 4 : 8,
-    marginBottom: isMobile ? 12 : 14,
+    marginTop: isMobile ? 8 : 14,
+    marginBottom: isMobile ? 10 : 12,
   }}>
     <span style={{
-      fontSize: 10.5,
+      display: 'inline-flex',
+      alignItems: 'center',
+      fontSize: 10,
       fontWeight: 700,
       color: 'var(--text-muted)',
       textTransform: 'uppercase',
       letterSpacing: '0.08em',
-      whiteSpace: 'nowrap',
-      flexShrink: 0,
+      backgroundColor: 'var(--surface-subtle)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: 6,
+      padding: '3px 8px',
     }}>
       {label}
     </span>
-    <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border)' }} />
   </div>
 )
 
@@ -349,14 +349,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       <BerandaChart transactions={rawTransactions} />
 
-      {/* Over-budget alert — sits below chart inside Keuangan section */}
-      <BerandaAlerts programs={displayPrograms} showOverdue={false} />
-
       {/* ── PEKERJAAN ── */}
       <SectionDivider label="Pekerjaan" isMobile={isMobile} />
 
-      {/* Deadline overdue alert — sits inside Pekerjaan section */}
-      <BerandaAlerts programs={displayPrograms} showOverBudget={false} />
+      {/* Over-budget alert — masuk Pekerjaan karena perlu tindakan per program */}
+      <BerandaAlerts programs={displayPrograms} showOverdue={false} />
 
       <BerandaWeekOverWeek
         programs={displayPrograms}
