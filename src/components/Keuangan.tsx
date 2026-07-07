@@ -289,7 +289,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isMobile ? card.label.replace('Dana ', '') : card.label}
               </div>
-              <div style={{ fontSize: isMobile ? 12 : 16, fontWeight: 700, color: isActive ? card.color : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: isMobile ? 12 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {formatRupiah(card.value)}
               </div>
               <div style={{ fontSize: isMobile ? 9 : 10.5, color: isActive ? card.color : 'var(--text-muted)', marginTop: 3 }}>
