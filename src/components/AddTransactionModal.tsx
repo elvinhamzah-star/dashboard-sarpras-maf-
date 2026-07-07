@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
@@ -86,6 +87,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   const [search, setSearch] = useState('')
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const portalRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -99,10 +101,9 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
   useEffect(() => {
     if (!dropdownOpen) return
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false)
-        setSearch('')
-      }
+      const inTrigger = dropdownRef.current?.contains(e.target as Node)
+      const inPortal = portalRef.current?.contains(e.target as Node)
+      if (!inTrigger && !inPortal) { setDropdownOpen(false); setSearch('') }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -257,14 +258,14 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               </svg>
             </button>
 
-            {/* Dropdown panel — fixed to escape modal overflow clipping */}
-            {dropdownOpen && (
-              <div style={{
+            {/* Dropdown panel — portaled to body to escape modal overflow clipping */}
+            {dropdownOpen && createPortal(
+              <div ref={portalRef} style={{
                 position: 'fixed',
                 top: dropdownPos.top,
                 left: dropdownPos.left,
                 width: dropdownPos.width,
-                zIndex: 200,
+                zIndex: 500,
                 backgroundColor: 'var(--card)',
                 borderRadius: 12,
                 border: '1px solid var(--border-subtle)',
@@ -393,7 +394,8 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                     </>
                   )}
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>

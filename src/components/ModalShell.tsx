@@ -103,17 +103,23 @@ export default function ModalShell({
 
   // Panel-level swipe: activates when content is scrolled to top
   const onPanelTouchStart = (e: React.TouchEvent) => {
-    const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
-    if (scrollTop === 0) {
-      touchStartY.current = e.touches[0].clientY
-      isDragging.current = true
-    }
+    // Store start position but DON'T commit to drag yet — wait for confirmed downward gesture
+    touchStartY.current = e.touches[0].clientY
+    isDragging.current = false
   }
   const onPanelTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current || touchStartY.current === null) return
+    if (touchStartY.current === null) return
     const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
-    if (scrollTop > 0) { isDragging.current = false; setDragY(0); return }
     const delta = e.touches[0].clientY - touchStartY.current
+    // Only start drag-to-close when: at scroll top AND swiping downward > 10px
+    if (!isDragging.current) {
+      if (scrollTop === 0 && delta > 10) {
+        isDragging.current = true
+      } else {
+        return // let normal scroll happen
+      }
+    }
+    if (scrollTop > 0) { isDragging.current = false; setDragY(0); return }
     if (delta > 0) setDragY(delta)
     else { isDragging.current = false; setDragY(0) }
   }

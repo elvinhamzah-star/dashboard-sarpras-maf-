@@ -47,7 +47,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [lightboxImgLoaded, setLightboxImgLoaded] = useState(false)
   const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
-  const [videoPlayRequested, setVideoPlayRequested] = useState(false)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
@@ -242,7 +241,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     if (lightboxIndex === null) return
     setLightboxImgLoaded(false)
     setLightboxIsVideo(false)
-    setVideoPlayRequested(false)
     ;[lightboxIndex - 1, lightboxIndex + 1].forEach(idx => {
       const d = activeDocs[idx]
       if (!d) return
@@ -520,6 +518,19 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         <div style={{ minWidth: 0, flex: 1 }}>
           {isLevel1 && (
             <>
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                  onMouseEnter={e => { const b = e.currentTarget; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)' }}
+                >
+                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </span>
+                  Kembali
+                </button>
+              )}
               <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
                 Galeri Dokumentasi
               </h1>
@@ -837,33 +848,15 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               {/* Media + overlay nav */}
               <div style={{ position: 'relative' }}>
                 {isVideoFile ? (
-                  <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
-                    {!videoPlayRequested ? (
-                      <div
-                        style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}
-                        onClick={e => { e.stopPropagation(); setVideoPlayRequested(true) }}
-                      >
-                        <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: 'rgba(0,0,0,0.35)' }}>
-                          <div style={{ width: isMobile ? 64 : 56, height: isMobile ? 64 : 56, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                            <svg width={isMobile ? 24 : 20} height={isMobile ? 24 : 20} fill="#111" viewBox="0 0 24 24" style={{ marginLeft: 2 }}><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                          </div>
-                          <div style={{ color: '#fff', fontSize: 12.5, fontWeight: 600, backgroundColor: 'rgba(0,0,0,0.5)', padding: '6px 16px', borderRadius: 24 }}>
-                            Tap untuk putar video
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Use Google Drive's own iframe player — works on all platforms without login for public files */
-                      <iframe
-                        key={doc.id}
-                        src={getDriveEmbedUrl(doc.link_foto) || ''}
-                        allow="autoplay; encrypted-media"
-                        allowFullScreen
-                        onClick={e => e.stopPropagation()}
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', background: '#000' }}
-                      />
-                    )}
+                  <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
+                    <iframe
+                      key={doc.id}
+                      src={getDriveEmbedUrl(doc.link_foto) || ''}
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      onClick={e => e.stopPropagation()}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }}
+                    />
                   </div>
                 ) : (
                   <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>

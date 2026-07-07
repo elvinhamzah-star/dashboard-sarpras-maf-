@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
@@ -71,15 +72,16 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const [search, setSearch] = useState('')
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const portalRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!dropdownOpen) return
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false); setSearch('')
-      }
+      const inTrigger = dropdownRef.current?.contains(e.target as Node)
+      const inPortal = portalRef.current?.contains(e.target as Node)
+      if (!inTrigger && !inPortal) { setDropdownOpen(false); setSearch('') }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -248,10 +250,10 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
               </svg>
             </button>
 
-            {dropdownOpen && (
-              <div style={{
+            {dropdownOpen && createPortal(
+              <div ref={portalRef} style={{
                 position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width,
-                zIndex: 200, backgroundColor: 'var(--card)', borderRadius: 12,
+                zIndex: 500, backgroundColor: 'var(--card)', borderRadius: 12,
                 border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
               }}>
                 <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -299,7 +301,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                     </button>
                   ))}
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>

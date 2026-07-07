@@ -49,6 +49,8 @@ export default function App() {
   // When Galeri was entered via the "Dokumentasi" folder card in Dokumen,
   // its back button should return to Dokumen instead of Galeri's own list.
   const [galeriReturnToDokumen, setGaleriReturnToDokumen] = useState(false)
+  // When Galeri was entered from PekerjaanDetail, back returns to that program's detail.
+  const [galeriReturnProgramId, setGaleriReturnProgramId] = useState<string | null>(null)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
 
   // Responsive: collapse to off-canvas drawer on small screens
@@ -115,6 +117,7 @@ export default function App() {
               setDokumenCategory((cat as DocCategory) ?? null)
             } else if (page === 'galeri') {
               setGaleriProgramId(pid ?? null)
+              setGaleriReturnProgramId(selectedProgramId)  // remember where to return
             }
           }}
         />
@@ -164,7 +167,19 @@ export default function App() {
           <Galeri
             isAdmin={isAdmin}
             initialProgramId={galeriProgramId}
-            onExit={galeriReturnToDokumen ? () => { setGaleriReturnToDokumen(false); setCurrentPage('dokumen') } : undefined}
+            onExit={
+              galeriReturnToDokumen
+                ? () => { setGaleriReturnToDokumen(false); setCurrentPage('dokumen') }
+                : galeriReturnProgramId
+                  ? () => {
+                      const pid = galeriReturnProgramId
+                      setGaleriReturnProgramId(null)
+                      setGaleriProgramId(null)
+                      setSelectedProgramId(pid)
+                      setCurrentPage('pekerjaan')
+                    }
+                  : undefined
+            }
           />
         )
       case 'riwayat':
@@ -329,10 +344,16 @@ export default function App() {
                 // Detail → daftar pekerjaan
                 setSelectedProgramId(null)
               } else if (currentPage === 'galeri') {
-                // Galeri → dokumen (jika masuk via dokumen) atau beranda
+                // Galeri → dokumen (jika masuk via dokumen), pekerjaan detail, atau beranda
                 if (galeriReturnToDokumen) {
                   setGaleriReturnToDokumen(false)
                   setCurrentPage('dokumen')
+                } else if (galeriReturnProgramId) {
+                  const pid = galeriReturnProgramId
+                  setGaleriReturnProgramId(null)
+                  setGaleriProgramId(null)
+                  setSelectedProgramId(pid)
+                  setCurrentPage('pekerjaan')
                 } else {
                   setGaleriProgramId(null)
                   setCurrentPage('beranda')
