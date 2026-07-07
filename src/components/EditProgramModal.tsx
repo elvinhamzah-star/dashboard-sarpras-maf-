@@ -47,6 +47,8 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   const [status, setStatus] = useState(program.status)
   const [vendor, setVendor] = useState(program.vendor || '')
   const [anggaran, setAnggaran] = useState(String(program.total_anggaran || ''))
+  const [tanggalMulai, setTanggalMulai] = useState(program.tanggal_mulai || '')
+  const [tanggalSelesai, setTanggalSelesai] = useState(program.tanggal_selesai || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -66,6 +68,8 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
       status,
       vendor: vendor.trim() || null,
       total_anggaran: anggaranNum,
+      tanggal_mulai: tanggalMulai || null,
+      tanggal_selesai: tanggalSelesai || null,
     }, program.id)
     setSaving(false)
     if (err) {
@@ -136,6 +140,25 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
               inputMode="numeric"
             />
           </Field>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Field label="Tanggal Mulai">
+              <input
+                type="date"
+                value={tanggalMulai}
+                onChange={e => setTanggalMulai(e.target.value)}
+                style={inputStyle}
+              />
+            </Field>
+            <Field label="Tanggal Selesai">
+              <input
+                type="date"
+                value={tanggalSelesai}
+                onChange={e => setTanggalSelesai(e.target.value)}
+                style={inputStyle}
+              />
+            </Field>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

@@ -16,6 +16,8 @@ export interface Program {
   realisasi_terkini: number
   sisa_anggaran: number
   vendor: string
+  tanggal_mulai?: string
+  tanggal_selesai?: string
   target_selesai?: string
   isu_utama: string
   link_rab_detail?: string
