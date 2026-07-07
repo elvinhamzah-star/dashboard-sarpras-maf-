@@ -87,16 +87,15 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const start = (page - 1) * itemsPerPage
   const paged = filtered.slice(start, start + itemsPerPage)
 
-  // Monthly spending data for chart — oldest first
+  // Monthly chart — Masuk vs (Keluar + Keluar PBB) — same as BerandaChart
   const chartData = (() => {
-    const map: Record<string, { keluar: number; keluarPBB: number }> = {}
+    const map: Record<string, { masuk: number; keluar: number }> = {}
     transactions.forEach(t => {
-      if (t.jenis_transaksi === 'Masuk') return
       const ym = t.tanggal?.slice(0, 7)
       if (!ym) return
-      if (!map[ym]) map[ym] = { keluar: 0, keluarPBB: 0 }
-      if (t.jenis_transaksi === 'Keluar') map[ym].keluar += t.nominal || 0
-      else if (t.jenis_transaksi === 'Keluar PBB') map[ym].keluarPBB += t.nominal || 0
+      if (!map[ym]) map[ym] = { masuk: 0, keluar: 0 }
+      if (t.jenis_transaksi === 'Masuk') map[ym].masuk += t.nominal || 0
+      else if (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB') map[ym].keluar += t.nominal || 0
     })
     const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
     return Object.entries(map)
@@ -107,15 +106,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
         return {
           label: `${monthName} ${y}`,
           abbr: MONTH_ABBR[monthName] || monthName.slice(0, 3),
+          masuk: v.masuk,
           keluar: v.keluar,
-          keluarPBB: v.keluarPBB,
-          total: v.keluar + v.keluarPBB,
         }
       })
       .slice(-8)
   })()
 
-  const maxChartVal = Math.max(...chartData.map(m => m.total), 1)
+  const maxChartVal = Math.max(...chartData.flatMap(m => [m.masuk, m.keluar]), 1)
   const chartBarH = isMobile ? 72 : 96
 
   useEffect(() => {
@@ -331,12 +329,12 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#DC2626' }} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Masuk</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#D97706' }} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar PBB</span>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#94A3B8' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
                 </div>
               </div>
             </div>
@@ -366,15 +364,15 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#DC2626', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
-                      {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
+                      {hovered && hovered.masuk > 0 ? formatRupiah(hovered.masuk) : '—'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#D97706', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#94A3B8', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
-                      {hovered && hovered.keluarPBB > 0 ? formatRupiah(hovered.keluarPBB) : '—'}
+                      {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
                     </span>
                   </div>
                 </div>
@@ -383,8 +381,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {/* Bar groups */}
               <div ref={chartScrollRef} style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', paddingBottom: 2 }}>
                 {chartData.map((m, i) => {
+                  const masukPct = m.masuk > 0 ? Math.max(4 / CHART_H * 100, (m.masuk / maxChartVal) * 100) : 0
                   const keluarPct = m.keluar > 0 ? Math.max(4 / CHART_H * 100, (m.keluar / maxChartVal) * 100) : 0
-                  const pbbPct = m.keluarPBB > 0 ? Math.max(4 / CHART_H * 100, (m.keluarPBB / maxChartVal) * 100) : 0
                   const isHov = hoveredChartIdx === i
                   return (
                     <div
@@ -396,18 +394,18 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                       <div style={{ display: 'flex', gap: 4, height: CHART_H, alignItems: 'flex-end' }}>
                         <div style={{
                           width: BAR_W,
-                          height: keluarPct > 0 ? `${keluarPct}%` : 3,
-                          backgroundColor: keluarPct > 0 ? '#DC2626' : 'var(--border-subtle)',
+                          height: masukPct > 0 ? `${masukPct}%` : 3,
+                          backgroundColor: masukPct > 0 ? '#1A6FE8' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
                           opacity: isHov ? 1 : 0.72,
                           transition: 'opacity 0.15s ease',
                         }} />
                         <div style={{
                           width: BAR_W,
-                          height: pbbPct > 0 ? `${pbbPct}%` : 3,
-                          backgroundColor: pbbPct > 0 ? '#D97706' : 'var(--border-subtle)',
+                          height: keluarPct > 0 ? `${keluarPct}%` : 3,
+                          backgroundColor: keluarPct > 0 ? '#94A3B8' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
-                          opacity: isHov ? 1 : pbbPct > 0 ? 0.72 : 0.4,
+                          opacity: isHov ? 1 : keluarPct > 0 ? 0.72 : 0.4,
                           transition: 'opacity 0.15s ease',
                         }} />
                       </div>
