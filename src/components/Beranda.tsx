@@ -69,7 +69,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
-  const [filterYear, setFilterYear] = useState<number | null>(null)
+  const [filterMonth, setFilterMonth] = useState<string | null>(null) // format: 'YYYY-MM'
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
@@ -114,23 +114,23 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  // Tahun yang tersedia dari data transaksi
-  const availableYears = [...new Set(
-    rawTransactions.map(t => t.tanggal?.slice(0, 4)).filter(Boolean) as string[]
-  )].sort().reverse().map(Number)
+  // Bulan yang tersedia dari data transaksi (format YYYY-MM, urut ascending)
+  const availableMonths = [...new Set(
+    rawTransactions.map(t => t.tanggal?.slice(0, 7)).filter(Boolean) as string[]
+  )].sort()
 
-  // Filter transaksi berdasarkan tahun
-  const filteredTransactions = filterYear
-    ? rawTransactions.filter(t => t.tanggal?.startsWith(String(filterYear)))
+  // Filter transaksi berdasarkan bulan
+  const filteredTransactions = filterMonth
+    ? rawTransactions.filter(t => t.tanggal?.startsWith(filterMonth))
     : rawTransactions
 
-  // Filter program: aktif di tahun yang dipilih
-  const filteredPrograms = filterYear
+  // Filter program: aktif di bulan yang dipilih
+  const filteredPrograms = filterMonth
     ? programs.filter(p => {
         if (!p.tanggal_mulai) return true
-        const mulaiYear = parseInt(p.tanggal_mulai.slice(0, 4))
-        const selesaiYear = p.tanggal_selesai ? parseInt(p.tanggal_selesai.slice(0, 4)) : 9999
-        return mulaiYear <= filterYear && selesaiYear >= filterYear
+        const mulai = p.tanggal_mulai.slice(0, 7) // YYYY-MM
+        const selesai = p.tanggal_selesai ? p.tanggal_selesai.slice(0, 7) : '9999-12'
+        return mulai <= filterMonth && selesai >= filterMonth
       })
     : programs
 
@@ -284,29 +284,35 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         </div>
       )}
 
-      {/* Filter Tahun */}
-      {availableYears.length > 0 && (
+      {/* Filter Bulan */}
+      {availableMonths.length > 0 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-          {[null, ...availableYears].map(year => (
-            <button
-              key={year ?? 'all'}
-              onClick={() => setFilterYear(year)}
-              style={{
-                padding: isMobile ? '4px 11px' : '5px 13px',
-                borderRadius: 20,
-                border: filterYear === year ? 'none' : '1px solid var(--border)',
-                backgroundColor: filterYear === year ? 'var(--blue)' : 'var(--card)',
-                color: filterYear === year ? '#fff' : 'var(--text-muted)',
-                fontSize: isMobile ? 11.5 : 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >
-              {year ?? 'Semua'}
-            </button>
-          ))}
+          {[null, ...availableMonths].map(ym => {
+            const label = ym
+              ? `${BULAN_ID[parseInt(ym.slice(5, 7)) - 1].slice(0, 3)} '${ym.slice(2, 4)}`
+              : 'Semua'
+            const active = filterMonth === ym
+            return (
+              <button
+                key={ym ?? 'all'}
+                onClick={() => setFilterMonth(ym)}
+                style={{
+                  padding: isMobile ? '4px 11px' : '5px 13px',
+                  borderRadius: 20,
+                  border: active ? 'none' : '1px solid var(--border)',
+                  backgroundColor: active ? 'var(--blue)' : 'var(--card)',
+                  color: active ? '#fff' : 'var(--text-muted)',
+                  fontSize: isMobile ? 11.5 : 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       )}
 
