@@ -16,7 +16,7 @@ const JENIS_OPTIONS = ['Pengadaan', 'Konstruksi', 'Operasional', 'Pemeliharaan',
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         {label}
       </label>
       {children}
@@ -28,10 +28,10 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '9px 12px',
   borderRadius: 9,
-  border: '1.5px solid var(--border)',
+  border: '1px solid var(--border)',
   backgroundColor: 'var(--bg)',
   color: 'var(--text-primary)',
-  fontSize: 13,
+  fontSize: 14,
   fontFamily: 'inherit',
   outline: 'none',
   boxSizing: 'border-box',

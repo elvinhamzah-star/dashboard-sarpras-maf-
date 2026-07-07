@@ -100,7 +100,7 @@ export default function MonthSelector({ value, onChange, months, allLabel = 'Sem
       {open && (
         <div style={{
           position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 200,
-          backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid rgba(26,43,94,0.12)',
+          backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border)',
           boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
           maxHeight: 280, overflowY: 'auto',
         }}>

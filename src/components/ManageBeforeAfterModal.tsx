@@ -151,7 +151,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
             value={label}
             onChange={e => setLabel(e.target.value)}
             placeholder="Label (opsional) — mis. nama titik / lokasi"
-            style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--card)', marginBottom: 12 }}
+            style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--card)', marginBottom: 12 }}
           />
           <button
             onClick={handleSave}

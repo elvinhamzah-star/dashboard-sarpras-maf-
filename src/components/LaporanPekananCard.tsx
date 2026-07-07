@@ -86,7 +86,7 @@ const hasAnyData = (d: LaporanPerProgram) =>
 
 const BulletList = ({ items }: { items: string[] }) => {
   const filtered = items.filter(i => i.trim())
-  if (!filtered.length) return <div style={{ fontSize: 12, color: '#C8D2E0', fontStyle: 'italic' }}>Belum ada catatan</div>
+  if (!filtered.length) return <div style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ada catatan</div>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {filtered.map((item, i) => (
@@ -608,7 +608,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                           disabled={availableSelesai.length === 0}
                           style={{
                             width: '100%', padding: '6px 10px',
-                            borderRadius: 7, border: '1px dashed rgba(26,43,94,0.2)',
+                            borderRadius: 7, border: '1px dashed var(--border-strong)',
                             backgroundColor: 'transparent', color: 'var(--text-secondary)',
                             fontSize: 11.5, fontWeight: 600,
                             cursor: availableSelesai.length > 0 ? 'pointer' : 'default',
@@ -663,7 +663,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                           disabled={availablePlanning.length === 0}
                           style={{
                             width: '100%', padding: '6px 10px',
-                            borderRadius: 7, border: '1px dashed rgba(26,43,94,0.2)',
+                            borderRadius: 7, border: '1px dashed var(--border-strong)',
                             backgroundColor: 'transparent', color: 'var(--text-secondary)',
                             fontSize: 11.5, fontWeight: 600,
                             cursor: availablePlanning.length > 0 ? 'pointer' : 'default',
@@ -729,7 +729,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
               </div>
             )}
             {!selectedProgram ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 200, color: '#C8D2E0', fontSize: 13 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 200, color: 'var(--text-muted)', fontSize: 13 }}>
                 Pilih program di sebelah kiri
               </div>
             ) : (

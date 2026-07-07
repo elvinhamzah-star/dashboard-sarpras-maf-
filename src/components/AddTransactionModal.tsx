@@ -110,7 +110,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
   // Focus search input when dropdown opens
   useEffect(() => {
-    if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
+    if (dropdownOpen) setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 50)
   }, [dropdownOpen])
 
   const openDropdown = () => {

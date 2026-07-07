@@ -218,7 +218,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           onClick={() => isAdmin && setShowEditCatatan(true)}
           style={{
             backgroundColor: program.isu_utama ? 'rgba(217,119,6,0.07)' : 'var(--surface-min)',
-            borderLeft: program.isu_utama ? '2.5px solid #D97706' : '2.5px solid #C8D2E0',
+            borderLeft: program.isu_utama ? '2.5px solid #D97706' : '2.5px solid var(--border)',
             borderRadius: 7,
             padding: '8px 12px',
             fontSize: isMobile ? 11.5 : 12.5,
@@ -633,7 +633,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                 {subPrograms.map((sp, i) => (
                   <div key={sp.id} style={{
                     padding: '12px 14px',
-                    border: '1px solid #D8DDE8',
+                    border: '1px solid var(--border)',
                     borderRadius: 12,
                     backgroundColor: 'var(--card)',
                   }}>
@@ -747,7 +747,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                       <tr
                         key={sp.id}
                         style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#F8FAFC' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--surface-min)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                       >
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
@@ -818,7 +818,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                               Folder
                             </a>
                           ) : (
-                            <span style={{ fontSize: 12, color: '#C8D2E0' }}>—</span>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>—</span>
                           )}
                         </td>
                         {isAdmin && (

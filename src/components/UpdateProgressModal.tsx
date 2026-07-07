@@ -62,9 +62,9 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     width: '100%',
     padding: '10px 14px',
     borderRadius: 10,
-    border: '1px solid rgba(26,43,94,0.15)',
+    border: '1px solid var(--border)',
     fontSize: 14,
-    color: '#0D1829',
+    color: 'var(--text-primary)',
     fontFamily: 'inherit',
     outline: 'none',
     boxSizing: 'border-box' as const,
@@ -75,7 +75,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
       {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Update Progress</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Update Progress</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{program.nama_pekerjaan}</div>
         </div>
 
@@ -112,7 +112,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
               onChange={e => setRealisasi(e.target.value)}
               style={inputStyle}
             />
-            <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
+            <div style={{ fontSize: 11, color: '#059669', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
           </div>
 
           <div>
@@ -137,7 +137,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,

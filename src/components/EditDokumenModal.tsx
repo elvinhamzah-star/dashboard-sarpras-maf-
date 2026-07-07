@@ -49,7 +49,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
       {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#0D1829' }}>Edit Dokumen & Link</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Edit Dokumen & Link</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Perbarui link dokumen, RAB, dan bukti transaksi</div>
         </div>
 
@@ -74,9 +74,9 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid rgba(26,43,94,0.15)',
-                  fontSize: 13,
-                  color: '#0D1829',
+                  border: '1px solid var(--border)',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
                   fontFamily: 'inherit',
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -92,7 +92,7 @@ export default function EditDokumenModal({ programId, links, onClose, onSuccess 
             style={{
               padding: '10px 16px',
               borderRadius: 10,
-              border: '1px solid rgba(26,43,94,0.15)',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--card)',
               color: 'var(--text-muted)',
               fontSize: 13,

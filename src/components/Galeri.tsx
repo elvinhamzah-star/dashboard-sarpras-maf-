@@ -86,7 +86,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   }, [showProgramDropdown])
 
   useEffect(() => {
-    if (showProgramDropdown) setTimeout(() => searchRef.current?.focus(), 50)
+    if (showProgramDropdown) setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 50)
   }, [showProgramDropdown])
 
   const openProgramDropdown = () => {
@@ -294,8 +294,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               }}
             />
           ) : null}
-          <div style={{ width: '100%', height: '100%', display: thumbUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="28" height="28" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+          <div style={{ width: '100%', height: '100%', display: thumbUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--border-strong)' }}>
+            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
             </svg>
           </div>
@@ -440,8 +440,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="28" height="28" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--border-strong)' }}>
+                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                       </svg>
                     </div>
@@ -734,8 +734,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                           onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = 'scale(1)' }}
                         />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="32" height="32" fill="none" stroke="#C8D2E0" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--border-strong)' }}>
+                          <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                             <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
                           </svg>
                         </div>

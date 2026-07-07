@@ -130,7 +130,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             backgroundColor: 'var(--card)',
             borderRadius: 14,
             padding: isNarrow ? '10px 14px' : '14px 16px',
-            border: isNarrow ? '1px solid #D8DDE8' : '1.5px solid rgba(124,58,237,0.25)',
+            border: isNarrow ? '1px solid var(--border)' : '1.5px solid rgba(124,58,237,0.25)',
             gridColumn: isNarrow ? '1 / -1' : 'auto',
             display: 'flex',
             flexDirection: isNarrow ? 'row' : 'column',
@@ -189,7 +189,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 backgroundColor: isActive ? `${color}10` : 'var(--card)',
                 borderRadius: isNarrow ? 12 : 14,
                 padding: isNarrow ? '10px 12px' : '14px 16px',
-                border: isActive ? `1.5px solid ${color}` : '1px solid #D8DDE8',
+                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border)',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
@@ -204,7 +204,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               onMouseLeave={e => {
                 if (!isActive) {
                   const el = e.currentTarget as HTMLButtonElement
-                  el.style.borderColor = '#D8DDE8'
+                  el.style.borderColor = 'var(--border)'
                   el.style.backgroundColor = 'var(--card)'
                 }
               }}

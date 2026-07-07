@@ -86,7 +86,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   }, [dropdownOpen])
 
   useEffect(() => {
-    if (dropdownOpen) setTimeout(() => searchRef.current?.focus(), 50)
+    if (dropdownOpen) setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 50)
   }, [dropdownOpen])
 
   const openDropdown = () => {
@@ -117,7 +117,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
 
   const addRow = () => {
     setRows(prev => [...prev, newRow()])
-    setTimeout(() => lastInputRef.current?.focus(), 50)
+    setTimeout(() => lastInputRef.current?.focus({ preventScroll: true }), 50)
   }
 
   const removeRow = (id: string) => {
@@ -366,7 +366,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                   {/* Row number */}
                   <div style={{
                     width: 22, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700, color: '#C8D2E0', flexShrink: 0, marginTop: 1,
+                    fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0, marginTop: 1,
                   }}>
                     {i + 1}
                   </div>
@@ -420,7 +420,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       value={row.caption}
                       onChange={e => updateRow(row.id, 'caption', e.target.value)}
                       placeholder="Caption (opsional)"
-                      style={{ ...inputStyle, fontSize: 14, color: 'var(--text-secondary)', padding: '7px 12px' }}
+                      style={{ ...inputStyle, fontSize: 14, color: 'var(--text-primary)', padding: '7px 12px' }}
                     />
                   </div>
 

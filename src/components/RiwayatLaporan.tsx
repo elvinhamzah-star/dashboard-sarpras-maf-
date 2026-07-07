@@ -337,7 +337,7 @@ export default function RiwayatLaporan() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
       <div style={{ padding: isMobile ? '16px 14px 0' : '28px 28px 0', flexShrink: 0 }}>
-        <h1 style={{ fontSize: isMobile ? 14 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
+        <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
           Riwayat Laporan
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
@@ -356,7 +356,7 @@ export default function RiwayatLaporan() {
           <div style={{ fontSize: 13 }}>Isi laporan pekanan di Beranda untuk mulai membangun riwayat</div>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', marginTop: 20, minHeight: 0, padding: '0 28px 28px', gap: 16 }}>
+        <div style={{ flex: 1, display: 'flex', marginTop: 20, minHeight: 0, padding: isMobile ? '0 14px 28px' : '0 28px 28px', gap: 16 }}>
           {/* Week list (sidebar) */}
           {(!isMobile || showList) && (
             <div style={{
@@ -395,7 +395,7 @@ export default function RiwayatLaporan() {
                           border: 'none',
                           borderLeft: `3px solid ${isSelected ? 'var(--blue)' : 'transparent'}`,
                           backgroundColor: isSelected ? 'rgba(26,111,232,0.06)' : 'transparent',
-                          color: isSelected ? 'var(--blue)' : '#3D5070',
+                          color: isSelected ? 'var(--blue)' : 'var(--text-secondary)',
                           fontSize: 12.5,
                           fontWeight: isSelected ? 700 : 500,
                           cursor: 'pointer',

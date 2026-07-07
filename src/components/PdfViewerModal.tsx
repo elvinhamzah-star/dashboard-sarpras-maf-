@@ -137,7 +137,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
         {/* iframe area */}
         <div style={{
           flex: 1, minHeight: 0,
-          backgroundColor: '#dde1e8',
+          backgroundColor: 'var(--surface-2)',
           padding: '14px 16px 16px',
           overflowX: 'hidden', overflowY: 'hidden',
           position: 'relative', display: 'flex', flexDirection: 'column',
@@ -146,14 +146,14 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 12, backgroundColor: '#dde1e8', zIndex: 2,
+              gap: 12, backgroundColor: 'var(--surface-2)', zIndex: 2,
             }}>
               <div style={{
                 width: 36, height: 36, borderRadius: '50%',
                 border: '3px solid rgba(0,0,0,0.12)', borderTopColor: 'var(--blue)',
                 animation: 'spin 0.8s linear infinite',
               }} />
-              <span style={{ fontSize: 13, color: '#666' }}>Memuat dokumen...</span>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Memuat dokumen...</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
             </div>
           )}
