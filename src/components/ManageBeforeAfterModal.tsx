@@ -83,7 +83,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
       ? programDocs.filter(d => d.fase === 'Kondisi Awal' || d.fase === 'Proses Pekerjaan')
       : programDocs.filter(d => d.fase === 'Kondisi Akhir')
     return (
-      <ModalShell onClose={() => setPicking(null)} maxWidth={640}>
+      <ModalShell key="picker" onClose={() => setPicking(null)} maxWidth={640}>
         <div style={{ padding: '20px 20px 28px' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
             Pilih foto {picking === 'before' ? 'Sebelum' : 'Sesudah'}
@@ -150,7 +150,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
   }
 
   return (
-    <ModalShell onClose={onClose} maxWidth={560}>
+    <ModalShell key="main" onClose={onClose} maxWidth={560}>
       <div style={{ padding: '22px 20px 28px' }}>
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Kelola Sebelum / Sesudah</div>
         <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3, marginBottom: 18 }}>{programName}</div>
