@@ -40,7 +40,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
   const resetForm = () => { setBeforeId(null); setAfterId(null); setLabel(''); setPicking(null) }
 
   const handleSave = async () => {
-    if (!beforeId && !afterId) { setError('Pilih minimal satu foto (Sebelum atau Sesudah)'); return }
+    if (!beforeId || !afterId) { setError('Pilih foto Sebelum dan Sesudah untuk membuat pasangan'); return }
     setSaving(true)
     setError('')
     const { error: err } = await adminInsert('before_after_pairs', {
@@ -69,18 +69,25 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
 
   // ── Picker overlay: choose a photo from this program's docs ──
   if (picking) {
+    const slotDocs = picking === 'before'
+      ? programDocs.filter(d => d.fase === 'Kondisi Awal' || d.fase === 'Proses Pekerjaan')
+      : programDocs.filter(d => d.fase === 'Kondisi Akhir')
     return (
       <ModalShell onClose={() => setPicking(null)} maxWidth={640}>
         <div style={{ padding: '20px 20px 28px' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
             Pilih foto {picking === 'before' ? 'Sebelum' : 'Sesudah'}
           </div>
-          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 16 }}>Klik salah satu foto dari pekerjaan ini</div>
-          {programDocs.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 0' }}>Belum ada foto pada pekerjaan ini.</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 16 }}>
+            {picking === 'before' ? 'Foto Kondisi Awal atau Proses Pekerjaan' : 'Foto Kondisi Akhir'}
+          </div>
+          {slotDocs.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 0' }}>
+              {picking === 'before' ? 'Belum ada foto Kondisi Awal / Proses Pekerjaan.' : 'Belum ada foto Kondisi Akhir.'}
+            </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-              {programDocs.map(d => {
+              {slotDocs.map(d => {
                 const t = thumb(d)
                 return (
                   <button
@@ -155,8 +162,16 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
           />
           <button
             onClick={handleSave}
-            disabled={saving}
-            style={{ width: '100%', padding: '10px', borderRadius: 9, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
+            disabled={saving || !beforeId || !afterId}
+            style={{
+              width: '100%', padding: '10px', borderRadius: 9,
+              border: '1px solid var(--border-subtle)',
+              backgroundColor: (!beforeId || !afterId) ? 'transparent' : 'rgba(26,111,232,0.07)',
+              color: (!beforeId || !afterId) ? 'var(--text-muted)' : 'var(--blue)',
+              fontSize: 13.5, fontWeight: 600,
+              cursor: (saving || !beforeId || !afterId) ? 'default' : 'pointer',
+              opacity: saving ? 0.7 : 1, fontFamily: 'inherit'
+            }}
           >
             {saving ? 'Menyimpan...' : 'Tambah Pasangan'}
           </button>
@@ -165,7 +180,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
         {/* Selesai button */}
         <button
           onClick={onClose}
-          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
+          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.07)', color: '#059669', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
         >
           Selesai
         </button>
