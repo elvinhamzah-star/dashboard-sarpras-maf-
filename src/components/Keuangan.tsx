@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
-import { formatRupiah, formatTanggal, TRANSACTION_COLORS } from '../lib/data'
+import { formatRupiah, formatTanggal, TRANSACTION_COLORS, getFileEmbedUrl } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddTransactionModal from './AddTransactionModal'
@@ -526,7 +526,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         {t.link_bukti && (
                           <button
                             onClick={() => {
-                              const url = t.link_bukti!
+                              const rawUrl = t.link_bukti!
+                              const url = getFileEmbedUrl(rawUrl) ?? rawUrl
                               const name = t.nama_pekerjaan || 'Bukti Transaksi'
                               setViewingBukti({ url, name })
                             }}

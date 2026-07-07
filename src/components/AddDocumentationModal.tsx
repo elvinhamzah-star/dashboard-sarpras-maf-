@@ -92,7 +92,14 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
   const openDropdown = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
-      setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+      const viewportHeight = window.innerHeight
+      const DROPDOWN_HEIGHT = 290
+      const fitsBelow = rect.bottom + 6 + DROPDOWN_HEIGHT < viewportHeight
+      setDropdownPos({
+        top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - DROPDOWN_HEIGHT - 6),
+        left: rect.left,
+        width: rect.width,
+      })
     }
     setDropdownOpen(true)
   }

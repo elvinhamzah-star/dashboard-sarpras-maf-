@@ -92,7 +92,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   const openProgramDropdown = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
-      setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: Math.max(rect.width, 260) })
+      const viewportHeight = window.innerHeight
+      const DROPDOWN_HEIGHT = 290
+      const fitsBelow = rect.bottom + 6 + DROPDOWN_HEIGHT < viewportHeight
+      setDropdownPos({
+        top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - DROPDOWN_HEIGHT - 6),
+        left: rect.left,
+        width: Math.max(rect.width, 260),
+      })
     }
     setShowProgramDropdown(true)
   }
