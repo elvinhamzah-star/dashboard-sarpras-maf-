@@ -39,8 +39,8 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
 
   const resetForm = () => { setBeforeId(null); setAfterId(null); setLabel(''); setPicking(null) }
 
-  const handleSave = async () => {
-    if (!beforeId || !afterId) { setError('Pilih foto Sebelum dan Sesudah untuk membuat pasangan'); return }
+  const handleSave = async (): Promise<boolean> => {
+    if (!beforeId || !afterId) { setError('Pilih foto Sebelum dan Sesudah untuk membuat pasangan'); return false }
     setSaving(true)
     setError('')
     const { error: err } = await adminInsert('before_after_pairs', {
@@ -52,10 +52,20 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
       urutan: pairs.length,
     })
     setSaving(false)
-    if (err) { setError('Gagal menyimpan: ' + err.message); return }
+    if (err) { setError('Gagal menyimpan: ' + err.message); return false }
     resetForm()
     await loadPairs()
     onSaved()
+    return true
+  }
+
+  // "Selesai" — auto-save pending pair (if both slots filled) then close
+  const handleSelesai = async () => {
+    if (beforeId && afterId) {
+      const ok = await handleSave()
+      if (!ok) return  // save failed — stay open, show error
+    }
+    onClose()
   }
 
   const handleDelete = async (id: string) => {
@@ -179,10 +189,11 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
 
         {/* Selesai button */}
         <button
-          onClick={onClose}
-          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.07)', color: '#059669', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
+          onClick={handleSelesai}
+          disabled={saving}
+          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.07)', color: '#059669', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 20, opacity: saving ? 0.7 : 1 }}
         >
-          Selesai
+          {(beforeId && afterId) ? (saving ? 'Menyimpan...' : 'Simpan & Selesai') : 'Selesai'}
         </button>
 
         {/* Existing pairs */}
