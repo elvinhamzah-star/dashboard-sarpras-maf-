@@ -59,12 +59,12 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: isMobile ? 14 : 24 }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
             Daftar Pekerjaan
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 5, fontWeight: 400 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? 12 : 13, marginTop: 4, fontWeight: 400 }}>
             {programs.length} Total Pekerjaan
           </p>
         </div>
@@ -124,8 +124,8 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
             boxSizing: 'border-box',
             paddingLeft: 34,
             paddingRight: 12,
-            paddingTop: 9,
-            paddingBottom: 9,
+            paddingTop: isMobile ? 7 : 9,
+            paddingBottom: isMobile ? 7 : 9,
             border: '1px solid var(--border)',
             borderRadius: 9,
             fontSize: isMobile ? 16 : 14,
@@ -154,7 +154,7 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               onClick={() => onStatusChange(isActive ? '' : tab)}
               style={{
                 borderRadius: 10,
-                padding: '10px 12px',
+                padding: isMobile ? '7px 10px' : '10px 12px',
                 borderWidth: '3px 1px 1px 1px',
                 borderStyle: 'solid',
                 borderColor: isActive
@@ -185,13 +185,13 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
                 el.style.boxShadow = 'none'
               }}
             >
-              <div style={{ fontSize: 9, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+              <div style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
                 {tab}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+              <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1 }}>
                 {count}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>Pekerjaan</div>
+              <div style={{ fontSize: isMobile ? 9 : 10, color: 'var(--text-muted)', marginTop: 2 }}>Pekerjaan</div>
             </button>
           )
         })}
