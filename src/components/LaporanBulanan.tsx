@@ -528,7 +528,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
               style={{
                 width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10,
                 border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-min)',
-                color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit',
+                color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit',
                 lineHeight: 1.65, resize: 'vertical', outline: 'none',
               }}
             />
@@ -561,7 +561,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
               style={{
                 width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10,
                 border: '1px solid #BFDBFE', backgroundColor: 'rgba(255,255,255,0.7)',
-                color: '#1E293B', fontSize: 13, fontFamily: 'inherit',
+                color: '#1E293B', fontSize: 16, fontFamily: 'inherit',
                 lineHeight: 1.65, resize: 'vertical', outline: 'none',
               }}
             />

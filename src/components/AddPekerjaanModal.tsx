@@ -74,7 +74,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
     border: '1px solid var(--border)',
     borderRadius: 10,
     padding: '10px 12px',
-    fontSize: 13,
+    fontSize: 16,
     color: 'var(--text-primary)',
     outline: 'none',
     backgroundColor: 'var(--card)',

@@ -359,14 +359,14 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
               onChange={e => setAddName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="Nama file..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', outline: 'none', marginBottom: 8 }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit', outline: 'none', marginBottom: 8 }}
             />
             <input
               value={addUrl}
               onChange={e => setAddUrl(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="Link Google Drive (opsional)"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', outline: 'none', marginBottom: 12 }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit', outline: 'none', marginBottom: 12 }}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -468,7 +468,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Cari pekerjaan..."
-          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 34px', borderRadius: 10, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+          style={{ width: '100%', boxSizing: 'border-box', paddingTop: isMobile ? 7 : 9, paddingBottom: isMobile ? 7 : 9, paddingLeft: 34, paddingRight: 12, borderRadius: 9, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: isMobile ? 16 : 14, fontFamily: 'inherit', outline: 'none' }}
         />
       </div>
 

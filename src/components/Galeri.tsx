@@ -385,7 +385,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input ref={searchRef} type="text" value={programSearch} onChange={e => setProgramSearch(e.target.value)} placeholder="Cari program..."
-                  style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: 8, border: '1px solid var(--border-subtle)', fontSize: 12.5, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)' }} />
+                  style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: 8, border: '1px solid var(--border-subtle)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)' }} />
               </div>
             </div>
             <div style={{ maxHeight: 260, overflowY: 'auto' }}>
