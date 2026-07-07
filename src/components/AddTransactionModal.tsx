@@ -29,7 +29,7 @@ const inputStyle: React.CSSProperties = {
   padding: '10px 14px',
   borderRadius: 10,
   border: '1px solid var(--border)',
-  fontSize: 16,
+  fontSize: 14,
   color: 'var(--text-primary)',
   fontFamily: 'inherit',
   outline: 'none',
@@ -200,12 +200,14 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         {/* Tanggal */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Tanggal</label>
-          <input
-            type="date"
-            value={tanggal}
-            onChange={e => setTanggal(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={{ width: '100%', overflow: 'hidden' }}>
+            <input
+              type="date"
+              value={tanggal}
+              onChange={e => setTanggal(e.target.value)}
+              style={{ ...inputStyle, maxWidth: '100%', display: 'block' }}
+            />
+          </div>
         </div>
 
         {/* Nama Pekerjaan — custom dropdown */}

@@ -357,36 +357,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile FAB for admin access */}
-      {isMobile && !isAdmin && role !== 'maf' && !showPinModal && !showAddModal && (
-        <button
-          onClick={() => setShowPinModal(true)}
-          aria-label="Masuk Mode Admin"
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 20,
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            border: 'none',
-            backgroundColor: 'var(--blue)',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(26,111,232,0.4), 0 1px 3px rgba(0,0,0,0.1)',
-            zIndex: 35,
-            transition: 'transform 0.15s, box-shadow 0.15s',
-          }}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <rect x="3" y="11" width="18" height="11" rx="2"/>
-            <path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
-        </button>
-      )}
 
       {/* Modals */}
       {showPinModal && (

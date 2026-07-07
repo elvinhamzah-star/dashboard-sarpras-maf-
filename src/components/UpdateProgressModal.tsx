@@ -63,7 +63,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     padding: '10px 14px',
     borderRadius: 10,
     border: '1px solid rgba(26,43,94,0.15)',
-    fontSize: 16,
+    fontSize: 14,
     color: '#0D1829',
     fontFamily: 'inherit',
     outline: 'none',

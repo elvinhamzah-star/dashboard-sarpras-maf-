@@ -22,7 +22,7 @@ const inputStyle: React.CSSProperties = {
   padding: '9px 12px',
   borderRadius: 9,
   border: '1px solid var(--border)',
-  fontSize: 16,
+  fontSize: 14,
   color: 'var(--text-primary)',
   fontFamily: 'inherit',
   outline: 'none',
@@ -420,7 +420,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       value={row.caption}
                       onChange={e => updateRow(row.id, 'caption', e.target.value)}
                       placeholder="Caption (opsional)"
-                      style={{ ...inputStyle, fontSize: 16, color: 'var(--text-secondary)', padding: '7px 12px' }}
+                      style={{ ...inputStyle, fontSize: 14, color: 'var(--text-secondary)', padding: '7px 12px' }}
                     />
                   </div>
 

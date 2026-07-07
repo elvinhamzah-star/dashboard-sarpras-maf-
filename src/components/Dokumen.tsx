@@ -359,14 +359,14 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
               onChange={e => setAddName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="Nama file..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit', outline: 'none', marginBottom: 8 }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', outline: 'none', marginBottom: 8 }}
             />
             <input
               value={addUrl}
               onChange={e => setAddUrl(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="Link Google Drive (opsional)"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 16, fontFamily: 'inherit', outline: 'none', marginBottom: 12 }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', outline: 'none', marginBottom: 12 }}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button
