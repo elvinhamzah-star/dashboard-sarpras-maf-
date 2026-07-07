@@ -477,14 +477,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                       </div>
                     )
                   })()}
-                  {/* Kontrak — program link + program_documents */}
+                  {/* Kontrak — program_documents only (same source as Dokumen page) */}
                   {(() => {
-                    const files = programDocs.filter(d => d.folder === 'kontrak')
-                    const autoUrl = program.link_kontrak
-                    const allFiles: { key: string; name: string; url: string | null }[] = [
-                      ...(autoUrl ? [{ key: '__kontrak_auto', name: 'Kontrak', url: autoUrl }] : []),
-                      ...files.map(d => ({ key: d.id, name: d.file_name, url: d.file_url ?? null })),
-                    ]
+                    const allFiles = programDocs.filter(d => d.folder === 'kontrak')
                     return (
                       <div style={{ borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: allFiles.length > 0 ? '1px solid var(--border-subtle)' : 'none', backgroundColor: 'rgba(37,99,235,0.04)' }}>
@@ -496,10 +491,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                         </div>
                         {allFiles.length === 0 && <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>Tidak ada kontrak untuk pekerjaan ini</div>}
                         {allFiles.map((f, i) => (
-                          <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                          <div key={f.id} onClick={f.file_url ? () => openFile(f.file_url!, f.file_name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.file_url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
                             <svg width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
-                            {f.url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.file_name}</span>
+                            {f.file_url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                           </div>
                         ))}
                       </div>

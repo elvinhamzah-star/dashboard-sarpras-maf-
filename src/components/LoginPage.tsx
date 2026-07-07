@@ -22,6 +22,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   const canSubmit = username.trim().length > 0 && pin.length > 0 && !loading
 
+  // Reset iOS viewport zoom — called after any input blur and before navigating away.
+  // Briefly sets maximum-scale=1 (snaps zoom back to 1:1) then restores the original meta.
+  const resetViewportZoom = () => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    if (!meta) return
+    const orig = meta.content
+    meta.content = 'width=device-width, initial-scale=1, maximum-scale=1'
+    requestAnimationFrame(() => { meta.content = orig })
+  }
+
   const handleSubmit = async () => {
     if (!canSubmit) return
     setLoading(true)
@@ -29,6 +39,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     const { ok, role } = await verifyLogin(username.trim(), pin)
     setLoading(false)
     if (ok && role) {
+      resetViewportZoom()          // Undo any zoom before entering the app
       if (role === 'maf') setMafCredentials(username.trim(), pin)
       sessionStorage.setItem('dashboard_auth', '1')
       sessionStorage.setItem('dashboard_role', role)
@@ -104,7 +115,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               transition: 'border-color 0.15s',
             }}
             onFocus={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,111,232,0.5)' }}
-            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'var(--border)' }}
+            onBlur={e => {
+              if (!error) e.currentTarget.style.borderColor = 'var(--border)'
+              resetViewportZoom()
+            }}
           />
         </div>
 
@@ -119,20 +133,25 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </label>
           <input
             type="password"
+            inputMode="numeric"
             value={pin}
             onChange={e => { setPin(e.target.value); setError('') }}
             onKeyDown={handleKeyDown}
-            placeholder="••••••"
+            placeholder="PIN"
             autoComplete="current-password"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
               border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
-              fontSize: 16, letterSpacing: '0.15em', color: 'var(--text-primary)',
+              fontSize: 16, color: 'var(--text-primary)',
               fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
+              backgroundColor: 'var(--card)',
             }}
             onFocus={e => { if (!error) e.currentTarget.style.borderColor = 'rgba(26,111,232,0.5)' }}
-            onBlur={e => { if (!error) e.currentTarget.style.borderColor = 'var(--border)' }}
+            onBlur={e => {
+              if (!error) e.currentTarget.style.borderColor = 'var(--border)'
+              resetViewportZoom()   // Reset zoom when PIN field loses focus
+            }}
           />
         </div>
 

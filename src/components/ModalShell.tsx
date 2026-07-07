@@ -21,7 +21,7 @@ interface ModalShellProps {
   contentScroll?: boolean
 }
 
-const EXIT_MS = 230
+const EXIT_MS = 220
 
 export default function ModalShell({
   onClose,
@@ -38,19 +38,43 @@ export default function ModalShell({
   const touchStartY = useRef<number | null>(null)
   const isDragging = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  // entered: false on first paint → true next frame, drives the enter transition
+  // Double RAF: ensure browser has painted the initial off-screen state before
+  // triggering the enter transition (prevents "animation with no start state").
   const [entered, setEntered] = useState(false)
   const [closing, setClosing] = useState(false)
   const closeTimer = useRef<number | null>(null)
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setEntered(true))
+    let raf1 = 0, raf2 = 0
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setEntered(true))
+    })
     return () => {
-      cancelAnimationFrame(raf)
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
       if (closeTimer.current !== null) window.clearTimeout(closeTimer.current)
     }
   }, [])
+
+  // Native touchmove listener with { passive: false } so we can call
+  // preventDefault() when the panel is being dragged — this stops iOS
+  // rubber-banding the background page through a fixed overlay.
+  useEffect(() => {
+    if (!isMobile) return
+    const panel = panelRef.current
+    if (!panel) return
+
+    const preventBgScroll = (e: TouchEvent) => {
+      if (!isDragging.current) return
+      const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
+      if (scrollTop === 0) e.preventDefault()
+    }
+
+    panel.addEventListener('touchmove', preventBgScroll, { passive: false })
+    return () => panel.removeEventListener('touchmove', preventBgScroll)
+  }, [isMobile])
 
   const closeStarted = useRef(false)
   const close = useCallback(() => {
@@ -60,6 +84,7 @@ export default function ModalShell({
     closeTimer.current = window.setTimeout(onClose, EXIT_MS)
   }, [onClose])
 
+  // Drag-handle touch handlers (always fully captured, touchAction:none on handle)
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY
     isDragging.current = true
@@ -76,7 +101,7 @@ export default function ModalShell({
     touchStartY.current = null
   }
 
-  // Panel-level swipe: works from anywhere when content is scrolled to top
+  // Panel-level swipe: activates when content is scrolled to top
   const onPanelTouchStart = (e: React.TouchEvent) => {
     const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
     if (scrollTop === 0) {
@@ -95,8 +120,6 @@ export default function ModalShell({
 
   const visible = entered && !closing
 
-  // Panel transform: drag follows the finger; otherwise enter/exit slides (mobile)
-  // or scale-fades (desktop).
   const panelTransform = dragY > 0
     ? `translateY(${dragY}px)`
     : isMobile
@@ -118,6 +141,7 @@ export default function ModalShell({
       }}
     >
       <div
+        ref={panelRef}
         onTouchStart={isMobile ? onPanelTouchStart : undefined}
         onTouchMove={isMobile ? onPanelTouchMove : undefined}
         onTouchEnd={isMobile ? onTouchEnd : undefined}
@@ -136,7 +160,7 @@ export default function ModalShell({
           transform: panelTransform,
           transition: dragY > 0
             ? 'none'
-            : `transform ${closing ? EXIT_MS : 300}ms cubic-bezier(0.32, 0.72, 0, 1), opacity ${closing ? EXIT_MS : 200}ms ease`,
+            : `transform ${closing ? EXIT_MS : 280}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${closing ? EXIT_MS : 200}ms ease`,
           willChange: 'transform',
           overflow: 'hidden',
         }}
@@ -159,7 +183,7 @@ export default function ModalShell({
         <div
           ref={scrollContainerRef}
           style={contentScroll
-            ? { overflowY: 'auto', flex: 1 }
+            ? { overflowY: 'auto', flex: 1, overscrollBehavior: 'contain' }
             : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }
           }>
           <ModalCloseContext.Provider value={close}>

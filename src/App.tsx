@@ -28,8 +28,13 @@ export default function App() {
   const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
+  // Lazy-init from current viewport so mobile never flashes sidebar-open on first render
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? !window.matchMedia('(max-width: 768px)').matches : true
+  )
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+  )
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalKey, setAddModalKey] = useState(0)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
@@ -314,7 +319,25 @@ export default function App() {
             const dx = e.changedTouches[0].clientX - edgeSwipeStartX.current
             const dy = Math.abs(e.changedTouches[0].clientY - (edgeSwipeStartY.current || 0))
             if (dx > 55 && dy < 90) {
-              if (currentPage === 'pekerjaan' && selectedProgramId) setSelectedProgramId(null)
+              // Swipe left→right from left edge = back, same as iPhone
+              if (currentPage === 'pekerjaan' && selectedProgramId) {
+                // Detail → daftar pekerjaan
+                setSelectedProgramId(null)
+              } else if (currentPage === 'galeri') {
+                // Galeri → dokumen (jika masuk via dokumen) atau beranda
+                if (galeriReturnToDokumen) {
+                  setGaleriReturnToDokumen(false)
+                  setCurrentPage('dokumen')
+                } else {
+                  setGaleriProgramId(null)
+                  setCurrentPage('beranda')
+                }
+              } else if (currentPage !== 'beranda') {
+                // Semua halaman lain → beranda
+                setCurrentPage('beranda')
+                setSelectedProgramId(null)
+                if (isMobile) setSidebarOpen(false)
+              }
             }
             edgeSwipeStartX.current = null
             edgeSwipeStartY.current = null
