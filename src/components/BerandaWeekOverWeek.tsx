@@ -19,6 +19,11 @@ interface Props {
   freshnessDays: number | null
   lastUpdated: string
   onProgramClick?: (id: string) => void
+  hideHeader?: boolean
+  externalTab?: string
+  onExternalTabChange?: (tab: string) => void
+  /** Spacious mode: lebih banyak padding & gap untuk tampilan dalam popup lebar */
+  spacious?: boolean
 }
 
 const TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
@@ -54,8 +59,13 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick }: Props) {
-  const [activeTab, setActiveTab] = useState('On Going')
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious }: Props) {
+  const [internalTab, setInternalTab] = useState('On Going')
+  const activeTab = externalTab ?? internalTab
+  const setActiveTab = (tab: string) => {
+    setInternalTab(tab)
+    onExternalTabChange?.(tab)
+  }
   const width = useWindowWidth()
   const isNarrow = width < 1100
 
@@ -119,6 +129,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
 
   return (
     <>
+      {!hideHeader && (
       <div style={{
         display: 'grid',
         gridTemplateColumns: isNarrow ? 'repeat(2, 1fr)' : 'minmax(150px, 1.15fr) repeat(4, minmax(110px, 1fr))',
@@ -230,17 +241,18 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
           )
         })}
       </div>
+      )}
 
       <div style={{
         backgroundColor: 'var(--card)',
-        borderRadius: 14,
-        border: '1px solid var(--border-subtle)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '14px 16px 16px',
+        borderRadius: spacious ? 0 : 14,
+        border: spacious ? 'none' : '1px solid var(--border-subtle)',
+        boxShadow: spacious ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
+        padding: spacious ? '16px 28px 24px' : '14px 16px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        marginBottom: 20,
+        gap: spacious ? 14 : 12,
+        marginBottom: spacious ? 0 : 20,
       }}>
         {filteredPrograms.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: 12 }}>
@@ -261,7 +273,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(5,150,105,0.07)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
-                  padding: '10px 12px',
+                  padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
                   borderLeft: '3px solid #059669',
@@ -335,7 +347,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = hoverColor }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
-                  padding: '10px 12px',
+                  padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
                   borderLeft: rencana.length > 0 ? '3px solid #DC2626' : '1.5px solid var(--border-subtle)',
@@ -400,7 +412,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = `${color}0D` }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
-                  padding: '10px 12px',
+                  padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: `1.5px solid var(--border-subtle)`,
                   borderLeft: `3px solid ${color}`,

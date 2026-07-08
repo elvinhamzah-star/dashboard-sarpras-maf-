@@ -1,18 +1,84 @@
 import { useState, useRef, useEffect } from 'react'
-import { Transaction, ProgramSnapshot } from '../lib/supabase'
+import { Transaction, ProgramSnapshot, Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 
 interface BerandaChartProps {
   transactions: Transaction[]
   snapshots: ProgramSnapshot[]
+  programs: Program[]
 }
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-const BAR_H = 110
-const PROG_H = 60
-const MONTH_W = 62
+const BAR_H = 120
+const MONTH_W = 78
+const BAR_W = 16
+const BAR_GAP = 3
 
-export default function BerandaChart({ transactions, snapshots }: BerandaChartProps) {
+/**
+ * Interpolate a program's estimated progress at the midpoint of a given month.
+ *
+ * Logic:
+ *  - Before tanggal_mulai                      → 0%
+ *  - Status "Selesai" after tanggal_selesai     → 100%
+ *  - Status "Selesai" between start and end     → linear 0→100%
+ *  - Status "On Going"/"On Hold" up to today    → linear 0→current_progress
+ *  - Status "On Going"/"On Hold" after today    → hold at current_progress
+ */
+function interpolateProgress(prog: Program, yearMonth: string): number {
+  if (!prog.tanggal_mulai) return 0
+
+  const [y, m] = yearMonth.split('-').map(Number)
+  const midDate = new Date(y, m - 1, 15)
+  const startDate = new Date(prog.tanggal_mulai)
+
+  if (midDate < startDate) return 0
+
+  if (prog.status === 'Selesai') {
+    if (prog.tanggal_selesai) {
+      const endDate = new Date(prog.tanggal_selesai)
+      if (midDate >= endDate) return 100
+      const elapsed = (midDate.getTime() - startDate.getTime()) / (endDate.getTime() - startDate.getTime())
+      return Math.round(Math.max(0, Math.min(100, elapsed * 100)))
+    }
+    return 100
+  }
+
+  // On Going / On Hold / Perencanaan — interpolate 0% → current progress_percent
+  const currentPct = prog.progress_percent ?? 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (midDate >= today) return currentPct
+  if (today.getTime() <= startDate.getTime()) return 0
+  const elapsed = (midDate.getTime() - startDate.getTime()) / (today.getTime() - startDate.getTime())
+  return Math.round(Math.max(0, Math.min(currentPct, elapsed * currentPct)))
+}
+
+/**
+ * Weighted-average progress per bulan — formula SAMA dengan angka 41.2% di Beranda:
+ *   - Exclude Perencanaan + Operasional
+ *   - Weighted by total_anggaran
+ * Hasilnya: bar Juli di chart = angka 41.2% overall → konsisten, bisa dijelaskan ke atasan.
+ */
+function calcMonthProgress(programs: Program[], yearMonth: string): number | null {
+  const relevant = programs.filter(p =>
+    p.status !== 'Perencanaan' &&
+    p.jenis_pekerjaan !== 'Operasional'
+  )
+  if (relevant.length === 0) return null
+
+  const totalAnggaran = relevant.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  if (totalAnggaran === 0) return null
+
+  const weightedSum = relevant.reduce((s, p) => {
+    // Program tanpa tanggal_mulai: pakai 0% untuk bulan lampau (belum ada data kapan mulai)
+    const pct = p.tanggal_mulai ? interpolateProgress(p, yearMonth) : 0
+    return s + pct * (p.total_anggaran || 0)
+  }, 0)
+
+  return Math.round(weightedSum / totalAnggaran)
+}
+
+export default function BerandaChart({ transactions, snapshots, programs }: BerandaChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -38,37 +104,24 @@ export default function BerandaChart({ transactions, snapshots }: BerandaChartPr
     keluar: byMonth[ym]?.keluar || 0,
   }))
 
-  // Weighted average progress per month (latest snapshot per program)
-  const progressByMonth: (number | null)[] = months.map(m => {
-    const monthSnaps = snapshots.filter(s => s.snapshot_date?.startsWith(m.ym) && s.progress_percent != null)
-    const latest: Record<string, ProgramSnapshot> = {}
-    monthSnaps.forEach(s => {
-      if (!latest[s.program_id] || s.snapshot_date > latest[s.program_id].snapshot_date) {
-        latest[s.program_id] = s
-      }
-    })
-    const snaps = Object.values(latest).filter(s => s.progress_percent != null)
-    if (snaps.length === 0) return null
-    return Math.round(snaps.reduce((sum, s) => sum + (s.progress_percent || 0), 0) / snaps.length)
-  })
-
-  const maxVal = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
-  const totalW = months.length * MONTH_W
+  // Progress per month — interpolated from program dates
+  const progressByMonth: (number | null)[] = months.map(m => calcMonthProgress(programs, m.ym))
   const hasProgress = progressByMonth.some(p => p != null)
 
-  // Y position inside progress area: top = 100%, bottom = 0%
-  const dotY = (pct: number) => 10 + ((100 - pct) / 100) * (PROG_H - 26)
+  const maxRp = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
+  // minWidth tiap kolom saat banyak bulan (scroll), flex:1 saat sedikit (stretch)
+  const minTotalW = months.length * MONTH_W
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
   }, [months.length])
 
-  if (transactions.length === 0 && snapshots.length === 0) return null
+  if (transactions.length === 0 && snapshots.length === 0 && programs.length === 0) return null
 
   const hovered = hoveredIdx !== null ? months[hoveredIdx] : null
   const hovProg = hoveredIdx !== null ? progressByMonth[hoveredIdx] : null
   const tooltipLeft = hoveredIdx !== null
-    ? Math.min(Math.max((hoveredIdx + 0.5) / months.length * 100, 13), 87)
+    ? Math.min(Math.max((hoveredIdx + 0.5) / months.length * 100, 14), 86)
     : 50
 
   return (
@@ -90,6 +143,7 @@ export default function BerandaChart({ transactions, snapshots }: BerandaChartPr
             Perkembangan {months.length} bulan
           </div>
         </div>
+        {/* Legend */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
@@ -101,7 +155,7 @@ export default function BerandaChart({ transactions, snapshots }: BerandaChartPr
           </div>
           {hasProgress && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 14, height: 2, borderRadius: 1, backgroundColor: '#059669' }} />
+              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#059669' }} />
               <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Progress</span>
             </div>
           )}
@@ -138,99 +192,121 @@ export default function BerandaChart({ transactions, snapshots }: BerandaChartPr
             )}
             {hovProg != null && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#059669', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#059669', flexShrink: 0 }} />
                 <span style={{ fontSize: 11, fontWeight: 600 }}>Progress {hovProg}%</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Scrollable area */}
+        {/* Scrollable area — overflowX auto agar scroll kalau bulan banyak */}
         <div ref={scrollRef} style={{ overflowX: 'auto', paddingBottom: 2 }}>
 
-          {/* Bar chart */}
-          <div style={{ display: 'flex', width: totalW }}>
-            {months.map((m, i) => {
-              const masukPct = m.masuk > 0 ? Math.max(4 / BAR_H * 100, (m.masuk / maxVal) * 100) : 0
-              const keluarPct = m.keluar > 0 ? Math.max(4 / BAR_H * 100, (m.keluar / maxVal) * 100) : 0
-              const isHov = hoveredIdx === i
-              return (
-                <div
-                  key={m.ym}
-                  style={{ width: MONTH_W, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
-                  onMouseEnter={() => setHoveredIdx(i)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                >
-                  <div style={{ display: 'flex', gap: 4, height: BAR_H, alignItems: 'flex-end' }}>
-                    <div style={{ width: 20, height: masukPct > 0 ? `${masukPct}%` : 3, backgroundColor: masukPct > 0 ? '#1A6FE8' : 'var(--border-subtle)', borderRadius: '3px 3px 0 0', opacity: isHov ? 1 : 0.72, transition: 'opacity 0.15s' }} />
-                    <div style={{ width: 20, height: keluarPct > 0 ? `${keluarPct}%` : 3, backgroundColor: keluarPct > 0 ? '#94A3B8' : 'var(--border-subtle)', borderRadius: '3px 3px 0 0', opacity: isHov ? 1 : keluarPct > 0 ? 0.72 : 0.4, transition: 'opacity 0.15s' }} />
-                  </div>
-                  <div style={{ fontSize: 10, marginTop: 6, color: isHov ? '#1A6FE8' : 'var(--text-muted)', fontWeight: isHov ? 700 : 400, transition: 'color 0.12s', userSelect: 'none' }}>
-                    {m.label}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          {/* Y-axis guide lines + bars dalam satu flex container yg stretch penuh */}
+          <div style={{ position: 'relative', minWidth: minTotalW, width: '100%' }}>
+            {[25, 50, 75, 100].map(pct => (
+              <div key={pct} style={{
+                position: 'absolute',
+                top: BAR_H - (pct / 100) * BAR_H,
+                left: 0, right: 0,
+                height: 1,
+                backgroundColor: 'var(--border-subtle)',
+                opacity: 0.5,
+              }} />
+            ))}
 
-          {/* Progress line */}
-          {hasProgress && (
-            <div style={{ position: 'relative', height: PROG_H, width: totalW, marginTop: 4 }}>
-              <svg width={totalW} height={PROG_H} style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}>
-                {/* Connecting lines */}
-                {months.map((_, i) => {
-                  const p1 = progressByMonth[i]
-                  const p2 = progressByMonth[i + 1]
-                  if (p1 == null || p2 == null) return null
-                  return (
-                    <line
-                      key={`l${i}`}
-                      x1={(i + 0.5) * MONTH_W} y1={dotY(p1)}
-                      x2={(i + 1.5) * MONTH_W} y2={dotY(p2)}
-                      stroke="#059669" strokeWidth="1.5" strokeLinecap="round"
-                      opacity="0.7"
-                    />
-                  )
-                })}
-                {/* Dots */}
-                {months.map((_, i) => {
-                  const p = progressByMonth[i]
-                  if (p == null) return null
-                  const cx = (i + 0.5) * MONTH_W
-                  const cy = dotY(p)
-                  const isHov = hoveredIdx === i
-                  return (
-                    <g key={`d${i}`}>
-                      <circle cx={cx} cy={cy} r={isHov ? 5 : 4} fill="#059669" opacity={isHov ? 1 : 0.85} />
-                      {isHov && <circle cx={cx} cy={cy} r="7" fill="none" stroke="#059669" strokeWidth="1.5" opacity="0.3" />}
-                    </g>
-                  )
-                })}
-              </svg>
-              {/* % labels */}
-              <div style={{ position: 'absolute', top: 0, left: 0, display: 'flex', width: totalW, height: PROG_H, pointerEvents: 'none' }}>
-                {months.map((_, i) => {
-                  const p = progressByMonth[i]
-                  if (p == null) return <div key={i} style={{ width: MONTH_W }} />
-                  const cy = dotY(p)
-                  const labelTop = cy > PROG_H - 22 ? cy - 16 : cy + 8
-                  return (
-                    <div key={i} style={{ width: MONTH_W, position: 'relative' }}>
-                      <span style={{
-                        position: 'absolute',
-                        left: '50%', transform: 'translateX(-50%)',
-                        top: labelTop,
-                        fontSize: 9.5, fontWeight: 700, color: '#059669',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {p}%
-                      </span>
+            {/* Bars — flex:1 per kolom agar rata, minWidth agar tidak terlalu sempit */}
+            <div style={{ display: 'flex', width: '100%', position: 'relative', zIndex: 1 }}>
+              {months.map((m, i) => {
+                const masukH = m.masuk > 0 ? Math.max(4, (m.masuk / maxRp) * BAR_H) : 3
+                const keluarH = m.keluar > 0 ? Math.max(4, (m.keluar / maxRp) * BAR_H) : 3
+                const prog = progressByMonth[i]
+                const progH = prog != null ? Math.max(4, (prog / 100) * BAR_H) : 3
+                const isHov = hoveredIdx === i
+                const masukActive = m.masuk > 0
+                const keluarActive = m.keluar > 0
+                const progActive = prog != null && prog > 0
+
+                return (
+                  <div
+                    key={m.ym}
+                    style={{ flex: 1, minWidth: MONTH_W, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
+                    onMouseEnter={() => setHoveredIdx(i)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                  >
+                    {/* 3 bars */}
+                    <div style={{
+                      display: 'flex',
+                      gap: BAR_GAP,
+                      height: BAR_H,
+                      alignItems: 'flex-end',
+                      paddingBottom: 0,
+                    }}>
+                      {/* Masuk */}
+                      <div style={{
+                        width: BAR_W,
+                        height: masukH,
+                        backgroundColor: masukActive ? '#1A6FE8' : 'var(--border-subtle)',
+                        borderRadius: '3px 3px 0 0',
+                        opacity: isHov ? 1 : masukActive ? 0.72 : 0.35,
+                        transition: 'opacity 0.15s, height 0.3s ease',
+                      }} />
+                      {/* Keluar */}
+                      <div style={{
+                        width: BAR_W,
+                        height: keluarH,
+                        backgroundColor: keluarActive ? '#94A3B8' : 'var(--border-subtle)',
+                        borderRadius: '3px 3px 0 0',
+                        opacity: isHov ? 1 : keluarActive ? 0.72 : 0.35,
+                        transition: 'opacity 0.15s, height 0.3s ease',
+                      }} />
+                      {/* Progress */}
+                      {hasProgress && (
+                        <div style={{
+                          width: BAR_W,
+                          height: progH,
+                          backgroundColor: progActive ? '#059669' : 'var(--border-subtle)',
+                          borderRadius: '3px 3px 0 0',
+                          opacity: isHov ? 1 : progActive ? 0.72 : 0.35,
+                          transition: 'opacity 0.15s, height 0.3s ease',
+                          position: 'relative',
+                        }}>
+                          {/* Progress % label on top of bar when hovered */}
+                          {isHov && prog != null && prog > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '100%',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              marginBottom: 2,
+                              fontSize: 8.5,
+                              fontWeight: 700,
+                              color: '#059669',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {prog}%
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
+
+                    {/* Month label */}
+                    <div style={{
+                      fontSize: 10,
+                      marginTop: 6,
+                      color: isHov ? '#1A6FE8' : 'var(--text-muted)',
+                      fontWeight: isHov ? 700 : 400,
+                      transition: 'color 0.12s',
+                      userSelect: 'none',
+                    }}>
+                      {m.label}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ interface Props {
   totalAnggaran: number
   totalRealisasi: number
   onClose: () => void
+  inline?: boolean
 }
 
 const GROUP_COLORS: Record<string, string> = {
@@ -80,7 +81,7 @@ const ICONS: Record<string, React.ReactNode> = {
   penyerapan: <IconPenyerapan />,
 }
 
-export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose }: Props) {
+export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose, inline }: Props) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const ps = isMobile ? 16 : 24
@@ -92,12 +93,12 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
+    if (!inline) document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      if (!inline) document.body.style.overflow = ''
     }
-  }, [onClose])
+  }, [onClose, inline])
 
   const rowSt = (isLast: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12,
@@ -287,16 +288,70 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
   const iconSize = isMobile ? 40 : 44
 
+  // ── Inline panel (desktop) ──
+  if (inline) {
+    return (
+      <div style={{
+        backgroundColor: 'var(--card)',
+        borderRadius: 14,
+        border: `1px solid ${accent}30`,
+        boxShadow: `0 4px 24px ${accent}12`,
+        overflow: 'hidden',
+        marginBottom: 20,
+        animation: 'fadeSlideDown 0.18s ease',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '16px 24px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent, flexShrink: 0 }}>
+              {ICONS[type]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{LABEL[type]}</div>
+              {renderStat()}
+            </div>
+            <button
+              onClick={onClose}
+              style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)' }}
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        {/* List */}
+        <div style={{ maxHeight: 340, overflowY: 'auto' }}>
+          {programs.length === 0
+            ? <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak ada data</div>
+            : renderRows()
+          }
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ftrLeft}</span>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ftrLabel}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{ftrValue}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <ModalShell
       onClose={onClose}
-      maxWidth={640}
+      maxWidth={960}
       zIndex={1000}
       backdropColor="rgba(0,0,0,0.4)"
       contentScroll={false}
     >
       {close => (
-      <>
+      <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? undefined : '68vh' }}>
 
         {/* Header */}
         <div
@@ -361,7 +416,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
           </div>
         </div>
 
-      </>
+      </div>
       )}
     </ModalShell>
   )
