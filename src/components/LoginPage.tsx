@@ -109,7 +109,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             autoComplete="off"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
-              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+              border: `1px solid ${error ? 'rgba(102,0,0,0.5)' : 'var(--border)'}`,
               fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit',
               outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
@@ -141,7 +141,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             autoComplete="current-password"
             style={{
               width: '100%', padding: '12px 14px', borderRadius: 10,
-              border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+              border: `1px solid ${error ? 'rgba(102,0,0,0.5)' : 'var(--border)'}`,
               fontSize: 16, color: 'var(--text-primary)',
               fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
@@ -158,7 +158,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         {error && (
           <div style={{
             marginBottom: 16, padding: '9px 12px', borderRadius: 8,
-            backgroundColor: 'rgba(239,68,68,0.07)', color: '#DC2626',
+            backgroundColor: 'rgba(102,0,0,0.07)', color: '#660000',
             fontSize: 12.5, fontWeight: 500,
           }}>
             {error}

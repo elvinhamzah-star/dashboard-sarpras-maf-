@@ -125,7 +125,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       ? '#059669'
       : freshnessDays <= 3
         ? '#D97706'
-        : '#DC2626'
+        : '#660000'
 
   return (
     <>
@@ -308,7 +308,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     <div style={{
                       height: '100%',
                       width: `${realisasiPct}%`,
-                      backgroundColor: isOver ? '#DC2626' : '#059669',
+                      backgroundColor: isOver ? '#660000' : '#059669',
                       borderRadius: 99,
                     }} />
                   </div>
@@ -325,7 +325,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   {isOver && (
                     <span style={{
                       fontSize: 10.5, fontWeight: 600, flexShrink: 0,
-                      color: '#DC2626',
+                      color: '#660000',
                       backgroundColor: 'rgba(220,38,38,0.08)',
                       padding: '2px 7px', borderRadius: 99,
                     }}>
@@ -350,7 +350,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
-                  borderLeft: rencana.length > 0 ? '3px solid #DC2626' : '1.5px solid var(--border-subtle)',
+                  borderLeft: rencana.length > 0 ? '3px solid #660000' : '1.5px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -381,10 +381,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 {rencana.length > 0 && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-                      <svg width="10" height="10" fill="none" stroke="#DC2626" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <svg width="10" height="10" fill="none" stroke="#660000" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                       </svg>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rencana</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rencana</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 4 }}>
                       {rencana.map((item, idx) => (
@@ -443,7 +443,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       ) : wow.delta > 0 ? (
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#059669' }}>▲ +{wow.delta}%</span>
                       ) : wow.delta < 0 ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626' }}>▼ {wow.delta}%</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#660000' }}>▼ {wow.delta}%</span>
                       ) : (
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>→ 0%</span>
                       )

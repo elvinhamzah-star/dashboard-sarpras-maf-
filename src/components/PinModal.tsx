@@ -88,7 +88,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
           placeholder="• • • •"
           style={{
             width: '100%',
-            border: `1px solid ${error ? '#EF4444' : 'var(--border)'}`,
+            border: `1px solid ${error ? '#660000' : 'var(--border)'}`,
             borderRadius: 10,
             padding: '14px',
             textAlign: 'center',
@@ -106,7 +106,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
         />
 
         {error && (
-          <div style={{ color: '#EF4444', fontSize: 12, marginBottom: 8 }}>{error}</div>
+          <div style={{ color: '#660000', fontSize: 12, marginBottom: 8 }}>{error}</div>
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>

@@ -124,7 +124,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
 
   const filterCards = [
     { jenis: 'Masuk', label: 'Dana Masuk', value: totalMasuk, count: masukList.length, color: '#059669', bgActive: 'rgba(5,150,105,0.09)' },
-    { jenis: 'Keluar', label: 'Dana Keluar', value: totalKeluar, count: keluarList.length, color: '#DC2626', bgActive: 'rgba(220,38,38,0.09)' },
+    { jenis: 'Keluar', label: 'Dana Keluar', value: totalKeluar, count: keluarList.length, color: '#660000', bgActive: 'rgba(102,0,0,0.09)' },
     { jenis: 'Keluar PBB', label: 'Dana Keluar PBB', value: totalKeluarPBB, count: keluarPBBList.length, color: '#D97706', bgActive: 'rgba(217,119,6,0.09)' },
   ]
 
@@ -230,12 +230,12 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           borderRadius: isMobile ? 12 : 14,
           padding: isMobile ? '14px 13px' : '20px 22px',
           border: '1px solid var(--border)',
-          borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#DC2626'}`,
+          borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#660000'}`,
         }}>
           <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 6 : 10 }}>
             Saldo Kas
           </div>
-          <div style={{ fontSize: isMobile ? 17 : 26, fontWeight: 700, color: saldoKas >= 0 ? '#059669' : '#DC2626', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+          <div style={{ fontSize: isMobile ? 17 : 26, fontWeight: 700, color: saldoKas >= 0 ? '#059669' : '#660000', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
             {formatRupiah(saldoKas)}
           </div>
           <div style={{ fontSize: isMobile ? 9.5 : 11, color: 'var(--text-muted)', marginTop: 5 }}>
@@ -443,7 +443,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
             </div>
             {filterJenis !== 'Semua' && (() => {
-              const color = filterJenis === 'Masuk' ? '#059669' : filterJenis === 'Keluar PBB' ? '#D97706' : '#DC2626'
+              const color = filterJenis === 'Masuk' ? '#059669' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
               return (
                 <button
                   onClick={() => { setFilterJenis('Semua'); setPage(1) }}
@@ -480,7 +480,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {paged.map(t => {
                 const isMasukTx = t.jenis_transaksi === 'Masuk'
                 const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
-                const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#DC2626'
+                const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#660000'
                 const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: '#fff' }
                 return (
                   <div

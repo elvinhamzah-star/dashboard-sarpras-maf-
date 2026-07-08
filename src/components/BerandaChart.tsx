@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Transaction, ProgramSnapshot, Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
+import { useWindowWidth } from '../lib/useWindowWidth'
 
 interface BerandaChartProps {
   transactions: Transaction[]
@@ -79,6 +80,8 @@ function calcMonthProgress(programs: Program[], yearMonth: string): number | nul
 }
 
 export default function BerandaChart({ transactions, snapshots, programs }: BerandaChartProps) {
+  const width = useWindowWidth()
+  const isMobile = width < 600
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -308,6 +311,37 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Footer legend with descriptions */}
+      <div style={{
+        display: 'flex', gap: isMobile ? 10 : 20, flexWrap: 'wrap',
+        marginTop: 14, paddingTop: 12,
+        borderTop: '1px solid var(--border-subtle)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#1A6FE8', marginTop: 2, flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Masuk</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Dana kas masuk</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#94A3B8', marginTop: 2, flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Keluar</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Realisasi pengeluaran</div>
+          </div>
+        </div>
+        {hasProgress && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#059669', marginTop: 2, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Progress</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Progress fisik program</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

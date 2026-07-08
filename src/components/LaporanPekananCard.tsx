@@ -458,12 +458,12 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const getStatusColor = (id: string) => {
     if (isPastWeek && !isAdmin) {
       if (histOnhold.some(p => p.id === id)) return '#D97706'
-      if (histPlanning.some(p => p.id === id)) return '#B91C1C'
+      if (histPlanning.some(p => p.id === id)) return '#660000'
       if (histSelesai.some(p => p.id === id)) return '#1B5E2B'
       return 'var(--blue)'
     }
     if (onHoldPrograms.some(p => p.id === id)) return '#D97706'
-    if (displayedPlanningPrograms.some(p => p.id === id)) return '#B91C1C'
+    if (displayedPlanningPrograms.some(p => p.id === id)) return '#660000'
     if (displayedSelesaiPrograms.some(p => p.id === id)) return '#1B5E2B'
     return 'var(--blue)'
   }
@@ -471,7 +471,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
   const statusBgMap: Record<string, string> = {
     'var(--blue)': 'rgba(26,111,232,0.07)',
     '#D97706': 'rgba(217,119,6,0.07)',
-    '#B91C1C': 'rgba(185,28,28,0.07)',
+    '#660000': 'rgba(102,0,0,0.07)',
     '#1B5E2B': 'rgba(27,94,43,0.07)',
   }
 
@@ -577,9 +577,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 )}
                 {histPlanning.length > 0 && (
                   <>
-                    <LeftSectionHeader label="Perencanaan" count={histPlanning.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
+                    <LeftSectionHeader label="Perencanaan" count={histPlanning.length} color="#660000" bg="rgba(102,0,0,0.04)" />
                     {histPlanning.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#660000" statusBg="rgba(102,0,0,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                   </>
                 )}
@@ -652,9 +652,9 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 )}
                 {(displayedPlanningPrograms.length > 0 || isAdmin) && (
                   <>
-                    <LeftSectionHeader label="Perencanaan Pekan Depan" count={displayedPlanningPrograms.length} color="#B91C1C" bg="rgba(185,28,28,0.04)" />
+                    <LeftSectionHeader label="Perencanaan Pekan Depan" count={displayedPlanningPrograms.length} color="#660000" bg="rgba(102,0,0,0.04)" />
                     {displayedPlanningPrograms.map(prog => (
-                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#B91C1C" statusBg="rgba(185,28,28,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
+                      <LeftItem key={prog.id} program={prog} isSelected={selectedId === prog.id} statusColor="#660000" statusBg="rgba(102,0,0,0.07)" notePreview={getNotePreview(prog.id)} onClick={() => { setSelectedId(prog.id); if (isNarrow) setMobileDetailView(true) }} />
                     ))}
                     {isAdmin && (
                       <div style={{ padding: '10px 12px', position: 'relative' }} ref={dropdownPlanningRef}>
@@ -775,8 +775,8 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                 {/* Sections */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {(isSelectedPlanning ? [SECTIONS[2]] : SECTIONS).map(s => {
-                    const sColor = isSelectedPlanning ? '#B91C1C' : s.color
-                    const sBg = isSelectedPlanning ? 'rgba(185,28,28,0.07)' : s.bg
+                    const sColor = isSelectedPlanning ? '#660000' : s.color
+                    const sBg = isSelectedPlanning ? 'rgba(102,0,0,0.07)' : s.bg
                     const sLabel = isSelectedPlanning ? 'Rencana Pekan Depan' : s.label
                     return (
                     <div key={s.field}>

@@ -258,8 +258,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Perencanaan',
       value: String(programs.filter(p => p.status === 'Perencanaan').length),
       sub: 'Belum mulai',
-      color: '#64748B',
-      iconBg: 'rgba(100,116,139,0.1)',
+      color: '#660000',
+      iconBg: 'rgba(102,0,0,0.1)',
       iconType: 'Perencanaan',
       onClick: () => { setPekerjaanTab('Perencanaan'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -429,7 +429,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {/* ── TREN ── */}
       <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} />
 
-      {/* ── POPUP: Detail Program ── */}
+      {/* ── POPUP: Detail Pekerjaan ── */}
       {showDetail && (
         <ModalShell
           onClose={() => { setShowDetail(false); setPopupDetailId(null) }}
@@ -446,10 +446,16 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               'Perencanaan': displayPrograms.filter(p => p.status === 'Perencanaan').length,
             }
             const tabColors: Record<string, string> = {
-              'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#64748B',
+              'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000',
+            }
+            const tabTitles: Record<string, string> = {
+              'On Going': 'Pekerjaan Berlangsung',
+              'On Hold': 'Pekerjaan Ditangguhkan',
+              'Selesai': 'Pekerjaan Selesai',
+              'Perencanaan': 'Tahap Perencanaan',
             }
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? '75vh' : '72vh' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? '82vh' : '84vh' }}>
                 {popupDetailId ? (
                   /* ── View 2: Program Detail (in-popup, no stacking) ── */
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -474,7 +480,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         </svg>
                         Kembali
                       </button>
-                      <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>Detail Program</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>Detail Pekerjaan</span>
                       <button
                         onClick={() => { setShowDetail(false); setPopupDetailId(null) }}
                         style={{
@@ -507,14 +513,21 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   /* ── View 1: Program List with filter tabs ── */
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                     {/* Header */}
-                    <div style={{ padding: isMobile ? '18px 16px 0' : '22px 28px 0', flexShrink: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+                    <div style={{
+                      padding: isMobile ? '18px 16px 16px' : '22px 28px 18px',
+                      flexShrink: 0,
+                      borderBottom: '1px solid var(--border-subtle)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <div>
-                          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                            Detail Program
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                            <div style={{ width: 4, height: 24, borderRadius: 2, backgroundColor: tabColors[pekerjaanTab], flexShrink: 0 }} />
+                            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                              {tabTitles[pekerjaanTab]}
+                            </div>
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
-                            {tabCounts[pekerjaanTab]} program · {pekerjaanTab}
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, paddingLeft: 14 }}>
+                            {tabCounts[pekerjaanTab]} pekerjaan
                           </div>
                         </div>
                         <button
@@ -531,48 +544,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                           </svg>
                         </button>
                       </div>
-                      {/* Pill tab bar */}
-                      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16 }}>
-                        {(['On Going', 'On Hold', 'Selesai', 'Perencanaan'] as const).map(tab => {
-                          const isActive = pekerjaanTab === tab
-                          const c = tabColors[tab]
-                          const cnt = tabCounts[tab]
-                          return (
-                            <button
-                              key={tab}
-                              onClick={() => setPekerjaanTab(tab)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 7,
-                                padding: '7px 14px',
-                                borderRadius: 10,
-                                border: isActive ? `1.5px solid ${c}` : '1.5px solid var(--border)',
-                                backgroundColor: isActive ? `${c}` : 'var(--card)',
-                                color: isActive ? '#fff' : 'var(--text-muted)',
-                                fontSize: isMobile ? 11.5 : 12.5,
-                                fontWeight: isActive ? 700 : 500,
-                                cursor: 'pointer',
-                                transition: 'all 0.14s',
-                                fontFamily: 'inherit',
-                                whiteSpace: 'nowrap',
-                                flexShrink: 0,
-                                boxShadow: isActive ? `0 2px 8px ${c}44` : 'none',
-                              }}
-                            >
-                              {tab}
-                              <span style={{
-                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                minWidth: 20, height: 20, borderRadius: 6, padding: '0 5px',
-                                backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--surface-subtle)',
-                                color: isActive ? '#fff' : 'var(--text-muted)',
-                                fontSize: 11, fontWeight: 700,
-                              }}>
-                                {cnt}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <div style={{ height: 1, backgroundColor: 'var(--border-subtle)', marginLeft: isMobile ? -16 : -28, marginRight: isMobile ? -16 : -28 }} />
                     </div>
                     {/* Scrollable program list */}
                     <div style={{ overflowY: 'auto', flex: 1, overscrollBehavior: 'contain' }}>

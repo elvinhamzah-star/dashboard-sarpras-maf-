@@ -259,9 +259,9 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
 
       {planningEntries.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <SectionDivider label="Perencanaan" count={planningEntries.length} color="#B91C1C" bg="rgba(185,28,28,0.1)" />
+          <SectionDivider label="Perencanaan" count={planningEntries.length} color="#660000" bg="rgba(102,0,0,0.1)" />
           {planningEntries.map(([id, data]) => (
-            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#B91C1C" />
+            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#660000" />
           ))}
         </div>
       )}

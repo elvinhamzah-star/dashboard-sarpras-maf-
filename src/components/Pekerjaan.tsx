@@ -13,7 +13,7 @@ interface PekerjaanProps {
   onSearchChange: (s: string) => void
 }
 
-const STATUS_TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
+const STATUS_TABS = ['Selesai', 'On Going', 'On Hold', 'Perencanaan']
 
 export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, activeStatus, onStatusChange, search, onSearchChange }: PekerjaanProps) {
   const width = useWindowWidth()
@@ -137,12 +137,13 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
         />
       </div>
 
-      {/* Filter Cards */}
+      {/* Filter Pill Tabs */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
+        display: 'flex',
         gap: 8,
         marginBottom: 16,
+        overflowX: 'auto',
+        paddingBottom: 2,
       }}>
         {STATUS_TABS.map(tab => {
           const isActive = activeStatus === tab
@@ -153,45 +154,32 @@ export default function Pekerjaan({ isAdmin, onSelectProgram, onAddPekerjaan, ac
               key={tab}
               onClick={() => onStatusChange(isActive ? '' : tab)}
               style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: isMobile ? '7px 12px' : '8px 16px',
                 borderRadius: 10,
-                padding: isMobile ? '7px 10px' : '10px 12px',
-                borderWidth: '3px 1px 1px 1px',
-                borderStyle: 'solid',
-                borderColor: isActive
-                  ? `${color} ${color}AA ${color}AA ${color}AA`
-                  : `${color} var(--border) var(--border) var(--border)`,
+                border: isActive ? `1.5px solid ${color}` : '1.5px solid var(--border)',
+                backgroundColor: isActive ? color : 'var(--card)',
+                color: isActive ? '#fff' : 'var(--text-muted)',
+                fontSize: isMobile ? 12 : 13,
+                fontWeight: isActive ? 700 : 500,
                 cursor: 'pointer',
-                backgroundColor: isActive ? `${color}15` : 'var(--card)',
-                textAlign: 'left',
+                transition: 'all 0.14s',
                 fontFamily: 'inherit',
-                transition: 'background 0.13s, box-shadow 0.13s, transform 0.13s, border-color 0.13s',
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget
-                if (!isActive) {
-                  el.style.backgroundColor = `${color}0D`
-                  el.style.borderColor = `${color} ${color}55 ${color}55 ${color}55`
-                }
-                el.style.transform = 'translateY(-2px)'
-                el.style.boxShadow = `0 4px 16px ${color}28`
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget
-                if (!isActive) {
-                  el.style.backgroundColor = 'var(--card)'
-                  el.style.borderColor = `${color} var(--border) var(--border) var(--border)`
-                }
-                el.style.transform = 'translateY(0)'
-                el.style.boxShadow = 'none'
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                boxShadow: isActive ? `0 2px 8px ${color}44` : 'none',
               }}
             >
-              <div style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
-                {tab}
-              </div>
-              <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+              {tab}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 20, height: 20, borderRadius: 6, padding: '0 5px',
+                backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--surface-subtle)',
+                color: isActive ? '#fff' : 'var(--text-muted)',
+                fontSize: 11, fontWeight: 700,
+              }}>
                 {count}
-              </div>
-              <div style={{ fontSize: isMobile ? 9 : 10, color: 'var(--text-muted)', marginTop: 2 }}>Pekerjaan</div>
+              </span>
             </button>
           )
         })}

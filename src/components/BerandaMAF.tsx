@@ -16,7 +16,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; bor
   'On Going':    { label: 'Berjalan',      color: '#0A7BC8', bg: 'rgba(10,123,200,0.08)',  border: 'rgba(10,123,200,0.25)' },
   'Selesai':     { label: 'Selesai',       color: '#1B5E2B', bg: 'rgba(27,94,43,0.08)',    border: 'rgba(27,94,43,0.25)' },
   'On Hold':     { label: 'Ditangguhkan',  color: '#D97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.25)' },
-  'Perencanaan': { label: 'Perencanaan',   color: '#DC2626', bg: 'rgba(220,38,38,0.08)',   border: 'rgba(220,38,38,0.2)' },
+  'Perencanaan': { label: 'Perencanaan',   color: '#660000', bg: 'rgba(102,0,0,0.08)',   border: 'rgba(102,0,0,0.2)' },
 }
 
 const STATUS_TABS = [
@@ -105,7 +105,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
             </span>
           </div>
           {formattedLastUpdated && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 10, color: 'rgba(185,28,28,.6)', fontWeight: 500, border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5, padding: '2px 7px', background: 'rgba(220,38,38,.055)', marginTop: 5 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 10, color: 'rgba(185,28,28,.6)', fontWeight: 500, border: '0.5px solid rgba(102,0,0,.22)', borderRadius: 5, padding: '2px 7px', background: 'rgba(102,0,0,.055)', marginTop: 5 }}>
               Diperbarui {formattedLastUpdated}
             </span>
           )}
@@ -119,7 +119,7 @@ export default function BerandaMAF({ programs, totalAnggaran, totalRealisasi, fo
             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>{getTodayFormatted()}</span>
               {formattedLastUpdated && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, color: 'rgba(185,28,28,.6)', fontWeight: 500, border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5, padding: '2px 8px', background: 'rgba(220,38,38,.055)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, color: 'rgba(185,28,28,.6)', fontWeight: 500, border: '0.5px solid rgba(102,0,0,.22)', borderRadius: 5, padding: '2px 8px', background: 'rgba(102,0,0,.055)' }}>
                   Diperbarui {formattedLastUpdated}
                 </span>
               )}

@@ -453,7 +453,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       if (rows.length > 1) {
                         const btn = e.currentTarget as HTMLButtonElement
                         btn.style.backgroundColor = 'rgba(239,68,68,0.06)'
-                        btn.style.color = '#DC2626'
+                        btn.style.color = '#660000'
                         btn.style.borderColor = 'rgba(220,38,38,0.2)'
                       }
                     }}

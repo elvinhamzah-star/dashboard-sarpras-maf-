@@ -19,7 +19,7 @@ interface GaleriProps {
 }
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
-  'Kondisi Awal':     { color: '#DC2626', bg: 'rgba(220,38,38,0.1)' },
+  'Kondisi Awal':     { color: '#660000', bg: 'rgba(102,0,0,0.1)' },
   'Proses Pekerjaan': { color: 'var(--blue)', bg: 'rgba(26,111,232,0.1)' },
   'Kondisi Akhir':    { color: '#059669', bg: 'rgba(5,150,105,0.1)' },
   'Dokumentasi':      { color: 'var(--text-secondary)', bg: 'rgba(0,0,0,0.06)' },
@@ -336,7 +336,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
             <button onClick={e => { e.stopPropagation(); setEditingDoc(doc) }}
               style={{ backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit' }}>✏️</button>
             <button onClick={e => { e.stopPropagation(); handleDelete(doc.id) }}
-              style={{ backgroundColor: 'rgba(220,38,38,0.7)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit' }}>✕</button>
+              style={{ backgroundColor: 'rgba(102,0,0,0.7)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit' }}>✕</button>
           </div>
         )}
       </div>
@@ -746,7 +746,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   const afterDoc = docById(pair.after_doc_id)
                   const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
                   const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
-                    const accent = kind === 'before' ? '#DC2626' : '#059669'
+                    const accent = kind === 'before' ? '#660000' : '#059669'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     return (
                       <div style={{ flex: 1, position: 'relative' }}>
@@ -846,7 +846,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   const afterDoc = docById(pair.after_doc_id)
                   const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
                   const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
-                    const accent = kind === 'before' ? '#DC2626' : '#059669'
+                    const accent = kind === 'before' ? '#660000' : '#059669'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     return (
                       <div style={{ flex: 1, position: 'relative' }}>

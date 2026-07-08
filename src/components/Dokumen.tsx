@@ -328,7 +328,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
             {isBuktiTx && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 7 }}>
-                  Jenis Dokumen <span style={{ color: '#dc2626' }}>*</span>
+                  Jenis Dokumen <span style={{ color: '#660000' }}>*</span>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(['invoice', 'pembayaran', 'struk'] as Sub[]).map(s => {
@@ -427,7 +427,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
             <button
               onClick={e => { e.stopPropagation(); onDelete() }}
               disabled={isDeleting}
-              style={{ width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1, fontFamily: 'inherit', flexShrink: 0 }}
+              style={{ width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--card)', color: '#660000', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1, fontFamily: 'inherit', flexShrink: 0 }}
             >
               {isDeleting ? '…' : '×'}
             </button>

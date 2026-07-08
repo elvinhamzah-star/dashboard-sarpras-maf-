@@ -174,7 +174,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
     const p = ((curr - prev) / prev) * 100
     return (p >= 0 ? '↑ +' : '↓ ') + Math.abs(p).toFixed(1) + '%'
   }
-  const dColor = (curr: number, prev: number) => curr >= prev ? '#059669' : '#DC2626'
+  const dColor = (curr: number, prev: number) => curr >= prev ? '#059669' : '#660000'
 
   const SectionTitle = ({ children, sub }: { children: string; sub?: string }) => (
     <div style={{ marginBottom: 14 }}>
@@ -327,7 +327,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
             <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Pengeluaran {monthLabelFromYM(bulan)}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#DC2626', letterSpacing: '-0.03em' }}>{formatRupiah(keluarIni)}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#660000', letterSpacing: '-0.03em' }}>{formatRupiah(keluarIni)}</div>
               </div>
               <div style={{ fontSize: 12, fontWeight: 600, color: dColor(keluarPrev, keluarIni) }}>{deltaText(keluarIni, keluarPrev)}</div>
             </div>
@@ -344,7 +344,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
               borderRadius: 10, padding: '12px 14px',
             }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Net Bulan Ini</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: masukIni >= keluarIni ? '#059669' : '#DC2626', letterSpacing: '-0.03em' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: masukIni >= keluarIni ? '#059669' : '#660000', letterSpacing: '-0.03em' }}>
                 {masukIni >= keluarIni ? '+' : '-'}{formatRupiah(Math.abs(masukIni - keluarIni))}
               </div>
               <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{masukIni >= keluarIni ? 'Surplus' : 'Defisit'} bulan ini</div>
@@ -416,7 +416,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
                       <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Progress fisik</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: prog >= 100 ? '#059669' : '#1A6FE8' }}>
                         {prog}%
-                        {diff !== 0 && <span style={{ fontWeight: 600, color: diff > 0 ? '#059669' : '#DC2626', marginLeft: 4 }}>({diff > 0 ? '+' : ''}{diff.toFixed(0)}%)</span>}
+                        {diff !== 0 && <span style={{ fontWeight: 600, color: diff > 0 ? '#059669' : '#660000', marginLeft: 4 }}>({diff > 0 ? '+' : ''}{diff.toFixed(0)}%)</span>}
                       </span>
                     </div>
                     <div style={{ height: 5, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
@@ -487,7 +487,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
                           <span style={{ fontSize: 11, fontWeight: 700, color: prog >= 100 ? '#059669' : '#1A6FE8' }}>{prog}%</span>
                         </div>
                       </td>
-                      <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: diff > 0 ? '#059669' : diff < 0 ? '#DC2626' : 'var(--text-muted)', fontSize: 11 }}>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600, color: diff > 0 ? '#059669' : diff < 0 ? '#660000' : 'var(--text-muted)', fontSize: 11 }}>
                         {diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) + '%' : '—'}
                       </td>
                       <td style={{ padding: '9px 10px', textAlign: 'right', color: 'var(--text-muted)', fontSize: 11 }}>{formatRupiah(p.total_anggaran || 0)}</td>
@@ -590,7 +590,7 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
             {saving ? 'Menyimpan...' : 'Simpan Evaluasi & Rencana'}
           </button>
           {saveMsg && (
-            <span style={{ fontSize: 13, color: saveMsg === 'Tersimpan' ? '#059669' : '#DC2626', fontWeight: 600 }}>
+            <span style={{ fontSize: 13, color: saveMsg === 'Tersimpan' ? '#059669' : '#660000', fontWeight: 600 }}>
               {saveMsg}
             </span>
           )}

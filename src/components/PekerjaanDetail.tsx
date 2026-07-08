@@ -450,55 +450,75 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* RAB — program link + program_documents */}
+                  {/* RAB — flat rows, satu baris per file */}
                   {(() => {
                     const files = programDocs.filter(d => d.folder === 'rab')
                     const autoUrl = program.link_rab_detail
                     const allFiles: { key: string; name: string; url: string | null }[] = [
-                      ...(autoUrl ? [{ key: '__rab_auto', name: 'RAB', url: autoUrl }] : []),
-                      ...files.map(d => ({ key: d.id, name: d.file_name, url: d.file_url ?? null })),
+                      ...(autoUrl ? [{ key: '__rab_auto', name: `RAB · ${program.nama_pekerjaan}`, url: autoUrl }] : []),
+                      ...files.map(d => ({ key: d.id, name: d.file_name || `RAB · ${program.nama_pekerjaan}`, url: d.file_url ?? null })),
                     ]
-                    return (
-                      <div style={{ borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: allFiles.length > 0 ? '1px solid var(--border-subtle)' : 'none', backgroundColor: 'rgba(217,119,6,0.04)' }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="14" height="14" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                    if (allFiles.length === 0) {
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
+                          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                           </div>
-                          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>RAB</span>
-                          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{allFiles.length > 0 ? `${allFiles.length} file` : 'Kosong'}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>RAB · {program.nama_pekerjaan}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada file RAB</div>
+                          </div>
                         </div>
-                        {allFiles.length === 0 && <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>Belum ada file RAB</div>}
-                        {allFiles.map((f, i) => (
-                          <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                            <svg width="14" height="14" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
-                            {f.url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                      )
+                    }
+                    return (
+                      <>
+                        {allFiles.map(f => (
+                          <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined}
+                            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: f.url ? 'pointer' : 'default' }}>
+                            <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: f.url ? 'rgba(217,119,6,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke={f.url ? '#D97706' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: f.url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+                            </div>
+                            {f.url && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                           </div>
                         ))}
-                      </div>
+                      </>
                     )
                   })()}
-                  {/* Kontrak — program_documents only (same source as Dokumen page) */}
+                  {/* Kontrak — flat rows */}
                   {(() => {
                     const allFiles = programDocs.filter(d => d.folder === 'kontrak')
-                    return (
-                      <div style={{ borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: allFiles.length > 0 ? '1px solid var(--border-subtle)' : 'none', backgroundColor: 'rgba(37,99,235,0.04)' }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(37,99,235,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                    if (allFiles.length === 0) {
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
+                          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
                           </div>
-                          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>Kontrak</span>
-                          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{allFiles.length > 0 ? `${allFiles.length} file` : 'Kosong'}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>Kontrak · {program.nama_pekerjaan}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada kontrak</div>
+                          </div>
                         </div>
-                        {allFiles.length === 0 && <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>Tidak ada kontrak untuk pekerjaan ini</div>}
-                        {allFiles.map((f, i) => (
-                          <div key={f.id} onClick={f.file_url ? () => openFile(f.file_url!, f.file_name) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: f.file_url ? 'pointer' : 'default', borderBottom: i < allFiles.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                            <svg width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{f.file_name}</span>
-                            {f.file_url && <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                      )
+                    }
+                    return (
+                      <>
+                        {allFiles.map(f => (
+                          <div key={f.id} onClick={f.file_url ? () => openFile(f.file_url!, f.file_name) : undefined}
+                            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: f.file_url ? 'pointer' : 'default' }}>
+                            <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: f.file_url ? 'rgba(37,99,235,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke={f.file_url ? '#2563EB' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: f.file_url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.file_name || `Kontrak · ${program.nama_pekerjaan}`}</div>
+                            </div>
+                            {f.file_url && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                           </div>
                         ))}
-                      </div>
+                      </>
                     )
                   })()}
                   {/* Dokumentasi Foto → Galeri */}
@@ -510,7 +530,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                           <svg width="18" height="18" fill="none" stroke={has ? '#7C3AED' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Dokumentasi Foto</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Dokumentasi Foto · {program.nama_pekerjaan}</div>
                           {!has && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada dokumentasi</div>}
                         </div>
                         {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
@@ -527,7 +547,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                           <svg width="18" height="18" fill="none" stroke={has ? '#059669' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Bukti Transaksi</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Bukti Transaksi · {program.nama_pekerjaan}</div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{has ? `${txDocs.length + transactions.length} file` : 'Belum ada bukti transaksi'}</div>
                         </div>
                         {has && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}

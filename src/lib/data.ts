@@ -1,12 +1,12 @@
 export const STATUS_COLORS: Record<string, string> = {
-  'Perencanaan': '#DC2626',
+  'Perencanaan': '#660000',
   'On Going': '#0A7BC8',
   'Selesai': '#1B5E2B',
   'On Hold': '#D97706',
 }
 
 export const STATUS_BG: Record<string, string> = {
-  'Perencanaan': 'rgba(220,38,38,0.1)',
+  'Perencanaan': 'rgba(102,0,0,0.1)',
   'On Going': 'rgba(10,123,200,0.1)',
   'Selesai': 'rgba(27,94,43,0.1)',
   'On Hold': 'rgba(217,119,6,0.1)',
@@ -48,7 +48,7 @@ export function monthsFromDates(dates: (string | undefined | null)[]): string[] 
 // Updated darker transaction colors
 export const TRANSACTION_COLORS: Record<string, { bg: string; text: string; light: string }> = {
   'Masuk': { bg: '#059669', text: '#fff', light: 'rgba(5,150,105,0.1)' },
-  'Keluar': { bg: '#991b1b', text: '#fff', light: 'rgba(153,27,27,0.1)' },
+  'Keluar': { bg: '#660000', text: '#fff', light: 'rgba(102,0,0,0.1)' },
   'Keluar PBB': { bg: '#92400e', text: '#fff', light: 'rgba(146,64,14,0.1)' },
 }
 
