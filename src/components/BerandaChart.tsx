@@ -10,10 +10,15 @@ interface BerandaChartProps {
 }
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-const BAR_H = 120
+const BAR_H = 180
 const MONTH_W = 78
-const BAR_W = 16
-const BAR_GAP = 3
+const BAR_W = 18
+const BAR_GAP = 4
+
+// Chart color palette — picked from existing dashboard elements
+const C_MASUK    = '#0D1829'  // navy — dari sidebar background
+const C_KELUAR   = '#D97706'  // orange — dari warna On Hold & alert
+const C_PROGRESS = '#7C3AED'  // purple — dari card Progress Pekerjaan
 
 /**
  * Interpolate a program's estimated progress at the midpoint of a given month.
@@ -136,32 +141,13 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       marginBottom: 20,
     }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            Realisasi & Progress
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-            Perkembangan {months.length} bulan
-          </div>
+      {/* Header — legenda hanya di footer, tidak duplikasi di sini */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+          Realisasi & Progress
         </div>
-        {/* Legend */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
-            <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Masuk</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#94A3B8' }} />
-            <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
-          </div>
-          {hasProgress && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#059669' }} />
-              <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Progress</span>
-            </div>
-          )}
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+          Perkembangan {months.length} bulan
         </div>
       </div>
 
@@ -183,19 +169,19 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {hovered && hovered.masuk > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: C_MASUK, flexShrink: 0 }} />
                 <span style={{ fontSize: 11, fontWeight: 600 }}>{formatRupiah(hovered.masuk)}</span>
               </div>
             )}
             {hovered && hovered.keluar > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#94A3B8', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: C_KELUAR, flexShrink: 0 }} />
                 <span style={{ fontSize: 11, fontWeight: 600 }}>{formatRupiah(hovered.keluar)}</span>
               </div>
             )}
             {hovProg != null && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#059669', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: C_PROGRESS, flexShrink: 0 }} />
                 <span style={{ fontSize: 11, fontWeight: 600 }}>Progress {hovProg}%</span>
               </div>
             )}
@@ -249,18 +235,18 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
                       <div style={{
                         width: BAR_W,
                         height: masukH,
-                        backgroundColor: masukActive ? '#1A6FE8' : 'var(--border-subtle)',
-                        borderRadius: '3px 3px 0 0',
-                        opacity: isHov ? 1 : masukActive ? 0.72 : 0.35,
+                        backgroundColor: masukActive ? C_MASUK : 'var(--border-subtle)',
+                        borderRadius: 0,
+                        opacity: isHov ? 1 : masukActive ? 0.8 : 0.3,
                         transition: 'opacity 0.15s, height 0.3s ease',
                       }} />
                       {/* Keluar */}
                       <div style={{
                         width: BAR_W,
                         height: keluarH,
-                        backgroundColor: keluarActive ? '#94A3B8' : 'var(--border-subtle)',
-                        borderRadius: '3px 3px 0 0',
-                        opacity: isHov ? 1 : keluarActive ? 0.72 : 0.35,
+                        backgroundColor: keluarActive ? C_KELUAR : 'var(--border-subtle)',
+                        borderRadius: 0,
+                        opacity: isHov ? 1 : keluarActive ? 0.8 : 0.3,
                         transition: 'opacity 0.15s, height 0.3s ease',
                       }} />
                       {/* Progress */}
@@ -268,9 +254,9 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
                         <div style={{
                           width: BAR_W,
                           height: progH,
-                          backgroundColor: progActive ? '#059669' : 'var(--border-subtle)',
-                          borderRadius: '3px 3px 0 0',
-                          opacity: isHov ? 1 : progActive ? 0.72 : 0.35,
+                          backgroundColor: progActive ? C_PROGRESS : 'var(--border-subtle)',
+                          borderRadius: 0,
+                          opacity: isHov ? 1 : progActive ? 0.8 : 0.3,
                           transition: 'opacity 0.15s, height 0.3s ease',
                           position: 'relative',
                         }}>
@@ -284,7 +270,7 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
                               marginBottom: 2,
                               fontSize: 8.5,
                               fontWeight: 700,
-                              color: '#059669',
+                              color: C_PROGRESS,
                               whiteSpace: 'nowrap',
                             }}>
                               {prog}%
@@ -298,7 +284,7 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
                     <div style={{
                       fontSize: 10,
                       marginTop: 6,
-                      color: isHov ? '#1A6FE8' : 'var(--text-muted)',
+                      color: isHov ? C_MASUK : 'var(--text-muted)',
                       fontWeight: isHov ? 700 : 400,
                       transition: 'color 0.12s',
                       userSelect: 'none',
@@ -320,14 +306,14 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
         borderTop: '1px solid var(--border-subtle)',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#1A6FE8', marginTop: 2, flexShrink: 0 }} />
+          <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_MASUK, marginTop: 2, flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Masuk</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Dana kas masuk</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#94A3B8', marginTop: 2, flexShrink: 0 }} />
+          <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_KELUAR, marginTop: 2, flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Keluar</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Realisasi pengeluaran</div>
@@ -335,7 +321,7 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
         </div>
         {hasProgress && (
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: '#059669', marginTop: 2, flexShrink: 0 }} />
+            <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_PROGRESS, marginTop: 2, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Progress</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Progress fisik program</div>
