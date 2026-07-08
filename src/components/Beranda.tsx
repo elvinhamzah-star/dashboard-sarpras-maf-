@@ -69,7 +69,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
-  const [filterMonth, setFilterMonth] = useState<string | null>(null) // format: 'YYYY-MM'
   const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
@@ -114,36 +113,16 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  // Bulan yang tersedia dari data transaksi (format YYYY-MM, urut ascending)
-  const availableMonths = [...new Set(
-    rawTransactions.map(t => t.tanggal?.slice(0, 7)).filter(Boolean) as string[]
-  )].sort()
+  const displayPrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
 
-  // Filter transaksi berdasarkan bulan
-  const filteredTransactions = filterMonth
-    ? rawTransactions.filter(t => t.tanggal?.startsWith(filterMonth))
-    : rawTransactions
-
-  // Filter program: aktif di bulan yang dipilih
-  const filteredPrograms = filterMonth
-    ? programs.filter(p => {
-        if (!p.tanggal_mulai) return true
-        const mulai = p.tanggal_mulai.slice(0, 7) // YYYY-MM
-        const selesai = p.tanggal_selesai ? p.tanggal_selesai.slice(0, 7) : '9999-12'
-        return mulai <= filterMonth && selesai >= filterMonth
-      })
-    : programs
-
-  const displayPrograms = role === 'maf' ? filteredPrograms.filter(p => p.jenis_pekerjaan !== 'Operasional') : filteredPrograms
-
-  const totalAnggaran = filteredPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const totalRealisasi = filteredTransactions
+  const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const totalRealisasi = rawTransactions
     .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
     .reduce((s, t) => s + (t.nominal || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
-  const progressPrograms = filteredPrograms.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
+  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
     ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
@@ -229,47 +208,20 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {/* Page Header */}
       {isMobile ? (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Dashboard Sarpras MAF
             </h1>
-            {availableMonths.length > 0 && (
-              <select
-                value={filterMonth ?? ''}
-                onChange={e => setFilterMonth(e.target.value || null)}
-                style={{
-                  padding: '5px 8px',
-                  borderRadius: 8,
-                  border: '1px solid var(--border)',
-                  backgroundColor: filterMonth ? 'rgba(26,111,232,0.07)' : 'var(--card)',
-                  color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  outline: 'none',
-                  flexShrink: 0,
-                }}
-              >
-                <option value=''>Semua</option>
-                {availableMonths.map(ym => (
-                  <option key={ym} value={ym}>{BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}</option>
-                ))}
-              </select>
-            )}
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
+              {getTodayFormatted()}
+            </span>
           </div>
           {formattedLastUpdated && (
             <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              fontSize: 10,
-              color: 'rgba(185,28,28,.6)',
-              fontWeight: 500,
-              border: '0.5px solid rgba(220,38,38,.22)',
-              borderRadius: 5,
-              padding: '2px 7px',
-              background: 'rgba(220,38,38,.055)',
-              marginTop: 5,
+              display: 'inline-flex', alignItems: 'center',
+              fontSize: 10, color: 'rgba(185,28,28,.6)', fontWeight: 500,
+              border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5,
+              padding: '2px 7px', background: 'rgba(220,38,38,.055)', marginTop: 5,
             }}>
               Diperbarui {formattedLastUpdated}
             </span>
@@ -282,49 +234,19 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               Dashboard Sarpras MAF
             </h1>
             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>
-                {getTodayFormatted()}
-              </span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>{getTodayFormatted()}</span>
               {formattedLastUpdated && (
                 <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  fontSize: 11,
-                  color: 'rgba(185,28,28,.6)',
-                  fontWeight: 500,
-                  border: '0.5px solid rgba(220,38,38,.22)',
-                  borderRadius: 5,
-                  padding: '2px 8px',
-                  background: 'rgba(220,38,38,.055)',
+                  display: 'inline-flex', alignItems: 'center',
+                  fontSize: 11, color: 'rgba(185,28,28,.6)', fontWeight: 500,
+                  border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5,
+                  padding: '2px 8px', background: 'rgba(220,38,38,.055)',
                 }}>
                   Diperbarui {formattedLastUpdated}
                 </span>
               )}
             </div>
           </div>
-          {availableMonths.length > 0 && (
-            <select
-              value={filterMonth ?? ''}
-              onChange={e => setFilterMonth(e.target.value || null)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 10,
-                border: '1px solid var(--border)',
-                backgroundColor: filterMonth ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-                color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                outline: 'none',
-              }}
-            >
-              <option value=''>Semua Bulan</option>
-              {availableMonths.map(ym => (
-                <option key={ym} value={ym}>{BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}</option>
-              ))}
-            </select>
-          )}
         </div>
       )}
 
@@ -389,7 +311,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         ))}
       </div>
 
-      <BerandaChart transactions={filteredTransactions} />
+      <BerandaChart transactions={rawTransactions} snapshots={snapshots} />
 
       {/* ── PEKERJAAN ── */}
       <SectionDivider label="Pekerjaan" isMobile={isMobile} />
