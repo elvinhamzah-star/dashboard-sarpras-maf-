@@ -286,33 +286,30 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       {/* Filter Bulan */}
       {availableMonths.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-          {[null, ...availableMonths].map(ym => {
-            const label = ym
-              ? `${BULAN_ID[parseInt(ym.slice(5, 7)) - 1].slice(0, 3)} '${ym.slice(2, 4)}`
-              : 'Semua'
-            const active = filterMonth === ym
-            return (
-              <button
-                key={ym ?? 'all'}
-                onClick={() => setFilterMonth(ym)}
-                style={{
-                  padding: isMobile ? '4px 11px' : '5px 13px',
-                  borderRadius: 20,
-                  border: active ? 'none' : '1px solid var(--border)',
-                  backgroundColor: active ? 'var(--blue)' : 'var(--card)',
-                  color: active ? '#fff' : 'var(--text-muted)',
-                  fontSize: isMobile ? 11.5 : 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
+        <div style={{ marginBottom: 16 }}>
+          <select
+            value={filterMonth ?? ''}
+            onChange={e => setFilterMonth(e.target.value || null)}
+            style={{
+              padding: isMobile ? '7px 12px' : '7px 14px',
+              borderRadius: 10,
+              border: '1px solid var(--border)',
+              backgroundColor: filterMonth ? 'rgba(26,111,232,0.06)' : 'var(--card)',
+              color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              outline: 'none',
+            }}
+          >
+            <option value=''>Semua Bulan</option>
+            {availableMonths.map(ym => (
+              <option key={ym} value={ym}>
+                {BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
