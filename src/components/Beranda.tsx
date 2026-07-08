@@ -229,13 +229,34 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {/* Page Header */}
       {isMobile ? (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Dashboard Sarpras MAF
             </h1>
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
-              {getTodayFormatted()}
-            </span>
+            {availableMonths.length > 0 && (
+              <select
+                value={filterMonth ?? ''}
+                onChange={e => setFilterMonth(e.target.value || null)}
+                style={{
+                  padding: '5px 8px',
+                  borderRadius: 8,
+                  border: '1px solid var(--border)',
+                  backgroundColor: filterMonth ? 'rgba(26,111,232,0.07)' : 'var(--card)',
+                  color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                <option value=''>Semua</option>
+                {availableMonths.map(ym => (
+                  <option key={ym} value={ym}>{BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}</option>
+                ))}
+              </select>
+            )}
           </div>
           {formattedLastUpdated && (
             <span style={{
@@ -281,35 +302,29 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Filter Bulan */}
-      {availableMonths.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <select
-            value={filterMonth ?? ''}
-            onChange={e => setFilterMonth(e.target.value || null)}
-            style={{
-              padding: isMobile ? '7px 12px' : '7px 14px',
-              borderRadius: 10,
-              border: '1px solid var(--border)',
-              backgroundColor: filterMonth ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-              color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              outline: 'none',
-            }}
-          >
-            <option value=''>Semua Bulan</option>
-            {availableMonths.map(ym => (
-              <option key={ym} value={ym}>
-                {BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}
-              </option>
-            ))}
-          </select>
+          {availableMonths.length > 0 && (
+            <select
+              value={filterMonth ?? ''}
+              onChange={e => setFilterMonth(e.target.value || null)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 10,
+                border: '1px solid var(--border)',
+                backgroundColor: filterMonth ? 'rgba(26,111,232,0.06)' : 'var(--card)',
+                color: filterMonth ? 'var(--blue)' : 'var(--text-secondary)',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            >
+              <option value=''>Semua Bulan</option>
+              {availableMonths.map(ym => (
+                <option key={ym} value={ym}>{BULAN_ID[parseInt(ym.slice(5, 7)) - 1]}</option>
+              ))}
+            </select>
+          )}
         </div>
       )}
 
