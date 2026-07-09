@@ -516,72 +516,56 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       {/* ── POPUP: Progres Pekerjaan ── */}
       {showProgressModal && (
-        <div
-          onClick={() => setShowProgressModal(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}
+        <ModalShell
+          onClose={() => setShowProgressModal(false)}
+          maxWidth={960}
+          zIndex={300}
+          backdropColor="rgba(10,22,40,0.5)"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: isMobile ? '20px 20px 0 0' : 16,
-              width: '100%',
-              maxWidth: 960,
-              maxHeight: isMobile ? '88dvh' : '80vh',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
-            }}
-          >
-            {/* Header modal */}
-            <div style={{ padding: isMobile ? '16px 16px 12px' : '18px 20px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <div>
-                <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progres Pekerjaan</div>
-                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{progressLapangan}%</span>
-                </div>
+          {/* Header */}
+          <div style={{ padding: isMobile ? '4px 16px 12px' : '18px 20px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progres Pekerjaan</div>
+              <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{progressLapangan}%</span>
               </div>
-              <button
-                onClick={() => setShowProgressModal(false)}
-                style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
             </div>
-            {/* List program */}
-            <div style={{ overflowY: 'auto', padding: isMobile ? '10px 12px 20px' : '12px 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
-                const pct = getEffectiveProgress(p)
-                const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
-                const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000' }
-                const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(5,150,105,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
-                const color = statusColors[p.status] || 'var(--blue)'
-                return (
-                  <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 10, padding: isMobile ? '10px 12px' : '11px 14px', border: '1px solid var(--border-subtle)' }}>
-                    {/* Baris atas: ID + nama + status */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>{p.id}</span>
-                      <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.3 }}>{p.nama_pekerjaan}</span>
-                      <span style={{ fontSize: 9.5, fontWeight: 700, color: color, backgroundColor: statusBg[p.status], padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>{p.status}</span>
-                    </div>
-                    {/* Progress bar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, height: 5, borderRadius: 99, backgroundColor: 'var(--border-subtle)', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: color, borderRadius: 99, transition: 'width 0.4s ease' }} />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: color, minWidth: 32, textAlign: 'right' }}>{pct}%</span>
-                    </div>
-                    {/* Bobot anggaran */}
-                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 5 }}>
-                      Bobot anggaran: {bobotPct}% dari total
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            <button
+              onClick={() => setShowProgressModal(false)}
+              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-        </div>
+          {/* List program */}
+          <div style={{ padding: isMobile ? '10px 12px 20px' : '12px 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
+              const pct = getEffectiveProgress(p)
+              const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
+              const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000' }
+              const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(5,150,105,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
+              const color = statusColors[p.status] || 'var(--blue)'
+              return (
+                <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 10, padding: isMobile ? '10px 12px' : '11px 14px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>{p.id}</span>
+                    <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.3 }}>{p.nama_pekerjaan}</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: color, backgroundColor: statusBg[p.status], padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>{p.status}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, height: 5, borderRadius: 99, backgroundColor: 'var(--border-subtle)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: color, borderRadius: 99, transition: 'width 0.4s ease' }} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: color, minWidth: 32, textAlign: 'right' }}>{pct}%</span>
+                  </div>
+                  <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 5 }}>
+                    Bobot anggaran: {bobotPct}% dari total
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </ModalShell>
       )}
 
       {/* ── POPUP: Detail Pekerjaan ── */}
