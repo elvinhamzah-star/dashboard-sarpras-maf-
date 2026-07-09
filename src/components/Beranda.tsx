@@ -318,11 +318,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           </div>
           {formattedLastUpdated && (
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
               fontSize: 10.5, color: 'rgba(27,94,43,.7)', fontWeight: 500,
-              marginTop: 4,
+              marginTop: 4, display: 'block',
             }}>
-              <span style={{ fontSize: 8, lineHeight: 1 }}>●</span>
               Last updated {formattedLastUpdated}
             </span>
           )}
@@ -337,10 +335,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>{getTodayFormatted()}</span>
               {formattedLastUpdated && (
                 <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
                   fontSize: 11, color: 'rgba(27,94,43,.7)', fontWeight: 500,
                 }}>
-                  <span style={{ fontSize: 7, lineHeight: 1 }}>●</span>
                   Last updated {formattedLastUpdated}
                 </span>
               )}
