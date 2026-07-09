@@ -40,9 +40,8 @@ export default function App() {
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
-  const [pekerjaanStatus, setPekerjaanStatus] = useState('')
-  const [pekerjaanSearch, setPekerjaanSearch] = useState('')
-  // Deep link state for Dokumen and Galeri pages (set by PekerjaanDetail onNavigate)
+  const [pekerjaanFilter, setPekerjaanFilter] = useState('')
+  // Deep link state for Dokumen dan Galeri pages (set by PekerjaanDetail onNavigate)
   const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
   const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
@@ -135,12 +134,11 @@ export default function App() {
         return (
           <Pekerjaan
             isAdmin={isAdmin}
+            role={role}
+            activeStatus={pekerjaanFilter}
+            onFilterChange={setPekerjaanFilter}
             onSelectProgram={handleSelectProgram}
             onAddPekerjaan={handleAddPekerjaan}
-            activeStatus={pekerjaanStatus}
-            onStatusChange={setPekerjaanStatus}
-            search={pekerjaanSearch}
-            onSearchChange={setPekerjaanSearch}
           />
         )
       case 'keuangan':

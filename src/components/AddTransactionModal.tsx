@@ -200,7 +200,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', color: '#E53E3E', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: '#660000', fontSize: 12 }}>
             {error}
           </div>
         )}

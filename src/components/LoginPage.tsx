@@ -36,11 +36,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     if (!canSubmit) return
     setLoading(true)
     setError('')
-    const { ok, role } = await verifyLogin(username.trim(), pin)
+    const { ok, role } = await verifyLogin(username.trim().toLowerCase(), pin)
     setLoading(false)
     if (ok && role) {
       resetViewportZoom()          // Undo any zoom before entering the app
-      if (role === 'maf') setMafCredentials(username.trim(), pin)
+      if (role === 'maf') setMafCredentials(username.trim().toLowerCase(), pin)
       sessionStorage.setItem('dashboard_auth', '1')
       sessionStorage.setItem('dashboard_role', role)
       onLogin(role)

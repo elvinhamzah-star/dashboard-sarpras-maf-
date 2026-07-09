@@ -263,7 +263,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 16,
             marginTop: 20,
             paddingTop: 16,
@@ -273,6 +273,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           {[
             { label: 'Program', value: program.program || '-' },
             { label: 'Jenis Pekerjaan', value: program.jenis_pekerjaan || '-' },
+            { label: 'Tanggal Mulai', value: formatTanggal(program.tanggal_mulai || '') },
+            { label: 'Tanggal Selesai', value: formatTanggal(program.tanggal_selesai || '') },
             {
               label: 'Vendor',
               value: (() => {
@@ -280,12 +282,11 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                 if (subs.length === 0) return program.vendor || '-'
                 const unique = [...new Set(subs.map(s => s.vendor).filter(Boolean))]
                 return unique.length > 0 ? unique.join(', ') : (program.vendor || '-')
-              })()
+              })(),
+              fullWidth: true,
             },
-            { label: 'Tanggal Mulai', value: formatTanggal(program.tanggal_mulai || '') },
-            { label: 'Tanggal Selesai', value: formatTanggal(program.tanggal_selesai || '') },
           ].map(m => (
-            <div key={m.label}>
+            <div key={m.label} style={'fullWidth' in m && m.fullWidth ? { gridColumn: '1 / -1' } : {}}>
               <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                 {m.label}
               </div>
@@ -421,12 +422,26 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                         ))
                       : '-'],
                     ['Dibuat', formatTanggal(program.created_at)],
-                  ].map(([label, value], i, arr) => (
-                    <tr key={String(label)} style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--surface-subtle)' : 'none' }}>
-                      <td style={{ padding: '10px 0', color: 'var(--text-muted)', fontWeight: 600, width: '40%', minWidth: 140, verticalAlign: 'top', fontSize: 12 }}>{label}</td>
-                      <td style={{ padding: '10px 0', color: 'var(--text-primary)', fontSize: 13 }}>{value}</td>
-                    </tr>
-                  ))}
+                  ].map(([label, value], i, arr) => {
+                    const isCatatan = label === 'Catatan Pekerjaan'
+                    const isLast = i === arr.length - 1
+                    if (isMobile && isCatatan) {
+                      return (
+                        <tr key={String(label)} style={{ borderBottom: !isLast ? '1px solid var(--surface-subtle)' : 'none' }}>
+                          <td colSpan={2} style={{ padding: '10px 0' }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
+                            <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{value}</div>
+                          </td>
+                        </tr>
+                      )
+                    }
+                    return (
+                      <tr key={String(label)} style={{ borderBottom: !isLast ? '1px solid var(--surface-subtle)' : 'none' }}>
+                        <td style={{ padding: '10px 0', color: 'var(--text-muted)', fontWeight: 600, width: '40%', minWidth: 140, verticalAlign: 'top', fontSize: 12 }}>{label}</td>
+                        <td style={{ padding: '10px 0', color: 'var(--text-primary)', fontSize: 13 }}>{value}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
-import { formatRupiah, getTodayFormatted } from '../lib/data'
+import { formatRupiah, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
@@ -107,6 +107,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [pekerjaanTab, setPekerjaanTab] = useState('On Going')
   const [showDetail, setShowDetail] = useState(false)
   const [popupDetailId, setPopupDetailId] = useState<string | null>(null)
+  const [showProgressModal, setShowProgressModal] = useState(false)
+  const [showBlockedModal, setShowBlockedModal] = useState(false)
 
   useEffect(() => {
     if (initialDetailId) {
@@ -148,7 +150,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  const displayPrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  const displayPrograms = programs
 
   const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const totalRealisasi = rawTransactions
@@ -157,10 +159,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
-  const progressPrograms = programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
+  const progressPrograms = programs.filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
-    ? (progressPrograms.reduce((s, p) => s + (p.progress_percent || 0) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
+    ? (progressPrograms.reduce((s, p) => s + getEffectiveProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
     : null
 
   const mostRecentUpdate = programs.reduce((latest, p) => {
@@ -219,9 +221,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
   const pekerjaanCards = [
     {
-      label: 'Progress Pekerjaan',
+      label: 'Progres Pekerjaan',
       value: progressLapangan ? `${progressLapangan}%` : '—',
-      sub: `${displayPrograms.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional').length} program aktif`,
+      sub: `dari ${progressPrograms.length} pekerjaan berjalan`,
       color: '#7C3AED',
       iconBg: 'rgba(124,58,237,0.1)',
       iconType: 'progress',
@@ -364,23 +366,101 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               el.style.transform = 'translateY(0)'
             }}
           >
-            <div style={{ marginBottom: isMobile ? 8 : 14 }}>
-              <div style={{ width: isMobile ? 28 : 36, height: isMobile ? 28 : 36, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
-                <MetricIcon type={card.iconType} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
+              {/* Baris 1: Icon + Label berdampingan */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
+                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
+                  <MetricIcon type={card.iconType} />
+                </div>
+                <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{card.label}</div>
               </div>
+              {/* Baris 2: Nilai besar */}
+              <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word', textAlign: 'center' }}>{card.value}</div>
+              {/* Baris 3: Keterangan */}
+              <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400, textAlign: 'center' }}>{card.trend}</div>
             </div>
-            <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
-            <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6, wordBreak: 'break-word' }}>{card.value}</div>
-            <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.trend}</div>
           </div>
         ))}
       </div>
 
-      {/* ── RINGKASAN: Pekerjaan ── */}
-      <SectionDivider label="Pekerjaan" isMobile={isMobile} />
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
-        {pekerjaanCards.map(card => {
-          const isActive = showDetail && (pekerjaanTab === card.label || (card.label === 'Progress Pekerjaan' && pekerjaanTab === 'On Going' && showDetail))
+      {/* ── RINGKASAN: Progress Pekerjaan (full-width) ── */}
+      <SectionDivider label="Progres" isMobile={isMobile} />
+      {(() => {
+        const card = pekerjaanCards[0]
+        const activeByTab = showDetail && pekerjaanTab === card.label
+        return (
+          <div
+            onClick={() => setShowProgressModal(true)}
+            style={{
+              backgroundColor: 'var(--card)',
+              borderRadius: 12,
+              padding: isMobile ? '14px 16px' : '18px 24px',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              marginBottom: isMobile ? 10 : 14,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: isMobile ? 12 : 14,
+              cursor: 'pointer',
+              transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.boxShadow = '0 4px 16px rgba(124,58,237,0.15)'
+              el.style.borderColor = 'rgba(124,58,237,0.35)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
+              el.style.borderColor = 'var(--border-subtle)'
+            }}
+          >
+            {/* Header tengah — dipisah dengan garis bawah tipis */}
+            <div style={{
+              textAlign: 'center',
+              fontSize: isMobile ? 9.5 : 11,
+              fontWeight: 700,
+              color: 'var(--text-secondary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              paddingBottom: isMobile ? 10 : 12,
+              borderBottom: '1px solid var(--border-subtle)',
+              width: '100%',
+            }}>
+              {card.label}
+            </div>
+            {/* Baris: icon + angka | progress bar — center */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color }}>
+                  <PekerjaanIcon type={card.iconType} />
+                </div>
+                <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ flex: 1 }}>
+                <div style={{ height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.12)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${progressLapangan || 0}%`,
+                    backgroundColor: card.color,
+                    borderRadius: 99,
+                    transition: 'width 0.5s ease',
+                  }} />
+                </div>
+                <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
+                  Dari Total {programs.length} Pekerjaan
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── RINGKASAN: Status Pekerjaan (2×2 mobile / 4 kolom desktop) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
+        {pekerjaanCards.slice(1).map(card => {
           const activeByTab = showDetail && pekerjaanTab === card.label
           return (
             <div
@@ -410,14 +490,17 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                 el.style.transform = 'translateY(0)'
               }}
             >
-              <div style={{ marginBottom: isMobile ? 8 : 14 }}>
-                <div style={{ width: isMobile ? 28 : 34, height: isMobile ? 28 : 34, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, flexShrink: 0 }}>
-                  <PekerjaanIcon type={card.iconType} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
+                {/* Icon + angka berdampingan */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
+                  <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, flexShrink: 0 }}>
+                    <PekerjaanIcon type={card.iconType} />
+                  </div>
+                  <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
                 </div>
+                <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{card.label}</div>
+                <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400, textAlign: 'center' }}>{card.sub}</div>
               </div>
-              <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 6 }}>{card.label}</div>
-              <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: isMobile ? 3 : 6, wordBreak: 'break-word' }}>{card.value}</div>
-              <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400 }}>{card.sub}</div>
             </div>
           )
         })}
@@ -428,6 +511,76 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       {/* ── TREN ── */}
       <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} />
+
+      {/* ── POPUP: Progres Pekerjaan ── */}
+      {showProgressModal && (
+        <div
+          onClick={() => setShowProgressModal(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--card)',
+              borderRadius: isMobile ? '20px 20px 0 0' : 16,
+              width: '100%',
+              maxWidth: 960,
+              maxHeight: isMobile ? '88dvh' : '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+            }}
+          >
+            {/* Header modal */}
+            <div style={{ padding: isMobile ? '16px 16px 12px' : '18px 20px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div>
+                <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progres Pekerjaan</div>
+                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: '#7C3AED', fontWeight: 700 }}>{progressLapangan}%</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProgressModal(false)}
+                style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            {/* List program */}
+            <div style={{ overflowY: 'auto', padding: isMobile ? '10px 12px 20px' : '12px 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
+                const pct = getEffectiveProgress(p)
+                const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
+                const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000' }
+                const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(5,150,105,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
+                const color = statusColors[p.status] || 'var(--blue)'
+                return (
+                  <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 10, padding: isMobile ? '10px 12px' : '11px 14px', border: '1px solid var(--border-subtle)' }}>
+                    {/* Baris atas: ID + nama + status */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>{p.id}</span>
+                      <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.3 }}>{p.nama_pekerjaan}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: color, backgroundColor: statusBg[p.status], padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>{p.status}</span>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, height: 5, borderRadius: 99, backgroundColor: 'var(--border-subtle)', overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: color, borderRadius: 99, transition: 'width 0.4s ease' }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: color, minWidth: 32, textAlign: 'right' }}>{pct}%</span>
+                    </div>
+                    {/* Bobot anggaran */}
+                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 5 }}>
+                      Bobot anggaran: {bobotPct}% dari total
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── POPUP: Detail Pekerjaan ── */}
       {showDetail && (
@@ -560,7 +713,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         externalTab={pekerjaanTab}
                         onExternalTabChange={setPekerjaanTab}
                         onProgramClick={id => {
-                          if (role === 'maf' && id === 'P-024') return
+                          const prog = programs.find(p => p.id === id)
+                          if (role === 'maf' && prog?.jenis_pekerjaan === 'Operasional') {
+                            setShowBlockedModal(true)
+                            return
+                          }
                           setPopupDetailId(id)
                         }}
                       />
@@ -656,6 +813,33 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </div>
       )}
 
+      {/* Modal: Akses Dibatasi (MAF user klik Man Power) */}
+      {showBlockedModal && (
+        <div
+          onClick={() => setShowBlockedModal(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '32px 28px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(10,22,40,0.2)' }}
+          >
+            <div style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'rgba(102,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="24" height="24" fill="none" stroke="#660000" strokeWidth="1.75" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Akses Dibatasi</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 24 }}>Butuh akses admin untuk melihat data ini.</div>
+            <button
+              onClick={() => setShowBlockedModal(false)}
+              style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Oke
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

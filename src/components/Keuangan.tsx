@@ -34,6 +34,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const [togglingRiwayat, setTogglingRiwayat] = useState(false)
   const [hoveredChartIdx, setHoveredChartIdx] = useState<number | null>(null)
   const chartScrollRef = useRef<HTMLDivElement>(null)
+  const [showDeploymentPopup, setShowDeploymentPopup] = useState(false)
+  const [showSaldoPopup, setShowSaldoPopup] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -206,17 +208,24 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       {/* === ROW 1: Total Deployment + Saldo Kas (display only) === */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 10 : 14, marginBottom: isMobile ? 10 : 12 }}>
         {/* Total Deployment */}
-        <div style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: isMobile ? 12 : 14,
-          padding: isMobile ? '14px 13px' : '20px 22px',
-          border: '1px solid var(--border)',
-          borderTop: '3px solid var(--blue)',
-        }}>
+        <div
+          onClick={() => setShowDeploymentPopup(true)}
+          style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: isMobile ? 12 : 14,
+            padding: isMobile ? '14px 13px' : '20px 22px',
+            border: '1px solid var(--border)',
+            borderTop: '3px solid var(--blue)',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(26,111,232,0.12)'}
+          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
+        >
           <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 6 : 10 }}>
             Total Deployment
           </div>
-          <div style={{ fontSize: isMobile ? 17 : 26, fontWeight: 700, color: 'var(--blue)', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+          <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
             {formatRupiah(totalDeployment)}
           </div>
           <div style={{ fontSize: isMobile ? 9.5 : 11, color: 'var(--text-muted)', marginTop: 5 }}>
@@ -225,17 +234,24 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
         </div>
 
         {/* Saldo Kas */}
-        <div style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: isMobile ? 12 : 14,
-          padding: isMobile ? '14px 13px' : '20px 22px',
-          border: '1px solid var(--border)',
-          borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#660000'}`,
-        }}>
+        <div
+          onClick={() => setShowSaldoPopup(true)}
+          style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: isMobile ? 12 : 14,
+            padding: isMobile ? '14px 13px' : '20px 22px',
+            border: '1px solid var(--border)',
+            borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#660000'}`,
+            cursor: 'pointer',
+            transition: 'box-shadow 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 16px ${saldoKas >= 0 ? 'rgba(5,150,105,0.12)' : 'rgba(102,0,0,0.12)'}`}
+          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
+        >
           <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 6 : 10 }}>
             Saldo Kas
           </div>
-          <div style={{ fontSize: isMobile ? 17 : 26, fontWeight: 700, color: saldoKas >= 0 ? '#059669' : '#660000', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
+          <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
             {formatRupiah(saldoKas)}
           </div>
           <div style={{ fontSize: isMobile ? 9.5 : 11, color: 'var(--text-muted)', marginTop: 5 }}>
@@ -289,7 +305,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isMobile ? card.label.replace('Dana ', '') : card.label}
               </div>
-              <div style={{ fontSize: isMobile ? 12 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: isMobile ? 12 : 19, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {formatRupiah(card.value)}
               </div>
               <div style={{ fontSize: isMobile ? 9 : 10.5, color: isActive ? card.color : 'var(--text-muted)', marginTop: 3 }}>
@@ -318,24 +334,12 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             marginBottom: isMobile ? 16 : 22,
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                  Pengeluaran Per Bulan
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {chartData.length} Bulan
-                </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                Arus Kas Per Bulan
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#1A6FE8' }} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Masuk</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#94A3B8' }} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>Keluar</span>
-                </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                Perkembangan {chartData.length} bulan
               </div>
             </div>
 
@@ -364,13 +368,13 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1A6FE8', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#059669', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
                       {hovered && hovered.masuk > 0 ? formatRupiah(hovered.masuk) : '—'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#94A3B8', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#660000', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
                       {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
                     </span>
@@ -395,7 +399,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         <div style={{
                           width: BAR_W,
                           height: masukPct > 0 ? `${masukPct}%` : 3,
-                          backgroundColor: masukPct > 0 ? '#1A6FE8' : 'var(--border-subtle)',
+                          backgroundColor: masukPct > 0 ? '#059669' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
                           opacity: isHov ? 1 : 0.72,
                           transition: 'opacity 0.15s ease',
@@ -403,7 +407,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         <div style={{
                           width: BAR_W,
                           height: keluarPct > 0 ? `${keluarPct}%` : 3,
-                          backgroundColor: keluarPct > 0 ? '#94A3B8' : 'var(--border-subtle)',
+                          backgroundColor: keluarPct > 0 ? '#660000' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
                           opacity: isHov ? 1 : keluarPct > 0 ? 0.72 : 0.4,
                           transition: 'opacity 0.15s ease',
@@ -412,7 +416,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                       <div style={{
                         fontSize: 10,
                         marginTop: 7,
-                        color: isHov ? 'var(--blue)' : 'var(--text-muted)',
+                        color: isHov ? 'var(--text-primary)' : 'var(--text-muted)',
                         fontWeight: isHov ? 700 : 400,
                         transition: 'color 0.12s ease',
                         userSelect: 'none',
@@ -423,6 +427,24 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* Legend — same style as BerandaChart */}
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#059669', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>Masuk</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 16 }}>Dana kas masuk</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#660000', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>Keluar</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 16 }}>Pengeluaran program</span>
               </div>
             </div>
           </div>
@@ -607,6 +629,124 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           name={viewingBukti.name}
           onClose={() => setViewingBukti(null)}
         />
+      )}
+
+      {/* ── Popup: Total Deployment ── */}
+      {showDeploymentPopup && (
+        <div
+          onClick={() => setShowDeploymentPopup(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '28px 28px 24px', maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(10,22,40,0.2)' }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Total Deployment</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', marginBottom: 20 }}>
+              {formatRupiah(totalDeployment)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(5,150,105,0.06)', borderRadius: 10, border: '1px solid rgba(5,150,105,0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Masuk</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{masukList.length} transaksi</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</div>
+              </div>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(217,119,6,0.06)', borderRadius: 10, border: '1px solid rgba(217,119,6,0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Keluar PBB</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{keluarPBBList.length} transaksi</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluarPBB)}</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.5 }}>
+                Total Deployment mencakup seluruh dana yang telah dialirkan untuk program Sarpras MAF:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: '#059669', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span><strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> — dana yang diterima dan dicatat langsung dalam kas Sarpras</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: '#D97706', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span><strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Keluar PBB</strong> — dana yang langsung disalurkan ke program tanpa melewati kas Sarpras</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowDeploymentPopup(false)}
+              style={{ marginTop: 20, width: '100%', padding: '10px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Popup: Saldo Kas ── */}
+      {showSaldoPopup && (
+        <div
+          onClick={() => setShowSaldoPopup(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '28px 28px 24px', maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(10,22,40,0.2)' }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Saldo Kas</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', marginBottom: 20 }}>
+              {formatRupiah(saldoKas)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(5,150,105,0.06)', borderRadius: 10, border: '1px solid rgba(5,150,105,0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Masuk</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{masukList.length} transaksi</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>+{formatRupiah(totalMasuk)}</div>
+              </div>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(102,0,0,0.05)', borderRadius: 10, border: '1px solid rgba(102,0,0,0.12)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Keluar Program</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{keluarList.length} transaksi</div>
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>−{formatRupiah(totalKeluar)}</div>
+              </div>
+              <div style={{ padding: '12px 14px', backgroundColor: saldoKas >= 0 ? 'rgba(5,150,105,0.06)' : 'rgba(102,0,0,0.05)', borderRadius: 10, border: `1px solid ${saldoKas >= 0 ? 'rgba(5,150,105,0.2)' : 'rgba(102,0,0,0.15)'}` }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 5 }}>Saldo Kas</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: saldoKas >= 0 ? '#059669' : '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.5 }}>
+                Saldo Kas mencerminkan dana kas Sarpras yang tersedia saat ini, dihitung dari:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: '#059669', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span>Seluruh <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> yang telah diterima ke kas Sarpras</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: '#660000', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span>Dikurangi seluruh <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>pengeluaran program</strong> yang telah dicairkan</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span>Nilai positif menunjukkan sisa kas yang siap digunakan; nilai negatif menunjukkan defisit</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSaldoPopup(false)}
+              style={{ marginTop: 20, width: '100%', padding: '10px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

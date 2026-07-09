@@ -138,6 +138,8 @@ export default function ModalShell({
       style={{
         position: 'fixed', inset: 0, zIndex,
         backgroundColor: backdropColor,
+        backdropFilter: isMobile ? undefined : 'blur(8px)',
+        WebkitBackdropFilter: isMobile ? undefined : 'blur(8px)',
         opacity: visible ? 1 : 0,
         transition: `opacity ${closing ? EXIT_MS : 200}ms ease`,
         display: 'flex',

@@ -16,9 +16,27 @@ const BAR_W = 18
 const BAR_GAP = 4
 
 // Chart color palette — picked from existing dashboard elements
-const C_MASUK    = '#0D1829'  // navy — dari sidebar background
-const C_KELUAR   = '#D97706'  // orange — dari warna On Hold & alert
+const C_MASUK    = '#059669'  // green — konsisten dengan badge Masuk di Keuangan
+const C_KELUAR   = '#660000'  // dark red — konsisten dengan badge Keluar
 const C_PROGRESS = '#7C3AED'  // purple — dari card Progress Pekerjaan
+
+// Left Y-axis: compact Rupiah format (e.g. 500Rb, 1Jt, 1.5M)
+function formatCompactRp(val: number): string {
+  if (val === 0) return '0'
+  if (val >= 1_000_000_000) {
+    const v = val / 1_000_000_000
+    return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + 'M'
+  }
+  if (val >= 1_000_000) {
+    const v = val / 1_000_000
+    return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + 'Jt'
+  }
+  if (val >= 1_000) {
+    const v = val / 1_000
+    return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + 'Rb'
+  }
+  return String(Math.round(val))
+}
 
 /**
  * Interpolate a program's estimated progress at the midpoint of a given month.
@@ -60,10 +78,9 @@ function interpolateProgress(prog: Program, yearMonth: string): number {
 }
 
 /**
- * Weighted-average progress per bulan — formula SAMA dengan angka 41.2% di Beranda:
+ * Weighted-average progress per bulan — formula SAMA dengan angka di Beranda:
  *   - Exclude Perencanaan + Operasional
  *   - Weighted by total_anggaran
- * Hasilnya: bar Juli di chart = angka 41.2% overall → konsisten, bisa dijelaskan ke atasan.
  */
 function calcMonthProgress(programs: Program[], yearMonth: string): number | null {
   const relevant = programs.filter(p =>
@@ -76,7 +93,6 @@ function calcMonthProgress(programs: Program[], yearMonth: string): number | nul
   if (totalAnggaran === 0) return null
 
   const weightedSum = relevant.reduce((s, p) => {
-    // Program tanpa tanggal_mulai: pakai 0% untuk bulan lampau (belum ada data kapan mulai)
     const pct = p.tanggal_mulai ? interpolateProgress(p, yearMonth) : 0
     return s + pct * (p.total_anggaran || 0)
   }, 0)
@@ -117,7 +133,6 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
   const hasProgress = progressByMonth.some(p => p != null)
 
   const maxRp = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
-  // minWidth tiap kolom saat banyak bulan (scroll), flex:1 saat sedikit (stretch)
   const minTotalW = months.length * MONTH_W
 
   useEffect(() => {
@@ -141,7 +156,7 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       marginBottom: 20,
     }}>
-      {/* Header — legenda hanya di footer, tidak duplikasi di sini */}
+      {/* Header */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
           Realisasi & Progress
@@ -188,114 +203,158 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
           </div>
         </div>
 
-        {/* Scrollable area — overflowX auto agar scroll kalau bulan banyak */}
-        <div ref={scrollRef} style={{ overflowX: 'auto', paddingBottom: 2 }}>
+        {/* Dual Y-axis + Scrollable bars */}
+        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
 
-          {/* Y-axis guide lines + bars dalam satu flex container yg stretch penuh */}
-          <div style={{ position: 'relative', minWidth: minTotalW, width: '100%' }}>
+          {/* Left Y-axis — Rupiah scale */}
+          <div style={{ width: 44, flexShrink: 0, position: 'relative', height: BAR_H }}>
             {[25, 50, 75, 100].map(pct => (
               <div key={pct} style={{
                 position: 'absolute',
                 top: BAR_H - (pct / 100) * BAR_H,
-                left: 0, right: 0,
-                height: 1,
-                backgroundColor: 'var(--border-subtle)',
-                opacity: 0.5,
-              }} />
+                right: 6,
+                transform: 'translateY(-50%)',
+                fontSize: 9,
+                color: 'var(--text-muted)',
+                textAlign: 'right',
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+              }}>
+                {formatCompactRp((maxRp * pct) / 100)}
+              </div>
             ))}
+          </div>
 
-            {/* Bars — flex:1 per kolom agar rata, minWidth agar tidak terlalu sempit */}
-            <div style={{ display: 'flex', width: '100%', position: 'relative', zIndex: 1 }}>
-              {months.map((m, i) => {
-                const masukH = m.masuk > 0 ? Math.max(4, (m.masuk / maxRp) * BAR_H) : 3
-                const keluarH = m.keluar > 0 ? Math.max(4, (m.keluar / maxRp) * BAR_H) : 3
-                const prog = progressByMonth[i]
-                const progH = prog != null ? Math.max(4, (prog / 100) * BAR_H) : 3
-                const isHov = hoveredIdx === i
-                const masukActive = m.masuk > 0
-                const keluarActive = m.keluar > 0
-                const progActive = prog != null && prog > 0
+          {/* Scrollable area — overflowX auto agar scroll kalau bulan banyak */}
+          <div ref={scrollRef} style={{ overflowX: 'auto', paddingBottom: 2, flex: 1, minWidth: 0 }}>
 
-                return (
-                  <div
-                    key={m.ym}
-                    style={{ flex: 1, minWidth: MONTH_W, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
-                    onMouseEnter={() => setHoveredIdx(i)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                  >
-                    {/* 3 bars */}
-                    <div style={{
-                      display: 'flex',
-                      gap: BAR_GAP,
-                      height: BAR_H,
-                      alignItems: 'flex-end',
-                      paddingBottom: 0,
-                    }}>
-                      {/* Masuk */}
+            {/* Guide lines + bars */}
+            <div style={{ position: 'relative', minWidth: minTotalW, width: '100%' }}>
+              {[25, 50, 75, 100].map(pct => (
+                <div key={pct} style={{
+                  position: 'absolute',
+                  top: BAR_H - (pct / 100) * BAR_H,
+                  left: 0, right: 0,
+                  height: 1,
+                  backgroundColor: 'var(--border-subtle)',
+                  opacity: 0.5,
+                }} />
+              ))}
+
+              {/* Bars — flex:1 per kolom agar rata, minWidth agar tidak terlalu sempit */}
+              <div style={{ display: 'flex', width: '100%', position: 'relative', zIndex: 1 }}>
+                {months.map((m, i) => {
+                  const masukH = m.masuk > 0 ? Math.max(4, (m.masuk / maxRp) * BAR_H) : 3
+                  const keluarH = m.keluar > 0 ? Math.max(4, (m.keluar / maxRp) * BAR_H) : 3
+                  const prog = progressByMonth[i]
+                  const progH = prog != null ? Math.max(4, (prog / 100) * BAR_H) : 3
+                  const isHov = hoveredIdx === i
+                  const masukActive = m.masuk > 0
+                  const keluarActive = m.keluar > 0
+                  const progActive = prog != null && prog > 0
+
+                  return (
+                    <div
+                      key={m.ym}
+                      style={{ flex: 1, minWidth: MONTH_W, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default' }}
+                      onMouseEnter={() => setHoveredIdx(i)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                    >
+                      {/* 3 bars */}
                       <div style={{
-                        width: BAR_W,
-                        height: masukH,
-                        backgroundColor: masukActive ? C_MASUK : 'var(--border-subtle)',
-                        borderRadius: 0,
-                        opacity: isHov ? 1 : masukActive ? 0.8 : 0.3,
-                        transition: 'opacity 0.15s, height 0.3s ease',
-                      }} />
-                      {/* Keluar */}
-                      <div style={{
-                        width: BAR_W,
-                        height: keluarH,
-                        backgroundColor: keluarActive ? C_KELUAR : 'var(--border-subtle)',
-                        borderRadius: 0,
-                        opacity: isHov ? 1 : keluarActive ? 0.8 : 0.3,
-                        transition: 'opacity 0.15s, height 0.3s ease',
-                      }} />
-                      {/* Progress */}
-                      {hasProgress && (
+                        display: 'flex',
+                        gap: BAR_GAP,
+                        height: BAR_H,
+                        alignItems: 'flex-end',
+                      }}>
+                        {/* Masuk */}
                         <div style={{
                           width: BAR_W,
-                          height: progH,
-                          backgroundColor: progActive ? C_PROGRESS : 'var(--border-subtle)',
+                          height: masukH,
+                          backgroundColor: masukActive ? C_MASUK : 'var(--border-subtle)',
                           borderRadius: 0,
-                          opacity: isHov ? 1 : progActive ? 0.8 : 0.3,
+                          opacity: isHov ? 1 : masukActive ? 0.8 : 0.3,
                           transition: 'opacity 0.15s, height 0.3s ease',
-                          position: 'relative',
-                        }}>
-                          {/* Progress % label on top of bar when hovered */}
-                          {isHov && prog != null && prog > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              bottom: '100%',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              marginBottom: 2,
-                              fontSize: 8.5,
-                              fontWeight: 700,
-                              color: C_PROGRESS,
-                              whiteSpace: 'nowrap',
-                            }}>
-                              {prog}%
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        }} />
+                        {/* Keluar */}
+                        <div style={{
+                          width: BAR_W,
+                          height: keluarH,
+                          backgroundColor: keluarActive ? C_KELUAR : 'var(--border-subtle)',
+                          borderRadius: 0,
+                          opacity: isHov ? 1 : keluarActive ? 0.8 : 0.3,
+                          transition: 'opacity 0.15s, height 0.3s ease',
+                        }} />
+                        {/* Progress */}
+                        {hasProgress && (
+                          <div style={{
+                            width: BAR_W,
+                            height: progH,
+                            backgroundColor: progActive ? C_PROGRESS : 'var(--border-subtle)',
+                            borderRadius: 0,
+                            opacity: isHov ? 1 : progActive ? 0.8 : 0.3,
+                            transition: 'opacity 0.15s, height 0.3s ease',
+                            position: 'relative',
+                          }}>
+                            {/* Progress % label on top of bar when hovered */}
+                            {isHov && prog != null && prog > 0 && (
+                              <div style={{
+                                position: 'absolute',
+                                bottom: '100%',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                marginBottom: 2,
+                                fontSize: 8.5,
+                                fontWeight: 700,
+                                color: C_PROGRESS,
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {prog}%
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Month label */}
-                    <div style={{
-                      fontSize: 10,
-                      marginTop: 6,
-                      color: isHov ? C_MASUK : 'var(--text-muted)',
-                      fontWeight: isHov ? 700 : 400,
-                      transition: 'color 0.12s',
-                      userSelect: 'none',
-                    }}>
-                      {m.label}
+                      {/* Month label */}
+                      <div style={{
+                        fontSize: 10,
+                        marginTop: 6,
+                        color: isHov ? C_MASUK : 'var(--text-muted)',
+                        fontWeight: isHov ? 700 : 400,
+                        transition: 'color 0.12s',
+                        userSelect: 'none',
+                      }}>
+                        {m.label}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           </div>
+
+          {/* Right Y-axis — Progress % scale */}
+          {hasProgress && (
+            <div style={{ width: 30, flexShrink: 0, position: 'relative', height: BAR_H }}>
+              {[25, 50, 75, 100].map(pct => (
+                <div key={pct} style={{
+                  position: 'absolute',
+                  top: BAR_H - (pct / 100) * BAR_H,
+                  left: 6,
+                  transform: 'translateY(-50%)',
+                  fontSize: 9,
+                  color: C_PROGRESS,
+                  opacity: 0.8,
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1,
+                }}>
+                  {pct}%
+                </div>
+              ))}
+            </div>
+          )}
+
         </div>
       </div>
 

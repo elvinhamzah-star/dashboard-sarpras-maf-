@@ -351,7 +351,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       contentScroll={false}
     >
       {close => (
-      <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? undefined : '68vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: isMobile ? undefined : '82vh' }}>
 
         {/* Header */}
         <div

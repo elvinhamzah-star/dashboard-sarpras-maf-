@@ -796,7 +796,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
   // ─── ROOT ─────────────────────────────────────────────────────────
 
   return (
-    <div style={{ padding: isMobile ? '16px' : '28px 32px', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '16px' : '28px 28px' }}>
       {loading ? (
         <div style={{ textAlign: 'center', padding: 56, color: 'var(--text-muted)', fontSize: 13 }}>Memuat...</div>
       ) : (
