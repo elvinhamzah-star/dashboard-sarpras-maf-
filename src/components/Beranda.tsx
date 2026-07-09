@@ -319,9 +319,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           {formattedLastUpdated && (
             <span style={{
               display: 'inline-flex', alignItems: 'center',
-              fontSize: 10, color: 'rgba(185,28,28,.6)', fontWeight: 500,
-              border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5,
-              padding: '2px 7px', background: 'rgba(220,38,38,.055)', marginTop: 5,
+              fontSize: 10, color: 'rgba(27,94,43,.75)', fontWeight: 500,
+              border: '0.5px solid rgba(27,94,43,.22)', borderRadius: 5,
+              padding: '2px 7px', background: 'rgba(27,94,43,.06)', marginTop: 5,
             }}>
               Diperbarui {formattedLastUpdated}
             </span>
@@ -338,9 +338,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               {formattedLastUpdated && (
                 <span style={{
                   display: 'inline-flex', alignItems: 'center',
-                  fontSize: 11, color: 'rgba(185,28,28,.6)', fontWeight: 500,
-                  border: '0.5px solid rgba(220,38,38,.22)', borderRadius: 5,
-                  padding: '2px 8px', background: 'rgba(220,38,38,.055)',
+                  fontSize: 11, color: 'rgba(27,94,43,.75)', fontWeight: 500,
+                  border: '0.5px solid rgba(27,94,43,.22)', borderRadius: 5,
+                  padding: '2px 8px', background: 'rgba(27,94,43,.06)',
                 }}>
                   Diperbarui {formattedLastUpdated}
                 </span>
