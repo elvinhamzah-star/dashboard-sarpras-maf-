@@ -318,12 +318,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           </div>
           {formattedLastUpdated && (
             <span style={{
-              display: 'inline-flex', alignItems: 'center',
-              fontSize: 10, color: 'rgba(27,94,43,.75)', fontWeight: 500,
-              border: '0.5px solid rgba(27,94,43,.22)', borderRadius: 5,
-              padding: '2px 7px', background: 'rgba(27,94,43,.06)', marginTop: 5,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 10.5, color: 'rgba(27,94,43,.7)', fontWeight: 500,
+              marginTop: 4,
             }}>
-              Diperbarui {formattedLastUpdated}
+              <span style={{ fontSize: 8, lineHeight: 1 }}>●</span>
+              Last updated {formattedLastUpdated}
             </span>
           )}
         </div>
@@ -337,12 +337,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>{getTodayFormatted()}</span>
               {formattedLastUpdated && (
                 <span style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  fontSize: 11, color: 'rgba(27,94,43,.75)', fontWeight: 500,
-                  border: '0.5px solid rgba(27,94,43,.22)', borderRadius: 5,
-                  padding: '2px 8px', background: 'rgba(27,94,43,.06)',
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  fontSize: 11, color: 'rgba(27,94,43,.7)', fontWeight: 500,
                 }}>
-                  Diperbarui {formattedLastUpdated}
+                  <span style={{ fontSize: 7, lineHeight: 1 }}>●</span>
+                  Last updated {formattedLastUpdated}
                 </span>
               )}
             </div>
