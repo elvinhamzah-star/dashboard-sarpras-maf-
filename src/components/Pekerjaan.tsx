@@ -150,34 +150,34 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
               key={tab}
               onClick={() => setActiveStatus(prev => prev === tab ? '' : tab)}
               style={{
-                backgroundColor: isActive ? `${color}0F` : 'var(--card)',
+                backgroundColor: isActive ? `${color}0A` : 'var(--card)',
                 borderRadius: 12,
                 padding: isMobile ? '10px 8px' : '14px 16px',
-                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border)',
+                border: isActive ? `1.5px solid ${color}80` : '1px solid var(--border)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
-                boxShadow: isActive ? `0 2px 8px ${color}30` : 'none',
+                boxShadow: 'none',
               }}
             >
               {/* Icon + Count side by side */}
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10, marginBottom: isMobile ? 4 : 8 }}>
                 <div style={{
                   width: isMobile ? 20 : 30, height: isMobile ? 20 : 30, borderRadius: 6,
-                  backgroundColor: isActive ? `${color}30` : `${color}18`,
+                  backgroundColor: isActive ? `${color}20` : 'rgba(0,0,0,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: color, flexShrink: 0,
+                  color: isActive ? color : 'var(--text-secondary)', flexShrink: 0,
                 }}>
                   {TAB_ICONS[tab]}
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 24, fontWeight: 700, color: color, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                <div style={{ fontSize: isMobile ? 16 : 24, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
                   {count}
                 </div>
               </div>
               {/* Label below */}
-              <div style={{ fontSize: isMobile ? 7 : 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+              <div style={{ fontSize: isMobile ? 7 : 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                 {tab}
               </div>
             </div>
@@ -202,13 +202,12 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
               <div
                 key={p.id}
                 onClick={() => handleCardClick(p)}
-                onMouseEnter={e => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.backgroundColor = `${color}0D` }}
+                onMouseEnter={e => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
                   padding: isMobile ? '10px 12px' : '14px 16px',
                   borderRadius: 10,
-                  border: '1.5px solid var(--border-subtle)',
-                  borderLeft: `3px solid ${isLocked ? '#C8D2E0' : color}`,
+                  border: '1px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: isLocked ? 'default' : 'pointer',
                   opacity: isLocked ? 0.7 : 1,
@@ -234,9 +233,9 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                     {/* Baris 2: progress bar + % */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                       <div style={{ flex: 1, height: 3, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : 'var(--blue)', borderRadius: 99, transition: 'width 0.3s ease' }} />
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : color, minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
                     </div>
                   </>
                 ) : (
@@ -265,9 +264,9 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                     {/* Baris 2: progress bar + pct + status badge */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : 'var(--blue)', borderRadius: 99, transition: 'width 0.3s ease' }} />
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : color, minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
                       {isLocked
                         ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                         : <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0 }}>{p.status}</span>

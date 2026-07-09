@@ -88,8 +88,13 @@ const PekerjaanIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-const SectionDivider = ({ isMobile }: { label: string; isMobile: boolean }) => (
-  <div style={{ height: isMobile ? 12 : 20 }} />
+const SectionDivider = ({ label, isMobile }: { label: string; isMobile: boolean }) => (
+  <div style={{ marginBottom: isMobile ? 8 : 12, marginTop: isMobile ? 16 : 20 }}>
+    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      {label}
+    </div>
+    <div style={{ height: 1, backgroundColor: 'var(--border-subtle)', marginTop: 6 }} />
+  </div>
 )
 
 export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed }: BerandaProps) {
@@ -181,41 +186,41 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Total Anggaran',
       value: formatRupiah(totalAnggaran),
       iconType: 'anggaran',
-      iconBg: 'rgba(26,111,232,0.1)',
-      iconColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       valueColor: 'var(--text-primary)',
       trend: `${displayPrograms.length} Pekerjaan`,
-      accentColor: '#1A6FE8',
+      accentColor: 'var(--border)',
     },
     {
       label: 'Total Realisasi',
       value: formatRupiah(totalRealisasi),
       iconType: 'realisasi',
-      iconBg: 'rgba(5,150,105,0.1)',
-      iconColor: '#059669',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       valueColor: 'var(--text-primary)',
       trend: `${penyerapan}% Terserap`,
-      accentColor: '#059669',
+      accentColor: 'var(--border)',
     },
     {
       label: 'Sisa Anggaran',
       value: formatRupiah(totalSisa),
       iconType: 'sisa',
-      iconBg: 'rgba(217,119,6,0.1)',
-      iconColor: '#D97706',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       valueColor: 'var(--text-primary)',
       trend: 'Belum Digunakan',
-      accentColor: '#D97706',
+      accentColor: 'var(--border)',
     },
     {
       label: 'Penyerapan',
       value: `${penyerapan}%`,
       iconType: 'penyerapan',
-      iconBg: 'rgba(26,111,232,0.1)',
-      iconColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       valueColor: 'var(--text-primary)',
       trend: 'Dari Total Anggaran',
-      accentColor: '#1A6FE8',
+      accentColor: 'var(--border)',
     },
   ]
 
@@ -224,8 +229,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Progres Pekerjaan',
       value: progressLapangan ? `${progressLapangan}%` : '—',
       sub: `dari ${progressPrograms.length} pekerjaan berjalan`,
-      color: '#7C3AED',
-      iconBg: 'rgba(124,58,237,0.1)',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       iconType: 'progress',
       onClick: () => { setPekerjaanTab('On Going'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -233,8 +240,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'On Going',
       value: String(programs.filter(p => p.status === 'On Going').length),
       sub: 'Pekerjaan berjalan',
-      color: '#1A6FE8',
-      iconBg: 'rgba(26,111,232,0.1)',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       iconType: 'On Going',
       onClick: () => { setPekerjaanTab('On Going'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -242,8 +251,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'On Hold',
       value: String(programs.filter(p => p.status === 'On Hold').length),
       sub: 'Ditangguhkan',
-      color: '#D97706',
-      iconBg: 'rgba(217,119,6,0.1)',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       iconType: 'On Hold',
       onClick: () => { setPekerjaanTab('On Hold'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -251,8 +262,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Selesai',
       value: String(programs.filter(p => p.status === 'Selesai').length),
       sub: 'Program selesai',
-      color: '#059669',
-      iconBg: 'rgba(5,150,105,0.1)',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       iconType: 'Selesai',
       onClick: () => { setPekerjaanTab('Selesai'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -260,8 +273,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Perencanaan',
       value: String(programs.filter(p => p.status === 'Perencanaan').length),
       sub: 'Belum mulai',
-      color: '#660000',
-      iconBg: 'rgba(102,0,0,0.1)',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      iconBg: 'rgba(0,0,0,0.05)',
+      iconColor: 'var(--text-secondary)',
       iconType: 'Perencanaan',
       onClick: () => { setPekerjaanTab('Perencanaan'); setPopupDetailId(null); setShowDetail(true) },
     },
@@ -336,7 +351,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       )}
 
       {/* ── RINGKASAN: Keuangan ── */}
-      <SectionDivider label="Keuangan" isMobile={isMobile} />
+      <SectionDivider label="Ringkasan Keuangan" isMobile={isMobile} />
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: isMobile ? 10 : 14 }}>
         {summaryCards.map(card => (
           <div
@@ -384,7 +399,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </div>
 
       {/* ── RINGKASAN: Progress Pekerjaan (full-width) ── */}
-      <SectionDivider label="Progres" isMobile={isMobile} />
+      <SectionDivider label="Progress Pekerjaan" isMobile={isMobile} />
       {(() => {
         const card = pekerjaanCards[0]
         const activeByTab = showDetail && pekerjaanTab === card.label
@@ -407,8 +422,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 4px 16px rgba(124,58,237,0.15)'
-              el.style.borderColor = 'rgba(124,58,237,0.35)'
+              el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+              el.style.borderColor = 'var(--border)'
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLDivElement
@@ -433,18 +448,18 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             {/* Baris: icon + angka | progress bar — center */}
             <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
-                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color }}>
+                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor }}>
                   <PekerjaanIcon type={card.iconType} />
                 </div>
                 <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
               </div>
               {/* Progress bar */}
               <div style={{ flex: 1 }}>
-                <div style={{ height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.12)', overflow: 'hidden' }}>
+                <div style={{ height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
                     width: `${progressLapangan || 0}%`,
-                    backgroundColor: card.color,
+                    backgroundColor: card.barColor ?? 'var(--blue)',
                     borderRadius: 99,
                     transition: 'width 0.5s ease',
                   }} />
@@ -467,25 +482,25 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               key={card.label}
               onClick={card.onClick}
               style={{
-                backgroundColor: activeByTab ? `${card.color}08` : 'var(--card)',
+                backgroundColor: activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--card)',
                 borderRadius: 12,
                 padding: isMobile ? '12px 13px' : '18px 20px',
-                border: activeByTab ? `1.5px solid ${card.color}55` : '1px solid var(--border-subtle)',
+                border: activeByTab ? '1.5px solid var(--border)' : '1px solid var(--border-subtle)',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                 transition: 'border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
                 cursor: 'pointer',
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLDivElement
-                el.style.borderColor = card.color + '55'
-                el.style.backgroundColor = card.color + '0D'
-                el.style.boxShadow = `0 4px 16px ${card.color}28`
+                el.style.borderColor = 'var(--border)'
+                el.style.backgroundColor = 'rgba(0,0,0,0.03)'
+                el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
                 el.style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLDivElement
-                el.style.borderColor = activeByTab ? card.color + '55' : 'var(--border-subtle)'
-                el.style.backgroundColor = activeByTab ? card.color + '08' : 'var(--card)'
+                el.style.borderColor = activeByTab ? 'var(--border)' : 'var(--border-subtle)'
+                el.style.backgroundColor = activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--card)'
                 el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
                 el.style.transform = 'translateY(0)'
               }}
@@ -493,7 +508,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
                 {/* Icon + angka berdampingan */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
-                  <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, flexShrink: 0 }}>
+                  <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
                     <PekerjaanIcon type={card.iconType} />
                   </div>
                   <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
