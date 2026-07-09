@@ -317,7 +317,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Dashboard Sarpras MAF
             </h1>
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
+            <span style={{ fontSize: 10.5, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8 }}>
               {getTodayFormatted()}
             </span>
           </div>
