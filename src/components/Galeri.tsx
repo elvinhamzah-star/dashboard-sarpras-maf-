@@ -202,7 +202,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   }
 
   const closeFolder = () => {
-    if (onExit) { onExit(); return }
     setOpenFolderId(null)
     setSelectedTitik(null)
     setFilterFase('Semua')
