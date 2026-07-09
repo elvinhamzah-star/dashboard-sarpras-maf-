@@ -552,7 +552,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               <div>
                 <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progres Pekerjaan</div>
                 <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: '#7C3AED', fontWeight: 700 }}>{progressLapangan}%</span>
+                  {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{progressLapangan}%</span>
                 </div>
               </div>
               <button

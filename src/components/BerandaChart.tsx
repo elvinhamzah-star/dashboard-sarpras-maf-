@@ -18,7 +18,7 @@ const BAR_GAP = 4
 // Chart color palette — picked from existing dashboard elements
 const C_MASUK    = '#059669'  // green — konsisten dengan badge Masuk di Keuangan
 const C_KELUAR   = '#660000'  // dark red — konsisten dengan badge Keluar
-const C_PROGRESS = '#7C3AED'  // purple — dari card Progress Pekerjaan
+const C_PROGRESS = '#1A6FE8'  // blue — seragam dengan aksen utama dashboard
 
 // Left Y-axis: compact Rupiah format (e.g. 500Rb, 1Jt, 1.5M)
 function formatCompactRp(val: number): string {
