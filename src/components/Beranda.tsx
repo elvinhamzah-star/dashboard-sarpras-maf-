@@ -431,31 +431,17 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               el.style.borderColor = 'var(--border-subtle)'
             }}
           >
-            {/* Header tengah — dipisah dengan garis bawah tipis */}
-            <div style={{
-              textAlign: 'center',
-              fontSize: isMobile ? 9.5 : 11,
-              fontWeight: 700,
-              color: 'var(--text-secondary)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              paddingBottom: isMobile ? 10 : 12,
-              borderBottom: '1px solid var(--border-subtle)',
-              width: '100%',
-            }}>
-              {card.label}
-            </div>
-            {/* Baris: icon + angka | progress bar — center */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
-                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor }}>
-                  <PekerjaanIcon type={card.iconType} />
+            {/* Baris: icon + angka | progress bar — sejajar */}
+            <div style={{ width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+                  <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor }}>
+                    <PekerjaanIcon type={card.iconType} />
+                  </div>
+                  <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
                 </div>
-                <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
-              </div>
-              {/* Progress bar */}
-              <div style={{ flex: 1 }}>
-                <div style={{ height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: card.trackColor ?? 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                {/* Progress bar — sama tinggi, tidak ada subtitle di dalam flex */}
+                <div style={{ flex: 1, height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: card.trackColor ?? 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
                     width: `${progressLapangan || 0}%`,
@@ -464,9 +450,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                     transition: 'width 0.5s ease',
                   }} />
                 </div>
-                <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
-                  Dari Total {programs.length} Pekerjaan
-                </div>
+              </div>
+              {/* Subtitle di luar flex row supaya tidak geser bar */}
+              <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
+                Dari Total {programs.length} Pekerjaan
               </div>
             </div>
           </div>

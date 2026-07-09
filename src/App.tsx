@@ -371,7 +371,9 @@ export default function App() {
             key={currentPage + (selectedProgramId || '')}
             style={{ animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)', minHeight: '100%' }}
           >
-            {renderPage()}
+            <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>
+              {renderPage()}
+            </div>
           </div>
         </div>
       </div>
