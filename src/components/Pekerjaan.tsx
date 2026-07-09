@@ -95,7 +95,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: isMobile ? 14 : 24 }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+          <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
             Daftar {programs.length} Pekerjaan
           </h1>
         </div>
