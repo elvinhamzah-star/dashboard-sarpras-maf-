@@ -12,7 +12,7 @@ import LaporanBulanan from './components/LaporanBulanan'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
-import { clearAdminPin } from './lib/adminApi'
+import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
 import MaintenanceScreen from './components/MaintenanceScreen'
@@ -41,6 +41,7 @@ export default function App() {
   const [addModalKey, setAddModalKey] = useState(0)
   // null = belum dicek, true = maintenance aktif, false = normal
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
+  const [togglingMaintenance, setTogglingMaintenance] = useState(false)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
@@ -100,6 +101,15 @@ export default function App() {
 
   const handleAdded = () => {
     setShowAddModal(false)
+  }
+
+  const handleToggleMaintenance = async () => {
+    if (togglingMaintenance) return
+    setTogglingMaintenance(true)
+    const newVal = !isMaintenance
+    const { error } = await adminUpsertConfig('maintenance_mode', newVal ? 'true' : 'false')
+    if (!error) setIsMaintenance(newVal)
+    setTogglingMaintenance(false)
   }
 
   const handleLogoutDashboard = () => {
@@ -215,9 +225,10 @@ export default function App() {
     laporan: 'Laporan Bulanan',
   }
 
-  // Tampilkan maintenance screen sebelum apapun (termasuk login)
+  // Maintenance check — admin yang sudah login tetap bisa akses dashboard
   if (isMaintenance === null) return null // masih loading config
-  if (isMaintenance) return <MaintenanceScreen />
+  if (isMaintenance && !isAdmin && !isLoggedIn) return <MaintenanceScreen />
+  if (isMaintenance && isLoggedIn && !isAdmin) return <MaintenanceScreen />
 
   if (!isLoggedIn) {
     return (
@@ -250,6 +261,9 @@ export default function App() {
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
+        isMaintenance={isMaintenance ?? false}
+        onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
+        togglingMaintenance={togglingMaintenance}
       />
 
       {/* Mobile backdrop */}

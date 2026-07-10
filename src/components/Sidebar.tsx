@@ -9,6 +9,9 @@ interface SidebarProps {
   onLogout: () => void
   onShowPinModal: () => void
   onLogoutDashboard: () => void
+  isMaintenance?: boolean
+  onToggleMaintenance?: () => void
+  togglingMaintenance?: boolean
 }
 
 const menuItems = [
@@ -80,8 +83,70 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onLogoutDashboard }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
+
+  // Tombol maintenance — tampil hanya kalau admin, dipakai di 3 layout variant
+  const maintenanceBtn = isAdmin && onToggleMaintenance ? (
+    <button
+      onClick={onToggleMaintenance}
+      disabled={togglingMaintenance}
+      title={isMaintenance ? 'Nonaktifkan Maintenance' : 'Aktifkan Maintenance Mode'}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        color: isMaintenance ? '#D97706' : 'rgba(255,255,255,0.45)',
+        backgroundColor: isMaintenance ? 'rgba(217,119,6,0.14)' : 'transparent',
+        border: `1px solid ${isMaintenance ? 'rgba(217,119,6,0.3)' : 'rgba(255,255,255,0.08)'}`,
+        cursor: togglingMaintenance ? 'wait' : 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+        padding: '10px 12px',
+        borderRadius: 9,
+        width: '100%',
+        marginBottom: 8,
+        transition: 'all 0.15s',
+        opacity: togglingMaintenance ? 0.6 : 1,
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+      {isMaintenance ? 'Nonaktifkan Maintenance' : 'Maintenance Mode'}
+      {isMaintenance && (
+        <span style={{ marginLeft: 'auto', width: 7, height: 7, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />
+      )}
+    </button>
+  ) : null
+
+  // Ikon kecil untuk mode collapsed
+  const maintenanceBtnCollapsed = isAdmin && onToggleMaintenance ? (
+    <button
+      onClick={onToggleMaintenance}
+      disabled={togglingMaintenance}
+      title={isMaintenance ? 'Nonaktifkan Maintenance' : 'Aktifkan Maintenance Mode'}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        backgroundColor: isMaintenance ? 'rgba(217,119,6,0.14)' : 'transparent',
+        border: `1px solid ${isMaintenance ? 'rgba(217,119,6,0.3)' : 'rgba(255,255,255,0.08)'}`,
+        cursor: togglingMaintenance ? 'wait' : 'pointer',
+        color: isMaintenance ? '#D97706' : 'rgba(255,255,255,0.25)',
+        padding: 0,
+        opacity: togglingMaintenance ? 0.6 : 1,
+        transition: 'all 0.15s',
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </button>
+  ) : null
   return (
     <div
       style={{
@@ -226,6 +291,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       <div style={{ padding: '10px 8px 16px', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         {expanded && isMobile ? (
           <div>
+            {maintenanceBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -308,6 +374,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : expanded ? (
           <div>
+            {maintenanceBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -390,6 +457,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            {maintenanceBtnCollapsed}
             {role !== 'maf' && (
               <button
                 onClick={isAdmin ? onLogout : onShowPinModal}
