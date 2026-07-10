@@ -13,8 +13,9 @@ import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
-import { clearMafCredentials, invalidateCache } from './lib/supabase'
+import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
+import MaintenanceScreen from './components/MaintenanceScreen'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan'
 
@@ -38,6 +39,8 @@ export default function App() {
   )
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalKey, setAddModalKey] = useState(0)
+  // null = belum dicek, true = maintenance aktif, false = normal
+  const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
@@ -52,6 +55,15 @@ export default function App() {
   // When Galeri was entered from PekerjaanDetail, back returns to that program's detail.
   const [galeriReturnProgramId, setGaleriReturnProgramId] = useState<string | null>(null)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
+
+  // Cek maintenance mode dari Supabase saat pertama load
+  useEffect(() => {
+    fetchAppConfig('maintenance_mode').then(({ data }) => {
+      setIsMaintenance(data?.value === 'true')
+    }).catch(() => {
+      setIsMaintenance(false) // kalau gagal fetch, jangan blokir akses
+    })
+  }, [])
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
@@ -202,6 +214,10 @@ export default function App() {
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
   }
+
+  // Tampilkan maintenance screen sebelum apapun (termasuk login)
+  if (isMaintenance === null) return null // masih loading config
+  if (isMaintenance) return <MaintenanceScreen />
 
   if (!isLoggedIn) {
     return (
