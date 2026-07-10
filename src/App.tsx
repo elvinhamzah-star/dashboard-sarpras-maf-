@@ -59,11 +59,15 @@ export default function App() {
 
   // Cek maintenance mode dari Supabase saat pertama load
   useEffect(() => {
-    fetchAppConfig('maintenance_mode').then(({ data }) => {
-      setIsMaintenance(data?.value === 'true')
-    }).catch(() => {
-      setIsMaintenance(false) // kalau gagal fetch, jangan blokir akses
-    })
+    const check = async () => {
+      try {
+        const { data } = await fetchAppConfig('maintenance_mode')
+        setIsMaintenance(data?.value === 'true')
+      } catch {
+        setIsMaintenance(false) // kalau gagal fetch, jangan blokir akses
+      }
+    }
+    check()
   }, [])
 
   // Responsive: collapse to off-canvas drawer on small screens
