@@ -233,11 +233,17 @@ export default function App() {
 
   if (isMaintenance === null) return null
 
-  // Maintenance aktif → semua orang kena, termasuk sebelum login
-  // Bypass: klik ikon 3× di MaintenanceScreen → tampilkan login (hanya admin yang tahu)
-  if (isMaintenance && !maintenanceBypass && !isLoggedIn) {
-    return <MaintenanceScreen onAdminAccess={() => setMaintenanceBypass(true)} />
+  // ── MAINTENANCE GATE ─────────────────────────────────────────────────────────
+  // Blokir semua user yang bukan admin (PIN verified).
+  // Admin bypass: klik ikon 3× di MaintenanceScreen → buka login.
+  // Setelah login tanpa PIN admin → tetap diblokir.
+  if (isMaintenance && !isAdmin) {
+    if (!maintenanceBypass) {
+      return <MaintenanceScreen onAdminAccess={() => setMaintenanceBypass(true)} />
+    }
+    // maintenanceBypass = true (admin klik 3×) → lanjut ke login di bawah
   }
+  // ─────────────────────────────────────────────────────────────────────────────
 
   if (!isLoggedIn) {
     return (
@@ -256,7 +262,7 @@ export default function App() {
     )
   }
 
-  // Sudah login tapi bukan admin & maintenance aktif → maintenance screen (tanpa bypass)
+  // Sudah login tapi tidak masuk PIN admin dan maintenance aktif → tetap diblokir
   if (isMaintenance && !isAdmin) return <MaintenanceScreen />
 
   return (
