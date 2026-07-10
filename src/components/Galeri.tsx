@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair, invalidateCache } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, STATUS_COLORS } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
@@ -1012,7 +1012,42 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               {/* Media + overlay nav */}
               <div style={{ position: 'relative' }}>
                 {isVideoFile ? (
-                  <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? 240 : 540 }}>
+                  isMobile ? (
+                    // Mobile: iframe Drive bleed keluar container (iOS WebKit issue).
+                    // Tampilkan thumbnail + tombol play → buka native Drive viewer.
+                    <div
+                      onClick={e => {
+                        e.stopPropagation()
+                        const fileId = extractDriveFileId(doc.link_foto)
+                        if (fileId) window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank')
+                      }}
+                      style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0f', overflow: 'hidden', cursor: 'pointer' }}
+                    >
+                      {/* Blurred thumbnail as background */}
+                      {getDriveThumbnailUrl(doc.link_foto) && (
+                        <img
+                          src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                          alt=""
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(6px) brightness(0.45)', transform: 'scale(1.08)' }}
+                        />
+                      )}
+                      {/* Play button */}
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <div style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="22" height="22" fill="#fff" viewBox="0 0 24 24" style={{ marginLeft: 3 }}>
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.02em' }}>Ketuk untuk putar video</span>
+                      </div>
+                      {/* Video badge top-left */}
+                      <div style={{ position: 'absolute', top: 10, left: 12, display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', padding: '4px 9px', borderRadius: 20 }}>
+                        <svg width="11" height="11" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span style={{ fontSize: 10.5, color: '#fff', fontWeight: 600 }}>Video</span>
+                      </div>
+                    </div>
+                  ) : (
+                  <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: 540 }}>
                     <iframe
                       key={doc.id}
                       src={getDriveEmbedUrl(doc.link_foto) || ''}
@@ -1022,6 +1057,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }}
                     />
                   </div>
+                  )
                 ) : (
                   <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
                     <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }} />
