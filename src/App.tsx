@@ -42,6 +42,8 @@ export default function App() {
   // null = belum dicek, true = maintenance aktif, false = normal
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
   const [togglingMaintenance, setTogglingMaintenance] = useState(false)
+  // Admin bypass: klik ikon 3× di MaintenanceScreen → tampilkan login
+  const [maintenanceBypass, setMaintenanceBypass] = useState(false)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
@@ -229,10 +231,14 @@ export default function App() {
     laporan: 'Laporan Bulanan',
   }
 
-  // Saat cek maintenance masih loading, jangan blokir apapun dulu
   if (isMaintenance === null) return null
 
-  // Login selalu bisa diakses — semua user (termasuk admin) perlu login dulu
+  // Maintenance aktif → semua orang kena, termasuk sebelum login
+  // Bypass: klik ikon 3× di MaintenanceScreen → tampilkan login (hanya admin yang tahu)
+  if (isMaintenance && !maintenanceBypass && !isLoggedIn) {
+    return <MaintenanceScreen onAdminAccess={() => setMaintenanceBypass(true)} />
+  }
+
   if (!isLoggedIn) {
     return (
       <LoginPage
@@ -250,7 +256,7 @@ export default function App() {
     )
   }
 
-  // Sudah login tapi bukan admin & maintenance aktif → tampilkan maintenance screen
+  // Sudah login tapi bukan admin & maintenance aktif → maintenance screen (tanpa bypass)
   if (isMaintenance && !isAdmin) return <MaintenanceScreen />
 
   return (
