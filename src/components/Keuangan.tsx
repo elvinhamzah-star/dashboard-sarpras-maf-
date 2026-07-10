@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchTransactions, fetchAppConfig, Transaction } from '../lib/supabase'
+import { fetchTransactions, fetchAppConfig, Transaction, invalidateCache } from '../lib/supabase'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS, getFileEmbedUrl } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -605,6 +605,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
         <AddTransactionModal
           onClose={() => setShowAddModal(false)}
           onSuccess={async () => {
+            invalidateCache('transactions')
             const { data } = await fetchTransactions()
             if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
             setPage(1)
@@ -617,6 +618,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           transaction={editingTransaction}
           onClose={() => setEditingTransaction(null)}
           onSuccess={async () => {
+            invalidateCache('transactions')
             const { data } = await fetchTransactions()
             if (data) setTransactions(data.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()))
           }}

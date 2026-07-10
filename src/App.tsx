@@ -13,7 +13,8 @@ import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
 import { clearAdminPin } from './lib/adminApi'
-import { clearMafCredentials } from './lib/supabase'
+import { clearMafCredentials, invalidateCache } from './lib/supabase'
+import { prefetchAll } from './lib/prefetch'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan'
 
@@ -94,6 +95,7 @@ export default function App() {
     sessionStorage.removeItem('dashboard_role')
     clearAdminPin()
     clearMafCredentials()
+    invalidateCache() // clear all cached data on logout
     setIsAdmin(false)
     setIsLoggedIn(false)
     setRole(null)
@@ -210,6 +212,9 @@ export default function App() {
           // can briefly trigger the mq listener and open the sidebar
           if (window.matchMedia('(max-width: 768px)').matches) setSidebarOpen(false)
           setIsLoggedIn(true)
+          // Pre-warm data cache in background — by the time user navigates to
+          // any page, data is already cached and the page renders instantly.
+          prefetchAll()
         }}
       />
     )

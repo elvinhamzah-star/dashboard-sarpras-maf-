@@ -5,6 +5,30 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
+// ─── In-memory data cache ─────────────────────────────────────────────────────
+// Eliminates re-fetching the same table on every page navigation.
+// TTL: 3 minutes. Cleared on logout and after admin writes.
+const _cache = new Map<string, { data: unknown; ts: number }>()
+const CACHE_TTL = 3 * 60 * 1000
+
+function fromCache<T>(key: string): T | null {
+  const e = _cache.get(key)
+  if (!e) return null
+  if (Date.now() - e.ts > CACHE_TTL) { _cache.delete(key); return null }
+  return e.data as T
+}
+
+function toCache<T>(key: string, data: T): T {
+  _cache.set(key, { data, ts: Date.now() })
+  return data
+}
+
+/** Clear one cache key (after a mutation) or the entire cache (on logout). */
+export function invalidateCache(...keys: string[]) {
+  if (keys.length === 0) _cache.clear()
+  else keys.forEach(k => _cache.delete(k))
+}
+
 export interface Program {
   id: string
   program: string
@@ -135,30 +159,69 @@ export const fetchAppConfig = (key: string) =>
   supabase.from('app_config').select('value').eq('key', key).single()
 
 export async function fetchPrograms() {
+  const cached = fromCache<Program[]>('programs')
+  if (cached) return { data: cached, error: null }
   const { data, error } = await supabase.from('programs').select('*').order('id', { ascending: true })
+  if (data) toCache('programs', data)
   return { data, error }
 }
 
 export async function fetchTransactions() {
   // Always fetch directly so totals include Man Power regardless of role.
   // Keuangan display filters Man Power rows for the maf role on the frontend.
+  const cached = fromCache<Transaction[]>('transactions')
+  if (cached) return { data: cached, error: null }
   const { data, error } = await supabase.from('transactions').select('*').order('tanggal', { ascending: false })
+  if (data) toCache('transactions', data)
   return { data, error }
 }
-export const fetchDocumentation = () => supabase.from('documentation').select('*').order('tanggal', { ascending: false })
-export const fetchDocumentationProgramIds = () => supabase.from('documentation').select('program_id')
-export const fetchBeforeAfterPairs = () => supabase.from('before_after_pairs').select('*').order('urutan', { ascending: true })
-export const fetchSnapshots = () => supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
+export async function fetchDocumentation() {
+  const cached = fromCache<Documentation[]>('documentation')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('documentation').select('*').order('tanggal', { ascending: false })
+  if (data) toCache('documentation', data)
+  return { data, error }
+}
+export async function fetchDocumentationProgramIds() {
+  const cached = fromCache<{ program_id: string }[]>('documentation_program_ids')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('documentation').select('program_id')
+  if (data) toCache('documentation_program_ids', data)
+  return { data, error }
+}
+export async function fetchBeforeAfterPairs() {
+  const cached = fromCache<BeforeAfterPair[]>('before_after_pairs')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('before_after_pairs').select('*').order('urutan', { ascending: true })
+  if (data) toCache('before_after_pairs', data)
+  return { data, error }
+}
+export async function fetchSnapshots() {
+  const cached = fromCache<ProgramSnapshot[]>('snapshots')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
+  if (data) toCache('snapshots', data)
+  return { data, error }
+}
 export async function fetchSubPrograms() {
+  // MAF role uses Edge Function — don't cache (different data per role)
   if (hasMafCredentials()) return fetchMafData<SubProgram>('sub_programs')
+  const cached = fromCache<SubProgram[]>('sub_programs')
+  if (cached) return { data: cached, error: null }
   const { data, error } = await supabase.from('sub_programs').select('*').order('id', { ascending: true })
+  if (data) toCache('sub_programs', data)
   return { data, error }
 }
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
 
-export const fetchWeeklyNotes = () =>
-  supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })
+export async function fetchWeeklyNotes() {
+  const cached = fromCache<unknown[]>('weekly_notes')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })
+  if (data) toCache('weekly_notes', data)
+  return { data, error }
+}
 
 export type DocCategory = 'rab_detail' | 'kontrak' | 'bukti_transaksi'
 
@@ -172,8 +235,13 @@ export interface ProgramDocument {
   created_at: string
 }
 
-export const fetchProgramDocuments = () =>
-  supabase.from('program_documents').select('*').order('created_at', { ascending: true })
+export async function fetchProgramDocuments() {
+  const cached = fromCache<ProgramDocument[]>('program_documents')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('program_documents').select('*').order('created_at', { ascending: true })
+  if (data) toCache('program_documents', data)
+  return { data, error }
+}
 
 export interface MonthlyReport {
   id: number

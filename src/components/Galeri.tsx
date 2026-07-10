@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair } from '../lib/supabase'
+import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair, invalidateCache } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -1083,11 +1083,11 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
 
       {isAdmin && showAddModal && (
         <AddDocumentationModal programs={programs} onClose={() => setShowAddModal(false)}
-          onSuccess={async () => { const { data } = await fetchDocumentation(); if (data) setDocs(data); setShowAddModal(false) }} />
+          onSuccess={async () => { invalidateCache('documentation', 'documentation_program_ids'); const { data } = await fetchDocumentation(); if (data) setDocs(data); setShowAddModal(false) }} />
       )}
       {isAdmin && editingDoc && (
         <EditDocumentationModal doc={editingDoc} programs={programs} onClose={() => setEditingDoc(null)}
-          onSuccess={async () => { const { data } = await fetchDocumentation(); if (data) setDocs(data); setEditingDoc(null) }} />
+          onSuccess={async () => { invalidateCache('documentation', 'documentation_program_ids'); const { data } = await fetchDocumentation(); if (data) setDocs(data); setEditingDoc(null) }} />
       )}
       {isAdmin && showManageBA && openFolderId && (
         <ManageBeforeAfterModal
@@ -1095,7 +1095,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           programName={openProgramName}
           docs={docs}
           onClose={() => setShowManageBA(false)}
-          onSaved={async () => { const { data } = await fetchBeforeAfterPairs(); if (data) setPairs(data) }}
+          onSaved={async () => { invalidateCache('before_after_pairs'); const { data } = await fetchBeforeAfterPairs(); if (data) setPairs(data) }}
         />
       )}
     </div>

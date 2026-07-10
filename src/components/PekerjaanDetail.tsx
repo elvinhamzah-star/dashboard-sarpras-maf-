@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase, SubProgram, Program, Transaction, ProgramDocument } from '../lib/supabase'
+import { supabase, SubProgram, Program, Transaction, ProgramDocument, invalidateCache } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress, getFileEmbedUrl } from '../lib/data'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -911,6 +911,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           subProgram={editingSubProgram}
           onClose={() => setEditingSubProgram(null)}
           onSuccess={() => {
+            invalidateCache('sub_programs', 'programs')
             setEditingSubProgram(null)
             load()
           }}
@@ -922,6 +923,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           programId={program.id}
           onClose={() => setAddingSubProgram(false)}
           onSuccess={() => {
+            invalidateCache('sub_programs', 'programs')
             setAddingSubProgram(false)
             load()
           }}
@@ -934,6 +936,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           currentNotes={program.isu_utama || ''}
           onClose={() => setShowEditCatatan(false)}
           onSuccess={() => {
+            invalidateCache('programs')
             setShowEditCatatan(false)
             load()
           }}
@@ -945,6 +948,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           program={program}
           onClose={() => setShowEditProgram(false)}
           onSuccess={() => {
+            invalidateCache('programs', 'sub_programs')
             setShowEditProgram(false)
             load()
           }}

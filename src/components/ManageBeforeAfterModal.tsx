@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Documentation, BeforeAfterPair, fetchBeforeAfterPairs } from '../lib/supabase'
+import { Documentation, BeforeAfterPair, fetchBeforeAfterPairs, invalidateCache } from '../lib/supabase'
 import { adminInsert, adminDelete } from '../lib/adminApi'
 import { getDriveThumbnailUrl, formatTanggal } from '../lib/data'
 import ModalShell from './ModalShell'
@@ -28,6 +28,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
 
   const loadPairs = async () => {
     setLoading(true)
+    invalidateCache('before_after_pairs') // always fresh inside this modal
     const { data } = await fetchBeforeAfterPairs()
     setPairs((data ?? []).filter(p => p.program_id === programId))
     setLoading(false)
