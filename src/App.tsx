@@ -229,11 +229,10 @@ export default function App() {
     laporan: 'Laporan Bulanan',
   }
 
-  // Maintenance check — admin yang sudah login tetap bisa akses dashboard
-  if (isMaintenance === null) return null // masih loading config
-  if (isMaintenance && !isAdmin && !isLoggedIn) return <MaintenanceScreen />
-  if (isMaintenance && isLoggedIn && !isAdmin) return <MaintenanceScreen />
+  // Saat cek maintenance masih loading, jangan blokir apapun dulu
+  if (isMaintenance === null) return null
 
+  // Login selalu bisa diakses — semua user (termasuk admin) perlu login dulu
   if (!isLoggedIn) {
     return (
       <LoginPage
@@ -250,6 +249,9 @@ export default function App() {
       />
     )
   }
+
+  // Sudah login tapi bukan admin & maintenance aktif → tampilkan maintenance screen
+  if (isMaintenance && !isAdmin) return <MaintenanceScreen />
 
   return (
     <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
