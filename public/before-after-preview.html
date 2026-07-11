@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Before/After Redesign</title>
+<style>
+  :root{
+    --card:#fff; --bg:#F4F6FA; --border-subtle:#EDF1F6; --border:#E2E8F0;
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --blue:#1A6FE8; --before:#660000; --after:#059669;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text-primary);padding:24px 14px 80px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto}
+  h2.section{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:34px 0 6px}
+  p.note{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.55}
+  .divider{height:1px;background:var(--border);margin:8px 0 0}
+
+  /* ── Segmented control variants ── */
+  .segrow{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  .seg{display:inline-flex;background:var(--border-subtle);border-radius:10px;padding:3px;gap:2px}
+  .seg button{border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text-muted);padding:6px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+  .seg button.active{background:#fff;color:var(--text-primary);font-weight:700}
+  .seg.cur button.active{box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .seg.soft button.active{box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .tag{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+
+  /* ── Before/After card variants ── */
+  .cardTitle{font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em}
+  .pairwrap{display:flex;flex-direction:column;gap:16px;margin-top:12px}
+
+  /* CURRENT (baseline) */
+  .v-cur{background:var(--card);border:1px solid var(--border-subtle);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .v-cur .head{padding:12px 16px;font-size:14px;font-weight:700;border-bottom:1px solid var(--border-subtle)}
+  .v-cur .imgs{display:flex;gap:2px;background:var(--border-subtle)}
+  .v-cur .cell{flex:1;position:relative;aspect-ratio:16/10;overflow:hidden;background:#e8edf3}
+  .v-cur .cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .v-cur .badge{position:absolute;top:8px;left:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+
+  /* VARIANT A — Editorial overlay (glass chip + scrim + seam) */
+  .v-a{background:var(--card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .v-a .cap{padding:11px 15px 9px;font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+  .v-a .imgs{display:flex;position:relative;gap:3px;background:#fff;padding:0 3px 3px}
+  .v-a .cell{flex:1;position:relative;aspect-ratio:16/11;overflow:hidden;border-radius:11px;background:#e8edf3}
+  .v-a .cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .v-a .scrim{position:absolute;left:0;right:0;bottom:0;height:44%;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);pointer-events:none}
+  .v-a .chip{position:absolute;left:9px;bottom:9px;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:4px 9px;border-radius:99px}
+  .v-a .dot{width:6px;height:6px;border-radius:50%}
+  .v-a .seam{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+  /* Header options (H1/H2/H3) */
+  .v-a .capTitle{font-size:13.5px;font-weight:700;letter-spacing:-.01em;color:var(--text-primary)}
+  .v-a .capX{display:flex;align-items:center;gap:9px;padding:11px 15px 10px}
+  .v-a .capX .pin{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:rgba(26,111,232,.10);color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .v-a .capBar{display:flex;align-items:center;gap:11px;padding:11px 15px 10px}
+  .v-a .capBar .bar{flex-shrink:0;width:3px;height:18px;border-radius:99px;background:var(--blue)}
+  .v-a .capStack{display:flex;flex-direction:column;gap:3px;padding:10px 15px 10px;background:linear-gradient(to bottom,rgba(26,111,232,.04),transparent)}
+  .v-a .capStack .micro{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+
+  /* VARIANT B — Minimal tiny corner labels, no card header, bigger photos */
+  .v-b{border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);background:var(--card)}
+  .v-b .imgs{display:flex;position:relative}
+  .v-b .cell{flex:1;position:relative;aspect-ratio:16/11;overflow:hidden;background:#e8edf3}
+  .v-b .cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .v-b .cell + .cell{border-left:2px solid #fff}
+  .v-b .mini{position:absolute;top:9px;left:9px;display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:rgba(15,28,46,.55);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);padding:3px 8px;border-radius:7px}
+  .v-b .mini .dot{width:5px;height:5px;border-radius:50%}
+  .v-b .cap{padding:10px 14px;font-size:13px;font-weight:600;color:var(--text-primary);border-top:1px solid var(--border-subtle)}
+
+  /* VARIANT C — Labels as top strip inside each cell (colored underline accent) */
+  .v-c{background:var(--card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .v-c .cap{padding:11px 15px 4px;font-size:13.5px;font-weight:700}
+  .v-c .sub{padding:0 15px 10px;font-size:11px;color:var(--text-muted)}
+  .v-c .imgs{display:flex;gap:10px;padding:0 12px 14px}
+  .v-c .cell{flex:1}
+  .v-c .lab{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .v-c .lab .bar{width:14px;height:3px;border-radius:99px}
+  .v-c .ph{position:relative;aspect-ratio:16/11;border-radius:10px;overflow:hidden;background:#e8edf3}
+  .v-c .ph img{width:100%;height:100%;object-fit:cover;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h2 class="section">A. Segmented control — poles</h2>
+  <p class="note">Kiri = sekarang (dengan ikon). Kanan = usulan (teks-only, shadow lebih halus). Perhatikan mana yang terasa lebih bersih.</p>
+  <div class="segrow">
+    <div>
+      <div class="tag" style="margin-bottom:6px">Sekarang</div>
+      <div class="seg cur">
+        <button class="active">⇄&nbsp; Sebelum/Sesudah</button>
+        <button>⊞&nbsp; Semua Foto</button>
+      </div>
+    </div>
+    <div>
+      <div class="tag" style="margin-bottom:6px">Usulan · teks-only</div>
+      <div class="seg soft">
+        <button class="active">Sebelum/Sesudah</button>
+        <button>Semua Foto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2 class="section">Baseline — versi sekarang (buat pembanding)</h2>
+  <p class="note">Badge besar & saturated, kartu ada header bar, split keras. Ini yang terasa "Word".</p>
+  <div class="pairwrap">
+    <div class="v-cur">
+      <div class="head">Saluran Air Area Depan Pabrik Sabun Riha</div>
+      <div class="imgs">
+        <div class="cell"><span class="badge" style="background:var(--before)">Sebelum</span><img src="https://picsum.photos/seed/beforeA/600/400"></div>
+        <div class="cell"><span class="badge" style="background:var(--after)">Sesudah</span><img src="https://picsum.photos/seed/afterA/600/400"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section">Varian A — Editorial overlay ⭐ (dipilih, tanpa seam)</h2>
+  <p class="note">Chip mungil dark-glass + titik warna brand, scrim gradient tipis. Foto besar, chrome minim. Di bawah ini header masih flat — lanjut ke opsi header.</p>
+  <div class="pairwrap">
+    <div class="v-a">
+      <div class="cap">Saluran Air Area Depan Pabrik Sabun Riha</div>
+      <div class="imgs">
+        <div class="cell"><img src="https://picsum.photos/seed/beforeA/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#ff5a5a"></span>Sebelum</span></div>
+        <div class="cell"><img src="https://picsum.photos/seed/afterA/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#34d399"></span>Sesudah</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section">Opsi header — biar nggak flat</h2>
+  <p class="note">Ketiga di bawah pakai body Varian A yang sama, cuma beda gaya header. Pilih salah satu (atau campur).</p>
+  <div class="pairwrap">
+
+    <!-- H1: Pin chip -->
+    <div class="v-a">
+      <div class="capX">
+        <span class="pin"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="capTitle">H1 · Saluran Air Area Depan Pabrik Sabun Riha</span>
+      </div>
+      <div class="imgs">
+        <div class="cell"><img src="https://picsum.photos/seed/beforeA/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#ff5a5a"></span>Sebelum</span></div>
+        <div class="cell"><img src="https://picsum.photos/seed/afterA/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#34d399"></span>Sesudah</span></div>
+      </div>
+    </div>
+
+    <!-- H2: Accent bar -->
+    <div class="v-a">
+      <div class="capBar"><span class="bar"></span><span class="capTitle">H2 · Saluran Air Area Depan Pabrik Sabun Riha</span></div>
+      <div class="imgs">
+        <div class="cell"><img src="https://picsum.photos/seed/beforeB/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#ff5a5a"></span>Sebelum</span></div>
+        <div class="cell"><img src="https://picsum.photos/seed/afterB/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#34d399"></span>Sesudah</span></div>
+      </div>
+    </div>
+
+    <!-- H3: Micro-label stack + subtle tint -->
+    <div class="v-a">
+      <div class="capStack">
+        <span class="micro">Lokasi Titik</span>
+        <span class="capTitle">H3 · Saluran Air Area Depan Pabrik Sabun Riha</span>
+      </div>
+      <div class="imgs">
+        <div class="cell"><img src="https://picsum.photos/seed/beforeC/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#ff5a5a"></span>Sebelum</span></div>
+        <div class="cell"><img src="https://picsum.photos/seed/afterC/600/400"><div class="scrim"></div><span class="chip"><span class="dot" style="background:#34d399"></span>Sesudah</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section">Varian B — Minimal, tanpa header, foto full-bleed</h2>
+  <p class="note">Label super kecil di pojok (dark glass), judul jadi caption di bawah. Paling "diam"/clean.</p>
+  <div class="pairwrap">
+    <div class="v-b">
+      <div class="imgs">
+        <div class="cell"><span class="mini"><span class="dot" style="background:#ff5a5a"></span>Sebelum</span><img src="https://picsum.photos/seed/beforeA/600/400"></div>
+        <div class="cell"><span class="mini"><span class="dot" style="background:#34d399"></span>Sesudah</span><img src="https://picsum.photos/seed/afterA/600/400"></div>
+      </div>
+      <div class="cap">Saluran Air Area Depan Pabrik Sabun Riha</div>
+    </div>
+  </div>
+
+  <h2 class="section">Varian C — Terpisah + aksen garis warna</h2>
+  <p class="note">Dua foto dipisah gap, label di atas foto pakai garis warna kecil (bukan badge di atas foto). Rapi & terbaca, tapi lebih "kalem".</p>
+  <div class="pairwrap">
+    <div class="v-c">
+      <div class="cap">Saluran Air Area Depan Pabrik Sabun Riha</div>
+      <div class="imgs">
+        <div class="cell">
+          <div class="lab" style="color:var(--before)"><span class="bar" style="background:var(--before)"></span>Sebelum</div>
+          <div class="ph"><img src="https://picsum.photos/seed/beforeA/600/400"></div>
+        </div>
+        <div class="cell">
+          <div class="lab" style="color:var(--after)"><span class="bar" style="background:var(--after)"></span>Sesudah</div>
+          <div class="ph"><img src="https://picsum.photos/seed/afterA/600/400"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

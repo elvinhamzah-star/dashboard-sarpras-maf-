@@ -30,3 +30,18 @@ export function useBackHandler(handler: BackHandler) {
     return () => register(null)
   }, [active, register])
 }
+
+/**
+ * Lets any page's drill-down sub-view override the mobile top bar title.
+ * Pass a string while drilled in (e.g. program name in Galeri level-2/3),
+ * or null to fall back to the default pageTitles[currentPage].
+ */
+export const TopBarTitleContext = createContext<(title: string | null) => void>(() => {})
+
+export function useTopBarTitle(title: string | null) {
+  const register = useContext(TopBarTitleContext)
+  useEffect(() => {
+    register(title)
+    return () => register(null)
+  }, [title, register])
+}

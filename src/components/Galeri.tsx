@@ -3,7 +3,7 @@ import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeA
 import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
-import { useBackHandler } from '../lib/backNav'
+import { useBackHandler, useTopBarTitle } from '../lib/backNav'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
@@ -216,6 +216,11 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       ? selectedTitik !== null ? backFromLevel3 : closeFolder
       : onExit ?? null,
   )
+
+  // Drive the mobile top-bar title: show program/titik name when drilled in.
+  const _openProgram = openFolderId ? programs.find(p => p.id === openFolderId) : null
+  const _openProgramName = _openProgram?.nama_pekerjaan || openFolderId || ''
+  useTopBarTitle(openFolderId ? _openProgramName : null)
 
   const selectedProgramName = filterProgram === 'Semua'
     ? 'Pilih Program'
@@ -609,22 +614,21 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
             <>
               {width > 768 && <button
                 onClick={closeFolder}
-                style={isMobile ? { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', background: 'none', border: 'none', padding: 0, marginBottom: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit' } : { display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
                 onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
                 onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
               >
-                {isMobile ? (
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                ) : (
-                  <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
-                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                  </span>
-                )}
-                {isMobile ? 'Kembali' : 'Kembali ke Daftar'}
+                <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                Kembali ke Daftar
               </button>}
-              <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
-                {openProgramName}
-              </h1>
+              {/* Desktop: tampilkan judul di body. Mobile: judul sudah ada di top bar */}
+              {!isMobile && (
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                  {openProgramName}
+                </h1>
+              )}
             </>
           )}
 
@@ -632,33 +636,27 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
             <>
               {width > 768 && <button
                 onClick={backFromLevel3}
-                style={isMobile ? { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', background: 'none', border: 'none', padding: 0, marginBottom: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit' } : { display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
                 onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
                 onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
               >
-                {isMobile ? (
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                ) : (
-                  <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
-                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                  </span>
-                )}
-                {isMobile ? 'Kembali' : 'Kembali ke Daftar'}
+                <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                Kembali ke Daftar
               </button>}
-              {openFolderHasManyTitik && titikDisplayName !== null ? (
-                /* Breadcrumb: Program · Titik */
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: isMobile ? 12 : 15, fontWeight: 500, color: 'var(--text-secondary)', letterSpacing: '-0.01em' }}>{openProgramName}</span>
-                    <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                    <span style={{ fontSize: isMobile ? 13 : 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{titikDisplayName}</span>
-                  </div>
+              {/* Desktop: tampilkan breadcrumb/judul di body. Mobile: judul di top bar */}
+              {!isMobile && (openFolderHasManyTitik && titikDisplayName !== null ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)', letterSpacing: '-0.01em' }}>{openProgramName}</span>
+                  <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                  <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{titikDisplayName}</span>
                 </div>
               ) : (
-                <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
                   {openProgramName}
                 </h1>
-              )}
+              ))}
             </>
           )}
         </div>
@@ -687,27 +685,60 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         /* ── Level 3: BA default + "Tampilkan Semua" toggle ── */
         <>
           {/* Control bar */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-            {isBAView ? (
-              /* In BA view: show "Tampilkan Semua" toggle */
-              <button
-                onClick={() => setFilterFase('Semua')}
-                style={{
-                  padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
-                  border: '1px solid var(--border-subtle)', backgroundColor: 'transparent',
-                  color: 'var(--text-secondary)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600,
-                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-                }}
-              >
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-                Tampilkan Semua Dokumentasi
-              </button>
-            ) : (
-              /* In grid view: show fase chips + BA toggle */
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', flex: 1 }}>
+          <div style={{ marginBottom: 16 }}>
+            {/* Row 1: segmented view toggle (if pairs exist) + admin kelola icon */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              {hasPairs ? (
+                <button
+                  onClick={() => setFilterFase(isBAView ? 'Semua' : FASE_BA)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'inherit',
+                    padding: isMobile ? '7px 14px' : '8px 16px', borderRadius: 10,
+                    border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)',
+                    fontSize: isMobile ? 12 : 12.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'var(--blue)'; b.style.color = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'var(--border-subtle)'; b.style.color = 'var(--text-secondary)' }}
+                >
+                  {isBAView ? (
+                    <>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                      Lihat Semua Foto
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                      Sebelum/Sesudah
+                    </>
+                  )}
+                </button>
+              ) : <div />}
+              {isAdmin && (isMobile ? (
+                <button
+                  onClick={() => setShowManageBA(true)}
+                  title="Kelola Sebelum/Sesudah"
+                  style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-muted)'; b.style.borderColor = 'var(--border-subtle)' }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowManageBA(true)}
+                  title="Kelola Sebelum/Sesudah"
+                  style={{ height: 34, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, flexShrink: 0, transition: 'all 0.15s' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border-subtle)' }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  Kelola Sebelum/Sesudah
+                </button>
+              ))}
+            </div>
+            {/* Row 2: fase chips — only in grid (Semua Foto) view */}
+            {!isBAView && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: hasPairs ? 10 : 0 }}>
                 {FASE_LIST.filter(f => f !== 'Semua').map(fase => {
                   const isActive = filterFase === fase
                   const c = FASE_INFO[fase]?.color || 'var(--blue)'
@@ -730,71 +761,54 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     </button>
                   )
                 })}
-                {hasPairs && (
-                  <button onClick={() => setFilterFase(FASE_BA)}
-                    style={{
-                      padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
-                      border: '1px solid var(--border-subtle)', backgroundColor: 'transparent',
-                      color: 'var(--text-secondary)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600,
-                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-                    }}>
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                    Sebelum vs Sesudah
-                  </button>
-                )}
               </div>
-            )}
-            {isAdmin && (
-              <button onClick={() => setShowManageBA(true)}
-                style={{
-                  padding: isMobile ? '5px 12px' : '6px 14px', borderRadius: 99, fontFamily: 'inherit',
-                  border: '1px dashed var(--border-strong)', backgroundColor: 'transparent', color: 'var(--text-secondary)',
-                  fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-                  flexShrink: 0,
-                }}>
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                Kelola Sebelum/Sesudah
-              </button>
             )}
           </div>
           {isBAView ? (
             /* ── BA view: show pairs or nothing ── */
             programPairs.length === 0 ? null : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20, maxWidth: isMobile ? '100%' : 900, margin: '0 auto', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20, width: '100%' }}>
                 {programPairs.map(pair => {
                   const beforeDoc = docById(pair.before_doc_id)
                   const afterDoc = docById(pair.after_doc_id)
                   const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
                   const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
-                    const accent = kind === 'before' ? '#660000' : '#059669'
+                    const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
+                    const chip = (
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: '3px 7px', borderRadius: 99 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                        {kind === 'before' ? 'Sebelum' : 'Sesudah'}
+                      </div>
+                    )
                     return (
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: accent, color: '#fff' }}>
-                          {kind === 'before' ? 'Sebelum' : 'Sesudah'}
-                        </div>
+                      <div style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
                         {d && t ? (
-                          <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
-                            style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', cursor: 'pointer', overflow: 'hidden', background: 'var(--surface-raised)' }}>
-                            <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </div>
+                          <>
+                            <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
+                              style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
+                              <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            </div>
+                            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+                          </>
                         ) : (
-                          <div style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--surface-raised)', color: 'var(--text-muted)' }}>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
                             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             <span style={{ fontSize: 11.5, fontWeight: 500 }}>Belum ada foto</span>
                           </div>
                         )}
+                        {chip}
                       </div>
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                       {pair.label && (
-                        <div style={{ padding: isMobile ? '10px 14px' : '12px 16px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-subtle)', letterSpacing: '-0.01em' }}>
+                        <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
                         </div>
                       )}
-                      <div style={{ display: 'flex', gap: 2, background: 'var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', gap: 3, padding: '0 3px 3px' }}>
                         {sideCell(beforeDoc, 'before')}
                         {sideCell(afterDoc, 'after')}
                       </div>
@@ -814,87 +828,102 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       ) : isLevel2 ? (
         /* ── Level 2: BA default (program-level), "Tampilkan Semua" → titik folders ── */
         <>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-            {isBAView ? (
+          {/* Control bar: segmented view toggle + admin kelola icon */}
+          {hasPairs && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
+              {/* Single toggle switcher */}
               <button
-                onClick={() => setFilterFase('Semua')}
+                onClick={() => setFilterFase(isBAView ? 'Semua' : FASE_BA)}
                 style={{
-                  padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
-                  border: '1px solid var(--border-subtle)', backgroundColor: 'transparent',
-                  color: 'var(--text-secondary)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600,
-                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                  display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'inherit',
+                  padding: isMobile ? '7px 14px' : '8px 16px', borderRadius: 10,
+                  border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)',
+                  fontSize: isMobile ? 12 : 12.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
                 }}
+                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'var(--blue)'; b.style.color = 'var(--blue)' }}
+                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'var(--border-subtle)'; b.style.color = 'var(--text-secondary)' }}
               >
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-                Tampilkan Semua Dokumentasi
+                {isBAView ? (
+                  <>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Lihat Semua Foto
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    Sebelum/Sesudah
+                  </>
+                )}
               </button>
-            ) : hasPairs ? (
-              <button
-                onClick={() => setFilterFase(FASE_BA)}
-                style={{
-                  padding: isMobile ? '5px 12px' : '6px 16px', borderRadius: 99, fontFamily: 'inherit',
-                  border: '1px solid var(--border-subtle)', backgroundColor: 'transparent',
-                  color: 'var(--text-secondary)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600,
-                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-                }}
-              >
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                Sebelum vs Sesudah
-              </button>
-            ) : <div />}
-            {isAdmin && (
-              <button onClick={() => setShowManageBA(true)}
-                style={{
-                  padding: isMobile ? '5px 12px' : '6px 14px', borderRadius: 99, fontFamily: 'inherit',
-                  border: '1px dashed var(--border-strong)', backgroundColor: 'transparent', color: 'var(--text-secondary)',
-                  fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-                  flexShrink: 0,
-                }}>
-                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                Kelola Sebelum/Sesudah
-              </button>
-            )}
-          </div>
+              {/* Admin: ikon kelola subtle */}
+              {isAdmin && (isMobile ? (
+                <button
+                  onClick={() => setShowManageBA(true)}
+                  title="Kelola Sebelum/Sesudah"
+                  style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-muted)'; b.style.borderColor = 'var(--border-subtle)' }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowManageBA(true)}
+                  title="Kelola Sebelum/Sesudah"
+                  style={{ height: 34, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, flexShrink: 0, transition: 'all 0.15s' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border-subtle)' }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  Kelola Sebelum/Sesudah
+                </button>
+              ))}
+            </div>
+          )}
           {isBAView ? (
             programPairs.length === 0 ? null : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20, maxWidth: isMobile ? '100%' : 900, margin: '0 auto', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 14 : 20, width: '100%' }}>
                 {programPairs.map(pair => {
                   const beforeDoc = docById(pair.before_doc_id)
                   const afterDoc = docById(pair.after_doc_id)
                   const baIndexOf = (d: Documentation | undefined) => d ? baDocs.indexOf(d) : -1
                   const sideCell = (d: Documentation | undefined, kind: 'before' | 'after') => {
-                    const accent = kind === 'before' ? '#660000' : '#059669'
+                    const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
+                    const chip = (
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: '3px 7px', borderRadius: 99 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                        {kind === 'before' ? 'Sebelum' : 'Sesudah'}
+                      </div>
+                    )
                     return (
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: accent, color: '#fff' }}>
-                          {kind === 'before' ? 'Sebelum' : 'Sesudah'}
-                        </div>
+                      <div style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
                         {d && t ? (
-                          <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
-                            style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', cursor: 'pointer', overflow: 'hidden', background: 'var(--surface-raised)' }}>
-                            <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </div>
+                          <>
+                            <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
+                              style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
+                              <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            </div>
+                            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+                          </>
                         ) : (
-                          <div style={{ width: '100%', aspectRatio: isMobile ? '4/3' : '16/10', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--surface-raised)', color: 'var(--text-muted)' }}>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
                             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             <span style={{ fontSize: 11.5, fontWeight: 500 }}>Belum ada foto</span>
                           </div>
                         )}
+                        {chip}
                       </div>
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                       {pair.label && (
-                        <div style={{ padding: isMobile ? '10px 14px' : '12px 16px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-subtle)', letterSpacing: '-0.01em' }}>
+                        <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
                         </div>
                       )}
-                      <div style={{ display: 'flex', gap: 2, background: 'var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', gap: 3, padding: '0 3px 3px' }}>
                         {sideCell(beforeDoc, 'before')}
                         {sideCell(afterDoc, 'after')}
                       </div>

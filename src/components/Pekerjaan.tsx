@@ -235,6 +235,9 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                     {/* Baris 1: nama + realisasi */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
+                          {p.id}
+                        </span>
                         <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                             {p.nama_pekerjaan}

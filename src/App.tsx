@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { BackNavContext, type BackHandler } from './lib/backNav'
+import { BackNavContext, TopBarTitleContext, type BackHandler } from './lib/backNav'
 import Sidebar from './components/Sidebar'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
@@ -61,6 +61,8 @@ export default function App() {
   // folder, Dokumen subfolder, etc.) so the mobile top bar can drive it.
   const [childBack, setChildBack] = useState<BackHandler>(null)
   const registerBack = useCallback((h: BackHandler) => setChildBack(() => h), [])
+  const [childTitle, setChildTitle] = useState<string | null>(null)
+  const registerTitle = useCallback((t: string | null) => setChildTitle(t), [])
 
   // Cek maintenance mode dari Supabase saat pertama load
   useEffect(() => {
@@ -365,7 +367,7 @@ export default function App() {
               )}
             </button>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {pageTitles[currentPage]}
+              {childTitle ?? pageTitles[currentPage]}
             </span>
             <div style={{ flex: 1 }} />
             {isAdmin && (
@@ -440,7 +442,9 @@ export default function App() {
           >
             <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>
               <BackNavContext.Provider value={registerBack}>
-                {renderPage()}
+                <TopBarTitleContext.Provider value={registerTitle}>
+                  {renderPage()}
+                </TopBarTitleContext.Provider>
               </BackNavContext.Provider>
             </div>
           </div>
