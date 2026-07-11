@@ -263,9 +263,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             const sisa = p.sisa_anggaran ?? (p.total_anggaran ?? 0) - (p.realisasi_terkini ?? 0)
             const isEfficient = sisa > 0
             const isOver = sisa < 0
-            const realisasiPct = p.total_anggaran
-              ? Math.min(100, Math.round(((p.realisasi_terkini ?? 0) / p.total_anggaran) * 100))
-              : 0
             return (
               <div
                 key={p.id}
@@ -303,36 +300,30 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     </div>
                   </div>
                 </div>
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${realisasiPct}%`,
-                      backgroundColor: isOver ? '#660000' : '#059669',
-                      borderRadius: 99,
-                    }} />
+                {(isEfficient || isOver) && (
+                  <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                    {isEfficient && (
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 600, flexShrink: 0,
+                        color: '#059669',
+                        backgroundColor: 'rgba(5,150,105,0.1)',
+                        padding: '2px 7px', borderRadius: 99,
+                      }}>
+                        Efisiensi {formatRupiah(sisa)}
+                      </span>
+                    )}
+                    {isOver && (
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 600, flexShrink: 0,
+                        color: '#660000',
+                        backgroundColor: 'rgba(220,38,38,0.08)',
+                        padding: '2px 7px', borderRadius: 99,
+                      }}>
+                        Lebih {formatRupiah(Math.abs(sisa))}
+                      </span>
+                    )}
                   </div>
-                  {isEfficient && (
-                    <span style={{
-                      fontSize: 10.5, fontWeight: 600, flexShrink: 0,
-                      color: '#059669',
-                      backgroundColor: 'rgba(5,150,105,0.1)',
-                      padding: '2px 7px', borderRadius: 99,
-                    }}>
-                      Efisiensi {formatRupiah(sisa)}
-                    </span>
-                  )}
-                  {isOver && (
-                    <span style={{
-                      fontSize: 10.5, fontWeight: 600, flexShrink: 0,
-                      color: '#660000',
-                      backgroundColor: 'rgba(220,38,38,0.08)',
-                      padding: '2px 7px', borderRadius: 99,
-                    }}>
-                      Lebih {formatRupiah(Math.abs(sisa))}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             )
           })

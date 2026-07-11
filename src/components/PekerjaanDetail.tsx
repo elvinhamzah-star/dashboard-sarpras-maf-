@@ -323,33 +323,35 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         ))}
       </div>
 
-      {/* Progress Bar */}
-      <div
-        style={{
-          backgroundColor: 'var(--card)',
-          borderRadius: 12,
-          padding: isMobile ? '10px 12px' : '16px 20px',
-          border: '1px solid var(--border-subtle)',
-          marginBottom: 14,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Progress Pekerjaan</span>
-          <span style={{ fontSize: isMobile ? 12.5 : 16, fontWeight: 700, color: statusColor, letterSpacing: '-0.02em' }}>{pct}%</span>
+      {/* Progress Bar — hidden for completed works (100% is redundant once done) */}
+      {program.status !== 'Selesai' && (
+        <div
+          style={{
+            backgroundColor: 'var(--card)',
+            borderRadius: 12,
+            padding: isMobile ? '10px 12px' : '16px 20px',
+            border: '1px solid var(--border-subtle)',
+            marginBottom: 14,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Progress Pekerjaan</span>
+            <span style={{ fontSize: isMobile ? 12.5 : 16, fontWeight: 700, color: statusColor, letterSpacing: '-0.02em' }}>{pct}%</span>
+          </div>
+          <div style={{ height: 8, backgroundColor: 'var(--border-subtle)', borderRadius: 10, overflow: 'hidden' }}>
+            <div
+              style={{
+                width: `${pct}%`,
+                height: '100%',
+                backgroundColor: statusColor,
+                borderRadius: 10,
+                transition: 'width 0.6s ease',
+              }}
+            />
+          </div>
         </div>
-        <div style={{ height: 8, backgroundColor: 'var(--border-subtle)', borderRadius: 10, overflow: 'hidden' }}>
-          <div
-            style={{
-              width: `${pct}%`,
-              height: '100%',
-              backgroundColor: statusColor,
-              borderRadius: 10,
-              transition: 'width 0.6s ease',
-            }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
