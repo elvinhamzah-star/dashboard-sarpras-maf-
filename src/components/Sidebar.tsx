@@ -156,7 +156,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         backgroundColor: '#0A1628',
         transition: isMobile
           ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)'
-          : 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
+          : 'width 0.26s cubic-bezier(0.4,0,0.2,1)',
+        willChange: isMobile ? 'transform' : 'width',
         transform: isMobile ? `translateX(${isOpen ? '0' : '-100%'})` : 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -176,7 +177,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           padding: expanded ? '18px 16px 14px' : '18px 0 14px',
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: expanded ? 10 : 0,
           cursor: isMobile ? 'default' : 'pointer',
           justifyContent: expanded ? 'flex-start' : 'center',
           flexShrink: 0,
@@ -190,16 +191,14 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
             style={{ width: 36, height: 36, objectFit: 'cover', display: 'block' }}
           />
         </div>
-        {expanded && (
-          <div style={{ overflow: 'hidden', minWidth: 0 }}>
-            <div style={{ color: '#F1F5F9', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-              Peradaban Baik Bahagia
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, whiteSpace: 'nowrap', marginTop: 1 }}>
-              Sarpras MAF
-            </div>
+        <div style={{ overflow: 'hidden', minWidth: 0, maxWidth: expanded ? 180 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease' }}>
+          <div style={{ color: '#F1F5F9', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+            Peradaban Baik Bahagia
           </div>
-        )}
+          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, whiteSpace: 'nowrap', marginTop: 1 }}>
+            Sarpras MAF
+          </div>
+        </div>
       </div>
 
       {isMobile && (
@@ -239,7 +238,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: expanded ? 10 : 0,
                 padding: expanded ? '9px 10px' : '9px',
                 justifyContent: expanded ? 'flex-start' : 'center',
                 borderRadius: 9,
@@ -248,7 +247,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 backgroundColor: isActive ? 'rgba(26,111,232,0.18)' : 'transparent',
                 color: isActive ? '#60A5FA' : 'rgba(255,255,255,0.45)',
                 marginBottom: 2,
-                transition: 'all 0.15s ease',
+                transition: 'background-color 0.15s ease, color 0.15s ease, padding 0.26s cubic-bezier(0.4,0,0.2,1), gap 0.26s cubic-bezier(0.4,0,0.2,1)',
                 whiteSpace: 'nowrap',
                 position: 'relative',
               }}
@@ -276,11 +275,9 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 />
               )}
               <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
-              {expanded && (
-                <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 400, letterSpacing: '-0.01em' }}>
-                  {item.label}
-                </span>
-              )}
+              <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 400, letterSpacing: '-0.01em', overflow: 'hidden', maxWidth: expanded ? 170 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease' }}>
+                {item.label}
+              </span>
             </button>
           )
         })}
