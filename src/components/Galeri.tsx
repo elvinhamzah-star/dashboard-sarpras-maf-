@@ -1180,8 +1180,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           onClick={() => setShowAddModal(true)}
           style={{
             position: 'fixed',
-            bottom: 24,
-            right: 24,
+            bottom: 'calc(78px + env(safe-area-inset-bottom))',
+            right: 18,
             zIndex: 50,
             width: 46,
             height: 46,

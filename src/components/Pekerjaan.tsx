@@ -282,7 +282,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       {isAdmin && isMobile && (
         <button
           onClick={onAddPekerjaan}
-          style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, width: 46, height: 46, borderRadius: 14, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,111,232,0.35)', transition: 'transform 0.15s' }}
+          style={{ position: 'fixed', bottom: 'calc(78px + env(safe-area-inset-bottom))', right: 18, zIndex: 50, width: 46, height: 46, borderRadius: 14, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,111,232,0.35)', transition: 'transform 0.15s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
         >

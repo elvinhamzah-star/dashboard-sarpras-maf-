@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { BackNavContext, TopBarTitleContext, type BackHandler } from './lib/backNav'
 import Sidebar from './components/Sidebar'
+import BottomNav from './components/BottomNav'
+import MobileAccountMenu from './components/MobileAccountMenu'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
 import PekerjaanDetail from './components/PekerjaanDetail'
@@ -336,59 +338,45 @@ export default function App() {
               borderBottom: '1px solid var(--border)',
             }}
           >
-            <button
-              onClick={() => (backAction ? backAction() : setSidebarOpen(true))}
-              aria-label={backAction ? 'Kembali' : 'Buka menu'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                border: '1px solid var(--border)',
-                backgroundColor: 'var(--card)',
-                cursor: 'pointer',
-                color: 'var(--text-primary)',
-                flexShrink: 0,
-              }}
-            >
-              {backAction ? (
+            {backAction && (
+              <button
+                onClick={() => backAction()}
+                aria-label="Kembali"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  border: '1px solid var(--border)',
+                  backgroundColor: 'var(--card)',
+                  cursor: 'pointer',
+                  color: 'var(--text-primary)',
+                  flexShrink: 0,
+                }}
+              >
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                   <line x1="19" y1="12" x2="5" y2="12" />
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
-              ) : (
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              )}
-            </button>
+              </button>
+            )}
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {childTitle ?? pageTitles[currentPage]}
             </span>
             <div style={{ flex: 1 }} />
-            {isAdmin && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  backgroundColor: 'rgba(26,111,232,0.1)',
-                  color: 'var(--blue)',
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  padding: '4px 9px',
-                  borderRadius: 20,
-                  flexShrink: 0,
-                }}
-              >
-                <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'var(--blue)' }} />
-                Admin
-              </span>
-            )}
+            <MobileAccountMenu
+              isAdmin={isAdmin}
+              role={role}
+              isMaintenance={isMaintenance ?? false}
+              togglingMaintenance={togglingMaintenance}
+              onRiwayat={() => handleNavigate('riwayat')}
+              onShowPinModal={() => setShowPinModal(true)}
+              onLogoutAdmin={() => { clearAdminPin(); setIsAdmin(false) }}
+              onLogoutDashboard={handleLogoutDashboard}
+              onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
+            />
           </header>
         )}
 
@@ -449,6 +437,9 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Mobile bottom navigation */}
+        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
       </div>
 
 

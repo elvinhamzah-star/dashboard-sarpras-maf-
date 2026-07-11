@@ -574,7 +574,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
 
       {/* Mobile FABs — Tambah + Toggle Riwayat */}
       {isAdmin && isMobile && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+        <div style={{ position: 'fixed', bottom: 'calc(78px + env(safe-area-inset-bottom))', right: 18, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
           {/* Mata — toggle riwayat */}
           <button
             onClick={handleToggleRiwayat}
