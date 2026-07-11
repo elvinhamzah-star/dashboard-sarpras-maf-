@@ -777,8 +777,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     const chip = (
-                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: '3px 7px', borderRadius: 99 }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                        <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: dotColor }} />
                         {kind === 'before' ? 'Sebelum' : 'Sesudah'}
                       </div>
                     )
@@ -892,8 +892,8 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     const chip = (
-                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: '3px 7px', borderRadius: 99 }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                        <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: dotColor }} />
                         {kind === 'before' ? 'Sebelum' : 'Sesudah'}
                       </div>
                     )
