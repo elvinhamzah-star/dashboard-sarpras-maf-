@@ -133,8 +133,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
       }}
     >
 
-      {/* Back button (hidden when embedded in a modal — the shell owns closing) */}
-      {!embedded && <button
+      {/* Back button — wide screens only (≤768px uses the top-bar ← arrow).
+          Hidden when embedded in a modal — the shell owns closing. */}
+      {!embedded && width > 768 && <button
         onClick={onBack}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, marginBottom: 20, fontFamily: 'inherit', transition: 'all 0.15s' }}
         onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}

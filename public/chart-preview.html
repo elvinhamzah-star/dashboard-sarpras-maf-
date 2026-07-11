@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chart Options Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #F1F4F9; padding: 32px 24px 60px; color: #0F1C2E; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.03em; }
+  .subtitle { font-size: 13px; color: #5C6B82; margin-bottom: 32px; }
+  .grid { display: flex; flex-direction: column; gap: 24px; max-width: 780px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 14px; border: 1px solid rgba(15,23,42,0.06); box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 20px 24px 22px; }
+  .card-label { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #5C6B82; background: rgba(15,23,42,0.05); border: 1px solid rgba(15,23,42,0.06); border-radius: 6px; padding: 3px 8px; margin-bottom: 12px; }
+  .rec { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #059669; background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.2); border-radius: 6px; padding: 3px 8px; margin-bottom: 12px; margin-left: 6px; }
+  .card-title { font-size: 13px; font-weight: 700; color: #0F1C2E; letter-spacing: -0.02em; }
+  .card-sub { font-size: 11px; color: #64748B; margin-top: 2px; margin-bottom: 16px; }
+  .legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: #64748B; font-weight: 500; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink:0; }
+  .dot-line { width: 14px; height: 2px; border-radius: 1px; flex-shrink:0; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+  svg text { font-family: 'Inter', sans-serif; }
+  .note { font-size: 10.5px; color: #94A3B8; margin-top: 10px; text-align: center; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div style="max-width:780px;margin:0 auto;">
+  <h2>Opsi Tampilan Chart</h2>
+  <p class="subtitle">Sample data Jan–Jul 2026 · Progress dihitung dari tanggal_mulai & tanggal_selesai</p>
+</div>
+
+<div class="grid">
+
+  <!-- OPSI A: Grouped 3 bar, dual axis -->
+  <div class="card">
+    <div class="header-row">
+      <div>
+        <div style="display:flex;align-items:center;gap:0">
+          <div class="card-label">Opsi A</div>
+        </div>
+        <div class="card-title">3 Bar Per Bulan — Axis Kiri &amp; Kanan</div>
+        <div class="card-sub">Masuk + Keluar (axis kiri, Rp) · Progress (axis kanan, %)</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#1A6FE8"></div>Masuk</div>
+        <div class="legend-item"><div class="dot" style="background:#94A3B8"></div>Keluar</div>
+        <div class="legend-item"><div class="dot" style="background:#059669"></div>Progress</div>
+      </div>
+    </div>
+    <!-- Data: Masuk big batches, Keluar spread, Progress interpolated -->
+    <!-- Jan: M=500 K=46 P=5, Feb: M=0 K=120 P=12, Mar: M=200 K=85 P=20 -->
+    <!-- Apr: M=0 K=65 P=30, Mei: M=0 K=30 P=38, Jun: M=0 K=190 P=50, Jul: M=0 K=130 P=63 -->
+    <!-- max Rp = 500, bar H = 110 -->
+    <svg width="100%" viewBox="0 0 680 158" preserveAspectRatio="xMidYMid meet">
+      <!-- Grid -->
+      <line x1="48" y1="10" x2="648" y2="10" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="37.5" x2="648" y2="37.5" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="65" x2="648" y2="65" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="92.5" x2="648" y2="92.5" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="120" x2="648" y2="120" stroke="#E2E8F0" stroke-width="1"/>
+
+      <!-- Y left labels (Rp, max 500) -->
+      <text x="44" y="123" text-anchor="end" font-size="8.5" fill="#94A3B8">0</text>
+      <text x="44" y="68" text-anchor="end" font-size="8.5" fill="#94A3B8">250jt</text>
+      <text x="44" y="13" text-anchor="end" font-size="8.5" fill="#94A3B8">500jt</text>
+
+      <!-- Y right labels (%, max 100) -->
+      <text x="652" y="123" text-anchor="start" font-size="8.5" fill="#059669">0%</text>
+      <text x="652" y="68" text-anchor="start" font-size="8.5" fill="#059669">50%</text>
+      <text x="652" y="13" text-anchor="start" font-size="8.5" fill="#059669">100%</text>
+
+      <!-- Col width = 85, bar width = 18, gap = 3, group = 57, offset = 14 -->
+      <!-- Jan: x=57 -->
+      <!-- Masuk 500/500*110=110 → y=10 -->
+      <rect x="57" y="10" width="18" height="110" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <!-- Keluar 46/500*110=10.1 → y=109.9 -->
+      <rect x="78" y="110" width="18" height="10" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 5/100*110=5.5 → y=114.5 -->
+      <rect x="99" y="114.5" width="18" height="5.5" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="85" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Jan</text>
+
+      <!-- Feb: x=142 -->
+      <!-- Masuk 0 → tiny bar -->
+      <rect x="142" y="119" width="18" height="1" rx="1" fill="#1A6FE8" opacity="0.25"/>
+      <!-- Keluar 120/500*110=26.4 → y=93.6 -->
+      <rect x="163" y="93.6" width="18" height="26.4" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 12/100*110=13.2 → y=106.8 -->
+      <rect x="184" y="106.8" width="18" height="13.2" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="170" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Feb</text>
+
+      <!-- Mar: x=227 -->
+      <!-- Masuk 200/500*110=44 → y=76 -->
+      <rect x="227" y="76" width="18" height="44" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <!-- Keluar 85/500*110=18.7 → y=101.3 -->
+      <rect x="248" y="101.3" width="18" height="18.7" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 20/100*110=22 → y=98 -->
+      <rect x="269" y="98" width="18" height="22" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="255" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Mar</text>
+
+      <!-- Apr: x=312 -->
+      <rect x="312" y="119" width="18" height="1" rx="1" fill="#1A6FE8" opacity="0.25"/>
+      <!-- Keluar 65/500*110=14.3 → y=105.7 -->
+      <rect x="333" y="105.7" width="18" height="14.3" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 30/100*110=33 → y=87 -->
+      <rect x="354" y="87" width="18" height="33" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="340" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Apr</text>
+
+      <!-- Mei: x=397 -->
+      <rect x="397" y="119" width="18" height="1" rx="1" fill="#1A6FE8" opacity="0.25"/>
+      <!-- Keluar 30/500*110=6.6 → y=113.4 -->
+      <rect x="418" y="113.4" width="18" height="6.6" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 38/100*110=41.8 → y=78.2 -->
+      <rect x="439" y="78.2" width="18" height="41.8" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="425" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Mei</text>
+
+      <!-- Jun: x=482 -->
+      <rect x="482" y="119" width="18" height="1" rx="1" fill="#1A6FE8" opacity="0.25"/>
+      <!-- Keluar 190/500*110=41.8 → y=78.2 -->
+      <rect x="503" y="78.2" width="18" height="41.8" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 50/100*110=55 → y=65 -->
+      <rect x="524" y="65" width="18" height="55" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="510" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Jun</text>
+
+      <!-- Jul: x=567 -->
+      <rect x="567" y="119" width="18" height="1" rx="1" fill="#1A6FE8" opacity="0.25"/>
+      <!-- Keluar 130/500*110=28.6 → y=91.4 -->
+      <rect x="588" y="91.4" width="18" height="28.6" rx="2" fill="#94A3B8" opacity="0.85"/>
+      <!-- Progress 63/100*110=69.3 → y=50.7 -->
+      <rect x="609" y="50.7" width="18" height="69.3" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="595" y="135" text-anchor="middle" font-size="10" fill="#94A3B8">Jul</text>
+
+      <text x="348" y="152" text-anchor="middle" font-size="9.5" fill="#94A3B8">⚠ Dual axis: Rp &amp; % beda skala — bisa membingungkan kalau tidak dijelaskan</text>
+    </svg>
+  </div>
+
+  <!-- OPSI B: 2 bar (masuk+keluar) + progress bar terpisah di bawah, 1 axis tiap section -->
+  <div class="card">
+    <div class="header-row">
+      <div>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap">
+          <div class="card-label">Opsi B</div>
+          <div class="rec">✦ Rekomendasi</div>
+        </div>
+        <div class="card-title">2 Panel — Dana di Atas, Progress di Bawah</div>
+        <div class="card-sub">Panel atas: Masuk &amp; Keluar (Rp) · Panel bawah: Progress per bulan (%)</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#1A6FE8"></div>Masuk</div>
+        <div class="legend-item"><div class="dot" style="background:#94A3B8"></div>Keluar</div>
+        <div class="legend-item"><div class="dot" style="background:#059669"></div>Progress</div>
+      </div>
+    </div>
+    <svg width="100%" viewBox="0 0 680 210" preserveAspectRatio="xMidYMid meet">
+      <!-- ── PANEL ATAS: Dana (bar masuk + keluar) ── -->
+      <text x="48" y="12" font-size="9" fill="#64748B" font-weight="600">DANA (Rp)</text>
+      <line x1="48" y1="80" x2="648" y2="80" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="48" y1="55" x2="648" y2="55" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="30" x2="648" y2="30" stroke="#F1F4F9" stroke-width="1"/>
+
+      <text x="44" y="83" text-anchor="end" font-size="8" fill="#94A3B8">0</text>
+      <text x="44" y="33" text-anchor="end" font-size="8" fill="#94A3B8">500jt</text>
+
+      <!-- Jan bars -->
+      <rect x="62" y="17" width="22" height="63" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <rect x="87" y="74" width="22" height="6" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Feb -->
+      <rect x="147" y="79" width="22" height="1" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="172" y="64" width="22" height="16" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Mar -->
+      <rect x="232" y="55" width="22" height="25" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <rect x="257" y="69" width="22" height="11" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Apr -->
+      <rect x="317" y="79" width="22" height="1" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="342" y="71" width="22" height="9" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Mei -->
+      <rect x="402" y="79" width="22" height="1" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="427" y="76" width="22" height="4" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Jun -->
+      <rect x="487" y="79" width="22" height="1" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="512" y="55" width="22" height="25" rx="2" fill="#94A3B8" opacity="0.75"/>
+      <!-- Jul -->
+      <rect x="572" y="79" width="22" height="1" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="597" y="63" width="22" height="17" rx="2" fill="#94A3B8" opacity="0.75"/>
+
+      <!-- Month labels (shared) -->
+      <text x="80" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Jan</text>
+      <text x="165" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Feb</text>
+      <text x="250" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Mar</text>
+      <text x="335" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Apr</text>
+      <text x="420" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Mei</text>
+      <text x="505" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Jun</text>
+      <text x="590" y="93" text-anchor="middle" font-size="10" fill="#94A3B8">Jul</text>
+
+      <!-- Divider -->
+      <line x1="48" y1="104" x2="648" y2="104" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- ── PANEL BAWAH: Progress bar per bulan ── -->
+      <text x="48" y="116" font-size="9" fill="#059669" font-weight="600">PROGRESS PEKERJAAN (%)</text>
+      <line x1="48" y1="190" x2="648" y2="190" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="48" y1="165" x2="648" y2="165" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="140" x2="648" y2="140" stroke="#F1F4F9" stroke-width="1"/>
+
+      <text x="44" y="193" text-anchor="end" font-size="8" fill="#059669">0%</text>
+      <text x="44" y="143" text-anchor="end" font-size="8" fill="#059669">50%</text>
+
+      <!-- Progress bars (max 100%, height=70px) -->
+      <!-- 5%→h=3.5, 12%→8.4, 20%→14, 30%→21, 38%→26.6, 50%→35, 63%→44.1 -->
+      <rect x="69" y="186.5" width="22" height="3.5" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="80" y="184" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">5%</text>
+
+      <rect x="154" y="181.6" width="22" height="8.4" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="165" y="179" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">12%</text>
+
+      <rect x="239" y="176" width="22" height="14" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="250" y="173" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">20%</text>
+
+      <rect x="324" y="169" width="22" height="21" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="335" y="166" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">30%</text>
+
+      <rect x="409" y="163.4" width="22" height="26.6" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="420" y="160" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">38%</text>
+
+      <rect x="494" y="155" width="22" height="35" rx="2" fill="#059669" opacity="0.9"/>
+      <text x="505" y="152" text-anchor="middle" font-size="8" fill="#059669" font-weight="700">50%</text>
+
+      <rect x="579" y="145.9" width="22" height="44.1" rx="2" fill="#059669"/>
+      <text x="590" y="142" text-anchor="middle" font-size="8.5" fill="#059669" font-weight="700">63%</text>
+    </svg>
+    <p class="note">Tiap panel punya axis sendiri → tidak ada kebingungan skala · progress naik dari kiri ke kanan langsung kelihatan</p>
+  </div>
+
+  <!-- OPSI C: 3 bar grouped, single scale normalized -->
+  <div class="card">
+    <div class="header-row">
+      <div>
+        <div class="card-label">Opsi C</div>
+        <div class="card-title">3 Bar Grouped, Skala Dinormalisasi</div>
+        <div class="card-sub">Masuk, Keluar, Progress — semua diskala relatif terhadap max masing-masing</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#1A6FE8"></div>Masuk</div>
+        <div class="legend-item"><div class="dot" style="background:#94A3B8"></div>Keluar</div>
+        <div class="legend-item"><div class="dot" style="background:#059669"></div>Progress</div>
+      </div>
+    </div>
+    <svg width="100%" viewBox="0 0 680 150" preserveAspectRatio="xMidYMid meet">
+      <line x1="48" y1="10" x2="648" y2="10" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="40" x2="648" y2="40" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="70" x2="648" y2="70" stroke="#F1F4F9" stroke-width="1"/>
+      <line x1="48" y1="100" x2="648" y2="100" stroke="#E2E8F0" stroke-width="1"/>
+
+      <text x="44" y="103" text-anchor="end" font-size="8" fill="#94A3B8">0</text>
+      <text x="44" y="13" text-anchor="end" font-size="8" fill="#64748B">Max</text>
+      <text x="44" y="28" font-size="7" fill="#94A3B8" text-anchor="end">masing-masing</text>
+
+      <!-- 3 bars per month, each normalized to their own max -->
+      <!-- Masuk max=500, Keluar max=190, Progress max=100 (63 actual) -->
+      <!-- Bar H = 90, each bar W=14, gap=2, group=50, col=85 -->
+
+      <!-- Jan: Masuk=500→100%, Keluar=46→24.2%, Progress=5→7.9% -->
+      <rect x="57" y="10" width="14" height="90" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <rect x="74" y="89" width="14" height="11" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="91" y="97" width="14" height="3" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="75" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Jan</text>
+
+      <!-- Feb: Masuk=0, Keluar=120→63.2%, Progress=12→19% -->
+      <rect x="142" y="99.5" width="14" height="0.5" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="159" y="43" width="14" height="57" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="176" y="83" width="14" height="17" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="160" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Feb</text>
+
+      <!-- Mar: Masuk=200→40%, Keluar=85→44.7%, Progress=20→31.7% -->
+      <rect x="227" y="64" width="14" height="36" rx="2" fill="#1A6FE8" opacity="0.85"/>
+      <rect x="244" y="60" width="14" height="40" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="261" y="71" width="14" height="29" rx="2" fill="#059669" opacity="0.8"/>
+      <text x="245" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Mar</text>
+
+      <!-- Apr: Masuk=0, Keluar=65→34.2%, Progress=30→47.6% -->
+      <rect x="312" y="99.5" width="14" height="0.5" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="329" y="69" width="14" height="31" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="346" y="57" width="14" height="43" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="330" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Apr</text>
+
+      <!-- Mei: Masuk=0, Keluar=30→15.8%, Progress=38→60.3% -->
+      <rect x="397" y="99.5" width="14" height="0.5" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="414" y="86" width="14" height="14" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="431" y="46" width="14" height="54" rx="2" fill="#059669" opacity="0.85"/>
+      <text x="415" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Mei</text>
+
+      <!-- Jun: Masuk=0, Keluar=190→100%, Progress=50→79.4% -->
+      <rect x="482" y="99.5" width="14" height="0.5" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="499" y="10" width="14" height="90" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="516" y="29" width="14" height="71" rx="2" fill="#059669" opacity="0.9"/>
+      <text x="500" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Jun</text>
+
+      <!-- Jul: Masuk=0, Keluar=130→68.4%, Progress=63→100% -->
+      <rect x="567" y="99.5" width="14" height="0.5" rx="1" fill="#1A6FE8" opacity="0.2"/>
+      <rect x="584" y="39" width="14" height="61" rx="2" fill="#94A3B8" opacity="0.8"/>
+      <rect x="601" y="10" width="14" height="90" rx="2" fill="#059669"/>
+      <text x="585" y="115" text-anchor="middle" font-size="9.5" fill="#94A3B8">Jul</text>
+
+      <text x="348" y="135" text-anchor="middle" font-size="9.5" fill="#94A3B8">⚠ Skala dinormalisasi — angka terlihat sebanding tapi satuannya berbeda (Rp vs %)</text>
+    </svg>
+  </div>
+
+</div>
+
+</body>
+</html>

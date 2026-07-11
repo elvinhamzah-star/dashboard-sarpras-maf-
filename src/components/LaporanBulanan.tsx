@@ -203,10 +203,12 @@ export default function LaporanBulanan({ isAdmin }: LaporanBulananProps) {
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
-            Laporan Bulanan
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+          {!isMobile && (
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+              Laporan Bulanan
+            </div>
+          )}
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: isMobile ? 0 : 3 }}>
             {monthLabelFromYM(bulan)} · Evaluasi, status & rencana eksekusi
           </div>
         </div>

@@ -5,9 +5,11 @@ interface BerandaAlertsProps {
   programs: Program[]
   showOverdue?: boolean
   showOverBudget?: boolean
+  /** Saat true, alert menempel di dalam panel induk (hapus margin bawah, beri jarak atas) */
+  embedded?: boolean
 }
 
-export default function BerandaAlerts({ programs, showOverdue = true, showOverBudget = true }: BerandaAlertsProps) {
+export default function BerandaAlerts({ programs, showOverdue = true, showOverBudget = true, embedded = false }: BerandaAlertsProps) {
   const today = new Date().toISOString().split('T')[0]
 
   const overdue = showOverdue ? programs.filter(p =>
@@ -21,7 +23,7 @@ export default function BerandaAlerts({ programs, showOverdue = true, showOverBu
   if (overdue.length === 0 && overBudget.length === 0) return null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: embedded ? 20 : 0, marginBottom: embedded ? 0 : 20 }}>
       {overdue.length > 0 && (
         <div style={{
           backgroundColor: 'rgba(102,0,0,0.05)',

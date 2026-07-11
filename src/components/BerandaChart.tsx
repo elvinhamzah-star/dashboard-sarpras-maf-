@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { Transaction, ProgramSnapshot, Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -7,6 +7,8 @@ interface BerandaChartProps {
   transactions: Transaction[]
   snapshots: ProgramSnapshot[]
   programs: Program[]
+  /** Saat true, render tanpa kartu + judul sendiri (dipakai di dalam SectionPanel) */
+  bare?: boolean
 }
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
@@ -100,7 +102,7 @@ function calcMonthProgress(programs: Program[], yearMonth: string): number | nul
   return Math.round(weightedSum / totalAnggaran)
 }
 
-export default function BerandaChart({ transactions, snapshots, programs }: BerandaChartProps) {
+export default function BerandaChart({ transactions, snapshots, programs, bare = false }: BerandaChartProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
@@ -143,12 +145,17 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
 
   const hovered = hoveredIdx !== null ? months[hoveredIdx] : null
   const hovProg = hoveredIdx !== null ? progressByMonth[hoveredIdx] : null
-  const tooltipLeft = hoveredIdx !== null
-    ? Math.min(Math.max((hoveredIdx + 0.5) / months.length * 100, 14), 86)
-    : 50
+  // Posisi tooltip edge-aware: bar di sisi kanan → rata kanan, kiri → rata kiri,
+  // sisanya center. Mencegah tooltip nyembul keluar panel (overflow terpotong).
+  const tipRatio = hoveredIdx !== null ? (hoveredIdx + 0.5) / months.length : 0.5
+  const tipPos: CSSProperties = tipRatio > 0.66
+    ? { right: 0, transform: 'none' }
+    : tipRatio < 0.34
+      ? { left: 0, transform: 'none' }
+      : { left: `${tipRatio * 100}%`, transform: 'translateX(-50%)' }
 
   return (
-    <div style={{
+    <div style={bare ? {} : {
       backgroundColor: 'var(--card)',
       borderRadius: 14,
       border: '1px solid var(--border-subtle)',
@@ -156,23 +163,30 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       marginBottom: 20,
     }}>
-      {/* Header */}
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-          Realisasi & Progress
+      {/* Header — judul disediakan SectionPanel saat bare; di sini sisakan subjudul saja */}
+      {bare ? (
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            Perkembangan {months.length} bulan
+          </div>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-          Perkembangan {months.length} bulan
+      ) : (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            Realisasi & Progress
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+            Perkembangan {months.length} bulan
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Chart */}
       <div style={{ position: 'relative' }}>
-        {/* Tooltip */}
+        {/* Tooltip — di dalam area plot (atas) supaya tak nembus tepi panel & terpotong */}
         <div style={{
-          position: 'absolute', bottom: '100%',
-          left: `${tooltipLeft}%`, transform: 'translateX(-50%)',
-          marginBottom: 8,
+          position: 'absolute', top: 0,
+          ...tipPos,
           backgroundColor: '#1E293B', color: '#fff',
           borderRadius: 8, padding: '7px 12px',
           pointerEvents: 'none', zIndex: 10,
@@ -358,35 +372,28 @@ export default function BerandaChart({ transactions, snapshots, programs }: Bera
         </div>
       </div>
 
-      {/* Footer legend with descriptions */}
+      {/* Footer legend — 3 kolom sejajar 1 baris; keterangan boleh turun di dalam kolom */}
       <div style={{
-        display: 'flex', gap: isMobile ? 10 : 20, flexWrap: 'wrap',
+        display: 'flex',
+        gap: isMobile ? 16 : 28,
+        flexWrap: 'nowrap',
+        justifyContent: isMobile ? 'center' : 'flex-start',
         marginTop: 14, paddingTop: 12,
         borderTop: '1px solid var(--border-subtle)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_MASUK, marginTop: 2, flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Masuk</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Dana kas masuk</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_KELUAR, marginTop: 2, flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Keluar</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Realisasi pengeluaran</div>
-          </div>
-        </div>
-        {hasProgress && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 0, backgroundColor: C_PROGRESS, marginTop: 2, flexShrink: 0 }} />
+        {[
+          { color: C_MASUK, label: 'Masuk', desc: 'Dana kas masuk', descShort: 'Kas masuk', show: true },
+          { color: C_KELUAR, label: 'Keluar', desc: 'Realisasi pengeluaran', descShort: 'Pengeluaran', show: true },
+          { color: C_PROGRESS, label: 'Progress', desc: 'Progress fisik program', descShort: 'Fisik program', show: hasProgress },
+        ].filter(it => it.show).map(it => (
+          <div key={it.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, flexShrink: 0 }}>
+            <div style={{ width: 10, height: 10, backgroundColor: it.color, marginTop: 2, flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>Progress</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Progress fisik program</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>{it.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, whiteSpace: 'nowrap' }}>{isMobile ? it.descShort : it.desc}</div>
             </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   )

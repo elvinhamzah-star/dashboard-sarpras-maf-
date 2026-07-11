@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview — Legenda Chart</title>
+<style>
+  :root{
+    --card:#fff; --border-subtle:#EDF1F6; --text-primary:#0F1C2E; --text-muted:#64748B;
+    --green:#059669; --red:#660000; --blue:#1A6FE8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#E7ECF3;color:var(--text-primary);padding:22px 16px 60px;-webkit-font-smoothing:antialiased;}
+  h1{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px;}
+  .sub{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:22px;}
+  .row{display:flex;gap:24px;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
+  .col{display:flex;flex-direction:column;align-items:center;}
+  .tag{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);margin-bottom:9px;}
+  .tag.rec{color:var(--blue);}
+  .device{font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+
+  .card{background:var(--card);border:1px solid var(--border-subtle);border-radius:14px;padding:16px 20px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+  .card.hp{width:330px;}
+  .card.desk{width:560px;}
+  .plot{height:44px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:flex-end;gap:9px;}
+  .plot i{width:9px;display:block;}
+
+  /* labels only (satu baris) */
+  .legLbl{display:flex;gap:18px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-subtle);}
+  .legLbl .it{display:flex;align-items:center;gap:7px;}
+  .legLbl .sw{width:10px;height:10px;flex-shrink:0;}
+  .legLbl .lb{font-size:11.5px;font-weight:600;color:var(--text-primary);}
+
+  /* label + deskripsi (satu baris, desktop) */
+  .legFull{display:flex;gap:24px;flex-wrap:nowrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-subtle);}
+  .legFull .it{display:flex;align-items:flex-start;gap:7px;}
+  .legFull .sw{width:10px;height:10px;margin-top:2px;flex-shrink:0;}
+  .legFull .lb{font-size:11px;font-weight:600;color:var(--text-primary);}
+  .legFull .ds{font-size:10px;color:var(--text-muted);margin-top:1px;white-space:nowrap;}
+
+  /* baris A (2 baris, mobile sekarang) */
+  .legWrap{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-subtle);}
+  .legWrap .it{display:flex;align-items:flex-start;gap:7px;}
+  .legWrap .sw{width:10px;height:10px;margin-top:2px;flex-shrink:0;}
+  .legWrap .lb{font-size:11px;font-weight:600;color:var(--text-primary);}
+  .legWrap .ds{font-size:10px;color:var(--text-muted);margin-top:1px;}
+
+  .bars-a{background:var(--green)} .bars-b{background:var(--red)} .bars-c{background:var(--blue)}
+</style>
+</head>
+<body>
+  <h1>Opsi C — Responsif</h1>
+  <div class="sub">Mobile sebaris (label saja) · Desktop tetap ada deskripsi. Dibanding versi sekarang.</div>
+
+  <div class="row">
+
+    <!-- SEKARANG (mobile 2 baris) -->
+    <div class="col">
+      <div class="tag">Sekarang · HP (2 baris)</div>
+      <div class="device">📱 375px</div>
+      <div class="card hp">
+        <div class="plot">
+          <i class="bars-a" style="height:16px"></i><i class="bars-b" style="height:24px"></i><i class="bars-c" style="height:34px"></i>
+          <i class="bars-a" style="height:30px"></i><i class="bars-b" style="height:20px"></i><i class="bars-c" style="height:28px"></i>
+        </div>
+        <div class="legWrap">
+          <div class="it"><span class="sw bars-a"></span><div><div class="lb">Masuk</div><div class="ds">Dana kas masuk</div></div></div>
+          <div class="it"><span class="sw bars-b"></span><div><div class="lb">Keluar</div><div class="ds">Realisasi pengeluaran</div></div></div>
+          <div class="it"><span class="sw bars-c"></span><div><div class="lb">Progress</div><div class="ds">Progress fisik program</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPSI C · HP -->
+    <div class="col">
+      <div class="tag rec">Opsi C · HP (sebaris)</div>
+      <div class="device">📱 375px</div>
+      <div class="card hp">
+        <div class="plot">
+          <i class="bars-a" style="height:16px"></i><i class="bars-b" style="height:24px"></i><i class="bars-c" style="height:34px"></i>
+          <i class="bars-a" style="height:30px"></i><i class="bars-b" style="height:20px"></i><i class="bars-c" style="height:28px"></i>
+        </div>
+        <div class="legLbl">
+          <div class="it"><span class="sw bars-a"></span><span class="lb">Masuk</span></div>
+          <div class="it"><span class="sw bars-b"></span><span class="lb">Keluar</span></div>
+          <div class="it"><span class="sw bars-c"></span><span class="lb">Progress</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row" style="margin-top:26px">
+    <!-- OPSI C · Desktop -->
+    <div class="col">
+      <div class="tag rec">Opsi C · Desktop (label + deskripsi, sebaris)</div>
+      <div class="device">🖥️ lebar</div>
+      <div class="card desk">
+        <div class="plot">
+          <i class="bars-a" style="height:16px"></i><i class="bars-b" style="height:24px"></i><i class="bars-c" style="height:34px"></i>
+          <i class="bars-a" style="height:30px"></i><i class="bars-b" style="height:20px"></i><i class="bars-c" style="height:28px"></i>
+          <i class="bars-a" style="height:38px"></i><i class="bars-b" style="height:22px"></i><i class="bars-c" style="height:30px"></i>
+        </div>
+        <div class="legFull">
+          <div class="it"><span class="sw bars-a"></span><div><div class="lb">Masuk</div><div class="ds">Dana kas masuk</div></div></div>
+          <div class="it"><span class="sw bars-b"></span><div><div class="lb">Keluar</div><div class="ds">Realisasi pengeluaran</div></div></div>
+          <div class="it"><span class="sw bars-c"></span><div><div class="lb">Progress</div><div class="ds">Progress fisik program</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

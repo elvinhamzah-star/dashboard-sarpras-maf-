@@ -92,47 +92,32 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
 
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: isMobile ? 14 : 24 }}>
-        <div>
-          <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
-            Daftar {programs.length} Pekerjaan
-          </h1>
+      {/* Header — DESKTOP ONLY. Di mobile judul ada di top bar (App.tsx). */}
+      {!isMobile && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+              Daftar {programs.length} Pekerjaan
+            </h1>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+              Status &amp; progres seluruh pekerjaan Sarpras MAF
+            </p>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={onAddPekerjaan}
+              style={{ backgroundColor: 'var(--blue)', color: 'var(--card)', border: 'none', borderRadius: 8, padding: '7px 13px', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '-0.01em', boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)', transition: 'all 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Tambah Pekerjaan
+            </button>
+          )}
         </div>
-        {isAdmin && (
-          <button
-            onClick={onAddPekerjaan}
-            style={{
-              backgroundColor: 'var(--blue)',
-              color: 'var(--card)',
-              border: 'none',
-              borderRadius: 10,
-              padding: '9px 18px',
-              fontWeight: 600,
-              fontSize: 13.5,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 7,
-              letterSpacing: '-0.01em',
-              boxShadow: '0 1px 3px rgba(26,111,232,0.3), 0 4px 12px rgba(26,111,232,0.2)',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)'
-            }}
-          >
-            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Tambah Pekerjaan
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Status Overview Cards — display only, no filter, always 1 row */}
       <div style={{
@@ -150,23 +135,23 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
               key={tab}
               onClick={() => setActiveStatus(prev => prev === tab ? '' : tab)}
               style={{
-                backgroundColor: isActive ? `${color}0A` : 'var(--card)',
+                backgroundColor: isActive ? `${color}18` : 'var(--card)',
                 borderRadius: 12,
                 padding: isMobile ? '10px 8px' : '14px 16px',
-                border: isActive ? `1.5px solid ${color}80` : '1px solid var(--border)',
+                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: 'pointer',
-                transition: 'all 0.15s',
-                boxShadow: 'none',
+                transition: 'all 0.18s',
+                boxShadow: isActive ? `0 2px 10px ${color}30` : 'none',
               }}
             >
               {/* Icon + Count side by side */}
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10, marginBottom: isMobile ? 4 : 8 }}>
                 <div style={{
                   width: isMobile ? 20 : 30, height: isMobile ? 20 : 30, borderRadius: 6,
-                  backgroundColor: isActive ? `${color}20` : 'rgba(0,0,0,0.05)',
+                  backgroundColor: isActive ? `${color}28` : 'rgba(0,0,0,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: isActive ? color : 'var(--text-secondary)', flexShrink: 0,
                 }}>
@@ -192,12 +177,14 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
       ) : (
         /* ── CARD LIST: style selaras dengan BerandaWeekOverWeek ── */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 8 : 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
           {filtered.map((p) => {
             const pct = getEffectiveProgress(p)
             const color = STATUS_COLORS[p.status] || 'var(--blue)'
             const isLocked = role === 'maf' && p.jenis_pekerjaan === 'Operasional'
             const vendor = getVendorDisplay(p)
+            const showBar = p.status === 'On Going' || p.status === 'On Hold'
+            const dimmed = activeStatus === ''
             return (
               <div
                 key={p.id}
@@ -205,47 +192,50 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                 onMouseEnter={e => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
-                  padding: isMobile ? '10px 12px' : '14px 16px',
+                  padding: isMobile ? '13px 12px' : '16px 16px',
                   borderRadius: 10,
                   border: '1px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: isLocked ? 'default' : 'pointer',
                   opacity: isLocked ? 0.7 : 1,
-                  transition: 'background-color 0.15s',
+                  transition: 'background-color 0.15s, box-shadow 0.18s',
+                  boxShadow: activeStatus !== '' ? `inset 3px 0 0 ${color}` : 'none',
                 }}
               >
                 {isMobile ? (
-                  /* ── MOBILE: nama + status (baris 1), progress bar (baris 2) ── */
-                  <>
-                    {/* Baris 1: nama + status */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
-                        {p.isu_utama && <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />}
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-                          {p.nama_pekerjaan}
+                  /* ── MOBILE: gaya baris seperti halaman Dokumen — nomor urut + nama penuh (wrap) + status ── */
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Nomor urut pekerjaan (P-001 … P-025) */}
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
+                        {p.id}
+                      </span>
+                      {/* Nama pekerjaan — penuh, boleh wrap, tidak terpotong */}
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+                        {p.nama_pekerjaan}
+                      </div>
+                      {/* Progress bar — hanya On Going & On Hold */}
+                      {showBar && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8 }}>
+                          <div style={{ flex: 1, height: 2, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease', opacity: dimmed ? 0.55 : 1 }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
                         </div>
-                      </div>
-                      {isLocked
-                        ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                        : <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 20, fontSize: 9, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0 }}>{p.status}</span>
-                      }
+                      )}
                     </div>
-                    {/* Baris 2: progress bar + % */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <div style={{ flex: 1, height: 3, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : 'var(--blue)', borderRadius: 99, transition: 'width 0.3s ease' }} />
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
-                    </div>
-                  </>
+                    {isLocked
+                      ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 2 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                      : <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 20, fontSize: 9, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0, marginTop: 2, opacity: dimmed ? 0.55 : 1, transition: 'opacity 0.18s' }}>{p.status}</span>
+                    }
+                  </div>
                 ) : (
                   /* ── DESKTOP: layout lengkap ── */
                   <>
                     {/* Baris 1: nama + realisasi */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
-                          {p.isu_utama && <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#D97706', flexShrink: 0 }} />}
+                        <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                             {p.nama_pekerjaan}
                           </div>
@@ -261,15 +251,21 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                         </div>
                       </div>
                     </div>
-                    {/* Baris 2: progress bar + pct + status badge */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : 'var(--blue)', borderRadius: 99, transition: 'width 0.3s ease' }} />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+                    {/* Baris 2: progress bar + pct + status badge — selalu render */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 18 }}>
+                      {showBar ? (
+                        <>
+                          <div style={{ flex: 1, height: 3, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease', opacity: dimmed ? 0.55 : 1 }} />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+                        </>
+                      ) : (
+                        <div style={{ flex: 1 }} />
+                      )}
                       {isLocked
                         ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                        : <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0 }}>{p.status}</span>
+                        : <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0, opacity: dimmed ? 0.55 : 1, transition: 'opacity 0.18s' }}>{p.status}</span>
                       }
                     </div>
                   </>
@@ -279,6 +275,20 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
           })}
         </div>
       )}
+      {/* Mobile FAB — Tambah Pekerjaan */}
+      {isAdmin && isMobile && (
+        <button
+          onClick={onAddPekerjaan}
+          style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, width: 46, height: 46, borderRadius: 14, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,111,232,0.35)', transition: 'transform 0.15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+        >
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      )}
+
       {/* Modal: Akses Dibatasi */}
       {showBlockedModal && (
         <div

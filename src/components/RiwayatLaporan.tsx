@@ -336,14 +336,16 @@ export default function RiwayatLaporan() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
-      <div style={{ padding: isMobile ? '16px 14px 0' : '28px 28px 0', flexShrink: 0 }}>
-        <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
-          Riwayat Laporan
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
-          Arsip Laporan Pekanan Per Minggu
-        </p>
-      </div>
+      {!isMobile && (
+        <div style={{ padding: '28px 28px 0', flexShrink: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
+            Riwayat Laporan
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 400 }}>
+            Arsip Laporan Pekanan Per Minggu
+          </p>
+        </div>
+      )}
 
       {notes.length === 0 ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--text-muted)', padding: 32 }}>

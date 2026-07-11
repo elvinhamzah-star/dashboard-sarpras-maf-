@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -88,12 +88,32 @@ const PekerjaanIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
-const SectionDivider = ({ label, isMobile }: { label: string; isMobile: boolean }) => (
-  <div style={{ marginBottom: isMobile ? 8 : 12, marginTop: isMobile ? 16 : 20 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-      {label}
+const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: boolean; children: ReactNode }) => (
+  <div
+    style={{
+      backgroundColor: 'var(--card)',
+      border: '1px solid var(--border)',
+      borderRadius: isMobile ? 14 : 16,
+      overflow: 'hidden',
+      boxShadow: 'var(--shadow-sm)',
+      marginBottom: isMobile ? 14 : 18,
+    }}
+  >
+    {/* Header strip — judul center, tanpa ikon/garis/count (D-A) */}
+    <div
+      style={{
+        textAlign: 'center',
+        padding: isMobile ? '11px 14px' : '13px 16px',
+        backgroundColor: 'var(--surface-raised)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
+    >
+      <div style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.015em' }}>
+        {label}
+      </div>
     </div>
-    <div style={{ height: 1, backgroundColor: 'var(--border-subtle)', marginTop: 6 }} />
+    {/* Body */}
+    <div style={{ padding: isMobile ? '13px' : '16px' }}>{children}</div>
   </div>
 )
 
@@ -310,55 +330,53 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
   return (
     <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
-      {/* Page Header */}
+      {/* Page Header — mobile: judul ada di top bar (App.tsx), sini cukup metadata */}
       {isMobile ? (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-              Dashboard Sarpras MAF
-            </h1>
-            <span style={{ fontSize: 10.5, color: 'var(--text-secondary)', fontWeight: 500, flexShrink: 0, marginLeft: 8 }}>
-              {getTodayFormatted()}
-            </span>
-          </div>
-          {formattedLastUpdated && (
+        formattedLastUpdated ? (
+          <div style={{ marginBottom: 12 }}>
             <span style={{
               fontSize: 10.5, color: 'rgba(27,94,43,.7)', fontWeight: 500,
-              marginTop: 4, display: 'block',
+              display: 'block',
             }}>
               Last updated {formattedLastUpdated}
             </span>
-          )}
-        </div>
+          </div>
+        ) : null
       ) : (
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Dashboard Sarpras MAF
             </h1>
-            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400 }}>{getTodayFormatted()}</span>
-              {formattedLastUpdated && (
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+              Ringkasan anggaran, realisasi &amp; progres pekerjaan
+            </p>
+            {formattedLastUpdated && (
+              <div style={{ marginTop: 6 }}>
                 <span style={{
                   fontSize: 11, color: 'rgba(27,94,43,.7)', fontWeight: 500,
                 }}>
                   Last updated {formattedLastUpdated}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+          {/* Tanggal hari ini — rata kanan di desktop */}
+          <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400, flexShrink: 0, whiteSpace: 'nowrap', marginTop: 4 }}>
+            {getTodayFormatted()}
+          </span>
         </div>
       )}
 
       {/* ── RINGKASAN: Keuangan ── */}
-      <SectionDivider label="Ringkasan Keuangan" isMobile={isMobile} />
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: isMobile ? 10 : 14 }}>
+      <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
         {summaryCards.map(card => (
           <div
             key={card.label}
             onClick={() => setActiveModal(card.iconType as MetricModalType)}
             style={{
-              backgroundColor: 'var(--card)',
+              backgroundColor: 'var(--surface-raised)',
               borderRadius: 12,
               padding: isMobile ? '12px 13px' : '18px 20px',
               border: '1px solid var(--border-subtle)',
@@ -376,7 +394,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLDivElement
               el.style.borderColor = 'var(--border-subtle)'
-              el.style.backgroundColor = 'var(--card)'
+              el.style.backgroundColor = 'var(--surface-raised)'
               el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
               el.style.transform = 'translateY(0)'
             }}
@@ -397,9 +415,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           </div>
         ))}
       </div>
+      {/* ── PERHATIAN: peringatan anggaran menempel di Section Keuangan ── */}
+      <BerandaAlerts programs={displayPrograms} showOverdue={false} embedded />
+      </SectionPanel>
 
       {/* ── RINGKASAN: Progress Pekerjaan (full-width) ── */}
-      <SectionDivider label="Progress Pekerjaan" isMobile={isMobile} />
+      <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
       {(() => {
         const card = pekerjaanCards[0]
         const activeByTab = showDetail && pekerjaanTab === card.label
@@ -407,12 +428,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           <div
             onClick={() => setShowProgressModal(true)}
             style={{
-              backgroundColor: 'var(--card)',
+              backgroundColor: 'var(--surface-raised)',
               borderRadius: 12,
               padding: isMobile ? '14px 16px' : '18px 24px',
               border: '1px solid var(--border-subtle)',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              marginBottom: isMobile ? 10 : 14,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -461,7 +481,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       })()}
 
       {/* ── RINGKASAN: Status Pekerjaan (2×2 mobile / 4 kolom desktop) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginTop: isMobile ? 10 : 14 }}>
         {pekerjaanCards.slice(1).map(card => {
           const activeByTab = showDetail && pekerjaanTab === card.label
           return (
@@ -469,7 +489,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               key={card.label}
               onClick={card.onClick}
               style={{
-                backgroundColor: activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--card)',
+                backgroundColor: activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)',
                 borderRadius: 12,
                 padding: isMobile ? '12px 13px' : '18px 20px',
                 border: activeByTab ? '1.5px solid var(--border)' : '1px solid var(--border-subtle)',
@@ -487,7 +507,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLDivElement
                 el.style.borderColor = activeByTab ? 'var(--border)' : 'var(--border-subtle)'
-                el.style.backgroundColor = activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--card)'
+                el.style.backgroundColor = activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)'
                 el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
                 el.style.transform = 'translateY(0)'
               }}
@@ -507,12 +527,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           )
         })}
       </div>
+      </SectionPanel>
 
-      {/* ── PERHATIAN ── */}
-      <BerandaAlerts programs={displayPrograms} showOverdue={false} />
-
-      {/* ── TREN ── */}
-      <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} />
+      {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
+      <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+        <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare />
+      </SectionPanel>
 
       {/* ── POPUP: Progres Pekerjaan ── */}
       {showProgressModal && (
@@ -538,7 +558,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             </button>
           </div>
           {/* List program */}
-          <div style={{ padding: isMobile ? '10px 12px 20px' : '12px 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ padding: isMobile ? '12px 14px 22px' : '14px 18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
               const pct = getEffectiveProgress(p)
               const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
@@ -546,7 +566,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(5,150,105,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
               const color = statusColors[p.status] || 'var(--blue)'
               return (
-                <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 10, padding: isMobile ? '10px 12px' : '11px 14px', border: '1px solid var(--border-subtle)' }}>
+                <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 12, padding: isMobile ? '13px 14px' : '14px 16px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>{p.id}</span>
                     <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.3 }}>{p.nama_pekerjaan}</span>

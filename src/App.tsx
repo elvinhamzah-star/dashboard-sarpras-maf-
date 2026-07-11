@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { BackNavContext, type BackHandler } from './lib/backNav'
 import Sidebar from './components/Sidebar'
 import Beranda from './components/Beranda'
 import Pekerjaan from './components/Pekerjaan'
@@ -42,8 +43,6 @@ export default function App() {
   // null = belum dicek, true = maintenance aktif, false = normal
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
   const [togglingMaintenance, setTogglingMaintenance] = useState(false)
-  // Admin bypass: klik ikon 3× di MaintenanceScreen → tampilkan login
-  const [maintenanceBypass, setMaintenanceBypass] = useState(false)
   // Shared month filter ('YYYY-MM' or null for all). Used across pages.
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
@@ -58,6 +57,10 @@ export default function App() {
   // When Galeri was entered from PekerjaanDetail, back returns to that program's detail.
   const [galeriReturnProgramId, setGaleriReturnProgramId] = useState<string | null>(null)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
+  // Back handler registered by the current page's drill-down sub-view (Galeri
+  // folder, Dokumen subfolder, etc.) so the mobile top bar can drive it.
+  const [childBack, setChildBack] = useState<BackHandler>(null)
+  const registerBack = useCallback((h: BackHandler) => setChildBack(() => h), [])
 
   // Cek maintenance mode dari Supabase saat pertama load
   useEffect(() => {
@@ -130,6 +133,15 @@ export default function App() {
   }
 
   const sidebarWidth = isMobile ? 0 : sidebarOpen ? 248 : 68
+
+  // The mobile top bar swaps its hamburger (☰) for a back arrow (←) whenever a
+  // drill-down view is open. The Pekerjaan detail is owned by App directly;
+  // every other page (Galeri, Dokumen, …) registers its own back handler via
+  // BackNavContext, which surfaces here as `childBack`.
+  const backAction: (() => void) | null =
+    currentPage === 'pekerjaan' && selectedProgramId
+      ? () => setSelectedProgramId(null)
+      : childBack
 
   const renderPage = () => {
     if (currentPage === 'pekerjaan' && selectedProgramId) {
@@ -221,11 +233,13 @@ export default function App() {
     }
   }
 
+  // Judul deskriptif untuk top bar mobile (di samping tombol ☰).
+  // Sidebar TIDAK memakai map ini — label sidebar tetap pendek.
   const pageTitles: Record<Page, string> = {
-    beranda: 'Beranda',
-    pekerjaan: 'Pekerjaan',
+    beranda: 'Dashboard Sarpras MAF',
+    pekerjaan: 'Daftar 25 Pekerjaan',
     keuangan: 'Keuangan',
-    dokumen: 'Dokumen',
+    dokumen: 'Dokumen Pekerjaan',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
@@ -235,13 +249,9 @@ export default function App() {
 
   // ── MAINTENANCE GATE ─────────────────────────────────────────────────────────
   // Blokir semua user yang bukan admin (PIN verified).
-  // Admin bypass: klik ikon 3× di MaintenanceScreen → buka login.
-  // Setelah login tanpa PIN admin → tetap diblokir.
+  // Admin bypass: klik tombol kunci → masukkan PIN → isAdmin=true → lanjut login.
   if (isMaintenance && !isAdmin) {
-    if (!maintenanceBypass) {
-      return <MaintenanceScreen onAdminAccess={() => setMaintenanceBypass(true)} />
-    }
-    // maintenanceBypass = true (admin klik 3×) → lanjut ke login di bawah
+    return <MaintenanceScreen onAdminAccess={() => setIsAdmin(true)} />
   }
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -261,9 +271,6 @@ export default function App() {
       />
     )
   }
-
-  // Sudah login tapi tidak masuk PIN admin dan maintenance aktif → tetap diblokir
-  if (isMaintenance && !isAdmin) return <MaintenanceScreen />
 
   return (
     <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
@@ -328,8 +335,8 @@ export default function App() {
             }}
           >
             <button
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Buka menu"
+              onClick={() => (backAction ? backAction() : setSidebarOpen(true))}
+              aria-label={backAction ? 'Kembali' : 'Buka menu'}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -344,11 +351,18 @@ export default function App() {
                 flexShrink: 0,
               }}
             >
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
+              {backAction ? (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              )}
             </button>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {pageTitles[currentPage]}
@@ -425,7 +439,9 @@ export default function App() {
             style={{ animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)', minHeight: '100%' }}
           >
             <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>
-              {renderPage()}
+              <BackNavContext.Provider value={registerBack}>
+                {renderPage()}
+              </BackNavContext.Provider>
             </div>
           </div>
         </div>

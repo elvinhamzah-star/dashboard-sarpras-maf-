@@ -134,37 +134,24 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
     <div style={{ padding: isMobile ? '16px 14px 56px' : '28px 28px 56px' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, gap: 12, flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
-            Keuangan
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
-            Riwayat Transaksi Keuangan Sarpras MAF
-          </p>
-        </div>
-        {isAdmin && (
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: isMobile ? 0 : 22, gap: 12, flexWrap: 'wrap' }}>
+        {!isMobile && (
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+              Keuangan
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
+              Riwayat Transaksi Keuangan Sarpras MAF
+            </p>
+          </div>
+        )}
+        {isAdmin && !isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <button
               onClick={handleToggleRiwayat}
               disabled={togglingRiwayat}
               title={showRiwayat ? 'Sembunyikan Riwayat dari viewer' : 'Tampilkan Riwayat ke viewer'}
-              style={{
-                padding: '8px 13px',
-                borderRadius: 10,
-                border: `1px solid ${showRiwayat ? 'var(--border-strong)' : 'rgba(26,111,232,0.25)'}`,
-                backgroundColor: showRiwayat ? 'var(--card)' : 'rgba(26,111,232,0.06)',
-                color: showRiwayat ? 'var(--text-secondary)' : 'var(--blue)',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: togglingRiwayat ? 'wait' : 'pointer',
-                opacity: togglingRiwayat ? 0.6 : 1,
-                transition: 'all 0.15s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontFamily: 'inherit',
-              }}
+              style={{ padding: '8px 13px', borderRadius: 10, border: `1px solid ${showRiwayat ? 'var(--border-strong)' : 'rgba(26,111,232,0.25)'}`, backgroundColor: showRiwayat ? 'var(--card)' : 'rgba(26,111,232,0.06)', color: showRiwayat ? 'var(--text-secondary)' : 'var(--blue)', fontSize: 12, fontWeight: 600, cursor: togglingRiwayat ? 'wait' : 'pointer', opacity: togglingRiwayat ? 0.6 : 1, transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}
             >
               {showRiwayat ? (
                 <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -175,31 +162,16 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                   <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
                 </svg>
               )}
-              {isMobile ? '' : (showRiwayat ? 'Riwayat: Terlihat' : 'Riwayat: Tersembunyi')}
+              {showRiwayat ? 'Riwayat: Terlihat' : 'Riwayat: Tersembunyi'}
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              style={{
-                padding: isMobile ? '8px 13px' : '9px 18px',
-                borderRadius: 10,
-                border: 'none',
-                backgroundColor: 'var(--blue)',
-                color: '#fff',
-                fontSize: isMobile ? 13 : 13.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-                letterSpacing: '-0.01em',
-                boxShadow: '0 1px 3px rgba(26,111,232,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontFamily: 'inherit',
-              }}
+              style={{ padding: '9px 18px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', letterSpacing: '-0.01em', boxShadow: '0 1px 3px rgba(26,111,232,0.3)', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              {isMobile ? '' : 'Tambah Transaksi'}
+              Tambah Transaksi
             </button>
           </div>
         )}
@@ -597,6 +569,40 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Mobile FABs — Tambah + Toggle Riwayat */}
+      {isAdmin && isMobile && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+          {/* Mata — toggle riwayat */}
+          <button
+            onClick={handleToggleRiwayat}
+            disabled={togglingRiwayat}
+            title={showRiwayat ? 'Sembunyikan Riwayat' : 'Tampilkan Riwayat'}
+            style={{ width: 46, height: 46, borderRadius: 14, border: `1.5px solid ${showRiwayat ? 'var(--border)' : 'rgba(26,111,232,0.3)'}`, backgroundColor: showRiwayat ? 'var(--card)' : 'rgba(26,111,232,0.08)', color: showRiwayat ? 'var(--text-secondary)' : 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: togglingRiwayat ? 'wait' : 'pointer', opacity: togglingRiwayat ? 0.6 : 1, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', transition: 'all 0.15s' }}
+          >
+            {showRiwayat ? (
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            )}
+          </button>
+          {/* + Tambah Transaksi */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{ width: 46, height: 46, borderRadius: 14, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,111,232,0.35)', transition: 'transform 0.15s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
         </div>
       )}
 

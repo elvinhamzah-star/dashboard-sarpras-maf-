@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Section Separator — Redesign Options</title>
+<style>
+  :root{
+    --blue:#1A6FE8; --blue-light:rgba(26,111,232,0.1);
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --bg:#F1F4F9; --card:#ffffff; --surface-raised:#FAFBFC;
+    --border:rgba(15,23,42,0.08); --border-subtle:rgba(15,23,42,0.06); --border-strong:rgba(15,23,42,0.12);
+    --green:#16A34A; --amber:#D97706; --violet:#7C3AED;
+    --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--text-primary);
+    -webkit-font-smoothing:antialiased; padding:28px 16px 80px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  .head{max-width:920px;margin:0 auto 28px;text-align:center}
+  .head h1{font-size:22px;font-weight:800;letter-spacing:-0.02em}
+  .head p{font-size:13px;color:var(--text-muted);margin-top:6px;line-height:1.55}
+  .grid{max-width:920px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+  .frame{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:18px 16px 22px;box-shadow:var(--shadow-md)}
+  .frame > .tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-light);padding:4px 10px;border-radius:999px;margin-bottom:4px}
+  .frame > .desc{font-size:11.5px;color:var(--text-muted);margin:8px 2px 16px;line-height:1.5}
+
+  /* mini content mocks */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .mcard{background:var(--card);border:1px solid var(--border-subtle);border-radius:12px;padding:11px 12px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;align-items:center;gap:4px}
+  .mcard .mrow{display:flex;align-items:center;gap:7px}
+  .mchip{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+  .mcard .mlbl{font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em}
+  .mcard .mval{font-size:15px;font-weight:700;letter-spacing:-0.03em}
+  .mcard .msub{font-size:9.5px;color:var(--text-muted)}
+  svg{display:block}
+
+  /* ===== OPTION A : eyebrow + accent bar ===== */
+  .a-sep{display:flex;align-items:center;gap:9px;margin:2px 0 12px}
+  .a-bar{width:3px;height:15px;border-radius:2px;background:var(--blue)}
+  .a-lbl{font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:-0.01em}
+
+  /* ===== OPTION B : icon chip header block ===== */
+  .b-sep{display:flex;align-items:center;gap:10px;margin:2px 0 13px}
+  .b-ico{width:30px;height:30px;border-radius:9px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .b-txt{display:flex;flex-direction:column;line-height:1.25}
+  .b-title{font-size:13.5px;font-weight:700;letter-spacing:-0.015em}
+  .b-sub{font-size:10.5px;color:var(--text-muted);font-weight:500}
+
+  /* ===== OPTION C : title + trailing rule + count pill ===== */
+  .c-sep{display:flex;align-items:center;gap:11px;margin:2px 0 13px}
+  .c-lbl{font-size:13px;font-weight:700;letter-spacing:-0.015em;white-space:nowrap}
+  .c-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border-strong),transparent)}
+  .c-pill{font-size:10px;font-weight:700;color:var(--text-secondary);background:var(--surface-raised);border:1px solid var(--border-subtle);padding:3px 9px;border-radius:999px;white-space:nowrap}
+
+  /* ===== OPTION D : grouped panel (bento) ===== */
+  .d-panel{background:var(--card);border:1px solid var(--border-subtle);border-radius:16px;padding:14px 13px;box-shadow:var(--shadow-sm)}
+  .d-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .d-ico{width:28px;height:28px;border-radius:8px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .d-title{font-size:13px;font-weight:700;letter-spacing:-0.015em}
+  .d-count{margin-left:auto;font-size:10px;font-weight:700;color:var(--text-muted)}
+  .d-panel .cards .mcard{background:var(--surface-raised)}
+
+  /* ===== OPTION E : pure whitespace title ===== */
+  .e-sep{margin:2px 0 13px}
+  .e-title{font-size:15px;font-weight:800;letter-spacing:-0.025em}
+  .e-sub{font-size:11px;color:var(--text-muted);margin-top:2px;font-weight:500}
+
+  /* current (for comparison) */
+  .cur-sep{margin:2px 0 12px}
+  .cur-lbl{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em}
+  .cur-line{height:1px;background:var(--border-subtle);margin-top:6px}
+  .badcorner{position:relative}
+  .badcorner::after{content:'SEKARANG';position:absolute;top:14px;right:14px;font-size:9px;font-weight:800;color:#B91C1C;background:#FEE2E2;padding:3px 8px;border-radius:999px;letter-spacing:0.04em}
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Opsi D — Header Center, Anchor Tanpa Garis</h1>
+    <p>Solusi "ngambang" pakai massa/zona, bukan ornamen. Tanpa ikon, tanpa count. Di bawah ada arsip opsi lama.</p>
+  </div>
+
+  <div class="grid" style="margin-bottom:34px">
+    <!-- D-A : header strip (zona tinted) -->
+    <div class="frame">
+      <span class="tag">D-A · Header Strip ★</span>
+      <div class="desc">Judul duduk di pita header ber-background halus, membentang selebar panel &amp; nyatu dengan sudut atas. Terisi penuh — nggak ada pulau kesepian, nggak ada ornamen.</div>
+      <div class="d-panel" style="padding:0;overflow:hidden">
+        <div style="text-align:center;padding:12px 14px;background:var(--surface-raised);border-bottom:1px solid var(--border-subtle)">
+          <div style="font-size:13.5px;font-weight:700;letter-spacing:-0.015em">Ringkasan Keuangan</div>
+        </div>
+        <div style="padding:14px 13px"><div class="cards" data-mock></div></div>
+      </div>
+    </div>
+
+    <!-- D-B : dua baris (judul + subteks) -->
+    <div class="frame">
+      <span class="tag">D-B · Dua Baris</span>
+      <div class="desc">Judul + subteks halus center. Massa jadi 2 baris, nggak sepi — tanpa elemen grafis sama sekali. Murni tipografi.</div>
+      <div class="d-panel">
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;letter-spacing:-0.02em">Ringkasan Keuangan</div>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:500;margin-top:2px">Anggaran, realisasi &amp; penyerapan dana</div>
+        </div>
+        <div class="cards" data-mock></div>
+      </div>
+    </div>
+
+    <!-- D-C : kicker + judul -->
+    <div class="frame">
+      <span class="tag">D-C · Kicker + Judul</span>
+      <div class="desc">Kicker mungil di atas + judul lebih besar di bawah. Hirarki tipografi jadi jangkarnya. Terasa editorial/premium.</div>
+      <div class="d-panel">
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.12em">Section 01</div>
+          <div style="font-size:15px;font-weight:800;letter-spacing:-0.025em;margin-top:3px">Ringkasan Keuangan</div>
+        </div>
+        <div class="cards" data-mock></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="head" style="margin-top:10px">
+    <p style="font-size:12px;opacity:0.7">— Arsip: 5 opsi awal —</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- CURRENT -->
+    <div class="frame badcorner" style="border-color:#FCA5A5">
+      <div class="cur-sep">
+        <div class="cur-lbl">Ringkasan Keuangan</div>
+        <div class="cur-line"></div>
+      </div>
+      <div class="cards" id="mock-current"></div>
+      <div class="desc" style="margin-top:14px;color:#B91C1C">Label mungil + garis full-width = kesan "heading Microsoft Word". Garis terasa formalitas, label tidak menyatu dengan konten.</div>
+    </div>
+
+    <!-- OPTION A -->
+    <div class="frame">
+      <span class="tag">Opsi A · Accent Bar</span>
+      <div class="desc">Batang aksen warna menggantikan garis. Ringan, modern, khas SaaS. Perubahan paling kecil &amp; aman.</div>
+      <div class="a-sep">
+        <div class="a-bar"></div>
+        <div class="a-lbl">Ringkasan Keuangan</div>
+      </div>
+      <div class="cards" data-mock></div>
+    </div>
+
+    <!-- OPTION B -->
+    <div class="frame">
+      <span class="tag">Opsi B · Icon Header</span>
+      <div class="desc">Ikon chip (senada tile di kartu) + judul + subteks. Terasa disengaja, informatif, bukan sekadar garis.</div>
+      <div class="b-sep">
+        <div class="b-ico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="b-txt">
+          <div class="b-title">Ringkasan Keuangan</div>
+          <div class="b-sub">Anggaran, realisasi &amp; penyerapan</div>
+        </div>
+      </div>
+      <div class="cards" data-mock></div>
+    </div>
+
+    <!-- OPTION C -->
+    <div class="frame">
+      <span class="tag">Opsi C · Rule + Count</span>
+      <div class="desc">Judul kiri, garis gradien mengisi sisa, badge jumlah di kanan. Garis dipertahankan tapi terasa intensional &amp; asimetris.</div>
+      <div class="c-sep">
+        <div class="c-lbl">Ringkasan Keuangan</div>
+        <div class="c-rule"></div>
+        <div class="c-pill">4 metrik</div>
+      </div>
+      <div class="cards" data-mock></div>
+    </div>
+
+    <!-- OPTION D -->
+    <div class="frame">
+      <span class="tag">Opsi D · Bento Panel</span>
+      <div class="desc">Section dibungkus panel bulat dengan header di dalamnya. Pemisahan datang dari container, bukan garis. Paling "premium".</div>
+      <div class="d-panel">
+        <div class="d-head">
+          <div class="d-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <div class="d-title">Ringkasan Keuangan</div>
+          <div class="d-count">4 metrik</div>
+        </div>
+        <div class="cards" data-mock></div>
+      </div>
+    </div>
+
+    <!-- OPTION E -->
+    <div class="frame">
+      <span class="tag">Opsi E · Whitespace</span>
+      <div class="desc">Tanpa garis sama sekali. Judul tebal + subteks halus, dipisahkan oleh ruang. Gaya Apple/minimalis.</div>
+      <div class="e-sep">
+        <div class="e-title">Ringkasan Keuangan</div>
+        <div class="e-sub">Ringkasan anggaran &amp; penyerapan dana</div>
+      </div>
+      <div class="cards" data-mock></div>
+    </div>
+
+  </div>
+
+<script>
+  // shared mini financial-card mock (matches real Beranda summary cards)
+  const cardsHTML = `
+    <div class="mcard"><div class="mrow"><div class="mchip" style="background:rgba(26,111,232,0.1);color:#1A6FE8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="mlbl">Anggaran</div></div><div class="mval" style="color:#0F1C2E">Rp4,2 M</div><div class="msub">Total pagu</div></div>
+    <div class="mcard"><div class="mrow"><div class="mchip" style="background:rgba(22,163,74,0.1);color:#16A34A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div class="mlbl">Realisasi</div></div><div class="mval" style="color:#16A34A">Rp3,1 M</div><div class="msub">73% terserap</div></div>
+    <div class="mcard"><div class="mrow"><div class="mchip" style="background:rgba(124,58,237,0.1);color:#7C3AED"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="mlbl">Sisa</div></div><div class="mval" style="color:#0F1C2E">Rp1,1 M</div><div class="msub">27% tersisa</div></div>
+    <div class="mcard"><div class="mrow"><div class="mchip" style="background:rgba(217,119,6,0.1);color:#D97706"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12A10 10 0 1112 2v10z"/></svg></div><div class="mlbl">Penyerapan</div></div><div class="mval" style="color:#D97706">73%</div><div class="msub">Rata pagu</div></div>`;
+  document.getElementById('mock-current').innerHTML = cardsHTML;
+  document.querySelectorAll('[data-mock]').forEach(el => el.innerHTML = cardsHTML);
+</script>
+</body>
+</html>

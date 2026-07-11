@@ -4,8 +4,9 @@ import {
   Program, ProgramDocument, Transaction, DocCategory, hasMafCredentials,
 } from '../lib/supabase'
 import { adminInsert, adminDelete } from '../lib/adminApi'
-import { STATUS_COLORS, STATUS_BG, getFileEmbedUrl, formatRupiah, formatTanggal } from '../lib/data'
+import { STATUS_COLORS, getFileEmbedUrl, formatRupiah, formatTanggal } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { useBackHandler } from '../lib/backNav'
 import PdfViewerModal from './PdfViewerModal'
 
 type Folder = 'rab' | 'kontrak' | 'bukti_transaksi'
@@ -209,6 +210,10 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     setAddUrl('')
   }
 
+  // Drive the mobile top-bar ← arrow: each level goes up one. Level 0 (program
+  // list) is the page's top level → null (top bar shows the ☰ menu).
+  useBackHandler(level > 0 ? () => goLevel((level - 1) as 0 | 1 | 2) : null)
+
   const selProgram = programs.find(p => p.id === selProgramId)
 
   const filtered = programs.filter(p =>
@@ -292,7 +297,8 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
 
   // ─── BACK BUTTON ──────────────────────────────────────────────────
 
-  const renderBack = (toLevel: 0 | 1 | 2) => (
+  // Hidden at ≤768px — the mobile top-bar ← arrow handles back there.
+  const renderBack = (toLevel: 0 | 1 | 2) => width <= 768 ? null : (
     <button
       onClick={() => goLevel(toLevel)}
       style={{
@@ -453,12 +459,14 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
 
   const renderLevel0 = () => (
     <>
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', letterSpacing: '-0.03em' }}>
-          Dokumen Pekerjaan
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Pilih pekerjaan untuk melihat dokumen</p>
-      </div>
+      {!isMobile && (
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', letterSpacing: '-0.03em' }}>
+            Dokumen Pekerjaan
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Pilih pekerjaan untuk melihat dokumen</p>
+        </div>
+      )}
 
       <div style={{ position: 'relative', marginBottom: 18 }}>
         <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -468,7 +476,7 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Cari pekerjaan..."
-          style={{ width: '100%', boxSizing: 'border-box', paddingTop: isMobile ? 7 : 9, paddingBottom: isMobile ? 7 : 9, paddingLeft: 34, paddingRight: 12, borderRadius: 9, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: isMobile ? 16 : 14, fontFamily: 'inherit', outline: 'none' }}
+          style={{ width: '100%', boxSizing: 'border-box', paddingTop: isMobile ? 7 : 9, paddingBottom: isMobile ? 7 : 9, paddingLeft: 34, paddingRight: 12, borderRadius: 9, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
         />
       </div>
 
@@ -491,22 +499,12 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
                 <FolderIcon color="var(--blue)" size={isMobile ? 17 : 20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>{p.id}</span>
-                  <span style={{
-                    display: 'inline-block', padding: '1px 7px', borderRadius: 20,
-                    fontSize: 10, fontWeight: 700,
-                    backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)',
-                    color: STATUS_COLORS[p.status] || 'var(--text-muted)',
-                  }}>
-                    {p.status}
-                  </span>
-                </div>
-                <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3 }}>{p.id}</span>
+                <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35 }}>
                   {p.nama_pekerjaan}
                 </div>
                 {!isMobile && p.vendor && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.vendor}
                   </div>
                 )}
@@ -533,16 +531,28 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     </>
   )
 
-  // ─── LEVEL 1: 3 folder cards ──────────────────────────────────────
+  // ─── LEVEL 1: category list rows ──────────────────────────────────
 
   const renderLevel1 = () => {
     const p = selProgram!
     const folders: Folder[] = ['rab', 'kontrak', 'bukti_transaksi']
+
+    const ROW: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,
+      padding: isMobile ? '14px 14px' : '16px 18px',
+      background: 'var(--card)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: 12,
+      transition: 'border-color 0.12s, box-shadow 0.12s',
+    }
+
     return (
       <>
         {renderBack(0)}
         {renderBreadcrumb()}
-        <div style={GRID}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {folders.map(f => {
             const meta = FOLDER_META[f]
             const count = f === 'bukti_transaksi'
@@ -554,63 +564,80 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
               <div
                 key={f}
                 onClick={disabled ? undefined : () => { setSelFolder(f); setLevel(2) }}
-                style={{
-                  ...CARD,
-                  cursor: disabled ? 'default' : 'pointer',
-                  opacity: disabled ? 0.5 : 1,
-                  filter: disabled ? 'grayscale(0.4)' : 'none',
+                style={{ ...ROW, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1 }}
+                onMouseEnter={disabled ? undefined : e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.borderColor = meta.color + '55'
+                  if (!isMobile) el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.06)'
                 }}
-                onMouseEnter={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = meta.color + '55' }}
-                onMouseLeave={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
+                onMouseLeave={disabled ? undefined : e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.borderColor = 'var(--border-subtle)'
+                  el.style.boxShadow = 'none'
+                }}
               >
-                <div style={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : meta.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : meta.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {f === 'bukti_transaksi'
-                    ? <ReceiptIcon color={disabled ? 'var(--text-muted)' : meta.color} size={isMobile ? 22 : 26} />
-                    : <FolderIcon color={disabled ? 'var(--text-muted)' : meta.color} size={isMobile ? 24 : 28} />
+                    ? <ReceiptIcon color={disabled ? 'var(--text-muted)' : meta.color} size={22} />
+                    : <FolderIcon color={disabled ? 'var(--text-muted)' : meta.color} size={22} />
                   }
                 </div>
-                <div style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>{meta.label}</div>
-                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', flex: 1 }}>
-                  {disabled
-                    ? 'Belum ada dokumen'
-                    : `${count} file`
-                  }
-                </div>
-                {!disabled && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    <ChevronRight />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 2 }}>
+                    {meta.label}
                   </div>
-                )}
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {disabled ? 'Belum ada dokumen' : meta.desc}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                  {!disabled && (
+                    <span style={{ fontSize: 11, fontWeight: 600, color: meta.color, backgroundColor: meta.bgColor, padding: '2px 8px', borderRadius: 99 }}>
+                      {count} file
+                    </span>
+                  )}
+                  {!disabled && <ChevronRight />}
+                </div>
               </div>
             )
           })}
+
+          {/* Dokumentasi → Galeri */}
           {(() => {
             const hasPhotos = docPhotoProgramIds.has(p.id)
             const disabled = !hasPhotos && !isAdmin
             const color = '#7C3AED'
+            const bgColor = 'rgba(124,58,237,0.1)'
             return (
               <div
                 onClick={disabled ? undefined : () => onNavigate?.('galeri', p.id)}
-                style={{
-                  ...CARD,
-                  cursor: disabled ? 'default' : 'pointer',
-                  opacity: disabled ? 0.5 : 1,
-                  filter: disabled ? 'grayscale(0.4)' : 'none',
+                style={{ ...ROW, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1 }}
+                onMouseEnter={disabled ? undefined : e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.borderColor = color + '55'
+                  if (!isMobile) el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.06)'
                 }}
-                onMouseEnter={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = color + '55' }}
-                onMouseLeave={disabled ? undefined : e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)' }}
+                onMouseLeave={disabled ? undefined : e => {
+                  const el = e.currentTarget as HTMLDivElement
+                  el.style.borderColor = 'var(--border-subtle)'
+                  el.style.boxShadow = 'none'
+                }}
               >
-                <div style={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} fill="none" stroke={disabled ? 'var(--text-muted)' : color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: disabled ? 'rgba(0,0,0,0.04)' : bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width={22} height={22} fill="none" stroke={disabled ? 'var(--text-muted)' : color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
                   </svg>
                 </div>
-                <div style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>Dokumentasi</div>
-                <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', flex: 1 }}>
-                  {disabled ? 'Belum ada foto' : 'Lihat galeri foto'}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 2 }}>
+                    Dokumentasi
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {disabled ? 'Belum ada foto' : 'Foto & video progress pekerjaan'}
+                  </div>
                 </div>
                 {!disabled && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <div style={{ flexShrink: 0 }}>
                     <ChevronRight />
                   </div>
                 )}

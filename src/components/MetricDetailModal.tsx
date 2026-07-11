@@ -101,8 +101,8 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
   }, [onClose, inline])
 
   const rowSt = (isLast: boolean): React.CSSProperties => ({
-    display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12,
-    padding: `${isMobile ? 10 : 13}px ${ps}px`,
+    display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14,
+    padding: `${isMobile ? 14 : 16}px ${ps}px`,
     borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
   })
 
@@ -136,7 +136,6 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     if (type === 'anggaran') {
       const sorted = [...programs].sort((a, b) => (b.total_anggaran || 0) - (a.total_anggaran || 0))
       const els: JSX.Element[] = []
-      els.push(groupHeader(`${programs.length} Program Pekerjaan`, accent, false))
       sorted.forEach((p, i) => {
         const pct = totalAnggaran > 0 ? ((p.total_anggaran || 0) / totalAnggaran * 100).toFixed(1) : '0'
         els.push(
@@ -189,7 +188,6 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         .map(p => ({ prog: p, sisa: (p.total_anggaran || 0) - (p.realisasi_terkini || 0) }))
         .sort((a, b) => b.sisa - a.sisa)
       const els: JSX.Element[] = []
-      els.push(groupHeader(`${programs.length} Program Pekerjaan`, accent, false))
       withSisa.forEach(({ prog, sisa }, i) => {
         els.push(
           <div key={prog.id} style={rowSt(i === withSisa.length - 1)}>
@@ -355,7 +353,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
         {/* Header */}
         <div
-          style={{ padding: isMobile ? `2px ${ps}px 12px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}
+          style={{ padding: isMobile ? `6px ${ps}px 14px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
 
@@ -377,15 +375,13 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
               {renderStat()}
             </div>
 
-            {/* Close button — desktop only; mobile uses swipe-down */}
-            {!isMobile && (
-              <button
-                onClick={close}
-                style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)', marginTop: 1 }}
-              >
-                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            )}
+            {/* Close button — selalu tampil termasuk mobile */}
+            <button
+              onClick={close}
+              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-secondary)' }}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeA
 import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { useBackHandler } from '../lib/backNav'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
@@ -207,6 +208,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     setFilterFase('Semua')
     setLightboxIndex(null)
   }
+
+  // Drive the mobile top-bar ← arrow: Level 3 → up one level, Level 2 → list,
+  // Level 1 → exit to caller (only when entered via deep link). null = no back.
+  useBackHandler(
+    openFolderId
+      ? selectedTitik !== null ? backFromLevel3 : closeFolder
+      : onExit ?? null,
+  )
 
   const selectedProgramName = filterProgram === 'Semua'
     ? 'Pilih Program'
@@ -566,14 +575,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     >
 
       {/* Header */}
-      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ marginBottom: (isMobile && isLevel1) ? 0 : 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           {isLevel1 && (
             <>
-              {onExit && (
+              {onExit && width > 768 && (
                 <button
                   onClick={onExit}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                  style={isMobile ? { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', background: 'none', border: 'none', padding: 0, marginBottom: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit' } : { display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
                   onMouseEnter={e => { const b = e.currentTarget; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)' }}
                   onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)' }}
                 >
@@ -583,28 +592,36 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   Kembali
                 </button>
               )}
-              <h1 style={{ fontSize: isMobile ? 16 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
-                Galeri Dokumentasi
-              </h1>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '5px 0 0' }}>
-                {loading ? 'Memuat...' : `${mobilePrograms.length} program · ${docs.filter(d => mobilePrograms.some(p => p.id === d.program_id)).length} foto`}
-              </p>
+              {!isMobile && (
+                <>
+                  <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+                    Galeri Dokumentasi
+                  </h1>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+                    Foto dokumentasi progres setiap pekerjaan
+                  </p>
+                </>
+              )}
             </>
           )}
 
           {isLevel2 && (
             <>
-              <button
+              {width > 768 && <button
                 onClick={closeFolder}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                style={isMobile ? { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', background: 'none', border: 'none', padding: 0, marginBottom: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit' } : { display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
                 onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
                 onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
               >
-                <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
-                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                </span>
-                Kembali ke Daftar
-              </button>
+                {isMobile ? (
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                ) : (
+                  <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </span>
+                )}
+                {isMobile ? 'Kembali' : 'Kembali ke Daftar'}
+              </button>}
               <h1 style={{ fontSize: isMobile ? 13 : 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
                 {openProgramName}
               </h1>
@@ -613,17 +630,21 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
 
           {isLevel3 && (
             <>
-              <button
+              {width > 768 && <button
                 onClick={backFromLevel3}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
+                style={isMobile ? { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', background: 'none', border: 'none', padding: 0, marginBottom: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit' } : { display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 10 }}
                 onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
                 onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
               >
-                <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
-                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                </span>
-                Kembali ke Daftar
-              </button>
+                {isMobile ? (
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                ) : (
+                  <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                  </span>
+                )}
+                {isMobile ? 'Kembali' : 'Kembali ke Daftar'}
+              </button>}
               {openFolderHasManyTitik && titikDisplayName !== null ? (
                 /* Breadcrumb: Program · Titik */
                 <div>
@@ -642,17 +663,17 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           )}
         </div>
 
-        {isAdmin && (
+        {isAdmin && !isMobile && (
           <button
             onClick={() => setShowAddModal(true)}
-            style={{ padding: isMobile ? '8px 14px' : '9px 18px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: isMobile ? 12.5 : 13.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', boxShadow: '0 1px 3px rgba(26,111,232,0.3)', flexShrink: 0 }}
+            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', boxShadow: '0 1px 3px rgba(26,111,232,0.3)', flexShrink: 0 }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
           >
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            {isMobile ? 'Tambah' : 'Tambah Dokumentasi'}
+            Tambah Dokumentasi
           </button>
         )}
       </div>
@@ -889,7 +910,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       ) : (
         /* ── Level 1: Program folder grid ── */
         <>
-          {renderFilterBar()}
           {mobilePrograms.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada dokumentasi foto.</div>
           ) : (
@@ -1125,6 +1145,37 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
         <EditDocumentationModal doc={editingDoc} programs={programs} onClose={() => setEditingDoc(null)}
           onSuccess={async () => { invalidateCache('documentation', 'documentation_program_ids'); const { data } = await fetchDocumentation(); if (data) setDocs(data); setEditingDoc(null) }} />
       )}
+      {/* Mobile FAB — hanya tampil saat lightbox tutup */}
+      {isAdmin && isMobile && lightboxIndex === null && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 50,
+            width: 46,
+            height: 46,
+            borderRadius: 14,
+            border: 'none',
+            backgroundColor: 'var(--blue)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(26,111,232,0.35)',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+        >
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      )}
+
       {isAdmin && showManageBA && openFolderId && (
         <ManageBeforeAfterModal
           programId={openFolderId}
