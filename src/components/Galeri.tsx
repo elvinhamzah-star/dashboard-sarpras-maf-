@@ -177,8 +177,9 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
 
   const openFolder = (pid: string) => {
     const uniqueTitik = getDistinctTitik(pid)
+    const progHasPairs = pairs.some(p => p.program_id === pid)
     setOpenFolderId(pid)
-    setFilterFase(FASE_BA)   // default to Before/After view
+    setFilterFase(progHasPairs ? FASE_BA : 'Semua')   // BA view only if pairs exist; else show all photos grid
     setLightboxIndex(null)
     if (uniqueTitik.length > 1) {
       setSelectedTitik(null)     // → Level 2 (show BA pairs first)
