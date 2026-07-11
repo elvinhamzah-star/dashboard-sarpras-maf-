@@ -1061,42 +1061,9 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               {/* Media + overlay nav */}
               <div style={{ position: 'relative' }}>
                 {isVideoFile ? (
-                  isMobile ? (
-                    // Mobile: iframe Drive bleed keluar container (iOS WebKit issue).
-                    // Tampilkan thumbnail + tombol play → buka native Drive viewer.
-                    <div
-                      onClick={e => {
-                        e.stopPropagation()
-                        const fileId = extractDriveFileId(doc.link_foto)
-                        if (fileId) window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank')
-                      }}
-                      style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0f', overflow: 'hidden', cursor: 'pointer' }}
-                    >
-                      {/* Blurred thumbnail as background */}
-                      {getDriveThumbnailUrl(doc.link_foto) && (
-                        <img
-                          src={getDriveThumbnailUrl(doc.link_foto) || ''}
-                          alt=""
-                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(6px) brightness(0.45)', transform: 'scale(1.08)' }}
-                        />
-                      )}
-                      {/* Play button */}
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <div style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="22" height="22" fill="#fff" viewBox="0 0 24 24" style={{ marginLeft: 3 }}>
-                            <polygon points="5 3 19 12 5 21 5 3"/>
-                          </svg>
-                        </div>
-                        <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.02em' }}>Ketuk untuk putar video</span>
-                      </div>
-                      {/* Video badge top-left */}
-                      <div style={{ position: 'absolute', top: 10, left: 12, display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', padding: '4px 9px', borderRadius: 20 }}>
-                        <svg width="11" height="11" fill="#fff" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <span style={{ fontSize: 10.5, color: '#fff', fontWeight: 600 }}>Video</span>
-                      </div>
-                    </div>
-                  ) : (
-                  <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: 540 }}>
+                  // Video: iframe /preview Drive main inline di semua platform (termasuk iOS Safari).
+                  // Mobile borderRadius 0 → tak ada isu "iframe bleed" sudut membulat WebKit.
+                  <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? undefined : 540 }}>
                     <iframe
                       key={doc.id}
                       src={getDriveEmbedUrl(doc.link_foto) || ''}
@@ -1105,8 +1072,18 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       onClick={e => e.stopPropagation()}
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }}
                     />
+                    {/* Fallback iOS — anchor asli lebih andal dari window.open di standalone PWA */}
+                    <a
+                      href={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto) || ''}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 104, display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 10.5, fontWeight: 600, padding: '5px 10px', borderRadius: 20, textDecoration: 'none', letterSpacing: '0.01em' }}
+                    >
+                      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Buka di Drive
+                    </a>
                   </div>
-                  )
                 ) : (
                   <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
                     <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }} />
