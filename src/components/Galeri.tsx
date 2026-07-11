@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeAfterPairs, BeforeAfterPair, invalidateCache } from '../lib/supabase'
 import { adminDelete } from '../lib/adminApi'
-import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveVideoUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
+import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { useBackHandler, useTopBarTitle } from '../lib/backNav'
 import AddDocumentationModal from './AddDocumentationModal'
@@ -1061,8 +1061,9 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               {/* Media + overlay nav */}
               <div style={{ position: 'relative' }}>
                 {isVideoFile ? (
-                  // Video: iframe /preview Drive main inline di semua platform (termasuk iOS Safari).
-                  // Mobile borderRadius 0 → tak ada isu "iframe bleed" sudut membulat WebKit.
+                  // Video: iframe /preview Drive — satu-satunya metode inline yang jalan
+                  // (hotlink ke <video> native diblokir Google). Mobile borderRadius 0 →
+                  // tak ada isu iframe-bleed sudut membulat WebKit; iOS Safari main inline.
                   <div style={{ position: 'relative', width: '100%', background: '#000', borderRadius: isMobile ? 0 : '16px 16px 0 0', overflow: 'hidden', aspectRatio: '16/9', maxHeight: isMobile ? undefined : 540 }}>
                     <iframe
                       key={doc.id}
@@ -1072,7 +1073,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       onClick={e => e.stopPropagation()}
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }}
                     />
-                    {/* Fallback iOS — anchor asli lebih andal dari window.open di standalone PWA */}
+                    {/* Fallback — buka kualitas penuh di Drive (anchor asli andal di iOS) */}
                     <a
                       href={`https://drive.google.com/file/d/${extractDriveFileId(doc.link_foto) || ''}/view`}
                       target="_blank"
@@ -1081,7 +1082,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 104, display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 10.5, fontWeight: 600, padding: '5px 10px', borderRadius: 20, textDecoration: 'none', letterSpacing: '0.01em' }}
                     >
                       <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Buka di Drive
+                      HD
                     </a>
                   </div>
                 ) : (
