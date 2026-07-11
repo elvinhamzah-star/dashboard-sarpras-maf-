@@ -155,9 +155,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         height: '100%',
         backgroundColor: '#0A1628',
         transition: isMobile
-          ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)'
-          : 'width 0.26s cubic-bezier(0.4,0,0.2,1)',
-        willChange: isMobile ? 'transform' : 'width',
+          ? 'transform 0.3s cubic-bezier(0.32,0.72,0,1)'
+          : 'width 0.3s cubic-bezier(0.32,0.72,0,1)',
         transform: isMobile ? `translateX(${isOpen ? '0' : '-100%'})` : 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -191,7 +190,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
             style={{ width: 36, height: 36, objectFit: 'cover', display: 'block' }}
           />
         </div>
-        <div style={{ overflow: 'hidden', minWidth: 0, maxWidth: expanded ? 180 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease' }}>
+        <div style={{ overflow: 'hidden', minWidth: 0, maxWidth: expanded ? 180 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s cubic-bezier(0.32,0.72,0,1)' }}>
           <div style={{ color: '#F1F5F9', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
             Peradaban Baik Bahagia
           </div>
@@ -247,7 +246,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 backgroundColor: isActive ? 'rgba(26,111,232,0.18)' : 'transparent',
                 color: isActive ? '#60A5FA' : 'rgba(255,255,255,0.45)',
                 marginBottom: 2,
-                transition: 'background-color 0.15s ease, color 0.15s ease, padding 0.26s cubic-bezier(0.4,0,0.2,1), gap 0.26s cubic-bezier(0.4,0,0.2,1)',
+                transition: 'background-color 0.15s ease, color 0.15s ease, padding 0.3s cubic-bezier(0.32,0.72,0,1), gap 0.3s cubic-bezier(0.32,0.72,0,1)',
                 whiteSpace: 'nowrap',
                 position: 'relative',
               }}
@@ -275,7 +274,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 />
               )}
               <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
-              <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 400, letterSpacing: '-0.01em', overflow: 'hidden', maxWidth: expanded ? 170 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease' }}>
+              <span style={{ fontSize: 13.5, fontWeight: isActive ? 600 : 400, letterSpacing: '-0.01em', overflow: 'hidden', maxWidth: expanded ? 170 : 0, opacity: expanded ? 1 : 0, transition: 'max-width 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s cubic-bezier(0.32,0.72,0,1)' }}>
                 {item.label}
               </span>
             </button>

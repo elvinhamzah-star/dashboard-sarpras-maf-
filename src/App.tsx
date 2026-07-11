@@ -316,8 +316,7 @@ export default function App() {
           flex: 1,
           minWidth: 0,
           height: '100dvh',
-          transition: 'margin-left 0.26s cubic-bezier(0.4,0,0.2,1)',
-          willChange: 'margin-left',
+          transition: 'margin-left 0.3s cubic-bezier(0.32,0.72,0,1)',
           display: 'flex',
           flexDirection: 'column',
         }}
