@@ -33,10 +33,9 @@ export default function App() {
   const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
-  // Lazy-init from current viewport so mobile never flashes sidebar-open on first render
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== 'undefined' ? !window.matchMedia('(max-width: 768px)').matches : true
-  )
+  // Default sidebar tertutup (rail 68px di desktop, off-canvas di mobile).
+  // User bisa membukanya lewat tombol toggle.
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
   )
@@ -84,7 +83,7 @@ export default function App() {
     const mq = window.matchMedia('(max-width: 768px)')
     const update = () => {
       setIsMobile(mq.matches)
-      setSidebarOpen(!mq.matches)
+      if (mq.matches) setSidebarOpen(false) // mobile: paksa tertutup; desktop: biarkan pilihan user
     }
     update()
     mq.addEventListener('change', update)
