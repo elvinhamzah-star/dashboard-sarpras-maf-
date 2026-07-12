@@ -29,6 +29,17 @@ export function invalidateCache(...keys: string[]) {
   else keys.forEach(k => _cache.delete(k))
 }
 
+/** Kategori hasil pekerjaan selesai — menentukan label & rincian di laporan. */
+export type HasilKategori = 'fisik' | 'barang' | 'jasa'
+
+/** Satu baris rincian hasil (lokasi untuk fisik, item untuk barang). */
+export interface HasilRincianItem {
+  nama: string
+  ukuran: number   // luas (m²) untuk fisik, jumlah (unit) untuk barang
+  satuan: string
+  biaya: number
+}
+
 export interface Program {
   id: string
   program: string
@@ -50,6 +61,12 @@ export interface Program {
   link_bukti_transaksi?: string
   created_at: string
   updated_at?: string
+  // ─── Data hasil pekerjaan selesai (diisi via HasilFormModal) ───
+  hasil_kategori?: HasilKategori | null
+  hasil_nilai_aset?: number | null
+  hasil_dampak?: string[] | null
+  hasil_rincian?: HasilRincianItem[] | null
+  hasil_filled_at?: string | null
 }
 
 export interface ProgramSnapshot {

@@ -8,6 +8,8 @@ import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import AddSubPekerjaanModal from './AddSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
 import EditProgramModal from './EditProgramModal'
+import HasilFormModal from './HasilFormModal'
+import HasilRingkasan from './HasilRingkasan'
 
 interface PekerjaanDetailProps {
   programId: string
@@ -32,6 +34,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [showEditCatatan, setShowEditCatatan] = useState(false)
   const [showEditProgram, setShowEditProgram] = useState(false)
+  const [showHasilForm, setShowHasilForm] = useState(false)
+  const [hasilDismissed, setHasilDismissed] = useState(false)
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
@@ -70,6 +74,16 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   }
 
   useEffect(() => { load() }, [programId])
+
+  // Soft-mandatory: saat pekerjaan berstatus Selesai tapi data hasil belum
+  // diisi, admin langsung diminta melengkapinya (baik setelah flip status via
+  // modal maupun saat membuka pekerjaan Selesai lama yang belum di-backfill).
+  // Sekali "Nanti Saja" ditekan, tidak muncul lagi selama view ini.
+  useEffect(() => {
+    if (isAdmin && program && program.status === 'Selesai' && !program.hasil_filled_at && !hasilDismissed) {
+      setShowHasilForm(true)
+    }
+  }, [isAdmin, program?.status, program?.hasil_filled_at, hasilDismissed])
 
   const tabs: Tab[] = ['Ringkasan', 'Dokumen', ...(subPrograms.length > 0 || isAdmin ? ['Sub Pekerjaan' as Tab] : [])]
 
@@ -113,6 +127,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
   const pct = getEffectiveProgress(program)
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
+  const isSelesai = program.status === 'Selesai'
+  // Selesai + Ringkasan renders the multi-card Hasil layout, so the tab wrapper
+  // drops its own white card to avoid nested cards.
+  const bareRingkasan = isSelesai && activeTab === 'Ringkasan'
 
   return (
     <div
@@ -297,7 +315,8 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* Metric Cards — hidden for Selesai (HasilRingkasan shows Nilai/Anggaran/Efisiensi instead) */}
+      {program.status !== 'Selesai' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
         {[
           { label: 'Total Anggaran', value: formatRupiah(program.total_anggaran || 0), color: 'var(--blue)' },
@@ -322,6 +341,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           </div>
         ))}
       </div>
+      )}
 
       {/* Progress Bar — hidden for completed works (100% is redundant once done) */}
       {program.status !== 'Selesai' && (
@@ -379,7 +399,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
       {/* Tab Content */}
       <div
-        style={{
+        style={bareRingkasan ? {} : {
           backgroundColor: 'var(--card)',
           borderRadius: 14,
           border: '1px solid var(--border-subtle)',
@@ -387,7 +407,24 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}
       >
-        {activeTab === 'Ringkasan' && (
+        {activeTab === 'Ringkasan' && isSelesai && (
+          <div>
+            {isAdmin && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                <button
+                  onClick={() => setShowHasilForm(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  {program.hasil_filled_at ? 'Edit Hasil' : 'Lengkapi Data Hasil'}
+                </button>
+              </div>
+            )}
+            <HasilRingkasan program={program} isMobile={isMobile} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
+          </div>
+        )}
+
+        {activeTab === 'Ringkasan' && !isSelesai && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
@@ -953,6 +990,18 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           onSuccess={() => {
             invalidateCache('programs', 'sub_programs')
             setShowEditProgram(false)
+            load()
+          }}
+        />
+      )}
+
+      {showHasilForm && program && (
+        <HasilFormModal
+          program={program}
+          onClose={() => { setShowHasilForm(false); setHasilDismissed(true) }}
+          onSuccess={() => {
+            invalidateCache('programs')
+            setShowHasilForm(false)
             load()
           }}
         />
