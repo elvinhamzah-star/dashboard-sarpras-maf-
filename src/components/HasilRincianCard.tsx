@@ -94,12 +94,60 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
     marginBottom: isMobile ? 11 : 14,
   }
 
+  // ── Tabel seragam (mobile-tuned; auto membesar di iPad/desktop) ──
+  // Hierarki tebal: hanya judul (head) & label total yang bold; data & angka
+  // rincian non-bold seragam. Total dibedakan lewat strip abu + label uppercase.
+  const sectionTitle = (mt: number): React.CSSProperties => ({
+    fontSize: isMobile ? 11 : 11.5, fontWeight: 800, textTransform: 'uppercase',
+    letterSpacing: '0.05em', color: 'var(--text-secondary)', margin: `${mt}px 2px 8px`,
+  })
+  const tblHead: React.CSSProperties = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    background: '#dbe0e8', borderRadius: '9px 9px 0 0',
+    padding: isMobile ? '8px 13px' : '9px 14px',
+    fontSize: isMobile ? 12 : 13, fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--text-primary)',
+  }
+  const tblHeadCount: React.CSSProperties = {
+    fontSize: isMobile ? 10.5 : 11, fontWeight: 600, color: 'var(--text-secondary)',
+  }
+  const tblBody: React.CSSProperties = {
+    border: '1px solid var(--border-subtle)', borderTop: 'none',
+    borderRadius: '0 0 9px 9px', overflow: 'hidden',
+  }
+  const tblRow = (first: boolean): React.CSSProperties => ({
+    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10,
+    padding: isMobile ? '9px 13px' : '11px 14px',
+    background: 'var(--surface-raised)',
+    borderTop: first ? 'none' : '1px solid var(--border-subtle)',
+  })
+  const tblName: React.CSSProperties = {
+    fontSize: isMobile ? 12 : 13, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.35,
+  }
+  const tblSub: React.CSSProperties = {
+    display: 'block', fontSize: isMobile ? 10 : 10.5, color: 'var(--text-muted)', marginTop: 2, fontWeight: 400,
+  }
+  const tblVal: React.CSSProperties = {
+    fontSize: isMobile ? 12 : 13, fontWeight: 500, color: 'var(--text-primary)',
+    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+  }
+  const tblFoot: React.CSSProperties = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: isMobile ? '14px 13px' : '15px 14px',
+    background: 'var(--surface-2)', borderTop: '1px solid var(--border-subtle)',
+  }
+  const tblFootLabel: React.CSSProperties = {
+    fontSize: isMobile ? 10.5 : 11, fontWeight: 700, textTransform: 'uppercase',
+    letterSpacing: '0.04em', color: 'var(--text-secondary)',
+  }
+  const tblFootVal: React.CSSProperties = {
+    fontSize: isMobile ? 12 : 13, fontWeight: 500, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums',
+  }
+
   return (
     <div style={cardStyle}>
-      {/* Header banner */}
+      {/* Header — tanpa aksen garis (dibedakan lewat tebal font saja) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 4px' }}>
-        <span style={{ width: 4, height: 17, borderRadius: 2, background: 'var(--green)' }} />
-        <h2 style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>{mcfg.header}</h2>
+        <h2 style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>{mcfg.header}</h2>
         <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>{count}</span>
       </div>
 
@@ -161,87 +209,100 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
           {mode === 'lokasi' ? (
             <>
               {showRingkasan && (
-                <div style={{ borderRadius: 11, background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.15)', padding: isMobile ? '11px 13px' : '13px 15px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--green)', marginBottom: 9 }}>Ringkasan per Aset</div>
-                  {asetRollup.map((a, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '5px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(5,150,105,0.12)' }}>
-                      <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, color: 'var(--text-primary)' }}>{a.aset}</span>
-                      <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                        {a.ukuran.toLocaleString('id-ID')} {a.satuan} · {formatRupiah(a.biaya)}
-                      </span>
+                <>
+                  <div style={sectionTitle(0)}>Ringkasan per Aset</div>
+                  <div>
+                    <div style={tblHead}>
+                      <span>Per Jenis Aset</span>
+                      <span style={tblHeadCount}>{asetRollup.length} aset</span>
                     </div>
-                  ))}
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginTop: 8, paddingTop: 8, borderTop: '1.5px solid rgba(5,150,105,0.25)' }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>Total Keseluruhan</span>
-                    <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totBiaya)}</span>
+                    <div style={tblBody}>
+                      {asetRollup.map((a, i) => (
+                        <div key={i} style={tblRow(i === 0)}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={tblName}>{a.aset}</div>
+                            <span style={tblSub}>{a.ukuran.toLocaleString('id-ID')} {a.satuan}</span>
+                          </div>
+                          <div style={tblVal}>{formatRupiah(a.biaya)}</div>
+                        </div>
+                      ))}
+                      <div style={tblFoot}>
+                        <span style={tblFootLabel}>Total Keseluruhan</span>
+                        <span style={tblFootVal}>{formatRupiah(totBiaya)}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
+              <div style={sectionTitle(showRingkasan ? 24 : 0)}>Rincian per Lokasi</div>
               {locGroups.map((g, gi) => (
-                <div key={gi} style={{ marginTop: gi === 0 ? 0 : 14 }}>
-                  <div style={{ background: '#dbe0e8', borderRadius: '9px 9px 0 0', padding: isMobile ? '8px 12px' : '9px 14px', fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-                    {g.nama || '—'}
+                <div key={gi} style={{ marginTop: gi === 0 ? 0 : 12 }}>
+                  <div style={tblHead}>
+                    <span>{g.nama || '—'}</span>
                   </div>
-                  <div style={{ border: '1px solid var(--border-subtle)', borderTop: 'none', borderRadius: '0 0 9px 9px', overflow: 'hidden' }}>
-                    {g.rows.map((r, ri) => (
-                      <div key={ri} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, padding: isMobile ? '9px 12px' : '11px 14px', background: 'var(--surface-raised)', borderTop: ri === 0 ? 'none' : '1px solid var(--border-subtle)' }}>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, color: (r.aset || '').trim() ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: (r.aset || '').trim() ? 'normal' : 'italic' }}>
-                            {(r.aset || '').trim() || '— tanpa nama aset'}
+                  <div style={tblBody}>
+                    {g.rows.map((r, ri) => {
+                      const hasAset = (r.aset || '').trim()
+                      return (
+                        <div key={ri} style={tblRow(ri === 0)}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ ...tblName, color: hasAset ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: hasAset ? 'normal' : 'italic' }}>
+                              {hasAset || '— tanpa nama aset'}
+                            </div>
+                            <span style={tblSub}>{(Number(r.ukuran) || 0).toLocaleString('id-ID')} {r.satuan}</span>
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                            {(Number(r.ukuran) || 0).toLocaleString('id-ID')} {r.satuan}
-                          </div>
+                          <div style={tblVal}>{formatRupiah(r.biaya)}</div>
                         </div>
-                        <div style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{formatRupiah(r.biaya)}</div>
-                      </div>
-                    ))}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '8px 12px' : '9px 14px', background: 'var(--surface-2)', borderTop: '1px solid var(--border-subtle)' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>Nilai Total</span>
-                      <span style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(g.total)}</span>
+                      )
+                    })}
+                    <div style={tblFoot}>
+                      <span style={tblFootLabel}>Nilai Total</span>
+                      <span style={tblFootVal}>{formatRupiah(g.total)}</span>
                     </div>
                   </div>
                 </div>
               ))}
 
               {!showRingkasan && locGroups.length > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '11px 13px' : '12px 15px', borderRadius: 11, background: 'rgba(5,150,105,0.07)', border: '1px solid rgba(5,150,105,0.15)', marginTop: 12 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>Total Keseluruhan</span>
-                  <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totBiaya)}</span>
+                <div style={{ ...tblFoot, border: '1px solid var(--border-subtle)', borderRadius: 9, marginTop: 12 }}>
+                  <span style={tblFootLabel}>Total Keseluruhan</span>
+                  <span style={tblFootVal}>{formatRupiah(totBiaya)}</span>
                 </div>
               )}
             </>
           ) : (
-            /* ── Mode ITEM / DIVISI / KEGIATAN: daftar datar ── */
-            <>
-              {rincian.map((r, i) => {
-                const statusKey = (r.status || 'Rencana') as keyof typeof STATUS_CHIP
-                const chip = STATUS_CHIP[statusKey] || STATUS_CHIP.Rencana
-                return (
-                  <div key={i} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', borderRadius: 11, padding: isMobile ? '11px 13px' : '13px 15px', marginBottom: 9 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                      <div style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', minWidth: 0 }}>{r.nama || '-'}</div>
-                      <div style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(r.biaya)}</div>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
-                      {mode === 'kegiatan' ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 7, background: chip.bg, color: chip.fg }}>{r.status || 'Rencana'}</span>
-                      ) : (
-                        <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '3px 9px', borderRadius: 7 }}>
-                          {mcfg.midLabel} <b style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{(Number(r.ukuran) || 0).toLocaleString('id-ID')}</b>
-                          {mcfg.showSatuan && <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 10.5 }}>{r.satuan}</span>}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '11px 13px' : '12px 15px', borderRadius: 11, background: 'rgba(5,150,105,0.07)', border: '1px solid rgba(5,150,105,0.15)', marginTop: 3 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>{mcfg.totalLabel}</span>
-                <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totBiaya)}</span>
+            /* ── Mode ITEM / DIVISI / KEGIATAN: tabel seragam ── */
+            <div>
+              <div style={tblHead}>
+                <span>{mode === 'item' ? 'Daftar Barang' : mode === 'divisi' ? 'Daftar Divisi' : 'Daftar Kegiatan'}</span>
               </div>
-            </>
+              <div style={tblBody}>
+                {rincian.map((r, i) => {
+                  const statusKey = (r.status || 'Rencana') as keyof typeof STATUS_CHIP
+                  const chip = STATUS_CHIP[statusKey] || STATUS_CHIP.Rencana
+                  return (
+                    <div key={i} style={tblRow(i === 0)}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={tblName}>{r.nama || '-'}</div>
+                        {mode === 'kegiatan' ? (
+                          <span style={{ display: 'inline-block', marginTop: 4, fontSize: isMobile ? 10 : 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.fg }}>{r.status || 'Rencana'}</span>
+                        ) : (
+                          <span style={tblSub}>
+                            {(Number(r.ukuran) || 0).toLocaleString('id-ID')} {mode === 'divisi' ? 'orang' : r.satuan}
+                          </span>
+                        )}
+                      </div>
+                      <div style={tblVal}>{formatRupiah(r.biaya)}</div>
+                    </div>
+                  )
+                })}
+                <div style={tblFoot}>
+                  <span style={tblFootLabel}>{mcfg.totalLabel}</span>
+                  <span style={tblFootVal}>{formatRupiah(totBiaya)}</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}

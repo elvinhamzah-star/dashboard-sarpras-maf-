@@ -171,8 +171,7 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
       {pairs.length > 0 && (
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 13px' }}>
-            <span style={{ width: 4, height: 17, borderRadius: 2, background: 'var(--blue)' }} />
-            <h2 style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>Kondisi Sebelum &amp; Sesudah</h2>
+            <h2 style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>Kondisi Sebelum &amp; Sesudah</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {pairs.slice(0, 2).map(pair => {
@@ -183,9 +182,11 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
                 return (
                   <div style={{ flex: 1, position: 'relative', height: isMobile ? 148 : 210, background: kind === 'before' ? 'linear-gradient(135deg, #8a97a8, #6b7789)' : 'linear-gradient(135deg, #35a06b, #1f7d4e)', display: 'flex', alignItems: 'flex-end', padding: isMobile ? 9 : 11, overflow: 'hidden' }}>
                     {thumb && <img src={thumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-                    <span style={{ position: 'relative', zIndex: 1, fontSize: 10, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.42)', padding: '3px 9px', borderRadius: 99 }}>
+                    {/* Label Sebelum/Sesudah — style & font size disamakan dengan halaman Galeri */}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                      <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: kind === 'before' ? '#ff5a5a' : '#34d399' }} />
                       {kind === 'before' ? 'Sebelum' : 'Sesudah'}
-                    </span>
+                    </div>
                   </div>
                 )
               }
