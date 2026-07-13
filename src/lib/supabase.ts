@@ -138,6 +138,8 @@ export interface BeforeAfterPair {
   after_doc_id: string | null
   label?: string | null
   urutan: number
+  /** Tampilkan pasangan ini di halaman Pekerjaan (Ringkasan). Maks. 2 teratas yang benar-benar dirender. */
+  tampil_ringkasan?: boolean
   created_at?: string
 }
 

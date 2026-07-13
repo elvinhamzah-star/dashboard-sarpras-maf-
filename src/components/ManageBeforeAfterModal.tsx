@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Documentation, BeforeAfterPair, fetchBeforeAfterPairs, invalidateCache } from '../lib/supabase'
-import { adminInsert, adminDelete } from '../lib/adminApi'
+import { adminInsert, adminDelete, adminUpdate } from '../lib/adminApi'
 import { getDriveThumbnailUrl, formatTanggal } from '../lib/data'
 import ModalShell from './ModalShell'
 
@@ -73,6 +73,21 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
     const { error: err } = await adminDelete('before_after_pairs', id)
     if (err) { setError('Gagal menghapus: ' + err.message); return }
     await loadPairs()
+    onSaved()
+  }
+
+  // Toggle "tampil di halaman Pekerjaan" — optimistik, rollback jika gagal.
+  const handleToggleTampil = async (p: BeforeAfterPair) => {
+    const next = !p.tampil_ringkasan
+    setError('')
+    setPairs(prev => prev.map(x => (x.id === p.id ? { ...x, tampil_ringkasan: next } : x)))
+    const { error: err } = await adminUpdate('before_after_pairs', { tampil_ringkasan: next }, p.id)
+    if (err) {
+      setPairs(prev => prev.map(x => (x.id === p.id ? { ...x, tampil_ringkasan: !next } : x)))
+      setError('Gagal mengubah tampilan: ' + err.message)
+      return
+    }
+    invalidateCache('before_after_pairs')
     onSaved()
   }
 
@@ -150,6 +165,9 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
     )
   }
 
+  // Pasangan yang benar-benar tampil di halaman Pekerjaan: maks 2 aktif teratas.
+  const shownIds = new Set(pairs.filter(p => p.tampil_ringkasan).slice(0, 2).map(p => p.id))
+
   return (
     <ModalShell key="main" onClose={onClose} maxWidth={560}>
       <div style={{ padding: '22px 20px 28px' }}>
@@ -201,6 +219,12 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
           Pasangan tersimpan ({pairs.length})
         </div>
+        {pairs.length > 0 && (
+          <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45, background: 'rgba(26,111,232,0.06)', border: '1px solid rgba(26,111,232,0.14)', borderRadius: 9, padding: '9px 11px', marginBottom: 12 }}>
+            <svg width="14" height="14" fill="none" stroke="var(--blue)" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Ketuk ikon mata untuk memilih foto yang tampil di halaman Pekerjaan — <b>maksimal 2 teratas</b>. Selebihnya tetap tersimpan &amp; muncul di Galeri.</span>
+          </div>
+        )}
         {loading ? (
           <div style={{ color: 'var(--text-muted)', fontSize: 12.5, padding: '10px 0' }}>Memuat...</div>
         ) : pairs.length === 0 ? (
@@ -210,8 +234,10 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
             {pairs.map(p => {
               const b = thumb(docById(p.before_doc_id))
               const a = thumb(docById(p.after_doc_id))
+              const on = !!p.tampil_ringkasan
+              const shown = shownIds.has(p.id)
               return (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, border: '1px solid var(--border-subtle)', background: 'var(--card)' }}>
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, border: `1px solid ${on ? 'rgba(26,111,232,0.35)' : 'var(--border-subtle)'}`, background: on ? 'rgba(26,111,232,0.035)' : 'var(--card)' }}>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                     <div style={{ width: 44, height: 34, borderRadius: 6, overflow: 'hidden', background: 'var(--surface-raised)' }}>
                       {b ? <img src={b} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
@@ -224,12 +250,27 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
                     <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.label || 'Tanpa label'}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                      {shown && <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', padding: '2px 6px', borderRadius: 5, background: 'rgba(26,111,232,0.12)', color: 'var(--blue)' }}>Tampil</span>}
                       {docById(p.before_doc_id)?.tanggal ? formatTanggal(docById(p.before_doc_id)!.tanggal) : '—'}
                     </div>
                   </div>
                   <button
+                    onClick={() => handleToggleTampil(p)}
+                    title={on ? 'Tampil di halaman Pekerjaan — ketuk untuk sembunyikan' : 'Ketuk untuk tampilkan di halaman Pekerjaan'}
+                    aria-label={on ? 'Sembunyikan dari halaman Pekerjaan' : 'Tampilkan di halaman Pekerjaan'}
+                    style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: `1px solid ${on ? 'transparent' : 'var(--border-subtle)'}`, background: on ? 'rgba(26,111,232,0.12)' : 'var(--surface-raised)', color: on ? 'var(--blue)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
+                  >
+                    {on ? (
+                      <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                    ) : (
+                      <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    )}
+                  </button>
+                  <button
                     onClick={() => handleDelete(p.id)}
+                    title="Hapus pasangan"
+                    aria-label="Hapus pasangan"
                     style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(102,0,0,0.1)', color: '#660000', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
                   >
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>

@@ -50,6 +50,9 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
 
   const dampak = program.hasil_dampak ?? []
   const docById = (id: string | null) => (id ? docs.find(d => d.id === id) : undefined)
+  // Hanya pasangan yang ditandai admin ("tampil_ringkasan") yang muncul di sini,
+  // dibatasi maks. 2 teratas (urutan). Selebihnya tetap ada di Galeri.
+  const featuredPairs = pairs.filter(p => p.tampil_ringkasan).slice(0, 2)
 
   const cardStyle: React.CSSProperties = {
     background: 'var(--card)',
@@ -168,13 +171,13 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
       )}
 
       {/* 3. Kondisi Sebelum & Sesudah — dokumentasi di paling bawah */}
-      {pairs.length > 0 && (
+      {featuredPairs.length > 0 && (
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 13px' }}>
             <h2 style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>Kondisi Sebelum &amp; Sesudah</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {pairs.slice(0, 2).map(pair => {
+            {featuredPairs.map(pair => {
               const beforeDoc = docById(pair.before_doc_id)
               const afterDoc = docById(pair.after_doc_id)
               const cell = (d: Documentation | undefined, kind: 'before' | 'after') => {
