@@ -10,6 +10,8 @@ import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
 import EditProgramModal from './EditProgramModal'
 import HasilFormModal from './HasilFormModal'
 import HasilRingkasan from './HasilRingkasan'
+import HasilRincianCard from './HasilRincianCard'
+import { deriveProgramTotals, deriveNilaiAset } from '../lib/deriveTotals'
 
 interface PekerjaanDetailProps {
   programId: string
@@ -125,9 +127,14 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
     )
   }
 
-  const pct = getEffectiveProgress(program)
+  const derived = deriveProgramTotals(program, subPrograms.filter(s => s.program_id === program.id))
+  const pct = derived.progress_percent
+  const nilaiInfo = deriveNilaiAset(program)
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
   const isSelesai = program.status === 'Selesai'
+  // On Going / On Hold sudah punya realisasi berjalan — admin bisa mencatat
+  // rincian realisasinya, dan semua orang bisa membandingkan RAB vs realisasi.
+  const isBerjalan = program.status === 'On Going' || program.status === 'On Hold'
   // Selesai + Ringkasan renders the multi-card Hasil layout, so the tab wrapper
   // drops its own white card to avoid nested cards.
   const bareRingkasan = isSelesai && activeTab === 'Ringkasan'
@@ -236,12 +243,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         <div
           onClick={() => isAdmin && setShowEditCatatan(true)}
           style={{
-            backgroundColor: program.isu_utama ? 'rgba(217,119,6,0.07)' : 'var(--surface-min)',
-            borderLeft: program.isu_utama ? '2.5px solid #D97706' : '2.5px solid var(--border)',
+            backgroundColor: program.isu_utama ? 'rgba(102,0,0,0.08)' : 'var(--surface-min)',
+            borderLeft: program.isu_utama ? 'none' : '2.5px solid var(--border)',
             borderRadius: 7,
             padding: '8px 12px',
             fontSize: isMobile ? 11.5 : 12.5,
-            color: program.isu_utama ? '#92400e' : 'var(--text-muted)',
+            color: program.isu_utama ? '#660000' : 'var(--text-muted)',
             fontWeight: 500,
             cursor: isAdmin ? 'pointer' : 'default',
             transition: 'all 0.15s',
@@ -252,25 +259,21 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           }}
           onMouseEnter={e => {
             if (isAdmin && program.isu_utama) {
-              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(217,119,6,0.12)'
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(102,0,0,0.13)'
             }
           }}
           onMouseLeave={e => {
             if (isAdmin && program.isu_utama) {
-              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(217,119,6,0.07)'
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(102,0,0,0.08)'
             }
           }}
         >
           {program.isu_utama ? (
             <>
-              <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24" style={{ marginTop: 2, flexShrink: 0 }}>
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {program.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                    <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#92400e', flexShrink: 0, marginTop: 5 }} />
+                    <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#660000', flexShrink: 0, marginTop: 5 }} />
                     <span>{line}</span>
                   </div>
                 ))}
@@ -319,9 +322,9 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
       {program.status !== 'Selesai' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
         {[
-          { label: 'Total Anggaran', value: formatRupiah(program.total_anggaran || 0), color: 'var(--blue)' },
-          { label: 'Realisasi Terkini', value: formatRupiah(program.realisasi_terkini || 0), color: '#059669' },
-          { label: 'Sisa Anggaran', value: formatRupiah(program.sisa_anggaran || 0), color: '#D97706' },
+          { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
+          { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
+          { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
           { label: 'Progress', value: `${pct}%`, color: statusColor },
         ].map(c => (
           <div
@@ -429,14 +432,25 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
               {isAdmin && (
-                <button
-                  onClick={() => setShowEditProgram(true)}
-                  style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
-                >
-                  Edit
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {isBerjalan && (
+                    <button
+                      onClick={() => setShowHasilForm(true)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                      {program.hasil_filled_at ? 'Edit Realisasi' : 'Catat Realisasi'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowEditProgram(true)}
+                    style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
+                  >
+                    Edit
+                  </button>
+                </div>
               )}
             </div>
             <div style={{ overflowX: 'auto' }}>
@@ -448,10 +462,10 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                     ['Nama Pekerjaan', program.nama_pekerjaan],
                     ['Jenis Pekerjaan', program.jenis_pekerjaan || '-'],
                     ['Status', program.status],
-                    ['Progress', `${getEffectiveProgress(program)}%`],
-                    ['Total Anggaran', formatRupiah(program.total_anggaran || 0)],
-                    ['Realisasi Terkini', formatRupiah(program.realisasi_terkini || 0)],
-                    ['Sisa Anggaran', formatRupiah(program.sisa_anggaran || 0)],
+                    ['Progress', `${pct}%`],
+                    ['Total Anggaran', formatRupiah(derived.total_anggaran)],
+                    ['Realisasi Terkini', formatRupiah(derived.realisasi_terkini)],
+                    ['Sisa Anggaran', formatRupiah(derived.sisa_anggaran)],
                     ['Vendor', (() => { const subs = subPrograms.filter(s => s.program_id === program.id); if (subs.length === 0) return program.vendor || '-'; const u = [...new Set(subs.map(s => s.vendor).filter(Boolean))]; return u.length > 0 ? u.join(', ') : (program.vendor || '-') })()],
                     ['Catatan Pekerjaan', program.isu_utama
                       ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
@@ -485,6 +499,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                 </tbody>
               </table>
             </div>
+
+            {/* Rincian realisasi berjalan (On Going / On Hold) — tertutup by default */}
+            {isBerjalan && (
+              <div style={{ marginTop: 16 }}>
+                <HasilRincianCard program={program} isMobile={isMobile} />
+              </div>
+            )}
           </div>
         )}
 
