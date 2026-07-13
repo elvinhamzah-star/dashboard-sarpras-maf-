@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase, SubProgram, Program, Transaction, ProgramDocument, invalidateCache } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getEffectiveProgress, getFileEmbedUrl } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl } from '../lib/data'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import UpdateProgressModal from './UpdateProgressModal'
@@ -22,7 +22,7 @@ interface PekerjaanDetailProps {
   embedded?: boolean
 }
 
-type Tab = 'Ringkasan' | 'Dokumen' | 'Sub Pekerjaan'
+type Tab = 'Ringkasan' | 'Detail Realisasi' | 'Dokumen' | 'Sub Pekerjaan'
 
 export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate, embedded = false }: PekerjaanDetailProps) {
   const width = useWindowWidth()
@@ -87,7 +87,13 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
     }
   }, [isAdmin, program?.status, program?.hasil_filled_at, hasilDismissed])
 
-  const tabs: Tab[] = ['Ringkasan', 'Dokumen', ...(subPrograms.length > 0 || isAdmin ? ['Sub Pekerjaan' as Tab] : [])]
+  const hasRincian = (program?.hasil_rincian?.length ?? 0) > 0
+  const tabs: Tab[] = [
+    'Ringkasan',
+    ...(hasRincian || isAdmin ? ['Detail Realisasi' as Tab] : []),
+    'Dokumen',
+    ...(subPrograms.length > 0 || isAdmin ? ['Sub Pekerjaan' as Tab] : []),
+  ]
 
   if (loading) {
     return (
@@ -132,9 +138,6 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
   const nilaiInfo = deriveNilaiAset(program)
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
   const isSelesai = program.status === 'Selesai'
-  // On Going / On Hold sudah punya realisasi berjalan — admin bisa mencatat
-  // rincian realisasinya, dan semua orang bisa membandingkan RAB vs realisasi.
-  const isBerjalan = program.status === 'On Going' || program.status === 'On Hold'
   // Selesai + Ringkasan renders the multi-card Hasil layout, so the tab wrapper
   // drops its own white card to avoid nested cards.
   const bareRingkasan = isSelesai && activeTab === 'Ringkasan'
@@ -412,15 +415,11 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
       >
         {activeTab === 'Ringkasan' && isSelesai && (
           <div>
-            {isAdmin && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                <button
-                  onClick={() => setShowHasilForm(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                  {program.hasil_filled_at ? 'Edit Hasil' : 'Lengkapi Data Hasil'}
-                </button>
+            {nilaiInfo.mismatch && (
+              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
+                <div style={{ fontSize: 12, color: '#660000', lineHeight: 1.45 }}>
+                  Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
+                </div>
               </div>
             )}
             <HasilRingkasan program={program} isMobile={isMobile} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
@@ -429,19 +428,17 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
         {activeTab === 'Ringkasan' && !isSelesai && (
           <div>
+            {nilaiInfo.mismatch && (
+              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
+                <div style={{ fontSize: 12, color: '#660000', lineHeight: 1.45 }}>
+                  Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
+                </div>
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
               {isAdmin && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {isBerjalan && (
-                    <button
-                      onClick={() => setShowHasilForm(true)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                      {program.hasil_filled_at ? 'Edit Realisasi' : 'Catat Realisasi'}
-                    </button>
-                  )}
                   <button
                     onClick={() => setShowEditProgram(true)}
                     style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -500,10 +497,29 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
               </table>
             </div>
 
-            {/* Rincian realisasi berjalan (On Going / On Hold) — tertutup by default */}
-            {isBerjalan && (
-              <div style={{ marginTop: 16 }}>
-                <HasilRincianCard program={program} isMobile={isMobile} />
+          </div>
+        )}
+
+        {activeTab === 'Detail Realisasi' && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Detail Realisasi</h3>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowHasilForm(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  {program.hasil_filled_at ? (isSelesai ? 'Edit Hasil' : 'Edit Realisasi') : (isSelesai ? 'Lengkapi Data Hasil' : 'Catat Realisasi')}
+                </button>
+              )}
+            </div>
+            {(program.hasil_rincian?.length ?? 0) > 0 ? (
+              <HasilRincianCard program={program} isMobile={isMobile} defaultOpen />
+            ) : (
+              <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 13, marginBottom: 8 }}>Belum ada detail realisasi</div>
+                {isAdmin && <div style={{ fontSize: 12 }}>Klik <strong>{isSelesai ? 'Lengkapi Data Hasil' : 'Catat Realisasi'}</strong> untuk merinci realisasi</div>}
               </div>
             )}
           </div>

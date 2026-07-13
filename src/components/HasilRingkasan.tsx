@@ -22,12 +22,6 @@ const NILAI_LABEL: Record<HasilKategori, { label: string; sub: string }> = {
   jasa: { label: 'Total Realisasi', sub: 'total realisasi operasional' },
 }
 
-const RINCIAN_TITLE: Record<HasilKategori, string> = {
-  fisik: 'Rincian Hasil per Lokasi',
-  barang: 'Rincian Pengadaan per Item',
-  jasa: '',
-}
-
 export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: Props) {
   const [pairs, setPairs] = useState<BeforeAfterPair[]>([])
   const [docs, setDocs] = useState<Documentation[]>([])
@@ -49,16 +43,13 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
   const realisasi = program.realisasi_terkini ?? 0
   const efisiensi = anggaran - realisasi
   const efisiensiPct = anggaran > 0 ? (efisiensi / anggaran) * 100 : 0
+  const isHemat = efisiensi > 0
+  const isOver = efisiensi < 0
+  const isPas = efisiensi === 0
+  const pctStr = Math.abs(efisiensiPct).toFixed(1).replace('.', ',')
 
   const dampak = program.hasil_dampak ?? []
-  const rincian = program.hasil_rincian ?? []
   const docById = (id: string | null) => (id ? docs.find(d => d.id === id) : undefined)
-
-  // Live totals for rincian footer
-  const totUkuran = rincian.reduce((s, r) => s + (Number(r.ukuran) || 0), 0)
-  const totBiaya = rincian.reduce((s, r) => s + (Number(r.biaya) || 0), 0)
-  const perUnit = totUkuran > 0 ? Math.round(totBiaya / totUkuran) : 0
-  const satuan = rincian[0]?.satuan || (kat === 'fisik' ? 'm²' : 'unit')
 
   const cardStyle: React.CSSProperties = {
     background: 'var(--card)',
@@ -75,10 +66,34 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
     textTransform: 'uppercase',
     letterSpacing: '0.06em',
   }
+  const boxBase: React.CSSProperties = {
+    background: 'var(--card)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 12,
+    padding: isMobile ? '12px 13px' : '18px 17px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    textAlign: 'center',
+  }
+  const valStyle: React.CSSProperties = {
+    fontSize: isMobile ? 16 : 20,
+    fontWeight: 800,
+    letterSpacing: '-0.03em',
+    marginTop: isMobile ? 6 : 7,
+    fontVariantNumeric: 'tabular-nums',
+    color: 'var(--text-primary)',
+  }
+  const subStyle: React.CSSProperties = {
+    fontSize: isMobile ? 10 : 11,
+    color: 'var(--text-muted)',
+    marginTop: 4,
+  }
+  const washHemat: React.CSSProperties = { background: 'rgba(5,150,105,0.05)', border: '1px solid rgba(5,150,105,0.14)' }
+  const washOver: React.CSSProperties = { background: 'rgba(102,0,0,0.045)', border: '1px solid rgba(102,0,0,0.12)' }
 
   return (
     <div>
-      {/* 1. Metrics — Nilai (hero) + Anggaran + Efisiensi */}
+      {/* 1. Metrics — adaptif. Mobile: Nilai (hero, full-width) + duo di bawah.
+          Desktop: 3 kolom sama lebar, font angka seragam. */}
       <div
         style={{
           display: 'grid',
@@ -87,43 +102,48 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
           marginBottom: isMobile ? 11 : 14,
         }}
       >
+        {/* Nilai Aset — hero (full-width) di mobile, kolom biasa di desktop */}
         <div
           style={{
-            background: 'var(--card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 12,
-            padding: isMobile ? '11px 13px' : '15px 17px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            ...boxBase,
             gridColumn: isMobile ? '1 / -1' : undefined,
+            padding: isMobile ? '14px 13px' : '18px 17px',
           }}
         >
           <div style={eyebrowStyle}>{nilaiCfg.label}</div>
-          <div style={{ fontSize: isMobile ? 15.5 : 18, fontWeight: 700, letterSpacing: '-0.03em', marginTop: isMobile ? 5 : 7, color: 'var(--blue)' }}>
+          <div style={{ ...valStyle, fontSize: 20, marginTop: 6, color: 'var(--blue)' }}>
             {formatRupiah(nilaiAset)}
           </div>
-          <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', marginTop: 4 }}>{nilaiCfg.sub}</div>
+          <div style={{ ...subStyle, fontSize: isMobile ? 10.5 : 11 }}>{nilaiCfg.sub}</div>
         </div>
 
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 12, padding: isMobile ? '11px 13px' : '15px 17px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        {/* Total Anggaran */}
+        <div style={boxBase}>
           <div style={eyebrowStyle}>Total Anggaran</div>
-          <div style={{ fontSize: isMobile ? 15.5 : 18, fontWeight: 700, letterSpacing: '-0.03em', marginTop: isMobile ? 5 : 7, color: 'var(--text-primary)' }}>
-            {formatRupiah(anggaran)}
-          </div>
-          <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', marginTop: 4 }}>pagu awal pekerjaan</div>
+          <div style={valStyle}>{formatRupiah(anggaran)}</div>
+          <div style={subStyle}>pagu awal pekerjaan</div>
         </div>
 
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 12, padding: isMobile ? '11px 13px' : '15px 17px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={eyebrowStyle}>Efisiensi</div>
-          <div style={{ fontSize: isMobile ? 15.5 : 18, fontWeight: 700, letterSpacing: '-0.03em', marginTop: isMobile ? 5 : 7, color: efisiensi >= 0 ? 'var(--green)' : '#dc2626' }}>
-            {formatRupiah(Math.abs(efisiensi))}
-          </div>
-          <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', marginTop: 4 }}>
-            {efisiensi > 0
-              ? `${efisiensiPct.toFixed(1).replace('.', ',')}% di bawah anggaran`
-              : efisiensi < 0
-                ? `${Math.abs(efisiensiPct).toFixed(1).replace('.', ',')}% di atas anggaran`
-                : 'sesuai anggaran'}
-          </div>
+        {/* Efisiensi / Selisih — adaptif 3 state */}
+        <div style={{ ...boxBase, ...(isHemat ? washHemat : isOver ? washOver : {}) }}>
+          <div style={eyebrowStyle}>{isOver ? 'Selisih Anggaran' : 'Efisiensi Anggaran'}</div>
+          {isPas ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: isMobile ? 11 : 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(26,111,232,0.12)', color: 'var(--blue-dark)' }}>
+                Tepat sesuai pagu
+              </span>
+            </div>
+          ) : (
+            <>
+              <div style={valStyle}>
+                {isOver && <span style={{ color: '#660000' }}>+ </span>}
+                {formatRupiah(Math.abs(efisiensi))}
+              </div>
+              <div style={{ ...subStyle, color: isHemat ? 'var(--green)' : '#660000', fontWeight: 700 }}>
+                {pctStr}% {isHemat ? 'di bawah pagu' : 'di atas pagu'}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -147,7 +167,7 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
         </div>
       )}
 
-      {/* 3. Kondisi Sebelum & Sesudah */}
+      {/* 3. Kondisi Sebelum & Sesudah — dokumentasi di paling bawah */}
       {pairs.length > 0 && (
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 13px' }}>
@@ -191,60 +211,6 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           )}
-        </div>
-      )}
-
-      {/* 4. Rincian Hasil (fisik/barang) */}
-      {kat !== 'jasa' && rincian.length > 0 && (
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 13px' }}>
-            <span style={{ width: 4, height: 17, borderRadius: 2, background: 'var(--green)' }} />
-            <h2 style={{ fontSize: isMobile ? 13 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>{RINCIAN_TITLE[kat]}</h2>
-            <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>
-              {rincian.length} {kat === 'fisik' ? 'titik' : 'item'}
-            </span>
-          </div>
-
-          {/* Total keseluruhan — ringkasan di atas, sebelum rincian per lokasi */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '11px 13px' : '12px 15px', borderRadius: 11, background: 'rgba(5,150,105,0.07)', border: '1px solid rgba(5,150,105,0.15)', marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Keseluruhan</span>
-            <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
-              {kat === 'fisik' ? (
-                <>
-                  {totUkuran.toLocaleString('id-ID')} {satuan}
-                  <small style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--green)', marginTop: 2 }}>≈ Rp {perUnit.toLocaleString('id-ID')} / {satuan}</small>
-                </>
-              ) : (
-                <>
-                  {formatRupiah(totBiaya)}
-                  <small style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--green)', marginTop: 2 }}>{rincian.length} item</small>
-                </>
-              )}
-            </span>
-          </div>
-
-          {rincian.map((r, i) => {
-            const perItem = r.ukuran > 0 ? Math.round(r.biaya / r.ukuran) : 0
-            return (
-              <div key={i} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', borderRadius: 11, padding: isMobile ? '11px 13px' : '13px 15px', marginBottom: 9 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{r.nama || '-'}</div>
-                  <div>
-                    <div style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(r.biaya)}</div>
-                    {kat === 'fisik' && perItem > 0 && (
-                      <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, textAlign: 'right' }}>Rp {perItem.toLocaleString('id-ID')} / {r.satuan}</div>
-                    )}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '3px 9px', borderRadius: 7 }}>
-                    {kat === 'fisik' ? 'Luas' : 'Jumlah'} <b style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{r.ukuran.toLocaleString('id-ID')}</b>
-                    <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 10.5 }}>{r.satuan}</span>
-                  </span>
-                </div>
-              </div>
-            )
-          })}
         </div>
       )}
     </div>
