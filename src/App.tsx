@@ -69,6 +69,15 @@ export default function App() {
   const [childTitle, setChildTitle] = useState<string | null>(null)
   const registerTitle = useCallback((t: string | null) => setChildTitle(t), [])
 
+  // Warm the data cache on mount for sessions restored from sessionStorage
+  // (e.g. a page reload). Fresh logins warm it via the onLogin callback instead,
+  // so this only fires when we're already authenticated at mount — avoiding the
+  // cold-cache network buffering on the first visit to each page after a reload.
+  useEffect(() => {
+    if (isLoggedIn) prefetchAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Cek maintenance mode dari Supabase saat pertama load
   useEffect(() => {
     const check = async () => {
@@ -498,7 +507,14 @@ export default function App() {
         >
           <div
             key={currentPage + (selectedProgramId || '')}
-            style={{ animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)', minHeight: '100%' }}
+            style={{
+              animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)',
+              minHeight: '100%',
+              // Promote to its own compositor layer so the transform/opacity slide
+              // runs on the GPU, not the main thread (which is busy mounting the
+              // heavy detail tree). Keeps the page-open motion from stuttering.
+              willChange: 'transform, opacity',
+            }}
           >
             <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>
               <BackNavContext.Provider value={registerBack}>

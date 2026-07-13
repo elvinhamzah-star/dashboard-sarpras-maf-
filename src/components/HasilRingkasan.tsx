@@ -6,13 +6,16 @@ import {
   HasilKategori,
   fetchBeforeAfterPairs,
   fetchDocumentation,
+  invalidateCache,
 } from '../lib/supabase'
 import { formatRupiah, getDriveThumbnailUrl } from '../lib/data'
 import { katFromJenis } from './HasilFormModal'
+import ManageBeforeAfterModal from './ManageBeforeAfterModal'
 
 interface Props {
   program: Program
   isMobile: boolean
+  isAdmin?: boolean
   onNavigateGaleri?: () => void
 }
 
@@ -22,9 +25,18 @@ const NILAI_LABEL: Record<HasilKategori, { label: string; sub: string }> = {
   jasa: { label: 'Total Realisasi', sub: 'total realisasi operasional' },
 }
 
-export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: Props) {
+export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateGaleri }: Props) {
   const [pairs, setPairs] = useState<BeforeAfterPair[]>([])
   const [docs, setDocs] = useState<Documentation[]>([])
+  const [showManageBA, setShowManageBA] = useState(false)
+
+  // Refetch BA pairs after the manage modal saves, so the featured list here
+  // updates immediately without a full page reload.
+  const refreshPairs = async () => {
+    invalidateCache('before_after_pairs')
+    const { data } = await fetchBeforeAfterPairs()
+    if (data) setPairs((data as BeforeAfterPair[]).filter(p => p.program_id === program.id))
+  }
 
   useEffect(() => {
     let alive = true
@@ -170,12 +182,43 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
         </div>
       )}
 
-      {/* 3. Kondisi Sebelum & Sesudah — dokumentasi di paling bawah */}
-      {featuredPairs.length > 0 && (
+      {/* 3. Kondisi Sebelum & Sesudah — dokumentasi di paling bawah.
+          Untuk admin, kartu selalu muncul (walau belum ada pasangan yang
+          ditampilkan) agar tombol Kelola tetap tersedia dari halaman ini. */}
+      {(featuredPairs.length > 0 || isAdmin) && (
         <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 2px 13px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 9, margin: '4px 2px 13px' }}>
             <h2 style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>Kondisi Sebelum &amp; Sesudah</h2>
+            {isAdmin && (isMobile ? (
+              <button
+                onClick={() => setShowManageBA(true)}
+                title="Kelola Sebelum/Sesudah"
+                aria-label="Kelola Sebelum/Sesudah"
+                style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}
+                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-muted)'; b.style.borderColor = 'var(--border-subtle)' }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowManageBA(true)}
+                title="Kelola Sebelum/Sesudah"
+                style={{ height: 34, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, flexShrink: 0, transition: 'all 0.15s' }}
+                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--card)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border-subtle)' }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                Kelola Sebelum/Sesudah
+              </button>
+            ))}
           </div>
+          {featuredPairs.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: isMobile ? '20px 12px' : '28px 16px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: isMobile ? 12.5 : 13, marginBottom: 6 }}>Belum ada pasangan Sebelum/Sesudah yang ditampilkan di sini</div>
+              <div style={{ fontSize: 12 }}>Klik <strong>Kelola Sebelum/Sesudah</strong> untuk memilih foto (maks. 2).</div>
+            </div>
+          ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {featuredPairs.map(pair => {
               const beforeDoc = docById(pair.before_doc_id)
@@ -206,7 +249,8 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
               )
             })}
           </div>
-          {onNavigateGaleri && (
+          )}
+          {featuredPairs.length > 0 && onNavigateGaleri && (
             <button
               onClick={onNavigateGaleri}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, width: '100%', padding: 9, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--blue)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -216,6 +260,16 @@ export default function HasilRingkasan({ program, isMobile, onNavigateGaleri }: 
             </button>
           )}
         </div>
+      )}
+
+      {isAdmin && showManageBA && (
+        <ManageBeforeAfterModal
+          programId={program.id}
+          programName={program.nama_pekerjaan}
+          docs={docs}
+          onClose={() => setShowManageBA(false)}
+          onSaved={refreshPairs}
+        />
       )}
     </div>
   )

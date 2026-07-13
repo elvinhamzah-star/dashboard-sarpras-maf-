@@ -1,5 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase, SubProgram, Program, Transaction, ProgramDocument, invalidateCache } from '../lib/supabase'
+import {
+  SubProgram,
+  Program,
+  Transaction,
+  ProgramDocument,
+  invalidateCache,
+  fetchPrograms,
+  fetchSubPrograms,
+  fetchProgramDocuments,
+  fetchTransactions,
+} from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl } from '../lib/data'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -54,24 +64,31 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
 
   const load = async () => {
     setLoading(true)
-    const [pRes, sRes, pdRes] = await Promise.all([
-      supabase.from('programs').select('*').eq('id', programId).single(),
-      supabase.from('sub_programs').select('*').eq('program_id', programId).order('id', { ascending: true }),
-      supabase.from('program_documents').select('*').eq('program_id', programId).order('created_at', { ascending: true }),
+    // Read from the shared in-memory cache (warmed by prefetchAll on login) and
+    // filter client-side, instead of firing fresh per-program network queries on
+    // every open. When the cache is warm this resolves in a microtask — the page
+    // renders instantly with no network buffering. Admin write paths call
+    // invalidateCache(...) before load(), so post-save reloads still fetch fresh.
+    const [pRes, sRes, pdRes, tRes] = await Promise.all([
+      fetchPrograms(),
+      fetchSubPrograms(),
+      fetchProgramDocuments(),
+      fetchTransactions(),
     ])
-    if (pRes.data) {
-      setProgram(pRes.data)
-      // Fetch transactions with bukti for this program
-      const tRes = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('nama_pekerjaan', pRes.data.nama_pekerjaan)
-        .not('link_bukti', 'is', null)
-        .order('tanggal', { ascending: false })
-      setTransactions((tRes.data ?? []).filter(t => t.link_bukti))
+    const prog = (pRes.data as Program[] | null)?.find(p => p.id === programId) ?? null
+    if (prog) {
+      setProgram(prog)
+      // Transactions with a bukti link for this program (cache is already sorted tanggal desc).
+      setTransactions(
+        ((tRes.data as Transaction[] | null) ?? []).filter(
+          t => t.nama_pekerjaan === prog.nama_pekerjaan && t.link_bukti,
+        ),
+      )
+    } else {
+      setProgram(null)
     }
-    if (sRes.data) setSubPrograms(sRes.data)
-    if (pdRes.data) setProgramDocs(pdRes.data as ProgramDocument[])
+    if (sRes.data) setSubPrograms((sRes.data as SubProgram[]).filter(s => s.program_id === programId))
+    if (pdRes.data) setProgramDocs((pdRes.data as ProgramDocument[]).filter(d => d.program_id === programId))
     setLoading(false)
   }
 
@@ -422,7 +439,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                 </div>
               </div>
             )}
-            <HasilRingkasan program={program} isMobile={isMobile} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
+            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
 
@@ -977,6 +994,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           program={program}
           onClose={() => setShowUpdateModal(false)}
           onUpdated={() => {
+            invalidateCache('programs', 'sub_programs')
             setShowUpdateModal(false)
             load()
           }}
