@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah, getEffectiveProgress } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
+import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
 
 interface PekerjaanProps {
@@ -79,6 +80,9 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
     if (unique.length === 0) return p.vendor || ''
     return unique.join(' · ')
   }
+
+  const getDerived = (p: Program) =>
+    deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id))
 
   // Filter by status (if active), then sort by ID
   const filtered = programs
@@ -179,7 +183,8 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         /* ── CARD LIST: style selaras dengan BerandaWeekOverWeek ── */
         <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
           {filtered.map((p) => {
-            const pct = getEffectiveProgress(p)
+            const d = getDerived(p)
+            const pct = d.progress_percent
             const color = STATUS_COLORS[p.status] || 'var(--blue)'
             const isLocked = role === 'maf' && p.jenis_pekerjaan === 'Operasional'
             const vendor = getVendorDisplay(p)
@@ -199,7 +204,6 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                   cursor: isLocked ? 'default' : 'pointer',
                   opacity: isLocked ? 0.7 : 1,
                   transition: 'background-color 0.15s, box-shadow 0.18s',
-                  boxShadow: activeStatus !== '' ? `inset 3px 0 0 ${color}` : 'none',
                 }}
               >
                 {isMobile ? (
@@ -246,11 +250,11 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                         {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
                       </div>
                       <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: (p.realisasi_terkini || 0) > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
-                          {formatRupiah(p.realisasi_terkini || 0)}
+                        <div style={{ fontSize: 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                          {formatRupiah(d.realisasi_terkini)}
                         </div>
                         <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>
-                          dari {formatRupiah(p.total_anggaran || 0)}
+                          dari {formatRupiah(d.total_anggaran)}
                         </div>
                       </div>
                     </div>
