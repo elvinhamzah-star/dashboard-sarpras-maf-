@@ -92,7 +92,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
     'Ringkasan',
     ...(hasRincian || isAdmin ? ['Detail Realisasi' as Tab] : []),
     'Dokumen',
-    ...(subPrograms.length > 0 || isAdmin ? ['Sub Pekerjaan' as Tab] : []),
+    ...(subPrograms.length > 0 ? ['Sub Pekerjaan' as Tab] : []),
   ]
 
   if (loading) {
@@ -246,12 +246,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         <div
           onClick={() => isAdmin && setShowEditCatatan(true)}
           style={{
-            backgroundColor: program.isu_utama ? 'rgba(102,0,0,0.08)' : 'var(--surface-min)',
-            borderLeft: program.isu_utama ? 'none' : '2.5px solid var(--border)',
+            backgroundColor: 'var(--card)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: 7,
             padding: '8px 12px',
             fontSize: isMobile ? 11.5 : 12.5,
-            color: program.isu_utama ? '#660000' : 'var(--text-muted)',
+            color: program.isu_utama ? 'var(--text-secondary)' : 'var(--text-muted)',
             fontWeight: 500,
             cursor: isAdmin ? 'pointer' : 'default',
             transition: 'all 0.15s',
@@ -262,12 +262,12 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
           }}
           onMouseEnter={e => {
             if (isAdmin && program.isu_utama) {
-              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(102,0,0,0.13)'
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--surface-raised)'
             }
           }}
           onMouseLeave={e => {
             if (isAdmin && program.isu_utama) {
-              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(102,0,0,0.08)'
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)'
             }
           }}
         >
@@ -276,7 +276,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {program.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                    <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#660000', flexShrink: 0, marginTop: 5 }} />
+                    <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: 'var(--text-muted)', flexShrink: 0, marginTop: 5 }} />
                     <span>{line}</span>
                   </div>
                 ))}

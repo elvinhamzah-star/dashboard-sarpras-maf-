@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview · Pengadaan · Operasional · Program</title>
+<style>
+  :root{
+    --card:#ffffff; --surface-raised:#f8fafc; --surface-2:#eef2f7;
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --border:rgba(15,23,42,0.10); --border-subtle:rgba(15,23,42,0.07);
+    --blue:#1A6FE8; --green:#059669;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe5ee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text-primary);padding:26px 14px 90px}
+  .stage{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:10px;width:404px}
+  .col-cap{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#475569}
+  .col-note{font-size:11.5px;color:#475569;line-height:1.5;background:#fff;border:1px solid var(--border-subtle);border-radius:10px;padding:10px 12px;width:100%}
+  .col-note b{color:#0f172a}
+  .col-note .tag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1e293b;background:#eef2f7;border-radius:6px;padding:2px 7px;margin-right:4px}
+
+  .phone{width:390px;background:#0b1220;border-radius:44px;padding:12px;box-shadow:0 24px 60px rgba(15,23,42,.28)}
+  .screen{background:#eef2f7;border-radius:33px;overflow:hidden;height:760px;overflow-y:auto;position:relative}
+  .statusbar{height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0b1220;position:sticky;top:0;background:#eef2f7;z-index:5}
+  .screen-pad{padding:6px 14px 40px}
+
+  /* ---- metrik atas (tidak berubah) ---- */
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+  .mbox{background:var(--card);border:1px solid var(--border-subtle);border-radius:12px;padding:12px 12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .mbox.hero{grid-column:1/-1}
+  .mbox .eb{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+  .mbox .v{font-size:16px;font-weight:800;letter-spacing:-.03em;margin-top:5px;font-variant-numeric:tabular-nums;color:var(--text-primary)}
+  .mbox.hero .v{font-size:19px;color:var(--blue)}
+  .mbox .s{font-size:10px;color:var(--text-muted);margin-top:3px}
+  .mbox.sisa{background:rgba(26,111,232,.045);border-color:rgba(26,111,232,.14)}
+  .mbox.sisa .s{color:var(--blue);font-weight:700}
+  .mbox.hemat{background:rgba(5,150,105,.05);border-color:rgba(5,150,105,.14)}
+  .mbox.hemat .s{color:var(--green);font-weight:700}
+
+  /* ---- Header hijau ---- */
+  .hdr{background:rgba(5,150,105,.10);border:1px solid rgba(5,150,105,.18);border-radius:14px;padding:12px 14px;text-align:center;margin-bottom:12px}
+  .hdr h2{font-size:14px;font-weight:700;letter-spacing:-.02em;margin:0;color:var(--text-primary)}
+  .hdr .sub{font-size:10.5px;font-weight:600;color:var(--text-muted);margin-top:4px}
+
+  /* ---- kartu putih ---- */
+  .card{background:var(--card);border:1px solid var(--border-subtle);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px 15px}
+  .card + .card{margin-top:12px}
+  .card-title{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px}
+  .card-sub{font-size:10.5px;color:var(--text-muted);margin-bottom:10px}
+
+  /* ---- tabel generik ---- */
+  .grid{display:grid;gap:10px;padding:0 4px;align-items:center}
+  .cols{padding-bottom:6px;border-bottom:1px solid var(--border-subtle)}
+  .cols .ch{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+  .r-c{text-align:center}
+  .r-r{text-align:right}
+  .arow{padding:9px 4px}
+  .arow + .arow{border-top:1px solid var(--border-subtle)}
+  .arow .nm{font-size:12px;font-weight:600;color:var(--text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arow .nm small{display:block;font-size:10px;font-weight:500;color:var(--text-muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arow .mid{text-align:center;font-size:12px;font-weight:600;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .arow .mid span{color:var(--text-muted);font-weight:500;font-size:10px;margin-left:2px}
+  .arow .nilai{text-align:right;font-size:12px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .chip{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.02em;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .chip.done{color:#047857;background:rgba(5,150,105,.11)}
+  .chip.run{color:#1d4ed8;background:rgba(26,111,232,.10)}
+  .chip.plan{color:#92600a;background:rgba(217,151,20,.12)}
+
+  .ntot{margin-top:2px;padding:10px 4px 2px;border-top:1.5px solid var(--border);align-items:baseline}
+  .ntot .lbl{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+  .ntot .val{text-align:right;font-size:16px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* kolom per-tipe */
+  .g-barang{grid-template-columns:minmax(0,1fr) 60px 112px}
+  .g-op{grid-template-columns:minmax(0,1fr) 58px 116px}
+  .g-prog{grid-template-columns:minmax(0,1fr) 84px 100px}
+  .g-barang .ntot-c,.g-op .ntot-c,.g-prog .ntot-c{grid-column:3}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ================= 1. PENGADAAN (barang) ================= -->
+  <div class="col">
+    <div class="col-cap">🛒 Pengadaan · kategori "barang"</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar">9:41</div>
+      <div class="screen-pad">
+        <div class="metrics">
+          <div class="mbox hero"><div class="eb">Nilai Pengadaan</div><div class="v">Rp 13.853.440</div><div class="s">nilai barang yang diadakan</div></div>
+          <div class="mbox"><div class="eb">Total Anggaran</div><div class="v">Rp 15.270.000</div><div class="s">pagu awal</div></div>
+          <div class="mbox hemat"><div class="eb">Efisiensi</div><div class="v">Rp 1.416.560</div><div class="s">9,3% di bawah pagu</div></div>
+        </div>
+
+        <div class="hdr"><h2>Rincian Pengadaan per Item</h2><div class="sub">Seragam Div. Rumah Tangga</div></div>
+
+        <div class="card">
+          <div class="card-title">Daftar Barang · 4 item</div>
+          <div class="grid g-barang cols"><div class="ch">Item</div><div class="ch r-c">Jml</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid g-barang arow"><span class="nm">Seragam Batik</span><span class="mid">24<span>pcs</span></span><span class="nilai">Rp 4.800.000</span></div>
+          <div class="grid g-barang arow"><span class="nm">Seragam Harian</span><span class="mid">48<span>pcs</span></span><span class="nilai">Rp 5.280.000</span></div>
+          <div class="grid g-barang arow"><span class="nm">Sepatu Kerja</span><span class="mid">24<span>psg</span></span><span class="nilai">Rp 2.880.000</span></div>
+          <div class="grid g-barang arow"><span class="nm">Name Tag &amp; ID</span><span class="mid">24<span>set</span></span><span class="nilai">Rp 893.440</span></div>
+          <div class="grid g-barang ntot"><span class="lbl">Total Pengadaan</span><span class="val ntot-c">Rp 13.853.440</span></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="col-note"><span class="tag">Reuse</span> Sama persis dengan desain aset — tabel <b>Nama · Jumlah(unit) · Nilai</b>. Cukup ganti header kolom jadi <b>"Jml"</b> dan satuan <b>pcs/psg/set/unit</b>. Tidak perlu grouping lokasi.</div>
+  </div>
+
+  <!-- ================= 2. OPERASIONAL (jasa) ================= -->
+  <div class="col">
+    <div class="col-cap">🧑‍🔧 Operasional · kategori "jasa"</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar">9:41</div>
+      <div class="screen-pad">
+        <div class="metrics">
+          <div class="mbox hero"><div class="eb">Total Realisasi</div><div class="v">Rp 51.617.690</div><div class="s">realisasi operasional berjalan</div></div>
+          <div class="mbox"><div class="eb">Total Anggaran</div><div class="v">Rp 61.941.228</div><div class="s">pagu tahunan</div></div>
+          <div class="mbox sisa"><div class="eb">Sisa Anggaran</div><div class="v">Rp 10.323.538</div><div class="s">16,7% belum terpakai</div></div>
+        </div>
+
+        <div class="hdr"><h2>Rincian Operasional</h2><div class="sub">Man Power · per divisi</div></div>
+
+        <div class="card">
+          <div class="card-title">Alokasi per Divisi</div>
+          <div class="card-sub">Total personel 34 orang · realisasi s/d bulan ini</div>
+          <div class="grid g-op cols"><div class="ch">Divisi</div><div class="ch r-c">Org</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid g-op arow"><span class="nm">Kebersihan</span><span class="mid">12</span><span class="nilai">Rp 19.200.000</span></div>
+          <div class="grid g-op arow"><span class="nm">Pertamanan</span><span class="mid">6</span><span class="nilai">Rp 9.600.000</span></div>
+          <div class="grid g-op arow"><span class="nm">Security</span><span class="mid">8</span><span class="nilai">Rp 13.617.690</span></div>
+          <div class="grid g-op arow"><span class="nm">Supir &amp; Depot</span><span class="mid">4</span><span class="nilai">Rp 5.600.000</span></div>
+          <div class="grid g-op arow"><span class="nm">Maintenance</span><span class="mid">4</span><span class="nilai">Rp 3.600.000</span></div>
+          <div class="grid g-op ntot"><span class="lbl">Total Realisasi</span><span class="val ntot-c">Rp 51.617.690</span></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="col-note"><span class="tag">Baru</span> Jasa/operasional tidak punya aset. Rincian natural = <b>alokasi per divisi/tim</b> (Divisi · jumlah personel · biaya). Alternatif: rincian <b>per bulan</b>. <b>"Efisiensi" diganti "Sisa Anggaran"</b> karena masih berjalan — bukan penghematan. <i>Angka per-divisi contoh.</i></div>
+  </div>
+
+  <!-- ================= 3. PROGRAM / KESADARAN (jasa) ================= -->
+  <div class="col">
+    <div class="col-cap">📢 Program · kategori "jasa"</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar">9:41</div>
+      <div class="screen-pad">
+        <div class="metrics">
+          <div class="mbox hero"><div class="eb">Total Realisasi</div><div class="v">Rp 3.414.700</div><div class="s">realisasi kegiatan berjalan</div></div>
+          <div class="mbox"><div class="eb">Total Anggaran</div><div class="v">Rp 64.457.000</div><div class="s">pagu program</div></div>
+          <div class="mbox sisa"><div class="eb">Sisa Anggaran</div><div class="v">Rp 61.042.300</div><div class="s">94,7% belum terpakai</div></div>
+        </div>
+
+        <div class="hdr"><h2>Rincian Kegiatan</h2><div class="sub">Kesadaran tentang kebersihan</div></div>
+
+        <div class="card">
+          <div class="card-title">Daftar Kegiatan · 5 kegiatan</div>
+          <div class="card-sub">1 selesai · 1 berjalan · 3 direncanakan</div>
+          <div class="grid g-prog cols"><div class="ch">Kegiatan</div><div class="ch r-c">Status</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid g-prog arow"><span class="nm">Banner &amp; Poster Edukasi</span><span class="r-c"><span class="chip done">Selesai</span></span><span class="nilai">Rp 2.414.700</span></div>
+          <div class="grid g-prog arow"><span class="nm">Sosialisasi Warga</span><span class="r-c"><span class="chip run">Berjalan</span></span><span class="nilai">Rp 1.000.000</span></div>
+          <div class="grid g-prog arow"><span class="nm">Lomba Kebersihan</span><span class="r-c"><span class="chip plan">Rencana</span></span><span class="nilai">Rp 0</span></div>
+          <div class="grid g-prog arow"><span class="nm">Pelatihan Petugas</span><span class="r-c"><span class="chip plan">Rencana</span></span><span class="nilai">Rp 0</span></div>
+          <div class="grid g-prog arow"><span class="nm">Media Kampanye Digital</span><span class="r-c"><span class="chip plan">Rencana</span></span><span class="nilai">Rp 0</span></div>
+          <div class="grid g-prog ntot"><span class="lbl">Total Realisasi</span><span class="val ntot-c">Rp 3.414.700</span></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="col-note"><span class="tag">Baru</span> Program/kampanye output-nya <b>kegiatan</b>, bukan barang/aset. Rincian = <b>daftar kegiatan</b> (Kegiatan · status · biaya). <b>Chip status</b> (Selesai/Berjalan/Rencana) penting karena realisasi masih awal — menunjukkan progres, bukan cuma angka Rp0. <i>Daftar kegiatan contoh.</i></div>
+  </div>
+
+</div>
+
+<style>
+  /* affordance elemen yang bisa diedit */
+  [contenteditable]{outline:none;border-radius:4px;transition:background .12s,box-shadow .12s;cursor:text}
+  [contenteditable]:hover{background:rgba(26,111,232,.07)}
+  [contenteditable]:focus{background:rgba(26,111,232,.12);box-shadow:0 0 0 2px rgba(26,111,232,.4)}
+  /* akumulasi otomatis — terkunci */
+  .autolock{position:relative}
+  .mbox.autolock::after{content:"🔒 otomatis";position:absolute;top:8px;right:9px;font-size:8.5px;font-weight:700;letter-spacing:.03em;color:var(--text-muted);background:var(--surface-2);border-radius:5px;padding:2px 5px}
+  .edit-hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b1220;color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(15,23,42,.35);z-index:99}
+</style>
+<div class="edit-hint">✏️ Klik teks untuk mengubah · 🔒 total &amp; metrik atas terkunci (otomatis)</div>
+<script>
+  // editable: hanya baris data (nama, jumlah, nilai per-baris, status, label kolom)
+  var SEL = '.nm,.mid,.nilai,.aset,.vol,.lname,.lbl,.ch,.card-title,.card-sub,.hdr h2,.hdr .sub,.chip';
+  document.querySelectorAll(SEL).forEach(function(el){
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+  });
+  // terkunci: kartu metrik atas + baris total (akumulasi otomatis)
+  document.querySelectorAll('.mbox,.ntot .val').forEach(function(el){
+    el.classList.add('autolock');
+    el.title = 'Otomatis dihitung — terkunci';
+  });
+</script>
+</body>
+</html>

@@ -273,7 +273,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
-                  borderLeft: '3px solid #059669',
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -341,7 +340,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
-                  borderLeft: rencana.length > 0 ? '3px solid #660000' : '1.5px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -406,7 +404,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: `1.5px solid var(--border-subtle)`,
-                  borderLeft: `3px solid ${color}`,
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -454,11 +451,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 {p.isu_utama && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-                      <svg width="11" height="11" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                      </svg>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 4 }}>
                       {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (

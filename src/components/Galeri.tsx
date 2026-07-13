@@ -521,7 +521,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   <div style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20 }}>
                     {titikDocs.length} foto
                   </div>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: '#7C3AED' }} />
                 </div>
                 {/* Body */}
                 <div style={{ padding: isMobile ? '10px 12px' : '12px 14px' }}>
@@ -947,7 +946,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
               {mobilePrograms.map(prog => {
                 const progDocs = docs.filter(d => d.program_id === prog.id)
                 const cover = getDriveThumbnailUrl(progDocs[0]?.link_foto)
-                const statusColor = STATUS_COLORS[prog.status] || 'var(--blue)'
                 const titikCount = getDistinctTitik(prog.id).length
                 return (
                   <div
@@ -975,23 +973,19 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       <div style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20 }}>
                         {progDocs.length} foto
                       </div>
-                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: statusColor }} />
                     </div>
                     {/* Info */}
                     <div style={{ padding: isMobile ? '10px 12px' : '12px 14px' }}>
                       <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                         {prog.nama_pekerjaan}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: `${statusColor}15`, color: statusColor }}>
-                          {prog.status}
-                        </span>
-                        {titikCount > 1 && (
+                      {titikCount > 1 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 99, backgroundColor: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}>
                             {titikCount} titik
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )

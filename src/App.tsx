@@ -58,6 +58,10 @@ export default function App() {
   // When Galeri was entered from PekerjaanDetail, back returns to that program's detail.
   const [galeriReturnProgramId, setGaleriReturnProgramId] = useState<string | null>(null)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
+  // When a program detail is opened from Beranda (not the Pekerjaan menu), Back
+  // returns to Beranda and reopens the status list at the tab we came from.
+  const [pekerjaanFromBeranda, setPekerjaanFromBeranda] = useState(false)
+  const [berandaReturnTab, setBerandaReturnTab] = useState<string | null>(null)
   // Back handler registered by the current page's drill-down sub-view (Galeri
   // folder, Dokumen subfolder, etc.) so the mobile top bar can drive it.
   const [childBack, setChildBack] = useState<BackHandler>(null)
@@ -98,12 +102,26 @@ export default function App() {
     setGaleriProgramId(null)
     setGaleriReturnToDokumen(false)
     if (page !== 'beranda') setBerandaReturnDetailId(null)
+    setPekerjaanFromBeranda(false)
+    setBerandaReturnTab(null)
     if (isMobile) setSidebarOpen(false)
   }
 
   const handleSelectProgram = (id: string) => {
     if (role === 'maf' && id === 'P-024') return
+    setPekerjaanFromBeranda(false)
     setSelectedProgramId(id)
+  }
+
+  // Back from the full-page program detail. If we arrived from Beranda, return
+  // there (Beranda reopens the status list at berandaReturnTab); otherwise fall
+  // back to the Pekerjaan menu list.
+  const handlePekerjaanBack = () => {
+    setSelectedProgramId(null)
+    if (pekerjaanFromBeranda) {
+      setPekerjaanFromBeranda(false)
+      setCurrentPage('beranda')
+    }
   }
 
   const handleAddPekerjaan = () => {
@@ -184,7 +202,7 @@ export default function App() {
   // BackNavContext, which surfaces here as `childBack`.
   const backAction: (() => void) | null =
     currentPage === 'pekerjaan' && selectedProgramId
-      ? () => setSelectedProgramId(null)
+      ? handlePekerjaanBack
       : childBack
 
   const renderPage = () => {
@@ -193,7 +211,7 @@ export default function App() {
         <PekerjaanDetail
           programId={selectedProgramId}
           isAdmin={isAdmin}
-          onBack={() => setSelectedProgramId(null)}
+          onBack={handlePekerjaanBack}
           onNavigate={(page, pid, cat) => {
             setSelectedProgramId(null)
             setCurrentPage(page as Page)
@@ -211,11 +229,25 @@ export default function App() {
 
     switch (currentPage) {
       case 'beranda':
-        return <Beranda isAdmin={isAdmin} role={role} initialDetailId={berandaReturnDetailId} onInitialDetailConsumed={() => setBerandaReturnDetailId(null)} onNavigate={(page, pid, cat) => {
-          setCurrentPage(page as Page)
-          if (page === 'dokumen') { setDokumenProgramId(pid ?? null); setDokumenCategory((cat as DocCategory) ?? null) }
-          if (page === 'galeri') { setGaleriProgramId(pid ?? null); setBerandaReturnDetailId(pid ?? null) }
-        }} />
+        return <Beranda
+          isAdmin={isAdmin}
+          role={role}
+          initialDetailId={berandaReturnDetailId}
+          onInitialDetailConsumed={() => setBerandaReturnDetailId(null)}
+          initialStatusTab={berandaReturnTab}
+          onInitialStatusConsumed={() => setBerandaReturnTab(null)}
+          onOpenDetail={(id, tab) => {
+            setPekerjaanFromBeranda(true)
+            setBerandaReturnTab(tab)
+            setSelectedProgramId(id)
+            setCurrentPage('pekerjaan')
+          }}
+          onNavigate={(page, pid, cat) => {
+            setCurrentPage(page as Page)
+            if (page === 'dokumen') { setDokumenProgramId(pid ?? null); setDokumenCategory((cat as DocCategory) ?? null) }
+            if (page === 'galeri') { setGaleriProgramId(pid ?? null); setBerandaReturnDetailId(pid ?? null) }
+          }}
+        />
       case 'pekerjaan':
         return (
           <Pekerjaan
@@ -282,7 +314,7 @@ export default function App() {
   const pageTitles: Record<Page, string> = {
     beranda: 'Dashboard Sarpras MAF',
     pekerjaan: 'Daftar 25 Pekerjaan',
-    keuangan: 'Keuangan',
+    keuangan: 'Riwayat Keuangan',
     dokumen: 'Dokumen Pekerjaan',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',

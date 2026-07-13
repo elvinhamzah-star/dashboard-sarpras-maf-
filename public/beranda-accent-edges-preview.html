@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview — Accent Edges Kartu Beranda</title>
+<style>
+  :root{
+    --blue:#1A6FE8; --green:#059669; --amber:#D97706; --maroon:#660000;
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --bg:#F1F4F9; --card:#fff; --border-subtle:rgba(15,23,42,0.06); --surface-raised:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text-primary);-webkit-font-smoothing:antialiased;padding:16px 14px 40px}
+  .maxw{max-width:390px;margin:0 auto}
+  .sec-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:18px 2px 10px}
+  .panel{background:rgba(255,255,255,.55);border:1px solid var(--border-subtle);border-radius:16px;padding:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mt10{margin-top:10px}
+
+  /* kartu metrik */
+  .card{background:var(--surface-raised);border-radius:12px;padding:12px 13px;display:flex;flex-direction:column;align-items:center;gap:5px;
+        border:1px solid var(--edge);box-shadow:0 2px 8px var(--glow), 0 1px 2px rgba(0,0,0,.04)}
+  .card .top{display:flex;align-items:center;gap:7px}
+  .card .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .card .lbl{font-size:9.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em}
+  .card .val{font-size:15px;font-weight:700;letter-spacing:-.03em;line-height:1.1;text-align:center;word-break:break-word}
+  .card .sub{font-size:10px;color:var(--text-muted);text-align:center}
+
+  /* progress card full width */
+  .pcard{background:var(--surface-raised);border-radius:12px;padding:14px 16px;
+         border:1px solid var(--edge);box-shadow:0 2px 8px var(--glow), 0 1px 2px rgba(0,0,0,.04)}
+  .prow{display:flex;align-items:center;gap:10px}
+  .pnum{font-size:17px;font-weight:700;letter-spacing:-.03em}
+  .track{flex:1;height:7px;border-radius:99px;background:rgba(26,111,232,.12);overflow:hidden}
+  .bar{height:100%;border-radius:99px;background:var(--blue)}
+  .psub{font-size:8.5px;color:var(--text-muted);margin-top:6px}
+
+  /* over-budget card */
+  .ob{background:var(--surface-raised);border-radius:12px;overflow:hidden;
+      border:1px solid rgba(102,0,0,.16);box-shadow:0 2px 8px rgba(102,0,0,.08), 0 1px 2px rgba(0,0,0,.04)}
+  .ob-h{padding:10px 16px;border-bottom:1px solid var(--border-subtle)}
+  .ob-h span{font-size:10.5px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.05em}
+  .ob-l{display:flex;flex-direction:column;padding:8px 16px 12px}
+  .ob-r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--border-subtle)}
+  .ob-r:last-child{border-bottom:none}
+  .ob-r .n{font-size:11.5px;color:var(--text-primary);font-weight:500}
+  .ob-r .a{font-size:10.5px;color:var(--maroon);font-weight:700;white-space:nowrap}
+
+  .note{font-size:11px;color:var(--text-muted);margin:6px 2px 0;font-style:italic;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="maxw">
+
+  <div class="sec-label">Ringkasan Keuangan</div>
+  <div class="panel">
+    <div class="grid2">
+      <div class="card" style="--edge:rgba(26,111,232,.28);--glow:rgba(26,111,232,.10)">
+        <div class="top"><div class="ic" style="background:rgba(26,111,232,.08);color:rgba(26,111,232,.7)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></div>
+          <div class="lbl">Total Anggaran</div></div>
+        <div class="val">Rp 2.068M</div><div class="sub">62 Pekerjaan</div>
+      </div>
+      <div class="card" style="--edge:rgba(5,150,105,.28);--glow:rgba(5,150,105,.10)">
+        <div class="top"><div class="ic" style="background:rgba(5,150,105,.08);color:rgba(5,150,105,.75)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="lbl">Total Realisasi</div></div>
+        <div class="val">Rp 678M</div><div class="sub">32,8% Terserap</div>
+      </div>
+      <div class="card" style="--edge:rgba(217,119,6,.28);--glow:rgba(217,119,6,.10)">
+        <div class="top"><div class="ic" style="background:rgba(217,119,6,.08);color:rgba(217,119,6,.75)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="lbl">Sisa Anggaran</div></div>
+        <div class="val">Rp 1.389M</div><div class="sub">Belum Digunakan</div>
+      </div>
+      <div class="card" style="--edge:rgba(26,111,232,.28);--glow:rgba(26,111,232,.10)">
+        <div class="top"><div class="ic" style="background:rgba(26,111,232,.08);color:rgba(26,111,232,.7)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
+          <div class="lbl">Penyerapan</div></div>
+        <div class="val">32,8%</div><div class="sub">Dari Total Anggaran</div>
+      </div>
+    </div>
+
+    <div class="mt10 ob">
+      <div class="ob-h"><span>2 Program Melebihi Anggaran</span></div>
+      <div class="ob-l">
+        <div class="ob-r"><span class="n">Pemasangan Cover U Ditch</span><span class="a">−Rp 16.990.000</span></div>
+        <div class="ob-r"><span class="n">Gudang Sarpras</span><span class="a">−Rp 36.000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Progress Pekerjaan</div>
+  <div class="panel">
+    <div class="pcard" style="--edge:rgba(26,111,232,.28);--glow:rgba(26,111,232,.10)">
+      <div class="prow">
+        <div class="ic" style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(26,111,232,.08);color:rgba(26,111,232,.7)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></div>
+        <div class="pnum">42%</div>
+        <div class="track"><div class="bar" style="width:42%"></div></div>
+      </div>
+      <div class="psub">Dari Total 62 Pekerjaan</div>
+    </div>
+
+    <div class="grid2 mt10">
+      <div class="card" style="--edge:rgba(26,111,232,.28);--glow:rgba(26,111,232,.10)">
+        <div class="top"><div class="ic" style="background:rgba(26,111,232,.08);color:rgba(26,111,232,.7)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="lbl">On Going</div></div>
+        <div class="val">18</div><div class="sub">Pekerjaan berjalan</div>
+      </div>
+      <div class="card" style="--edge:rgba(217,119,6,.28);--glow:rgba(217,119,6,.10)">
+        <div class="top"><div class="ic" style="background:rgba(217,119,6,.08);color:rgba(217,119,6,.75)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></div>
+          <div class="lbl">On Hold</div></div>
+        <div class="val">3</div><div class="sub">Ditangguhkan</div>
+      </div>
+      <div class="card" style="--edge:rgba(5,150,105,.28);--glow:rgba(5,150,105,.10)">
+        <div class="top"><div class="ic" style="background:rgba(5,150,105,.08);color:rgba(5,150,105,.75)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="lbl">Selesai</div></div>
+        <div class="val">26</div><div class="sub">Program selesai</div>
+      </div>
+      <div class="card" style="--edge:rgba(102,0,0,.24);--glow:rgba(102,0,0,.09)">
+        <div class="top"><div class="ic" style="background:rgba(102,0,0,.08);color:rgba(102,0,0,.6)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+          <div class="lbl">Perencanaan</div></div>
+        <div class="val">15</div><div class="sub">Belum mulai</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">Tiap kartu clickable kini punya pinggiran + bayangan halus sesuai aksen warnanya (biru / hijau / amber / maroon). Terlihat di HP tanpa perlu hover.</div>
+
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
@@ -16,6 +16,46 @@ export function katFromJenis(jenis: string): HasilKategori {
   if (jenis === 'Pengadaan') return 'barang'
   if (jenis === 'Operasional' || jenis === 'Program' || jenis === 'Pemeliharaan') return 'jasa'
   return 'fisik' // Proyek, Konstruksi, dan default
+}
+
+/** Bentuk rincian: fisik→lokasi, barang→item, jasa→divisi (Operasional) / kegiatan (Program). */
+export type RincianMode = 'lokasi' | 'item' | 'divisi' | 'kegiatan'
+export function rincianMode(kat: HasilKategori, jenis: string): RincianMode {
+  if (kat === 'fisik') return 'lokasi'
+  if (kat === 'barang') return 'item'
+  if (jenis === 'Operasional') return 'divisi'
+  return 'kegiatan' // jasa lain (Program, Pemeliharaan)
+}
+
+export const KEGIATAN_STATUS = ['Rencana', 'Berjalan', 'Selesai'] as const
+
+interface ModeConfig {
+  header: string
+  addLabel: string
+  namaPlaceholder: string
+  hasAset: boolean
+  asetPlaceholder: string
+  midKind: 'num' | 'status'
+  showSatuan: boolean
+  midLabel: string
+  defaultSatuan: string
+  totalLabel: string
+}
+
+export const MODE_CONFIG: Record<RincianMode, ModeConfig> = {
+  lokasi: { header: 'Rincian Realisasi Pekerjaan', addLabel: 'Tambah baris', namaPlaceholder: 'Nama lokasi...', hasAset: true, asetPlaceholder: 'Nama aset / material...', midKind: 'num', showSatuan: true, midLabel: 'Volume', defaultSatuan: 'm²', totalLabel: 'Total Keseluruhan' },
+  item: { header: 'Rincian Pengadaan per Item', addLabel: 'Tambah item', namaPlaceholder: 'Nama item...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: true, midLabel: 'Jumlah', defaultSatuan: 'unit', totalLabel: 'Total Pengadaan' },
+  divisi: { header: 'Rincian Operasional', addLabel: 'Tambah divisi', namaPlaceholder: 'Nama divisi / tim...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: false, midLabel: 'Personel', defaultSatuan: 'org', totalLabel: 'Total Realisasi' },
+  kegiatan: { header: 'Rincian Kegiatan', addLabel: 'Tambah kegiatan', namaPlaceholder: 'Nama kegiatan...', hasAset: false, asetPlaceholder: '', midKind: 'status', showSatuan: false, midLabel: 'Status', defaultSatuan: '', totalLabel: 'Total Realisasi' },
+}
+
+/** Baris rincian kosong sesuai mode. */
+function emptyRow(mode: RincianMode): HasilRincianItem {
+  const m = MODE_CONFIG[mode]
+  const base: HasilRincianItem = { nama: '', ukuran: 0, satuan: m.defaultSatuan, biaya: 0 }
+  if (mode === 'lokasi') base.aset = ''
+  if (mode === 'kegiatan') base.status = 'Rencana'
+  return base
 }
 
 interface KatConfig {
@@ -106,6 +146,66 @@ const capStyle: React.CSSProperties = {
   display: 'block',
 }
 
+// Satuan presets untuk dropdown. [value tersimpan, label tampil].
+// Pilihan "Lainnya…" mengubah field jadi input manual.
+const SATUAN_OPTIONS: [string, string][] = [
+  ["m'", "m'"],
+  ['m²', 'm²'],
+  ['m³', 'm³'],
+  ['unit', 'unit'],
+  ['buah', 'buah'],
+  ['pcs', 'pcs'],
+  ['set', 'set'],
+  ['paket', 'paket'],
+  ['lembar', 'lembar'],
+  ['batang', 'batang'],
+  ['roll', 'roll'],
+  ['kg', 'kg'],
+  ['liter', 'liter'],
+]
+const SATUAN_VALUES = SATUAN_OPTIONS.map(o => o[0])
+const SATUAN_CUSTOM = '__lainnya__'
+
+/** Dropdown satuan dengan opsi manual ("Lainnya…"). */
+function SatuanField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [manual, setManual] = useState(() => value !== '' && !SATUAN_VALUES.includes(value))
+
+  if (manual) {
+    return (
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Ketik satuan…"
+          autoFocus
+          style={inputStyle}
+        />
+        <button
+          type="button"
+          onClick={() => { setManual(false); onChange(SATUAN_VALUES[0]) }}
+          aria-label="Pilih dari daftar"
+          title="Pilih dari daftar"
+          style={{ flexShrink: 0, width: 36, height: 38, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 15, lineHeight: 1 }}
+        >☰</button>
+      </div>
+    )
+  }
+
+  return (
+    <select
+      value={value}
+      onChange={e => {
+        if (e.target.value === SATUAN_CUSTOM) { setManual(true); onChange('') }
+        else onChange(e.target.value)
+      }}
+      style={{ ...inputStyle, cursor: 'pointer' }}
+    >
+      {SATUAN_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      <option value={SATUAN_CUSTOM}>Lainnya…</option>
+    </select>
+  )
+}
+
 export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   useEscapeKey(onClose)
 
@@ -114,27 +214,34 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   const [nilai, setNilai] = useState<string>(
     formatDigits(program.hasil_nilai_aset ?? program.realisasi_terkini ?? 0),
   )
+  // true begitu admin mengubah Nilai Aset manual → auto-follow ke total rincian berhenti.
+  const [nilaiTouched, setNilaiTouched] = useState(false)
   const [dampak, setDampak] = useState<string[]>(
     program.hasil_dampak && program.hasil_dampak.length > 0 ? program.hasil_dampak : [''],
   )
   const [rincian, setRincian] = useState<HasilRincianItem[]>(() => {
     if (program.hasil_rincian && program.hasil_rincian.length > 0) return program.hasil_rincian
-    const c = KAT_CONFIG[initialKat]
-    return c.rincian ? [{ nama: '', ukuran: 0, satuan: c.satuan, biaya: 0 }] : []
+    return [emptyRow(rincianMode(initialKat, program.jenis_pekerjaan))]
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const cfg = KAT_CONFIG[kat]
+  const mode = rincianMode(kat, program.jenis_pekerjaan)
+  const mcfg = MODE_CONFIG[mode]
 
   const changeKat = (k: HasilKategori) => {
     setKat(k)
-    const c = KAT_CONFIG[k]
-    // Isi ulang satuan default + pastikan minimal 1 baris rincian saat pindah ke fisik/barang
+    const nm = rincianMode(k, program.jenis_pekerjaan)
+    const m = MODE_CONFIG[nm]
     setRincian(prev => {
-      if (!c.rincian) return prev
-      const rows = prev.length > 0 ? prev : [{ nama: '', ukuran: 0, satuan: c.satuan, biaya: 0 }]
-      return rows.map(r => ({ ...r, satuan: r.satuan || c.satuan }))
+      const rows = prev.length > 0 ? prev : [emptyRow(nm)]
+      return rows.map(r => ({
+        ...r,
+        satuan: m.showSatuan ? (r.satuan || m.defaultSatuan) : m.defaultSatuan,
+        ...(nm === 'lokasi' && r.aset === undefined ? { aset: '' } : {}),
+        ...(nm === 'kegiatan' && !r.status ? { status: 'Rencana' } : {}),
+      }))
     })
   }
 
@@ -146,27 +253,37 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   // Rincian handlers
   const setRincianAt = (i: number, patch: Partial<HasilRincianItem>) =>
     setRincian(r => r.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
-  const addRincian = () => setRincian(r => [...r, { nama: '', ukuran: 0, satuan: cfg.satuan, biaya: 0 }])
+  const addRincian = () => setRincian(r => [...r, emptyRow(mode)])
   const delRincian = (i: number) => setRincian(r => r.filter((_, idx) => idx !== i))
 
   // Live total
   const totUkuran = rincian.reduce((s, r) => s + (Number(r.ukuran) || 0), 0)
   const totBiaya = rincian.reduce((s, r) => s + (Number(r.biaya) || 0), 0)
-  const perUnit = totUkuran > 0 ? Math.round(totBiaya / totUkuran) : 0
+
+  // Nilai Aset auto-mengikuti total rincian sampai admin mengubahnya manual.
+  // (cfg.rincian true untuk fisik/barang; untuk jasa nilai diisi langsung.)
+  useEffect(() => {
+    if (!nilaiTouched && cfg.rincian) {
+      setNilai(totBiaya ? totBiaya.toLocaleString('id-ID') : '')
+    }
+  }, [totBiaya, nilaiTouched, cfg.rincian])
 
   const handleSave = async () => {
     const nilaiNum = digitsToNumber(nilai)
     const cleanDampak = dampak.map(d => d.trim()).filter(Boolean)
-    const cleanRincian = cfg.rincian
-      ? rincian
-          .filter(r => r.nama.trim() || r.ukuran || r.biaya)
-          .map(r => ({
-            nama: r.nama.trim(),
-            ukuran: Number(r.ukuran) || 0,
-            satuan: r.satuan.trim() || cfg.satuan,
-            biaya: Number(r.biaya) || 0,
-          }))
-      : []
+    const cleanRincian: HasilRincianItem[] = rincian
+      .filter(r => (r.nama || '').trim() || r.ukuran || r.biaya || (r.aset || '').trim() || (r.status || '').trim())
+      .map(r => {
+        const item: HasilRincianItem = {
+          nama: (r.nama || '').trim(),
+          ukuran: Number(r.ukuran) || 0,
+          satuan: (r.satuan || '').trim() || mcfg.defaultSatuan,
+          biaya: Number(r.biaya) || 0,
+        }
+        if (mode === 'lokasi') item.aset = (r.aset || '').trim()
+        if (mode === 'kegiatan') item.status = (r.status || '').trim() || 'Rencana'
+        return item
+      })
 
     setSaving(true)
     setError('')
@@ -208,10 +325,14 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
             </svg>
             <div>
               <b style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-                Pekerjaan ditandai Selesai — lengkapi data hasil
+                {program.status === 'Selesai'
+                  ? 'Pekerjaan ditandai Selesai — lengkapi data hasil'
+                  : `Pekerjaan sedang ${program.status} — catat realisasi berjalan`}
               </b>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.45 }}>
-                Data ini tampil sebagai laporan hasil pekerjaan untuk presentasi.
+                {program.status === 'Selesai'
+                  ? 'Data ini tampil sebagai laporan hasil pekerjaan untuk presentasi.'
+                  : 'Catat apa saja yang sudah direalisasikan agar bisa dibandingkan dengan RAB.'}
               </p>
             </div>
           </div>
@@ -276,7 +397,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
               <label style={labelStyle}>{cfg.nilaiLabel}</label>
               <input
                 value={nilai}
-                onChange={e => setNilai(formatDigits(e.target.value))}
+                onChange={e => { setNilaiTouched(true); setNilai(formatDigits(e.target.value)) }}
                 inputMode="numeric"
                 style={{ ...inputStyle, fontVariantNumeric: 'tabular-nums' }}
                 placeholder="0"
@@ -284,6 +405,14 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5, lineHeight: 1.4 }}>
                 {cfg.nilaiHint(program.realisasi_terkini ?? 0)}
               </div>
+              {cfg.rincian && digitsToNumber(nilai) !== totBiaya && totBiaya > 0 && (
+                <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)' }}>
+                  <div style={{ fontSize: 11, color: '#660000', lineHeight: 1.4 }}>
+                    Berbeda dari total rincian (<b>{formatRupiah(totBiaya)}</b>).{' '}
+                    <button type="button" onClick={() => { setNilaiTouched(false); setNilai(totBiaya.toLocaleString('id-ID')) }} style={{ background: 'none', border: 'none', padding: 0, color: '#660000', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>Samakan</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Dampak & Manfaat */}
@@ -306,36 +435,60 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
               <button onClick={addDampak} style={addBtnStyle}>＋ Tambah poin</button>
             </div>
 
-            {/* Rincian (fisik/barang) */}
-            {cfg.rincian && (
-              <div>
-                <label style={labelStyle}>{cfg.rincianLabel}</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                  {rincian.map((r, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        border: '1px solid var(--border)',
-                        borderRadius: 12,
-                        padding: 12,
-                        background: 'var(--surface-raised)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 9,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Rincian (semua kategori — bentuk menyesuaikan mode) */}
+            <div>
+              <label style={labelStyle}>{mcfg.header}</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {rincian.map((r, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: '1px solid var(--border)',
+                      borderRadius: 12,
+                      padding: 12,
+                      background: 'var(--surface-raised)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 9,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input
+                        value={r.nama}
+                        onChange={e => setRincianAt(i, { nama: e.target.value })}
+                        placeholder={mcfg.namaPlaceholder}
+                        style={{ ...inputStyle, fontWeight: 600 }}
+                      />
+                      <button onClick={() => delRincian(i)} style={delBtnStyle} aria-label="Hapus baris">✕</button>
+                    </div>
+
+                    {mcfg.hasAset && (
+                      <div>
+                        <span style={capStyle}>Aset / Material</span>
                         <input
-                          value={r.nama}
-                          onChange={e => setRincianAt(i, { nama: e.target.value })}
-                          placeholder={cfg.namaPlaceholder}
-                          style={{ ...inputStyle, fontWeight: 600 }}
+                          value={r.aset || ''}
+                          onChange={e => setRincianAt(i, { aset: e.target.value })}
+                          placeholder={mcfg.asetPlaceholder}
+                          style={inputStyle}
                         />
-                        <button onClick={() => delRincian(i)} style={delBtnStyle} aria-label="Hapus baris">✕</button>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 1.3fr', gap: 8 }}>
+                    )}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: mcfg.midKind === 'status' ? '1fr 1.3fr' : mcfg.showSatuan ? '1fr 90px 1.3fr' : '1fr 1.3fr', gap: 8 }}>
+                      {mcfg.midKind === 'status' ? (
                         <div>
-                          <span style={capStyle}>{cfg.colUkuran}</span>
+                          <span style={capStyle}>{mcfg.midLabel}</span>
+                          <select
+                            value={r.status || 'Rencana'}
+                            onChange={e => setRincianAt(i, { status: e.target.value })}
+                            style={{ ...inputStyle, cursor: 'pointer' }}
+                          >
+                            {KEGIATAN_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <span style={capStyle}>{mcfg.midLabel}</span>
                           <input
                             type="number"
                             value={r.ukuran || ''}
@@ -344,64 +497,60 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                             style={inputStyle}
                           />
                         </div>
+                      )}
+                      {mcfg.midKind !== 'status' && mcfg.showSatuan && (
                         <div>
                           <span style={capStyle}>Satuan</span>
-                          <input
+                          <SatuanField
                             value={r.satuan}
-                            onChange={e => setRincianAt(i, { satuan: e.target.value })}
-                            style={inputStyle}
+                            onChange={v => setRincianAt(i, { satuan: v })}
                           />
                         </div>
-                        <div>
-                          <span style={capStyle}>Biaya (Rp)</span>
-                          <input
-                            value={r.biaya ? r.biaya.toLocaleString('id-ID') : ''}
-                            onChange={e => setRincianAt(i, { biaya: digitsToNumber(e.target.value) })}
-                            inputMode="numeric"
-                            placeholder="0"
-                            style={{ ...inputStyle, fontVariantNumeric: 'tabular-nums' }}
-                          />
-                        </div>
+                      )}
+                      <div>
+                        <span style={capStyle}>Biaya (Rp)</span>
+                        <input
+                          value={r.biaya ? r.biaya.toLocaleString('id-ID') : ''}
+                          onChange={e => setRincianAt(i, { biaya: digitsToNumber(e.target.value) })}
+                          inputMode="numeric"
+                          placeholder="0"
+                          style={{ ...inputStyle, fontVariantNumeric: 'tabular-nums' }}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
-                <button onClick={addRincian} style={addBtnStyle}>＋ {cfg.addLabel}</button>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'baseline',
-                    padding: '11px 13px',
-                    borderRadius: 10,
-                    background: 'rgba(5,150,105,0.07)',
-                    marginTop: 10,
-                  }}
-                >
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    {cfg.totalLabel}
-                  </span>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
-                    {kat === 'fisik' ? (
-                      <>
-                        {totUkuran.toLocaleString('id-ID')} {cfg.satuan}
-                        <small style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>
-                          ≈ Rp {perUnit.toLocaleString('id-ID')} / {cfg.satuan}
-                        </small>
-                      </>
-                    ) : (
-                      <>
-                        {rincian.length} item
-                        <small style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>
-                          Rp {totBiaya.toLocaleString('id-ID')}
-                        </small>
-                      </>
-                    )}
-                  </span>
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+              <button onClick={addRincian} style={addBtnStyle}>＋ {mcfg.addLabel}</button>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  padding: '11px 13px',
+                  borderRadius: 10,
+                  background: 'rgba(5,150,105,0.07)',
+                  marginTop: 10,
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {mcfg.totalLabel}
+                </span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+                  Rp {totBiaya.toLocaleString('id-ID')}
+                  <small style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>
+                    {mode === 'divisi'
+                      ? `${totUkuran.toLocaleString('id-ID')} org · ${rincian.length} divisi`
+                      : mode === 'item'
+                        ? `${rincian.length} item`
+                        : mode === 'kegiatan'
+                          ? `${rincian.length} kegiatan`
+                          : `${rincian.length} baris`}
+                  </small>
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Footer */}

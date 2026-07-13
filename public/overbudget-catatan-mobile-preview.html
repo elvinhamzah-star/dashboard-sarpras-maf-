@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview Mobile — Pop-up Catatan Over-Budget</title>
+<style>
+  :root{
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --bg:#F1F4F9; --card:#fff; --border-subtle:rgba(15,23,42,0.06);
+    --surface-raised:#fff; --surface-min:#F7F9FC; --border:rgba(15,23,42,0.10);
+    --maroon:#660000;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text-primary);-webkit-font-smoothing:antialiased;position:relative;min-height:100dvh}
+
+  /* konten beranda samar di belakang */
+  .bg-content{padding:18px 16px}
+  .bg-content .kartu-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:10px}
+  .alert{background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+  .alert-head{padding:10px 16px;border-bottom:1px solid var(--border-subtle)}
+  .alert-head span{font-size:10.5px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.05em}
+  .alert-list{display:flex;flex-direction:column;padding:8px 16px 12px}
+  .alert-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--border-subtle)}
+  .alert-row:last-child{border-bottom:none}
+  .alert-row .nm{font-size:11.5px;color:var(--text-primary);font-weight:500}
+  .alert-row .amt{font-size:10.5px;color:var(--maroon);font-weight:700;white-space:nowrap}
+
+  /* dim backdrop */
+  .backdrop{position:fixed;inset:0;background:rgba(13,24,41,.55)}
+
+  /* BOTTOM SHEET — tinggi tetap 85vh, konsisten dgn modal metrik */
+  .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -8px 32px rgba(0,0,0,.15);height:85vh;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+  .grab{padding:14px 0 10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .grab i{width:40px;height:4px;border-radius:99px;background:var(--border);display:block}
+  .scroll{overflow-y:auto;flex:1;min-height:0}
+
+  /* footer sticky */
+  .foot{flex-shrink:0;padding:12px 20px;border-top:1px solid var(--border-subtle);background:var(--surface-min);display:flex;align-items:center;justify-content:space-between}
+  .foot .l{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)}
+  .foot .l .dot{width:6px;height:6px;border-radius:50%;background:var(--maroon)}
+  .foot .r{text-align:right}
+  .foot .r .lab{font-size:10px;color:var(--text-muted)}
+  .foot .r .v{font-size:12px;font-weight:700;color:var(--text-primary)}
+
+  .m-head{padding:6px 20px 15px;border-bottom:1px solid var(--border-subtle);position:relative}
+  .m-title{font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em;padding-right:34px}
+  .m-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+  .m-close{position:absolute;top:0;right:15px;width:28px;height:28px;border-radius:8px;border:none;background:var(--surface-min);color:var(--text-muted);display:flex;align-items:center;justify-content:center}
+
+  .m-body{padding:14px 20px 24px;display:flex;flex-direction:column;gap:14px}
+  .prog{border:1px solid var(--border-subtle);border-radius:11px;overflow:hidden}
+  .prog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;background:var(--surface-min);border-bottom:1px solid var(--border-subtle)}
+  .prog-head .nm{font-size:12.5px;font-weight:700;color:var(--text-primary)}
+  .prog-head .sel{display:block;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+  .prog-head .amt{font-size:13px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums}
+  .prog-head .r{text-align:right;flex-shrink:0}
+  .prog-body{padding:12px 14px}
+  .cat-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px}
+  .cat-line{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
+  .cat-line:last-child{margin-bottom:0}
+  .cat-line .dot{width:5px;height:5px;border-radius:50%;background:var(--text-secondary);flex-shrink:0;margin-top:6px}
+  .cat-line span{font-size:12px;line-height:1.5;color:var(--text-secondary);font-weight:500}
+  .cat-empty{font-size:12px;color:var(--text-muted);font-style:italic}
+</style>
+</head>
+<body>
+
+  <!-- beranda di belakang -->
+  <div class="bg-content">
+    <div class="kartu-title">Ringkasan Program</div>
+    <div class="alert">
+      <div class="alert-head"><span>2 Program Melebihi Anggaran</span></div>
+      <div class="alert-list">
+        <div class="alert-row"><span class="nm">Renovasi Atap Aula</span><span class="amt">−Rp 7.400.000</span></div>
+        <div class="alert-row"><span class="nm">Pengadaan AC Ruang Kelas</span><span class="amt">−Rp 2.150.000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="backdrop"></div>
+
+  <!-- BOTTOM SHEET -->
+  <div class="sheet">
+    <div class="grab"><i></i></div>
+    <div class="scroll">
+      <div class="m-head">
+        <div class="m-title">2 Program Melebihi Anggaran</div>
+        <div class="m-sub">Keterangan pekerjaan yang melampaui pagu anggaran</div>
+        <button class="m-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="m-body">
+        <div class="prog">
+          <div class="prog-head">
+            <span class="nm">Renovasi Atap Aula</span>
+            <span class="r"><span class="sel">Selisih</span><span class="amt">Rp 7.400.000</span></span>
+          </div>
+          <div class="prog-body">
+            <div class="cat-label">Catatan Pekerjaan</div>
+            <div class="cat-line"><span class="dot"></span><span>Harga material baja ringan naik 12% dari estimasi awal RAB.</span></div>
+            <div class="cat-line"><span class="dot"></span><span>Penambahan volume rangka karena atap lama lebih rapuh dari survei.</span></div>
+            <div class="cat-line"><span class="dot"></span><span>Selisih ditutup dari efisiensi pekerjaan pengecatan.</span></div>
+          </div>
+        </div>
+        <div class="prog">
+          <div class="prog-head">
+            <span class="nm">Gudang Sarpras</span>
+            <span class="r"><span class="sel">Selisih</span><span class="amt">Rp 36.000</span></span>
+          </div>
+          <div class="prog-body">
+            <div class="cat-label">Catatan Pekerjaan</div>
+            <div class="cat-empty">Belum ada catatan. Tambahkan alasan di halaman detail pekerjaan.</div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <div class="l"><span class="dot"></span><span>2 program</span></div>
+        <div class="r"><div class="lab">Total selisih</div><div class="v">Rp 17.026.000</div></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

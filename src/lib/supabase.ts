@@ -32,12 +32,19 @@ export function invalidateCache(...keys: string[]) {
 /** Kategori hasil pekerjaan selesai — menentukan label & rincian di laporan. */
 export type HasilKategori = 'fisik' | 'barang' | 'jasa'
 
-/** Satu baris rincian hasil (lokasi untuk fisik, item untuk barang). */
+/** Satu baris rincian hasil.
+ *  - fisik  (mode "lokasi")  : nama = lokasi, aset = material, ukuran = volume
+ *  - barang (mode "item")    : nama = item, ukuran = jumlah
+ *  - jasa/Operasional (divisi): nama = divisi, ukuran = jumlah personel
+ *  - jasa/Program (kegiatan)  : nama = kegiatan, status = Rencana|Berjalan|Selesai
+ */
 export interface HasilRincianItem {
   nama: string
-  ukuran: number   // luas (m²) untuk fisik, jumlah (unit) untuk barang
+  ukuran: number   // luas/volume, jumlah unit, atau jumlah personel
   satuan: string
   biaya: number
+  aset?: string    // nama aset/material (mode lokasi) — satu lokasi bisa banyak aset
+  status?: string  // status kegiatan (mode kegiatan): 'Rencana' | 'Berjalan' | 'Selesai'
 }
 
 export interface Program {

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview · Semua kemungkinan data & format</title>
+<style>
+  :root{
+    --card:#ffffff; --surface-raised:#f8fafc; --surface-2:#eef2f7;
+    --text-primary:#0F1C2E; --text-secondary:#5C6B82; --text-muted:#64748B;
+    --border:rgba(15,23,42,0.10); --border-subtle:rgba(15,23,42,0.07);
+    --blue:#1A6FE8; --green:#059669;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe5ee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text-primary);padding:26px 14px 90px}
+  .stage{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:40px;justify-content:center;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .col-cap{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#475569}
+
+  .phone{width:390px;background:#0b1220;border-radius:44px;padding:12px;box-shadow:0 24px 60px rgba(15,23,42,.28)}
+  .screen{background:#eef2f7;border-radius:33px;overflow:hidden;height:800px;overflow-y:auto;position:relative}
+  .statusbar{height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0b1220;position:sticky;top:0;background:#eef2f7;z-index:5}
+  .screen-pad{padding:6px 14px 40px}
+
+  /* ---- Header (hijau, judul tengah) ---- */
+  .hdr{background:rgba(5,150,105,.10);border:1px solid rgba(5,150,105,.18);border-radius:14px;padding:13px 14px;text-align:center;margin-bottom:12px}
+  .hdr h2{font-size:15px;font-weight:700;letter-spacing:-.02em;margin:0;color:var(--text-primary)}
+  .hdr .sub{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:4px}
+
+  /* ---- kartu putih generik ---- */
+  .card{background:var(--card);border:1px solid var(--border-subtle);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px 15px}
+  .card + .card{margin-top:12px}
+  .card-title{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+
+  /* ---- tabel ---- */
+  .grid{display:grid;gap:10px;padding:0 4px}
+  .cols{padding-bottom:6px;border-bottom:1px solid var(--border-subtle)}
+  .cols .ch{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+  .r-c{text-align:center}
+  .arow{padding:8px 4px;align-items:center}
+  .arow + .arow{border-top:1px solid var(--border-subtle)}
+  .arow .aset{font-size:13px;font-weight:600;color:var(--text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arow .aset.empty{color:var(--text-muted);font-weight:500;font-style:italic}
+  .arow .vol{text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .arow .vol span{color:var(--text-muted);font-weight:500;font-size:11px;margin-left:2px}
+  .arow .nilai{text-align:right;font-size:13px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .ntot{margin-top:2px;padding:9px 4px 2px;border-top:1.5px solid var(--border-subtle);align-items:baseline}
+  .ntot .lbl{font-size:10.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+  .ntot .val{grid-column:3;text-align:right;font-size:14px;font-weight:800;color:#047857;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ntot.grand{border-top:1.5px solid var(--border);margin-top:4px}
+  .ntot.grand .lbl{font-size:11px;color:var(--text-secondary)}
+  .ntot.grand .val{font-size:16px;color:var(--text-primary)}
+
+  /* ---- detail per lokasi ---- */
+  .loc + .loc{margin-top:22px}
+  .loc-band{padding:9px 12px;border-radius:8px;background:#dbe0e8}
+  .loc-band .lname{font-size:13.5px;font-weight:700;color:#0F1C2E;letter-spacing:-.01em;line-height:1.3}
+  .loc .cols{margin-top:9px}
+
+  .desk .grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 150px}
+  .mob  .grid{grid-template-columns:minmax(0,1fr) 58px 116px}
+
+  .mob .hdr h2{font-size:14px}
+  .mob .card-title{font-size:11px}
+  .mob .loc-band .lname{font-size:12.5px}
+  .mob .cols .ch{font-size:9.5px}
+  .mob .arow{padding:9px 4px}
+  .mob .arow .aset,.mob .arow .vol,.mob .arow .nilai{font-size:12px}
+  .mob .arow .vol span{font-size:10px}
+  .mob .ntot .lbl{font-size:10px}
+  .mob .ntot .val{font-size:13px}
+  .mob .ntot.grand .val{font-size:15px}
+
+  /* ---- caption skenario ---- */
+  .scen{margin-bottom:26px}
+  .scen-cap{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1e293b;background:#fff;border:1px solid var(--border-subtle);border-radius:999px;padding:4px 12px}
+  .scen-desc{font-size:11.5px;color:#475569;margin:7px 2px 11px;line-height:1.45}
+  .scen-desc b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============ MOBILE (skenario A) ============ -->
+  <div class="col">
+    <div class="col-cap">📱 Mobile · Skenario A</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar">9:41</div>
+      <div class="screen-pad mob">
+        <div class="hdr"><h2>Rincian Realisasi Pekerjaan</h2></div>
+        <div class="card">
+          <div class="card-title">Ringkasan Nilai per Aset</div>
+          <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">1.137<span>m²</span></span><span class="nilai">Rp 192.428.100</span></div>
+          <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">31<span>m¹</span></span><span class="nilai">Rp 5.211.300</span></div>
+          <div class="grid arow"><span class="aset">U-Ditch</span><span class="vol">22<span>m¹</span></span><span class="nilai">Rp 5.994.000</span></div>
+          <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 203.633.400</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Jalan Utama - Area Depan Sakan Qozvin</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">699<span>m²</span></span><span class="nilai">Rp 118.830.000</span></div>
+            <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">31<span>m¹</span></span><span class="nilai">Rp 5.211.300</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 124.041.300</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Sakan Ashfahan</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">169<span>m²</span></span><span class="nilai">Rp 28.774.200</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 28.774.200</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Masjid</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">222<span>m²</span></span><span class="nilai">Rp 37.740.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 37.740.000</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Kantin</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">47<span>m²</span></span><span class="nilai">Rp 7.083.900</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 7.083.900</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Saluran Air (Udith)</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">U-Ditch</span><span class="vol">22<span>m¹</span></span><span class="nilai">Rp 5.994.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 5.994.000</span></div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============ DESKTOP GALLERY (semua skenario) ============ -->
+  <div class="col">
+    <div class="col-cap">🖥️ Desktop · Semua kemungkinan data</div>
+    <div style="width:540px" class="desk">
+
+      <div class="hdr" style="margin-bottom:22px"><h2>Rincian Realisasi Pekerjaan</h2><div class="sub">Header hijau ini konstan di semua skenario</div></div>
+
+      <!-- A -->
+      <div class="scen">
+        <span class="scen-cap">A · Fisik — ada lokasi multi-aset</span>
+        <div class="scen-desc">Kasus Paving. Ada lokasi dengan &gt;1 aset (Jalan Utama). Aset beragam → <b>Ringkasan muncul</b>.</div>
+        <div class="card">
+          <div class="card-title">Ringkasan Nilai per Aset</div>
+          <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">1.137<span>m²</span></span><span class="nilai">Rp 192.428.100</span></div>
+          <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">31<span>m¹</span></span><span class="nilai">Rp 5.211.300</span></div>
+          <div class="grid arow"><span class="aset">U-Ditch</span><span class="vol">22<span>m¹</span></span><span class="nilai">Rp 5.994.000</span></div>
+          <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 203.633.400</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Jalan Utama - Area Depan Sakan Qozvin</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">699<span>m²</span></span><span class="nilai">Rp 118.830.000</span></div>
+            <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">31<span>m¹</span></span><span class="nilai">Rp 5.211.300</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 124.041.300</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Sakan Ashfahan</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">169<span>m²</span></span><span class="nilai">Rp 28.774.200</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 28.774.200</span></div></div>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="scen">
+        <span class="scen-cap">B · Fisik — 1 jenis aset saja</span>
+        <div class="scen-desc">Semua lokasi hanya Paving Block. Aset tidak beragam → <b>Ringkasan dilewati</b>. Grand total ditaruh sebagai footer di card detail.</div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Sakan Ashfahan</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">169<span>m²</span></span><span class="nilai">Rp 28.774.200</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 28.774.200</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Masjid</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">222<span>m²</span></span><span class="nilai">Rp 37.740.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 37.740.000</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Kantin</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">47<span>m²</span></span><span class="nilai">Rp 7.083.900</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 7.083.900</span></div></div>
+          <div class="grid ntot grand" style="margin-top:20px"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 73.598.100</span></div>
+        </div>
+      </div>
+
+      <!-- C -->
+      <div class="scen">
+        <span class="scen-cap">C · Fisik — tiap lokasi 1 aset, beda jenis</span>
+        <div class="scen-desc">Tiap lokasi cuma 1 aset tapi jenisnya berbeda → <b>Ringkasan muncul</b> (rangkuman per jenis aset), detail tiap lokasi 1 baris.</div>
+        <div class="card">
+          <div class="card-title">Ringkasan Nilai per Aset</div>
+          <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">300<span>m²</span></span><span class="nilai">Rp 51.000.000</span></div>
+          <div class="grid arow"><span class="aset">U-Ditch</span><span class="vol">45<span>m¹</span></span><span class="nilai">Rp 12.150.000</span></div>
+          <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">60<span>m¹</span></span><span class="nilai">Rp 9.000.000</span></div>
+          <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 72.150.000</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Lapangan Upacara</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">300<span>m²</span></span><span class="nilai">Rp 51.000.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 51.000.000</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Selokan Sisi Barat</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">U-Ditch</span><span class="vol">45<span>m¹</span></span><span class="nilai">Rp 12.150.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 12.150.000</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Pagar Taman</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Kanstin Taman</span><span class="vol">60<span>m¹</span></span><span class="nilai">Rp 9.000.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 9.000.000</span></div></div>
+        </div>
+      </div>
+
+      <!-- D -->
+      <div class="scen">
+        <span class="scen-cap">D · Barang — satuan unit / buah</span>
+        <div class="scen-desc">Kategori barang. Header volume jadi <b>"Jml"</b>, satuan unit/buah. Struktur sama.</div>
+        <div class="card">
+          <div class="card-title">Ringkasan Nilai per Aset</div>
+          <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Jml</div><div class="ch r-c">Nilai</div></div>
+          <div class="grid arow"><span class="aset">AC 1 PK</span><span class="vol">3<span>unit</span></span><span class="nilai">Rp 12.000.000</span></div>
+          <div class="grid arow"><span class="aset">Proyektor</span><span class="vol">2<span>unit</span></span><span class="nilai">Rp 9.000.000</span></div>
+          <div class="grid arow"><span class="aset">Meja Kerja</span><span class="vol">6<span>buah</span></span><span class="nilai">Rp 9.000.000</span></div>
+          <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 30.000.000</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Ruang Kelas 7A</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Jml</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">AC 1 PK</span><span class="vol">2<span>unit</span></span><span class="nilai">Rp 8.000.000</span></div>
+            <div class="grid arow"><span class="aset">Proyektor</span><span class="vol">2<span>unit</span></span><span class="nilai">Rp 9.000.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 17.000.000</span></div></div>
+          <div class="loc"><div class="loc-band"><div class="lname">Ruang Guru</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Jml</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">AC 1 PK</span><span class="vol">1<span>unit</span></span><span class="nilai">Rp 4.000.000</span></div>
+            <div class="grid arow"><span class="aset">Meja Kerja</span><span class="vol">6<span>buah</span></span><span class="nilai">Rp 9.000.000</span></div>
+            <div class="grid ntot"><span class="lbl">Nilai Total</span><span class="val">Rp 13.000.000</span></div></div>
+        </div>
+      </div>
+
+      <!-- E -->
+      <div class="scen">
+        <span class="scen-cap">E · Satu lokasi saja</span>
+        <div class="scen-desc">Cuma 1 lokasi & 1 aset. Ringkasan dilewati; Nilai Total lokasi = grand total, jadi tak perlu footer terpisah.</div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Masjid</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block</span><span class="vol">222<span>m²</span></span><span class="nilai">Rp 37.740.000</span></div>
+            <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 37.740.000</span></div></div>
+        </div>
+      </div>
+
+      <!-- F -->
+      <div class="scen">
+        <span class="scen-cap">F · Nama panjang (uji potong)</span>
+        <div class="scen-desc">Nama lokasi panjang → wrap di band (aman). Nama aset panjang → dipotong <b>ellipsis</b> di kolom, tetap 1 baris.</div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Jalan Lingkungan Blok C Menuju Gerbang Utara Kompleks Pesantren</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset">Paving Block Interlock Abu-abu Mutu K-300 Tebal 8cm</span><span class="vol">512<span>m²</span></span><span class="nilai">Rp 88.000.000</span></div>
+            <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 88.000.000</span></div></div>
+        </div>
+      </div>
+
+      <!-- G -->
+      <div class="scen">
+        <span class="scen-cap">G · Data lama tanpa nama aset</span>
+        <div class="scen-desc">Backward-compat: data lama tak punya field aset. Kolom Aset diisi placeholder <b>"—"</b> (miring, redup) — layout tetap utuh.</div>
+        <div class="card">
+          <div class="card-title">Detail per Lokasi</div>
+          <div class="loc"><div class="loc-band"><div class="lname">Halaman Belakang</div></div>
+            <div class="grid cols"><div class="ch">Aset</div><div class="ch r-c">Vol</div><div class="ch r-c">Nilai</div></div>
+            <div class="grid arow"><span class="aset empty">— tanpa nama aset</span><span class="vol">88<span>m²</span></span><span class="nilai">Rp 15.000.000</span></div>
+            <div class="grid ntot grand"><span class="lbl">Total Keseluruhan</span><span class="val">Rp 15.000.000</span></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+  /* affordance elemen yang bisa diedit */
+  [contenteditable]{outline:none;border-radius:4px;transition:background .12s,box-shadow .12s;cursor:text}
+  [contenteditable]:hover{background:rgba(26,111,232,.07)}
+  [contenteditable]:focus{background:rgba(26,111,232,.12);box-shadow:0 0 0 2px rgba(26,111,232,.4)}
+  .autolock{cursor:default}
+  .edit-hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b1220;color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(15,23,42,.35);z-index:99}
+</style>
+<div class="edit-hint">✏️ Klik teks untuk mengubah · 🔒 baris total terkunci (otomatis)</div>
+<script>
+  // editable: baris data + label; TIDAK termasuk .val (total = akumulasi otomatis)
+  var SEL = '.aset,.vol,.nilai,.lname,.lbl,.ch,.card-title,.hdr h2,.hdr .sub,.scen-cap,.scen-desc,.col-cap';
+  document.querySelectorAll(SEL).forEach(function(el){
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('spellcheck','false');
+  });
+  // terkunci: baris total (Nilai Total, Total Keseluruhan)
+  document.querySelectorAll('.ntot .val').forEach(function(el){
+    el.classList.add('autolock');
+    el.title = 'Otomatis dihitung — terkunci';
+  });
+</script>
+</body>
+</html>

@@ -16,6 +16,9 @@ interface BerandaProps {
   onNavigate?: (page: string, programId?: string, category?: string) => void
   initialDetailId?: string | null
   onInitialDetailConsumed?: () => void
+  onOpenDetail?: (id: string, tab: string) => void
+  initialStatusTab?: string | null
+  onInitialStatusConsumed?: () => void
 }
 
 const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
@@ -108,7 +111,7 @@ const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: 
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
-      <div style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.015em' }}>
+      <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
         {label}
       </div>
     </div>
@@ -117,7 +120,7 @@ const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: 
   </div>
 )
 
-export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed }: BerandaProps) {
+export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed, onOpenDetail, initialStatusTab, onInitialStatusConsumed }: BerandaProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [programs, setPrograms] = useState<Program[]>([])
@@ -141,6 +144,17 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       onInitialDetailConsumed?.()
     }
   }, [initialDetailId])
+
+  // Return-from-full-page-detail: reopen the status-list modal at the tab
+  // the user came from (Opsi B — preserves browsing context).
+  useEffect(() => {
+    if (initialStatusTab) {
+      setPekerjaanTab(initialStatusTab)
+      setPopupDetailId(null)
+      setShowDetail(true)
+      onInitialStatusConsumed?.()
+    }
+  }, [initialStatusTab])
 
   useEffect(() => {
     const load = async () => {
@@ -210,7 +224,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconColor: 'rgba(26,111,232,0.6)',
       valueColor: 'var(--text-primary)',
       trend: `${displayPrograms.length} Pekerjaan`,
-      accentColor: 'var(--border)',
+      accentColor: '#1A6FE8',
     },
     {
       label: 'Total Realisasi',
@@ -220,7 +234,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconColor: 'rgba(5,150,105,0.65)',
       valueColor: 'var(--text-primary)',
       trend: `${penyerapan}% Terserap`,
-      accentColor: 'var(--border)',
+      accentColor: '#059669',
     },
     {
       label: 'Sisa Anggaran',
@@ -230,7 +244,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconColor: 'rgba(217,119,6,0.65)',
       valueColor: 'var(--text-primary)',
       trend: 'Belum Digunakan',
-      accentColor: 'var(--border)',
+      accentColor: '#D97706',
     },
     {
       label: 'Penyerapan',
@@ -240,7 +254,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconColor: 'rgba(26,111,232,0.6)',
       valueColor: 'var(--text-primary)',
       trend: 'Dari Total Anggaran',
-      accentColor: 'var(--border)',
+      accentColor: '#1A6FE8',
     },
   ]
 
@@ -255,7 +269,21 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(26,111,232,0.08)',
       iconColor: 'rgba(26,111,232,0.6)',
       iconType: 'progress',
+      accentColor: '#1A6FE8',
       onClick: () => { setPekerjaanTab('On Going'); setPopupDetailId(null); setShowDetail(true) },
+    },
+    {
+      label: 'Selesai',
+      value: String(programs.filter(p => p.status === 'Selesai').length),
+      sub: 'Program selesai',
+      color: 'var(--text-primary)',
+      barColor: 'var(--blue)',
+      trackColor: 'rgba(0,0,0,0.06)',
+      iconBg: 'rgba(5,150,105,0.08)',
+      iconColor: 'rgba(5,150,105,0.65)',
+      iconType: 'Selesai',
+      accentColor: '#059669',
+      onClick: () => { setPekerjaanTab('Selesai'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
       label: 'On Going',
@@ -267,6 +295,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(26,111,232,0.08)',
       iconColor: 'rgba(26,111,232,0.6)',
       iconType: 'On Going',
+      accentColor: '#1A6FE8',
       onClick: () => { setPekerjaanTab('On Going'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
@@ -279,19 +308,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(217,119,6,0.08)',
       iconColor: 'rgba(217,119,6,0.65)',
       iconType: 'On Hold',
+      accentColor: '#D97706',
       onClick: () => { setPekerjaanTab('On Hold'); setPopupDetailId(null); setShowDetail(true) },
-    },
-    {
-      label: 'Selesai',
-      value: String(programs.filter(p => p.status === 'Selesai').length),
-      sub: 'Program selesai',
-      color: 'var(--text-primary)',
-      barColor: 'var(--blue)',
-      trackColor: 'rgba(0,0,0,0.06)',
-      iconBg: 'rgba(5,150,105,0.08)',
-      iconColor: 'rgba(5,150,105,0.65)',
-      iconType: 'Selesai',
-      onClick: () => { setPekerjaanTab('Selesai'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
       label: 'Perencanaan',
@@ -303,6 +321,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(102,0,0,0.08)',
       iconColor: 'rgba(102,0,0,0.55)',
       iconType: 'Perencanaan',
+      accentColor: '#660000',
       onClick: () => { setPekerjaanTab('Perencanaan'); setPopupDetailId(null); setShowDetail(true) },
     },
   ]
@@ -442,8 +461,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             }}
             onMouseEnter={e => {
               const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
-              el.style.borderColor = 'var(--border)'
+              el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
+              el.style.borderColor = card.accentColor
             }}
             onMouseLeave={e => {
               const el = e.currentTarget as HTMLDivElement
@@ -499,9 +518,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLDivElement
-                el.style.borderColor = 'var(--border)'
-                el.style.backgroundColor = 'rgba(0,0,0,0.03)'
-                el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                el.style.borderColor = card.accentColor
+                el.style.backgroundColor = card.accentColor + '0D'
+                el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
                 el.style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={e => {
@@ -604,9 +623,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               'Selesai': displayPrograms.filter(p => p.status === 'Selesai').length,
               'Perencanaan': displayPrograms.filter(p => p.status === 'Perencanaan').length,
             }
-            const tabColors: Record<string, string> = {
-              'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000',
-            }
             const tabTitles: Record<string, string> = {
               'On Going': 'Pekerjaan Berlangsung',
               'On Hold': 'Pekerjaan Ditangguhkan',
@@ -680,12 +696,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                            <div style={{ width: 4, height: 24, borderRadius: 2, backgroundColor: tabColors[pekerjaanTab], flexShrink: 0 }} />
                             <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                               {tabTitles[pekerjaanTab]}
                             </div>
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, paddingLeft: 14 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                             {tabCounts[pekerjaanTab]} pekerjaan
                           </div>
                         </div>
@@ -724,7 +739,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                             setShowBlockedModal(true)
                             return
                           }
-                          setPopupDetailId(id)
+                          if (onOpenDetail) onOpenDetail(id, pekerjaanTab)
+                          else setPopupDetailId(id)
                         }}
                       />
                     </div>
