@@ -37,6 +37,15 @@
   padding: 0;
 }
 
+/* Standalone mode — Safari Add to Dock (macOS).
+   hover:hover distinguishes macOS from iOS (touch-only) home screen.
+   Adds top breathing room so content clears the macOS title bar area. */
+@media (display-mode: standalone) and (hover: hover) {
+  #root > div:first-child {
+    padding-top: 28px;
+  }
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
