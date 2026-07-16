@@ -15,6 +15,7 @@ import LaporanBulanan from './components/LaporanBulanan'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
+import PresentationMode from './components/PresentationMode'
 import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
@@ -41,6 +42,7 @@ export default function App() {
   )
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalKey, setAddModalKey] = useState(0)
+  const [showPresentation, setShowPresentation] = useState(false)
   // null = belum dicek, true = maintenance aktif, false = normal
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
   const [togglingMaintenance, setTogglingMaintenance] = useState(false)
@@ -358,7 +360,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease' }}>
+    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', backgroundColor: 'var(--bg)', transition: 'background-color 0.2s ease', paddingTop: 'env(safe-area-inset-top, 0px)', boxSizing: 'border-box' }}>
       {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
@@ -374,6 +376,7 @@ export default function App() {
         isMaintenance={isMaintenance ?? false}
         onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
         togglingMaintenance={togglingMaintenance}
+        onPresentasi={isAdmin ? () => setShowPresentation(true) : undefined}
       />
 
       {/* Mobile backdrop */}
@@ -457,6 +460,7 @@ export default function App() {
               onLogoutAdmin={() => { clearAdminPin(); setIsAdmin(false) }}
               onLogoutDashboard={handleLogoutDashboard}
               onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
+              onPresentasi={isAdmin ? () => setShowPresentation(true) : undefined}
             />
           </header>
         )}
@@ -548,6 +552,10 @@ export default function App() {
           onClose={() => setShowAddModal(false)}
           onAdded={handleAdded}
         />
+      )}
+
+      {showPresentation && (
+        <PresentationMode onClose={() => setShowPresentation(false)} />
       )}
     </div>
   )
