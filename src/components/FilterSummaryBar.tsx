@@ -197,19 +197,32 @@ export default function FilterSummaryBar({
   const valSize = compact ? 13  : isMobile ? 12  : 14
   const subSize = compact ? 9   : isMobile ? 8.5 : 9.5
 
-  return (
-    <div
-      style={{
+  // compact mode: horizontal scroll so cards never get squeezed in narrow popups
+  const outerStyle: React.CSSProperties = compact
+    ? {
+        display: 'flex',
+        flexDirection: 'row',
+        gap,
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+        scrollbarWidth: 'none' as React.CSSProperties['scrollbarWidth'],
+        marginBottom: 0,
+        padding: '8px 16px 10px',
+        borderBottom: '1px solid var(--border-subtle)',
+        flexShrink: 0,
+        animation: 'fadeSlideDown 0.18s ease',
+      }
+    : {
         display: 'grid',
         gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
         gap,
-        marginBottom: compact ? 0 : isMobile ? 10 : 12,
-        padding: compact ? '8px 16px 10px' : 0,
-        borderBottom: compact ? '1px solid var(--border-subtle)' : 'none',
+        marginBottom: isMobile ? 10 : 12,
         flexShrink: 0,
         animation: 'fadeSlideDown 0.18s ease',
-      }}
-    >
+      }
+
+  return (
+    <div style={outerStyle}>
       {cards.map((card, i) => (
         <div
           key={i}
@@ -219,6 +232,8 @@ export default function FilterSummaryBar({
             padding: pad,
             border: '1px solid var(--border-subtle)',
             textAlign: 'center',
+            // compact: fixed width so cards don't shrink in scroll container
+            ...(compact ? { flexShrink: 0, minWidth: 110 } : {}),
           }}
         >
           <div style={{
@@ -229,8 +244,6 @@ export default function FilterSummaryBar({
             letterSpacing: '0.06em',
             marginBottom: compact ? 2 : 3,
             whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
           }}>
             {card.label}
           </div>
@@ -240,6 +253,7 @@ export default function FilterSummaryBar({
             color: card.accent,
             letterSpacing: '-0.02em',
             lineHeight: 1.2,
+            whiteSpace: 'nowrap',
           }}>
             {card.value}
           </div>
@@ -249,8 +263,6 @@ export default function FilterSummaryBar({
               color: 'var(--text-muted)',
               marginTop: 2,
               whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
             }}>
               {card.sub}
             </div>
