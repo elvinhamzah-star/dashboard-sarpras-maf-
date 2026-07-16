@@ -226,7 +226,7 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateG
               const cell = (d: Documentation | undefined, kind: 'before' | 'after') => {
                 const thumb = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                 return (
-                  <div style={{ flex: 1, position: 'relative', height: isMobile ? 148 : 210, background: kind === 'before' ? 'linear-gradient(135deg, #8a97a8, #6b7789)' : 'linear-gradient(135deg, #35a06b, #1f7d4e)', display: 'flex', alignItems: 'flex-end', padding: isMobile ? 9 : 11, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, position: 'relative', height: isMobile ? 160 : 280, background: kind === 'before' ? 'linear-gradient(135deg, #8a97a8, #6b7789)' : 'linear-gradient(135deg, #35a06b, #1f7d4e)', display: 'flex', alignItems: 'flex-end', padding: isMobile ? 9 : 11, overflow: 'hidden' }}>
                     {thumb && <img src={thumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
                     {/* Label Sebelum/Sesudah — style & font size disamakan dengan halaman Galeri */}
                     <div style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
