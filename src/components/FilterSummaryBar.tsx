@@ -61,14 +61,23 @@ export default function FilterSummaryBar({
       : 0
 
   // ── Efficiency (Selesai only) ─────────────────────────────────────────────
-  const netDiff  = totalRealisasi - totalAnggaran
-  const isOver   = netDiff > 0
-  const isUnder  = netDiff < 0
-  const effLabel = isUnder ? 'Efisien' : isOver ? 'Melebihi Pagu' : 'Tepat sesuai pagu'
-  const effColor = isUnder ? '#059669' : isOver ? '#DC2626' : '#6B7280'
-  const effSub   = netDiff !== 0
-    ? (isUnder ? `hemat ${formatRupiah(-netDiff)}` : `lebih ${formatRupiah(netDiff)}`)
-    : `dari ${programs.length} pekerjaan`
+  const netDiff   = totalRealisasi - totalAnggaran
+  const isOver    = netDiff > 0
+  const isUnder   = netDiff < 0
+  const effPct    = totalAnggaran > 0 ? Math.abs((netDiff / totalAnggaran) * 100).toFixed(1) : '0'
+  // Value: rupiah number with sign prefix, or "Tepat Sesuai Pagu" if exact
+  const effValue  = isUnder
+    ? `+${formatRupiah(-netDiff)}`
+    : isOver
+      ? `-${formatRupiah(netDiff)}`
+      : 'Tepat Sesuai Pagu'
+  const effColor  = isUnder ? '#059669' : isOver ? '#DC2626' : '#6B7280'
+  // Sub: label + percentage below/above pagu
+  const effSub    = isUnder
+    ? `efisiensi · ${effPct}% di bawah pagu`
+    : isOver
+      ? `melebihi pagu · ${effPct}% di atas pagu`
+      : `dari ${programs.length} pekerjaan`
 
   // ── Build card definitions per status ─────────────────────────────────────
   let cards: Card[]
@@ -91,7 +100,7 @@ export default function FilterSummaryBar({
       },
       {
         label: 'Efisiensi Anggaran',
-        value: effLabel,
+        value: effValue,
         sub: effSub,
         accent: effColor,
         bg: isOver ? 'rgba(220,38,38,0.06)' : isUnder ? 'rgba(5,150,105,0.06)' : 'rgba(107,114,128,0.06)',
