@@ -71,7 +71,7 @@ export default function FilterSummaryBar({
     : isOver
       ? `-${formatRupiah(netDiff)}`
       : 'Tepat Sesuai Pagu'
-  const effColor  = isUnder ? '#059669' : isOver ? '#DC2626' : '#6B7280'
+  const effColor  = isUnder ? '#059669' : isOver ? '#660000' : '#6B7280'
   // Sub: label + percentage below/above pagu
   const effSub    = isUnder
     ? `efisiensi · ${effPct}% di bawah pagu`
@@ -126,7 +126,7 @@ export default function FilterSummaryBar({
         label: 'Sisa Anggaran',
         value: formatRupiah(Math.abs(totalSisa)),
         sub: totalSisa < 0 ? 'melebihi pagu' : 'belum terserap',
-        accent: totalSisa < 0 ? '#DC2626' : '#D97706',
+        accent: totalSisa < 0 ? '#660000' : '#D97706',
         bg: totalSisa < 0 ? 'rgba(220,38,38,0.06)' : 'rgba(217,119,6,0.06)',
       },
       {
