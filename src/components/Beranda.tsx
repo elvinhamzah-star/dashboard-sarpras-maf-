@@ -9,6 +9,7 @@ import BerandaChart from './BerandaChart'
 import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 import PekerjaanDetail from './PekerjaanDetail'
 import ModalShell from './ModalShell'
+import FilterSummaryBar from './FilterSummaryBar'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -719,6 +720,15 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         </button>
                       </div>
                     </div>
+                    {/* Summary bar — non-scrollable, always visible at top */}
+                    <FilterSummaryBar
+                      status={pekerjaanTab}
+                      programs={displayPrograms.filter(p => p.status === pekerjaanTab)}
+                      subPrograms={subPrograms}
+                      compact
+                      isMobile={isMobile}
+                    />
+
                     {/* Scrollable program list */}
                     <div style={{ overflowY: 'auto', flex: 1, overscrollBehavior: 'contain' }}>
                       <BerandaWeekOverWeek

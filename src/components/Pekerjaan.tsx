@@ -3,6 +3,7 @@ import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/sup
 import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
 import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import FilterSummaryBar from './FilterSummaryBar'
 
 interface PekerjaanProps {
   isAdmin: boolean
@@ -173,6 +174,16 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
           )
         })}
       </div>
+
+      {/* Filter Summary Bar — muncul saat filter aktif */}
+      {!loading && activeStatus !== '' && (
+        <FilterSummaryBar
+          status={activeStatus}
+          programs={filtered}
+          subPrograms={subPrograms}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* Card List */}
       {loading ? (
