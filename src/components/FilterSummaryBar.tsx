@@ -188,12 +188,14 @@ export default function FilterSummaryBar({
     ]
   }
 
-  // ── Style tokens — matches PekerjaanDetail metric card style ─────────────
-  const gap     = compact ? 7 : isMobile ? 8 : 12
-  const pad     = compact ? '9px 11px' : isMobile ? '10px 12px' : '16px 18px'
-  const lblSize = compact ? 8.5 : isMobile ? 9.5 : 10.5
-  const valSize = compact ? 12  : isMobile ? 14  : 18
-  const subSize = compact ? 8.5 : isMobile ? 10  : 11
+  // ── Style tokens — intentionally understated, secondary to program cards ──
+  // No shadow, no white bg — uses surface-raised so it visually sits "behind"
+  // the white program cards below. Smaller fonts than PekerjaanDetail cards.
+  const gap     = compact ? 6 : isMobile ? 6 : 8
+  const pad     = compact ? '8px 10px' : isMobile ? '9px 11px' : '11px 14px'
+  const lblSize = compact ? 8   : isMobile ? 8.5 : 9
+  const valSize = compact ? 11  : isMobile ? 12  : 14
+  const subSize = compact ? 8   : isMobile ? 8.5 : 9.5
 
   return (
     <div
@@ -201,8 +203,8 @@ export default function FilterSummaryBar({
         display: 'grid',
         gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
         gap,
-        marginBottom: compact ? 0 : isMobile ? 12 : 16,
-        padding: compact ? '10px 16px 12px' : 0,
+        marginBottom: compact ? 0 : isMobile ? 10 : 12,
+        padding: compact ? '8px 16px 10px' : 0,
         borderBottom: compact ? '1px solid var(--border-subtle)' : 'none',
         flexShrink: 0,
         animation: 'fadeSlideDown 0.18s ease',
@@ -212,20 +214,19 @@ export default function FilterSummaryBar({
         <div
           key={i}
           style={{
-            backgroundColor: 'var(--card)',
-            borderRadius: compact ? 8 : 12,
+            backgroundColor: 'var(--surface-raised)',
+            borderRadius: compact ? 7 : 9,
             padding: pad,
             border: '1px solid var(--border-subtle)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}
         >
           <div style={{
             fontSize: lblSize,
-            fontWeight: 700,
+            fontWeight: 600,
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            marginBottom: compact ? 3 : isMobile ? 4 : 8,
+            marginBottom: compact ? 2 : 3,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -236,8 +237,8 @@ export default function FilterSummaryBar({
             fontSize: valSize,
             fontWeight: 700,
             color: card.accent,
-            letterSpacing: '-0.03em',
-            lineHeight: 1.15,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.2,
           }}>
             {card.value}
           </div>
@@ -245,7 +246,7 @@ export default function FilterSummaryBar({
             <div style={{
               fontSize: subSize,
               color: 'var(--text-muted)',
-              marginTop: compact ? 2 : 4,
+              marginTop: 2,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
