@@ -218,6 +218,7 @@ export default function FilterSummaryBar({
             borderRadius: compact ? 7 : 9,
             padding: pad,
             border: '1px solid var(--border-subtle)',
+            textAlign: 'center',
           }}
         >
           <div style={{
