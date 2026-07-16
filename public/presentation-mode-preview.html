@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Sarpras MAF — Presentasi Eksekutif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; background: #111;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  #stage-wrap { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  #stage {
+    width: 960px; height: 540px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  }
+
+  .s-dark { --muted: rgba(255,255,255,.45); }
+  .s-light { --muted: #6B7280; }
+
+  .slide {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; justify-content: flex-start;
+    padding: 4% 7.5% 3.5%; box-sizing: border-box; overflow: hidden;
+  }
+  .slide.active { display: flex; }
+  .s-dark { background: #0F1923; color: #fff; }
+  .s-light { background: #FAFAF8; color: #0F1923; }
+
+  /* ── Typography ── */
+  .h1 { font-size: 3.2em; font-weight: 900; line-height: 1.05; margin-bottom: .4em; }
+  .h2 { font-size: 2em; font-weight: 800; line-height: 1.1; margin-bottom: .18em; }
+  .meta { font-size: .64em; color: var(--muted); margin-bottom: .85em; line-height: 1.5; }
+  .sub  { font-size: .76em; color: var(--muted); line-height: 1.6; margin-bottom: .9em; }
+
+  /* ── Progress bar ── */
+  .pbar-wrap { height: 4px; background: #F0F2F5; border-radius: 2px; }
+  .pbar      { height: 100%; background: #1A3A5C; border-radius: 2px; }
+
+  /* ── Status badges ── */
+  .sbadge { display: inline-block; font-size: .44em; font-weight: 700; padding: .22em .58em; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+  .sb-ok   { background: #DCFCE7; color: #14532D; }
+  .sb-go   { background: #DBEAFE; color: #1E3A8A; }
+  .sb-hold { background: #FEF9C3; color: #713F12; }
+  .sb-plan { background: #F1F5F9; color: #475569; }
+
+  /* ── Program cards (pilar detail slides) ── */
+  .pcard { background: #fff; border: 1px solid #E8EAED; border-radius: 10px; padding: .75em .85em; display: flex; flex-direction: column; justify-content: space-between; }
+  .pcard-name { font-size: .68em; font-weight: 800; line-height: 1.2; color: #0F1923; margin-bottom: .25em; }
+  .pcard-row  { display: flex; justify-content: space-between; align-items: center; }
+  .pcard-val  { font-size: .56em; font-weight: 600; color: #374151; }
+  .pcard-pct  { font-size: .57em; font-weight: 700; color: #0F1923; text-align: right; margin-top: .18em; }
+
+  /* ── Navigation ── */
+  #nav {
+    position: fixed; bottom: 18px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 100;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+    color: #fff; width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,.3); }
+  .dots { display: flex; gap: 6px; align-items: center; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.3); cursor: pointer; transition: background .15s; }
+  .dot-on { background: #fff; }
+  .slide-info { color: rgba(255,255,255,.5); font-size: 12px; font-family: system-ui; min-width: 36px; text-align: center; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 1 — Cover
+  ════════════════════════════════════════════ */
+  #s1 { flex-direction: row; }
+  #s1-left { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-right: 2em; }
+  #s1-right { width: 28%; position: relative; display: flex; align-items: center; justify-content: flex-end; }
+  .s1-geo {
+    width: 100%; height: 100%;
+    clip-path: polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%);
+    background: #1A2E42;
+    position: absolute; right: -8%; top: 0; bottom: 0;
+  }
+  .s1-footer { display: flex; gap: 2em; margin-top: auto; }
+  .s1-fcol { display: flex; flex-direction: column; gap: .25em; }
+  .s1-flabel { font-size: .5em; font-weight: 700; letter-spacing: .1em; color: rgba(255,255,255,.4); text-transform: uppercase; }
+  .s1-fval   { font-size: .62em; font-weight: 600; color: rgba(255,255,255,.85); }
+  .s1-divider { width: 1px; background: rgba(255,255,255,.15); }
+
+  /* ════════════════════════════════════════════
+     SLIDE 2 — Latar Belakang
+  ════════════════════════════════════════════ */
+  .numbered-list { list-style: none; display: flex; flex-direction: column; gap: .48em; flex: 1; }
+  .numbered-list li { display: flex; gap: .65em; align-items: center; font-size: .68em; line-height: 1.55; flex: 1; background: #fff; border: 1px solid #E8EAED; border-radius: 10px; padding: .6em .9em; }
+  .nl-num { font-size: .85em; font-weight: 800; color: #0F1923; min-width: 1.8em; flex-shrink: 0; opacity: .3; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 3 — 4 Pilar + Donut
+  ════════════════════════════════════════════ */
+  .pilar-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: .9em .95em; display: flex; flex-direction: column; gap: .25em; }
+  .pilar-card-name  { font-size: .78em; font-weight: 800; line-height: 1.2; color: #0F1923; }
+  .pilar-card-count { font-size: .48em; font-weight: 600; color: #6B7280; letter-spacing: .02em; }
+  .pilar-card-desc  { font-size: .52em; color: #6B7280; line-height: 1.45; flex: 1; margin-top: .2em; }
+  .pilar-card-amt   { font-size: .54em; font-weight: 700; color: #0F1923; margin-top: auto; padding-top: .6em; border-top: 1px solid #F3F4F6; font-variant-numeric: tabular-nums; }
+
+  #s3 { flex-direction: row; align-items: stretch; gap: 1em; }
+  #s3-left { flex: 1.05; display: flex; flex-direction: column; justify-content: center; }
+  #s3-left-header { margin-bottom: .6em; }
+  #s3-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .6em; flex: 1; }
+  #s3-right { flex: .95; display: flex; flex-direction: column; justify-content: center; align-items: center; border-left: 1px solid #E5E7EB; padding-left: 1.2em; }
+
+  .donut-wrap { position: relative; width: 18em; height: 18em; }
+  .donut { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(
+    #1A3A5C 0deg 285deg,
+    #4B6280 285deg 310.5deg,
+    #64748B 310.5deg 329.5deg,
+    #94A3B8 329.5deg 360deg
+  ); }
+  .donut-hole {
+    position: absolute; inset: 22%; border-radius: 50%;
+    background: #FAFAF8;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  .donut-hole-val { font-size: .78em; font-weight: 800; color: #0F1923; line-height: 1.15; }
+  .donut-hole-sub { font-size: .42em; font-weight: 400; color: #4B5563; text-transform: uppercase; letter-spacing: .07em; margin-top: .2em; }
+
+  .legend-row { display: flex; align-items: center; gap: .55em; padding: .42em 0; border-bottom: 1px solid #F3F4F6; }
+  .legend-row:last-child { border-bottom: none; }
+  .legend-swatch { width: .7em; height: .7em; border-radius: 2px; flex-shrink: 0; }
+  .legend-name { font-size: .62em; font-weight: 600; flex: 1; }
+  .legend-pct  { font-size: .55em; color: #6B7280; min-width: 2.5em; text-align: right; }
+
+  /* ════════════════════════════════════════════
+     SLIDES 5 / 6 / 7 — Pilar detail
+  ════════════════════════════════════════════ */
+  /* KPI summary row — fills whitespace, highlights key numbers */
+  .kpi-row { display: flex; gap: .6em; margin-bottom: .65em; }
+  .kpi-box { flex: 1; background: #fff; border: 1px solid #E8EAED; border-radius: 10px; padding: .65em .85em; }
+  .kpi-val { font-size: 1.08em; font-weight: 800; color: #0F1923; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi-lbl { font-size: .43em; color: #9CA3AF; margin-top: .22em; text-transform: uppercase; letter-spacing: .05em; }
+  .kpi-box-accent { background: #0F1923; }
+  .kpi-box-accent .kpi-val { color: #fff; }
+  .kpi-box-accent .kpi-lbl { color: rgba(255,255,255,.5); }
+
+  /* Pilar 2&3 — section divider with inline stats */
+  .sec-div { display: flex; align-items: center; gap: .65em; margin: .55em 0 .4em; }
+  .sec-div-label { font-size: .62em; font-weight: 800; color: #0F1923; white-space: nowrap; }
+  .sec-div-stat  { font-size: .54em; color: #6B7280; white-space: nowrap; }
+  .sec-div-line  { flex: 1; height: 1px; background: #E5E7EB; }
+  /* Pilar 2&3 — program row (horizontal) */
+  .p-row { display: grid; grid-template-columns: 1fr auto 3fr auto auto; gap: .55em; align-items: center; background: #fff; border: 1px solid #E8EAED; border-radius: 8px; padding: .55em .82em; }
+  .p-row-name { font-size: .64em; font-weight: 700; color: #0F1923; line-height: 1.25; }
+  .p-row-bar  { display: flex; align-items: center; }
+  .p-row-pct  { font-size: .6em; font-weight: 700; color: #0F1923; min-width: 2.4em; text-align: right; }
+  .p-row-amt  { font-size: .58em; color: #6B7280; text-align: right; min-width: 4.5em; }
+
+  /* Grids fill remaining space; rows stretch equally */
+  .grid-3c { display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr); gap: .52em; flex: 1; }
+  .grid-4c { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(3,1fr); gap: .48em; flex: 1; }
+
+  .s6-col { display: flex; flex-direction: column; flex: 1; gap: .42em; }
+  .s6-col-hd { font-size: .62em; font-weight: 800; padding-bottom: .38em; border-bottom: 1px solid #E5E7EB; }
+  /* Cards inside pilar 2&3 columns stretch to fill */
+  .s6-col .pcard { flex: 1; justify-content: space-between; margin-bottom: 0 !important; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 8 — Snapshot
+  ════════════════════════════════════════════ */
+  .big-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1em 1.1em; display: flex; flex-direction: column; gap: .55em; flex: 1; }
+  .big-num     { font-size: 2.4em; font-weight: 900; color: #0F1923; line-height: 1; }
+  .big-num-sub { font-size: .65em; color: #6B7280; }
+  .keu-table { display: flex; flex-direction: column; gap: .35em; }
+  .keu-row   { display: flex; justify-content: space-between; font-size: .62em; padding-bottom: .3em; border-bottom: 1px solid #F3F4F6; }
+  .keu-row:last-child { border-bottom: none; font-weight: 700; }
+  .keu-row span:last-child { font-weight: 600; }
+  .prog-bullet { display: flex; flex-direction: column; gap: .38em; }
+  .prog-bullet-row { display: flex; justify-content: space-between; font-size: .65em; padding: .25em .5em; background: #F9FAFB; border-radius: 6px; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 9 — Chart
+  ════════════════════════════════════════════ */
+  #chart-area { flex: 1; display: flex; flex-direction: column; margin-top: .5em; }
+  .chart-legend { display: flex; gap: 1.2em; font-size: .6em; color: #6B7280; margin-bottom: .5em; align-items: center; }
+  .chart-legend span { display: flex; align-items: center; gap: .35em; }
+  .cl-sq { display: inline-block; width: .8em; height: .8em; border-radius: 2px; }
+  .cl-di { display: inline-block; width: .7em; height: .7em; background: #4B6280; transform: rotate(45deg); }
+  #chart-svg-wrap { flex: 1; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: .6em; overflow: hidden; }
+
+  /* ════════════════════════════════════════════
+     SLIDES 10 & 13 — Grid cards (Selesai / Rencana)
+  ════════════════════════════════════════════ */
+  .ccard { background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; padding: .65em .75em; display: flex; flex-direction: column; gap: .22em; }
+  .ccard-name  { font-size: .65em; font-weight: 700; line-height: 1.3; color: #0F1923; }
+  .ccard-pilar { font-size: .5em; color: #9CA3AF; text-transform: uppercase; letter-spacing: .06em; }
+  .ccard-amt   { font-size: .6em; font-weight: 600; color: #374151; margin-top: .1em; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 11 — Berjalan (list rows)
+  ════════════════════════════════════════════ */
+  .prog-list { display: flex; flex-direction: column; gap: .65em; flex: 1; justify-content: center; margin-top: .4em; }
+  .prog-list-row {
+    display: grid; grid-template-columns: 2fr 3fr auto auto; gap: .6em;
+    align-items: center; background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; padding: .6em .85em;
+  }
+  .pl-name  { font-size: .65em; font-weight: 700; color: #0F1923; }
+  .pl-pilar { font-size: .48em; color: #9CA3AF; text-transform: uppercase; letter-spacing: .05em; margin-top: .1em; }
+  .pl-bar-col { display: flex; align-items: center; }
+  .pl-pct   { font-size: .62em; font-weight: 700; min-width: 2.5em; text-align: right; }
+  .pl-amt   { font-size: .6em; color: #6B7280; text-align: right; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 12 — Tertunda (On Hold)
+  ════════════════════════════════════════════ */
+  .hold-alert { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 12px; padding: .85em 1.1em; margin-bottom: .65em; display: flex; align-items: center; gap: 1.5em; }
+  .hold-alert-num { font-size: 2em; font-weight: 900; color: #92400E; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hold-alert-desc { font-size: .6em; color: #78350F; line-height: 1.55; }
+  .hold-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1em 1.1em; display: flex; flex-direction: column; gap: .5em; flex: 1; }
+  .hold-name { font-size: .78em; font-weight: 800; line-height: 1.3; color: #0F1923; }
+  .hold-stats { display: flex; gap: 2.5em; margin-top: .1em; }
+  .hold-stat-val { font-size: .7em; font-weight: 800; color: #0F1923; font-variant-numeric: tabular-nums; }
+  .hold-stat-lbl { font-size: .44em; color: #9CA3AF; margin-top: .08em; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 14 — Poin Utama
+  ════════════════════════════════════════════ */
+  .concl-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
+  .concl-accent { height: .28em; width: 100%; }
+  .concl-body { padding: .85em .9em; display: flex; flex-direction: column; gap: .5em; flex: 1; }
+  .concl-hd   { font-size: .65em; font-weight: 800; border-bottom: 1px solid #F3F4F6; padding-bottom: .4em; margin-bottom: .2em; }
+  .concl-list { list-style: none; display: flex; flex-direction: column; gap: .6em; flex: 1; }
+  .concl-list li { font-size: .64em; line-height: 1.6; color: #374151; padding: .55em .75em; background: #F9FAFB; border-radius: 7px; flex: 1; display: flex; align-items: center; }
+
+  /* ════════════════════════════════════════════
+     SLIDE 15 — Penutup
+  ════════════════════════════════════════════ */
+  #s15-inner { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .s15-divider { height: 1px; background: rgba(255,255,255,.15); margin: 1.2em 0; }
+  .s15-footer { display: flex; gap: 3em; }
+  .s15-fcol .s15-flabel { font-size: .5em; font-weight: 700; letter-spacing: .1em; color: rgba(255,255,255,.4); text-transform: uppercase; }
+  .s15-fcol .s15-fval   { font-size: .62em; font-weight: 600; color: rgba(255,255,255,.8); margin-top: .2em; }
+</style>
+</head>
+<body>
+<div id="stage-wrap">
+<div id="stage">
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 1 — Cover
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-dark active" id="s1">
+  <div id="s1-left">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <div class="h1">Laporan Progress<br>Sarana &amp; Prasarana</div>
+      <div class="sub">Rekap capaian pekerjaan, realisasi anggaran, dan status program pengembangan fasilitas MAF — disampaikan kepada Peradaban Baik Bahagia.</div>
+    </div>
+    <div class="s1-footer">
+      <div class="s1-fcol">
+        <span class="s1-flabel">Laporan Kepada</span>
+        <span class="s1-fval">Peradaban Baik Bahagia (PBB)</span>
+      </div>
+      <div class="s1-divider"></div>
+      <div class="s1-fcol">
+        <span class="s1-flabel">Disusun Oleh</span>
+        <span class="s1-fval">Tim Rumah Tangga MAF</span>
+      </div>
+      <div class="s1-divider"></div>
+      <div class="s1-fcol">
+        <span class="s1-flabel">Periode</span>
+        <span class="s1-fval">Juli 2026</span>
+      </div>
+    </div>
+  </div>
+  <div id="s1-right">
+    <div class="s1-geo"></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 2 — Latar Belakang
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s2">
+  <div class="h2">Latar Belakang Program</div>
+  <div class="meta">5 masalah utama yang disepakati &nbsp;&middot;&nbsp; Pertemuan Tim Al-Fatih &times; PBB, 25 Desember 2025</div>
+  <ul class="numbered-list">
+    <li><span class="nl-num">01.</span><span>Belum tersedia kantor, ruang istirahat, dan gudang inventaris tim Sarpras.</span></li>
+    <li><span class="nl-num">02.</span><span>Pengelolaan sampah belum optimal &mdash; peralatan minim, kendaraan tidak layak, TPS belum ada.</span></li>
+    <li><span class="nl-num">03.</span><span>Air minum santri di sakan belum tersedia secara langsung.</span></li>
+    <li><span class="nl-num">04.</span><span>Belum ada program komunal kesadaran kebersihan dan kesehatan lingkungan.</span></li>
+    <li><span class="nl-num">05.</span><span>Kondisi infrastruktur fisik MAF tidak terawat &mdash; taman, gedung, dan akses jalan belum ditangani terstruktur.</span></li>
+  </ul>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 3 — 4 Pilar + Alokasi
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s3">
+  <div id="s3-left">
+    <div id="s3-left-header">
+      <div class="h2">4 Pilar Program</div>
+    </div>
+    <div id="s3-grid">
+      <div class="pilar-card">
+        <div class="pilar-card-name">Infrastruktur &amp; Lingkungan</div>
+        <div class="pilar-card-count">9 program</div>
+        <div class="pilar-card-desc">Jalan, paving block, gedung, taman, dan penataan area lingkungan madrasah.</div>
+        <div class="pilar-card-amt">Rp 1.636.848.080</div>
+      </div>
+      <div class="pilar-card">
+        <div class="pilar-card-name">Air Bersih</div>
+        <div class="pilar-card-count">2 program</div>
+        <div class="pilar-card-desc">Pengadaan depot air minum dan distribusi air bersih untuk santri di asrama.</div>
+        <div class="pilar-card-amt">Rp 146.380.000</div>
+      </div>
+      <div class="pilar-card">
+        <div class="pilar-card-name">Pengelolaan Sampah</div>
+        <div class="pilar-card-count">3 program</div>
+        <div class="pilar-card-desc">TPS, kendaraan operasional, dan peralatan kebersihan tim sampah.</div>
+        <div class="pilar-card-amt">Rp 109.107.000</div>
+      </div>
+      <div class="pilar-card">
+        <div class="pilar-card-name">Sarana Tim Sarpras</div>
+        <div class="pilar-card-count">11 program</div>
+        <div class="pilar-card-desc">Kantor, gudang inventaris, dan perlengkapan 7 divisi tim lapangan.</div>
+        <div class="pilar-card-amt">Rp 175.504.898</div>
+      </div>
+    </div>
+  </div>
+  <div id="s3-right">
+    <div class="donut-wrap">
+      <div class="donut"></div>
+      <div class="donut-hole">
+        <div class="donut-hole-val">Rp 2,07 M</div>
+        <div class="donut-hole-sub">TOTAL<br>ANGGARAN</div>
+      </div>
+    </div>
+    <div style="width:100%;margin-top:.9em;">
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:#1A3A5C;"></div>
+        <div class="legend-name">Infrastruktur &amp; Lingkungan</div>
+        <div class="legend-pct">79,2%</div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:#4B6280;"></div>
+        <div class="legend-name">Air Bersih</div>
+        <div class="legend-pct">7,1%</div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:#64748B;"></div>
+        <div class="legend-name">Pengelolaan Sampah</div>
+        <div class="legend-pct">5,3%</div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:#94A3B8;"></div>
+        <div class="legend-name">Sarana Tim Sarpras</div>
+        <div class="legend-pct">8,5%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 4 (idx 3) — Pilar 1: Infrastruktur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s5">
+  <div class="h2">Infrastruktur &amp; Lingkungan</div>
+  <div class="meta">Pilar 1 &nbsp;&middot;&nbsp; 9 Program</div>
+  <div class="kpi-row">
+    <div class="kpi-box kpi-box-accent">
+      <div class="kpi-val">Rp 1,64 M</div>
+      <div class="kpi-lbl">Total Anggaran</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">Rp 557 jt</div>
+      <div class="kpi-lbl">Realisasi</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">34,0%</div>
+      <div class="kpi-lbl">Penyerapan</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">7 Selesai</div>
+      <div class="kpi-lbl">2 On Hold</div>
+    </div>
+  </div>
+  <div class="grid-3c">
+    <div class="pcard">
+      <div class="pcard-name">Pengecatan &amp; Perbaikan Eksterior Gedung MAF (Tahap 1)</div>
+      <div class="pcard-row"><span class="sbadge sb-hold">On Hold</span><span class="pcard-val">Rp 1,20 M</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:25.3%"></div></div>
+      <div class="pcard-pct">25,3%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Pembangunan U Ditch Jalan Elaf</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 36 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Pembangunan Paving Block</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 214 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Penataan Taman Jalan Masuk</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 41 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Penataan Taman Area Dalam MAF (Tahap 1)</div>
+      <div class="pcard-row"><span class="sbadge sb-hold">On Hold</span><span class="pcard-val">Rp 34 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:15.4%"></div></div>
+      <div class="pcard-pct">15,4%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Penataan Taman Depan Rumah Kyai</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 6,5 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Pemasangan Cover U Ditch</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 53 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perapihan Jalan Masuk Gudang ME</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 13 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Pembangunan Paving Block Parkiran</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 36 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 5 (idx 4) — Pilar 2 & 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s6">
+  <div class="h2">Air Bersih &amp; Pengelolaan Sampah</div>
+  <div class="meta">Pilar 2 &amp; 3 &nbsp;&middot;&nbsp; 5 Program total</div>
+  <div class="kpi-row">
+    <div class="kpi-box kpi-box-accent">
+      <div class="kpi-val">Rp 255 jt</div>
+      <div class="kpi-lbl">Total Anggaran</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">Rp 25 jt</div>
+      <div class="kpi-lbl">Realisasi</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">9,8%</div>
+      <div class="kpi-lbl">Penyerapan</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">2 On Going</div>
+      <div class="kpi-lbl">1 On Hold · 2 Rencana</div>
+    </div>
+  </div>
+
+  <!-- Two-column layout: Air Bersih | Pengelolaan Sampah -->
+  <div style="display:flex;gap:1.1em;flex:1;">
+
+    <!-- Left — Air Bersih (2 programs) -->
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="sec-div" style="margin-top:0">
+        <span class="sec-div-label">Air Bersih</span>
+        <span class="sec-div-stat">Rp 146 jt &nbsp;·&nbsp; 13,1% terserap</span>
+        <div class="sec-div-line"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.45em;">
+        <div class="pcard">
+          <div class="pcard-name">Pengadaan Depot Air Minum</div>
+          <div class="pcard-row"><span class="sbadge sb-hold">On Hold</span><span class="pcard-val">Rp 126 jt</span></div>
+          <div class="pbar-wrap"><div class="pbar" style="width:12%"></div></div>
+          <div class="pcard-pct">12%</div>
+        </div>
+        <div class="pcard">
+          <div class="pcard-name">Kendaraan Tim Depot</div>
+          <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 20 jt</span></div>
+          <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+          <div class="pcard-pct">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — Pengelolaan Sampah (3 programs) -->
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="sec-div" style="margin-top:0">
+        <span class="sec-div-label">Pengelolaan Sampah</span>
+        <span class="sec-div-stat">Rp 109 jt &nbsp;·&nbsp; 5,9% terserap</span>
+        <div class="sec-div-line"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.45em;">
+        <div class="pcard">
+          <div class="pcard-name">Pengadaan Tempat Sampah</div>
+          <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 15 jt</span></div>
+          <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+          <div class="pcard-pct">0%</div>
+        </div>
+        <div class="pcard">
+          <div class="pcard-name">Peningkatan Fasilitas Sarana Operasional</div>
+          <div class="pcard-row"><span class="sbadge sb-go">On Going</span><span class="pcard-val">Rp 30 jt</span></div>
+          <div class="pbar-wrap"><div class="pbar" style="width:10%"></div></div>
+          <div class="pcard-pct">10%</div>
+        </div>
+        <div class="pcard">
+          <div class="pcard-name">Kesadaran Kebersihan</div>
+          <div class="pcard-row"><span class="sbadge sb-go">On Going</span><span class="pcard-val">Rp 64 jt</span></div>
+          <div class="pbar-wrap"><div class="pbar" style="width:6%"></div></div>
+          <div class="pcard-pct">6%</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 6 (idx 5) — Pilar 4: Sarana Tim
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s7">
+  <div class="h2">Sarana Tim Sarpras</div>
+  <div class="meta">Pilar 4 &nbsp;&middot;&nbsp; 11 Program</div>
+  <div class="kpi-row">
+    <div class="kpi-box kpi-box-accent">
+      <div class="kpi-val">Rp 176 jt</div>
+      <div class="kpi-lbl">Total Anggaran</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">Rp 96 jt</div>
+      <div class="kpi-lbl">Realisasi</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">54,7%</div>
+      <div class="kpi-lbl">Penyerapan</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">1 Selesai</div>
+      <div class="kpi-lbl">3 On Going · 7 Rencana</div>
+    </div>
+  </div>
+  <div class="grid-4c">
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Maintenance</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 36 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Kebersihan</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 1,5 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Pertamanan</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 11 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Depot</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 2,7 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Supir</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 6,4 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Masjid</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 6,1 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Perlengkapan Tim Security</div>
+      <div class="pcard-row"><span class="sbadge sb-plan">Rencana</span><span class="pcard-val">Rp 1,8 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:0%"></div></div>
+      <div class="pcard-pct">0%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Seragam Div. Rumah Tangga</div>
+      <div class="pcard-row"><span class="sbadge sb-go">On Going</span><span class="pcard-val">Rp 15 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:90%"></div></div>
+      <div class="pcard-pct">90%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Support Tim Sarpras</div>
+      <div class="pcard-row"><span class="sbadge sb-go">On Going</span><span class="pcard-val">Rp 5 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:61%"></div></div>
+      <div class="pcard-pct">61%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Gudang Sarpras</div>
+      <div class="pcard-row"><span class="sbadge sb-ok">Selesai</span><span class="pcard-val">Rp 28 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:100%"></div></div>
+      <div class="pcard-pct">100%</div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-name">Man Power</div>
+      <div class="pcard-row"><span class="sbadge sb-go">On Going</span><span class="pcard-val">Rp 62 jt</span></div>
+      <div class="pbar-wrap"><div class="pbar" style="width:67%"></div></div>
+      <div class="pcard-pct">67%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 7 (idx 6) — Snapshot Kinerja
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s8">
+  <div class="h2">Snapshot per Juli 2026</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1em;flex:1;margin-top:.6em;">
+    <div class="big-card">
+      <div class="big-num">Rp 678 jt</div>
+      <div class="big-num-sub">realisasi dari Rp 2,07 M anggaran</div>
+      <div class="pbar-wrap" style="height:5px;margin:.1em 0;">
+        <div class="pbar" style="width:32.8%;height:100%;"></div>
+      </div>
+      <div class="keu-table">
+        <div class="keu-row"><span>Total Anggaran</span><span>Rp 2.067.839.978</span></div>
+        <div class="keu-row"><span>Total Realisasi</span><span>Rp 678.175.174</span></div>
+        <div class="keu-row"><span>Sisa Anggaran</span><span>Rp 1.389.664.804</span></div>
+        <div class="keu-row"><span>Penyerapan</span><span>32,8%</span></div>
+      </div>
+      <div style="margin-top:auto;padding-top:.5em;border-top:1px solid #F3F4F6;">
+        <div style="font-size:.48em;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9CA3AF;margin-bottom:.45em;">Serapan per Pilar</div>
+        <div style="display:flex;flex-direction:column;gap:.32em;">
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Infrastruktur</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:34%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:2.5em;text-align:right;">34,0%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Air &amp; Sampah</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:9.8%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:2.5em;text-align:right;">9,8%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Sarana Tim</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:54.7%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:2.5em;text-align:right;">54,7%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="big-card">
+      <div class="big-num">25</div>
+      <div class="big-num-sub">total program dikelola</div>
+      <div class="prog-bullet">
+        <div class="prog-bullet-row"><span>Selesai</span><span style="font-weight:700;color:#14532D;">8</span></div>
+        <div class="prog-bullet-row"><span>On Going</span><span style="font-weight:700;color:#1E3A8A;">5</span></div>
+        <div class="prog-bullet-row"><span>On Hold</span><span style="font-weight:700;color:#713F12;">3</span></div>
+        <div class="prog-bullet-row"><span>Perencanaan</span><span style="font-weight:700;color:#475569;">9</span></div>
+      </div>
+      <div style="margin-top:auto;padding-top:.5em;border-top:1px solid #F3F4F6;">
+        <div style="font-size:.48em;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9CA3AF;margin-bottom:.45em;">Program per Pilar</div>
+        <div style="display:flex;flex-direction:column;gap:.32em;">
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Infrastruktur</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:78%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:3.5em;text-align:right;color:#374151;">7 / 9</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Air Bersih</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:0%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:3.5em;text-align:right;color:#374151;">0 / 2</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Sampah</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:0%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:3.5em;text-align:right;color:#374151;">0 / 3</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6em;">
+            <span style="font-size:.58em;color:#374151;min-width:7.5em;">Sarana Tim</span>
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar" style="width:9%"></div></div>
+            <span style="font-size:.58em;font-weight:700;min-width:3.5em;text-align:right;color:#374151;">1 / 11</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 8 (idx 7) — Tren Keuangan
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s9">
+  <div class="h2">Tren Keuangan per Bulan</div>
+  <div id="chart-area">
+    <div class="chart-legend">
+      <span><span class="cl-sq" style="background:#1A3A5C;"></span> Dana Masuk</span>
+      <span><span class="cl-sq" style="background:#94A3B8;"></span> Dana Keluar</span>
+      <span><span class="cl-di"></span> Progress (%)</span>
+    </div>
+    <div id="chart-svg-wrap">
+      <svg id="chart-svg" width="100%" height="100%" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 9 (idx 8) — Pekerjaan Selesai
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s10">
+  <div class="h2">Pekerjaan Selesai &mdash; 8 Program</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.65em;flex:1;margin-top:.5em;">
+    <div class="ccard"><div class="ccard-name">Pembangunan U Ditch Jalan Elaf</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 36 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pembangunan Paving Block</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 214 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Penataan Taman Jalan Masuk</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 41 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Penataan Taman Depan Rumah Kyai</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 6,5 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pemasangan Cover U Ditch</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 53 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Perapihan Jalan Masuk Gudang ME</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 13 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pembangunan Paving Block Parkiran</div><div class="ccard-pilar">Infrastruktur</div><div class="ccard-amt">Rp 36 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Gudang Sarpras</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 28 jt</div></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 10 (idx 9) — Pekerjaan Berjalan
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s11">
+  <div class="h2">Pekerjaan Berjalan &mdash; 5 Program</div>
+  <div class="prog-list">
+    <div class="prog-list-row">
+      <div><div class="pl-name">Seragam Div. Rumah Tangga</div><div class="pl-pilar">Sarana Tim</div></div>
+      <div class="pl-bar-col"><div class="pbar-wrap" style="flex:1;width:100%;"><div class="pbar" style="width:90%"></div></div></div>
+      <div class="pl-pct">90%</div>
+      <div class="pl-amt">Rp 13,9 jt</div>
+    </div>
+    <div class="prog-list-row">
+      <div><div class="pl-name">Man Power</div><div class="pl-pilar">Sarana Tim</div></div>
+      <div class="pl-bar-col"><div class="pbar-wrap" style="flex:1;width:100%;"><div class="pbar" style="width:67%"></div></div></div>
+      <div class="pl-pct">67%</div>
+      <div class="pl-amt">Rp 51,6 jt</div>
+    </div>
+    <div class="prog-list-row">
+      <div><div class="pl-name">Support Tim Sarpras</div><div class="pl-pilar">Sarana Tim</div></div>
+      <div class="pl-bar-col"><div class="pbar-wrap" style="flex:1;width:100%;"><div class="pbar" style="width:61%"></div></div></div>
+      <div class="pl-pct">61%</div>
+      <div class="pl-amt">Rp 3 jt</div>
+    </div>
+    <div class="prog-list-row">
+      <div><div class="pl-name">Peningkatan Fasilitas Pengelolaan Sampah</div><div class="pl-pilar">Pengelolaan Sampah</div></div>
+      <div class="pl-bar-col"><div class="pbar-wrap" style="flex:1;width:100%;"><div class="pbar" style="width:10%"></div></div></div>
+      <div class="pl-pct">10%</div>
+      <div class="pl-amt">Rp 3 jt</div>
+    </div>
+    <div class="prog-list-row">
+      <div><div class="pl-name">Kesadaran tentang Kebersihan</div><div class="pl-pilar">Pengelolaan Sampah</div></div>
+      <div class="pl-bar-col"><div class="pbar-wrap" style="flex:1;width:100%;"><div class="pbar" style="width:6%"></div></div></div>
+      <div class="pl-pct">6%</div>
+      <div class="pl-amt">Rp 3,4 jt</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 11 (idx 10) — Pekerjaan Tertunda
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s12">
+  <div class="h2">Pekerjaan Tertunda &mdash; 3 Program</div>
+  <div class="hold-alert">
+    <div class="hold-alert-num">Rp 1,36 M</div>
+    <div class="hold-alert-desc">anggaran tertahan &mdash; tiga program ini belum dapat dilanjutkan dan memerlukan keputusan atau persetujuan lebih lanjut dari PBB.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:.6em;flex:1;">
+    <div class="hold-card">
+      <div class="hold-name">Pengecatan &amp; Perbaikan Eksterior Gedung MAF (Tahap 1)</div>
+      <div class="pbar-wrap" style="height:5px;margin:.25em 0;"><div class="pbar" style="width:25.3%;height:100%"></div></div>
+      <div class="hold-stats">
+        <div><div class="hold-stat-val">Rp 1,20 M</div><div class="hold-stat-lbl">Anggaran</div></div>
+        <div><div class="hold-stat-val">Rp 141 jt</div><div class="hold-stat-lbl">Realisasi</div></div>
+        <div><div class="hold-stat-val">25,3%</div><div class="hold-stat-lbl">Serapan</div></div>
+      </div>
+    </div>
+    <div class="hold-card">
+      <div class="hold-name">Penataan Taman Area Dalam MAF (Tahap 1)</div>
+      <div class="pbar-wrap" style="height:5px;margin:.25em 0;"><div class="pbar" style="width:15.4%;height:100%"></div></div>
+      <div class="hold-stats">
+        <div><div class="hold-stat-val">Rp 34 jt</div><div class="hold-stat-lbl">Anggaran</div></div>
+        <div><div class="hold-stat-val">Rp 5,3 jt</div><div class="hold-stat-lbl">Realisasi</div></div>
+        <div><div class="hold-stat-val">15,4%</div><div class="hold-stat-lbl">Serapan</div></div>
+      </div>
+    </div>
+    <div class="hold-card">
+      <div class="hold-name">Pengadaan Depot Air Minum</div>
+      <div class="pbar-wrap" style="height:5px;margin:.25em 0;"><div class="pbar" style="width:12%;height:100%"></div></div>
+      <div class="hold-stats">
+        <div><div class="hold-stat-val">Rp 126 jt</div><div class="hold-stat-lbl">Anggaran</div></div>
+        <div><div class="hold-stat-val">Rp 19 jt</div><div class="hold-stat-lbl">Realisasi</div></div>
+        <div><div class="hold-stat-val">12%</div><div class="hold-stat-lbl">Serapan</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 12 (idx 11) — Dalam Perencanaan
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s13">
+  <div class="h2">Dalam Perencanaan &mdash; 9 Program</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:.65em;flex:1;margin-top:.5em;">
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Maintenance</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 36 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Kebersihan</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 1,5 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Pertamanan</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 11 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Depot</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 2,7 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Supir</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 6,4 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Masjid</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 6,1 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Perlengkapan Tim Security</div><div class="ccard-pilar">Sarana Tim</div><div class="ccard-amt">Rp 1,8 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Operasional Kendaraan Tim Depot</div><div class="ccard-pilar">Air Bersih</div><div class="ccard-amt">Rp 20 jt</div></div>
+    <div class="ccard"><div class="ccard-name">Pengadaan Tempat Sampah</div><div class="ccard-pilar">Pengelolaan Sampah</div><div class="ccard-amt">Rp 15 jt</div></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 13 (idx 12) — Poin Utama
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-light" id="s14">
+  <div class="h2">Poin Utama</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85em;flex:1;margin-top:.6em;">
+    <div class="concl-card">
+      <div class="concl-accent" style="background:#16A34A;"></div>
+      <div class="concl-body">
+        <div class="concl-hd">Pencapaian</div>
+        <ul class="concl-list">
+          <li>8 dari 25 program selesai 100%.</li>
+          <li>Serapan tertinggi: Sarana Tim 54,7%.</li>
+          <li>Infrastruktur inti (jalan, paving, taman) tuntas.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="concl-card">
+      <div class="concl-accent" style="background:#D97706;"></div>
+      <div class="concl-body">
+        <div class="concl-hd">Perlu Perhatian</div>
+        <ul class="concl-list">
+          <li>Serapan total baru 32,8%.</li>
+          <li>3 program on-hold &mdash; Rp 1,36 M beku.</li>
+          <li>9 program belum dimulai (0% realisasi).</li>
+          <li>Air Bersih &amp; Sampah serapan rendah.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="concl-card">
+      <div class="concl-accent" style="background:#1D4ED8;"></div>
+      <div class="concl-body">
+        <div class="concl-hd">Tindak Lanjut</div>
+        <ul class="concl-list">
+          <li>Selesaikan Gedung MAF (on-hold 25,3%).</li>
+          <li>Percepat Depot Air Minum untuk santri.</li>
+          <li>Mulai 9 program perencanaan tahun ini.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 14 (idx 13) — Penutup
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="slide s-dark" id="s15">
+  <div id="s15-inner">
+    <div class="h1">Terima Kasih</div>
+    <div class="sub" style="color:rgba(255,255,255,.6);max-width:72%;">Laporan ini disusun sebagai bentuk pertanggungjawaban Tim Sarpras MAF kepada PBB dalam pengelolaan sarana dan prasarana.</div>
+    <div class="s15-divider"></div>
+    <div class="s15-footer">
+      <div class="s15-fcol">
+        <div class="s15-flabel">Disusun Oleh</div>
+        <div class="s15-fval">Tim Rumah Tangga MAF</div>
+      </div>
+      <div class="s15-fcol">
+        <div class="s15-flabel">Periode</div>
+        <div class="s15-fval">Juli 2026</div>
+      </div>
+      <div class="s15-fcol">
+        <div class="s15-flabel">Data</div>
+        <div class="s15-fval">Dashboard Sarpras MAF</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #stage -->
+</div><!-- #stage-wrap -->
+
+<!-- Navigation -->
+<div id="nav">
+  <button class="nav-btn" id="btn-prev">&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-info">1 / 14</span>
+  <button class="nav-btn" id="btn-next">&#8594;</button>
+</div>
+
+<script>
+const N = 14;
+let cur = 0;
+
+const dotsEl = document.getElementById('dots');
+for (let i = 0; i < N; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' dot-on' : '');
+  d.addEventListener('click', () => go(i));
+  dotsEl.appendChild(d);
+}
+
+function go(n) {
+  document.querySelectorAll('.slide')[cur].classList.remove('active');
+  cur = ((n % N) + N) % N;
+  document.querySelectorAll('.slide')[cur].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('dot-on', i === cur));
+  document.querySelector('.slide-info').textContent = (cur + 1) + ' / ' + N;
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => go(cur - 1));
+document.getElementById('btn-next').addEventListener('click', () => go(cur + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(cur + 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(cur - 1);
+});
+
+// Stage scaling
+const stage = document.getElementById('stage');
+function resize() {
+  const wrap = document.getElementById('stage-wrap');
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  const scale = Math.min(w / 960, h / 540);
+  stage.style.transform = 'scale(' + scale + ')';
+  stage.style.transformOrigin = 'center center';
+  stage.style.fontSize = scale + 'rem';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Chart (slide 9)
+(function buildChart() {
+  const svg = document.getElementById('chart-svg');
+  const months   = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul'];
+  const masuk    = [20,  40,  65,  90,  55,  75, 110];
+  const keluar   = [15,  35,  58,  80,  50,  68, 100];
+  const progress = [ 5,   8,  14,  20,  25,  29,  33];
+
+  const maxVal = 120, maxProg = 40;
+  const W = 900, H = 300;
+  const padL = 40, padR = 20, padT = 20, padB = 40;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const groupW = chartW / months.length, barW = groupW * 0.3;
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (i / 4) * chartH;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', padL); line.setAttribute('x2', W - padR);
+    line.setAttribute('y1', y);    line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#E5E7EB'); line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', padL - 4); txt.setAttribute('y', y + 4);
+    txt.setAttribute('text-anchor', 'end');
+    txt.setAttribute('font-size', '10'); txt.setAttribute('fill', '#9CA3AF');
+    txt.textContent = (i * maxVal / 4) + 'jt';
+    svg.appendChild(txt);
+  }
+
+  const polyPoints = [];
+  months.forEach((m, i) => {
+    const cx = padL + i * groupW + groupW / 2;
+    const x1 = cx - barW - 2, x2 = cx + 2;
+
+    const h1 = (masuk[i] / maxVal) * chartH;
+    const rect1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect1.setAttribute('x', x1); rect1.setAttribute('y', padT + chartH - h1);
+    rect1.setAttribute('width', barW); rect1.setAttribute('height', h1);
+    rect1.setAttribute('fill', '#1A3A5C'); rect1.setAttribute('rx', '2');
+    svg.appendChild(rect1);
+
+    const h2 = (keluar[i] / maxVal) * chartH;
+    const rect2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect2.setAttribute('x', x2); rect2.setAttribute('y', padT + chartH - h2);
+    rect2.setAttribute('width', barW); rect2.setAttribute('height', h2);
+    rect2.setAttribute('fill', '#94A3B8'); rect2.setAttribute('rx', '2');
+    svg.appendChild(rect2);
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', cx); txt.setAttribute('y', H - padB + 16);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('font-size', '11'); txt.setAttribute('fill', '#6B7280');
+    txt.textContent = m;
+    svg.appendChild(txt);
+
+    const py = padT + chartH - (progress[i] / maxProg) * chartH;
+    polyPoints.push(cx + ',' + py);
+
+    const dia = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const s = 5;
+    dia.setAttribute('points', `${cx},${py-s} ${cx+s},${py} ${cx},${py+s} ${cx-s},${py}`);
+    dia.setAttribute('fill', '#4B6280');
+    svg.appendChild(dia);
+  });
+
+  const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  poly.setAttribute('points', polyPoints.join(' '));
+  poly.setAttribute('fill', 'none');
+  poly.setAttribute('stroke', '#4B6280');
+  poly.setAttribute('stroke-width', '1.5');
+  poly.setAttribute('stroke-dasharray', '4,3');
+  svg.insertBefore(poly, svg.children[svg.children.length - months.length]);
+})();
+</script>
+</body>
+</html>
