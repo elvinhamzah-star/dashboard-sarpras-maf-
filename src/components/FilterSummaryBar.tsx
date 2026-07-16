@@ -191,11 +191,11 @@ export default function FilterSummaryBar({
   // ── Style tokens — intentionally understated, secondary to program cards ──
   // No shadow, no white bg — uses surface-raised so it visually sits "behind"
   // the white program cards below. Smaller fonts than PekerjaanDetail cards.
-  const gap     = compact ? 6 : isMobile ? 6 : 8
-  const pad     = compact ? '8px 10px' : isMobile ? '9px 11px' : '11px 14px'
-  const lblSize = compact ? 8   : isMobile ? 8.5 : 9
-  const valSize = compact ? 11  : isMobile ? 12  : 14
-  const subSize = compact ? 8   : isMobile ? 8.5 : 9.5
+  const gap     = compact ? 7 : isMobile ? 6 : 8
+  const pad     = compact ? '10px 12px' : isMobile ? '9px 11px' : '11px 14px'
+  const lblSize = compact ? 9   : isMobile ? 8.5 : 9
+  const valSize = compact ? 13  : isMobile ? 12  : 14
+  const subSize = compact ? 9   : isMobile ? 8.5 : 9.5
 
   return (
     <div
