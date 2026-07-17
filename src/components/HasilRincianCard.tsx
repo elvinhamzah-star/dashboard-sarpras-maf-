@@ -235,7 +235,9 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
                 </>
               )}
 
-              <div style={sectionTitle(showRingkasan ? 24 : 0)}>Rincian per Lokasi</div>
+              {locGroups.length > 1 && (
+                <div style={sectionTitle(showRingkasan ? 24 : 0)}>Rincian per Lokasi</div>
+              )}
               {locGroups.map((g, gi) => (
                 <div key={gi} style={{ marginTop: gi === 0 ? 0 : 12 }}>
                   <div style={tblHead}>
