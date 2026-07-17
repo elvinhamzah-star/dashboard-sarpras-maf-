@@ -19,6 +19,7 @@ interface MobileAccountMenuProps {
   onLogoutAdmin: () => void
   onLogoutDashboard: () => void
   onToggleMaintenance?: () => void
+  onPresentasi?: () => void
 }
 
 export default function MobileAccountMenu({
@@ -31,6 +32,7 @@ export default function MobileAccountMenu({
   onLogoutAdmin,
   onLogoutDashboard,
   onToggleMaintenance,
+  onPresentasi: _onPresentasi,
 }: MobileAccountMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)

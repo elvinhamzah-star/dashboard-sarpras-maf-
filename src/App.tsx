@@ -12,6 +12,7 @@ import Dokumen from './components/Dokumen'
 import type { DocCategory } from './lib/supabase'
 import RiwayatLaporan from './components/RiwayatLaporan'
 import LaporanBulanan from './components/LaporanBulanan'
+import LaporanAset from './components/LaporanAset'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 import AddPekerjaanModal from './components/AddPekerjaanModal'
@@ -21,7 +22,7 @@ import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supa
 import { prefetchAll } from './lib/prefetch'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan' | 'laporan-aset'
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
@@ -311,6 +312,8 @@ export default function App() {
         )
       case 'riwayat':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
+      case 'laporan-aset':
+        return isAdmin ? <LaporanAset /> : <Beranda isAdmin={isAdmin} role={role} />
       case 'laporan':
         return role === 'maf'
           ? <Beranda isAdmin={isAdmin} role={role} />
@@ -330,6 +333,7 @@ export default function App() {
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
+    'laporan-aset': 'Laporan Perolehan Aset',
   }
 
   if (isMaintenance === null) return null
