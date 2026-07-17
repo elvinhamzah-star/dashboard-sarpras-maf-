@@ -197,8 +197,9 @@ export default function FilterSummaryBar({
   const valSize = compact ? 13  : isMobile ? 12  : 14
   const subSize = compact ? 9   : isMobile ? 8.5 : 9.5
 
-  // compact mode: horizontal scroll so cards never get squeezed in narrow popups
-  const outerStyle: React.CSSProperties = compact
+  // On mobile or compact: use horizontal scroll so cards never get squeezed
+  const useScroll = compact || (isMobile && cards.length > 2)
+  const outerStyle: React.CSSProperties = useScroll
     ? {
         display: 'flex',
         flexDirection: 'row',
@@ -206,9 +207,9 @@ export default function FilterSummaryBar({
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
         scrollbarWidth: 'none' as React.CSSProperties['scrollbarWidth'],
-        marginBottom: 0,
-        padding: '8px 16px 10px',
-        borderBottom: '1px solid var(--border-subtle)',
+        marginBottom: compact ? 0 : isMobile ? 10 : 12,
+        padding: compact ? '8px 16px 10px' : 0,
+        borderBottom: compact ? '1px solid var(--border-subtle)' : 'none',
         flexShrink: 0,
         animation: 'fadeSlideDown 0.18s ease',
       }
@@ -232,8 +233,8 @@ export default function FilterSummaryBar({
             padding: pad,
             border: '1px solid var(--border-subtle)',
             textAlign: 'center',
-            // compact: fixed width so cards don't shrink in scroll container
-            ...(compact ? { flexShrink: 0, minWidth: 110 } : {}),
+            // scroll mode: fixed width so cards don't shrink
+            ...(useScroll ? { flexShrink: 0, minWidth: compact ? 110 : 130 } : {}),
           }}
         >
           <div style={{
