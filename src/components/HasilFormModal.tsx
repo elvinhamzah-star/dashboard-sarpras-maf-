@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
@@ -126,6 +127,148 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
+interface DropdownOption { value: string; label: string }
+
+/**
+ * Dropdown kustom (trigger + panel di-portal ke body) — bukan `<select>` native,
+ * supaya tampilan daftar pilihan konsisten dengan tema app (bukan menu OS bawaan).
+ * Pola sama seperti kombobox "Pilih Pekerjaan" di AddTransactionModal.
+ */
+function Dropdown({ value, options, onChange, placeholder }: {
+  value: string
+  options: DropdownOption[]
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      const inTrigger = wrapRef.current?.contains(e.target as Node)
+      const inPanel = panelRef.current?.contains(e.target as Node)
+      if (!inTrigger && !inPanel) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const openPanel = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const panelHeight = Math.min(240, options.length * 38 + 12)
+      const fitsBelow = rect.bottom + 6 + panelHeight < viewportHeight
+      setPos({
+        top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - panelHeight - 6),
+        left: rect.left,
+        width: rect.width,
+      })
+    }
+    setOpen(true)
+  }
+
+  const selected = options.find(o => o.value === value)
+
+  return (
+    <div ref={wrapRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => (open ? setOpen(false) : openPanel())}
+        style={{
+          width: '100%',
+          padding: '9px 12px',
+          borderRadius: 9,
+          border: `1px solid ${open ? 'var(--blue)' : 'var(--border)'}`,
+          backgroundColor: 'var(--bg)',
+          fontSize: 14,
+          color: selected ? 'var(--text-primary)' : 'var(--text-muted)',
+          fontFamily: 'inherit',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          textAlign: 'left',
+          outline: 'none',
+          boxSizing: 'border-box',
+          boxShadow: open ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
+          transition: 'border-color 0.15s, box-shadow 0.15s',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selected?.label ?? placeholder ?? 'Pilih...'}
+        </span>
+        <svg
+          width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
+          style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && createPortal(
+        <div
+          ref={panelRef}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            width: pos.width,
+            zIndex: 600,
+            backgroundColor: 'var(--card)',
+            borderRadius: 12,
+            border: '1px solid var(--border-subtle)',
+            boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+            {options.map((o, i) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => { onChange(o.value); setOpen(false) }}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  border: 'none',
+                  borderBottom: i < options.length - 1 ? '1px solid var(--surface-min)' : 'none',
+                  backgroundColor: o.value === value ? 'rgba(26,111,232,0.06)' : 'transparent',
+                  color: o.value === value ? 'var(--blue)' : 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: o.value === value ? 600 : 400,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+                onMouseEnter={e => { if (o.value !== value) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
+                onMouseLeave={e => { if (o.value !== value) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+              >
+                {o.value === value && (
+                  <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </div>
+  )
+}
+
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
@@ -192,17 +335,17 @@ function SatuanField({ value, onChange }: { value: string; onChange: (v: string)
   }
 
   return (
-    <select
+    <Dropdown
       value={value}
-      onChange={e => {
-        if (e.target.value === SATUAN_CUSTOM) { setManual(true); onChange('') }
-        else onChange(e.target.value)
+      options={[
+        ...SATUAN_OPTIONS.map(([v, l]) => ({ value: v, label: l })),
+        { value: SATUAN_CUSTOM, label: 'Lainnya…' },
+      ]}
+      onChange={v => {
+        if (v === SATUAN_CUSTOM) { setManual(true); onChange('') }
+        else onChange(v)
       }}
-      style={{ ...inputStyle, cursor: 'pointer' }}
-    >
-      {SATUAN_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      <option value={SATUAN_CUSTOM}>Lainnya…</option>
-    </select>
+    />
   )
 }
 
@@ -478,13 +621,11 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                       {mcfg.midKind === 'status' ? (
                         <div>
                           <span style={capStyle}>{mcfg.midLabel}</span>
-                          <select
+                          <Dropdown
                             value={r.status || 'Rencana'}
-                            onChange={e => setRincianAt(i, { status: e.target.value })}
-                            style={{ ...inputStyle, cursor: 'pointer' }}
-                          >
-                            {KEGIATAN_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                            options={KEGIATAN_STATUS.map(s => ({ value: s, label: s }))}
+                            onChange={v => setRincianAt(i, { status: v })}
+                          />
                         </div>
                       ) : (
                         <div>

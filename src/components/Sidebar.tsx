@@ -72,18 +72,6 @@ const menuItems = [
     ),
   },
   {
-    id: 'riwayat',
-    label: 'Riwayat Laporan',
-    adminOnly: true,
-    icon: (
-      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-        <path d="M12 8v4l3 3"/>
-        <path d="M3.05 11a9 9 0 1 0 .5-4"/>
-        <polyline points="3 3 3 7 7 7"/>
-      </svg>
-    ),
-  },
-  {
     id: 'laporan-aset',
     label: 'Laporan Aset',
     adminOnly: true,
@@ -93,6 +81,18 @@ const menuItems = [
         <line x1="3" y1="9" x2="21" y2="9"/>
         <line x1="3" y1="15" x2="21" y2="15"/>
         <line x1="9" y1="9" x2="9" y2="21"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'riwayat',
+    label: 'Riwayat Laporan',
+    adminOnly: true,
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+        <path d="M12 8v4l3 3"/>
+        <path d="M3.05 11a9 9 0 1 0 .5-4"/>
+        <polyline points="3 3 3 7 7 7"/>
       </svg>
     ),
   },
