@@ -138,6 +138,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [popupDetailId, setPopupDetailId] = useState<string | null>(null)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showBlockedModal, setShowBlockedModal] = useState(false)
+  const [mafFilter, setMafFilter] = useState<string>('Selesai')
 
   useEffect(() => {
     if (initialDetailId) {
@@ -150,9 +151,14 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   // the user came from (Opsi B — preserves browsing context).
   useEffect(() => {
     if (initialStatusTab) {
-      setPekerjaanTab(initialStatusTab)
-      setPopupDetailId(null)
-      setShowDetail(true)
+      if (role === 'maf') {
+        // MAF: filter inline, tidak buka popup
+        setMafFilter(initialStatusTab)
+      } else {
+        setPekerjaanTab(initialStatusTab)
+        setPopupDetailId(null)
+        setShowDetail(true)
+      }
       onInitialStatusConsumed?.()
     }
   }, [initialStatusTab])
@@ -369,7 +375,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               Dashboard Sarpras MAF
             </h1>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
-              Ringkasan anggaran, realisasi &amp; progres pekerjaan
+              {role === 'maf' ? 'Ringkasan progres pekerjaan' : 'Ringkasan anggaran, realisasi & progres pekerjaan'}
             </p>
             {formattedLastUpdated && (
               <div style={{ marginTop: 6 }}>
@@ -388,8 +394,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         </div>
       )}
 
-      {/* ── RINGKASAN: Keuangan ── */}
-      <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+      {/* ── RINGKASAN: Keuangan ── (disembunyikan untuk MAF) */}
+      {role !== 'maf' && <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
         {summaryCards.map(card => (
           <div
@@ -437,10 +443,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </div>
       {/* ── PERHATIAN: peringatan anggaran menempel di Section Keuangan ── */}
       <BerandaAlerts programs={displayPrograms} showOverdue={false} embedded />
-      </SectionPanel>
+      </SectionPanel>}
 
-      {/* ── RINGKASAN: Progress Pekerjaan (full-width) ── */}
-      <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
+      {/* ── RINGKASAN: Progress Pekerjaan (full-width) — non-MAF only ── */}
+      {role !== 'maf' && <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
       {(() => {
         const card = pekerjaanCards[0]
         const activeByTab = showDetail && pekerjaanTab === card.label
@@ -547,12 +553,44 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           )
         })}
       </div>
-      </SectionPanel>
+      </SectionPanel>}
 
-      {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
-      <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
-        <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare />
-      </SectionPanel>
+      {/* ── SECTION 3: Realisasi & Progress (chart) — disembunyikan untuk MAF ── */}
+      {role !== 'maf' && (
+        <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+          <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare />
+        </SectionPanel>
+      )}
+
+      {/* ── MAF ONLY: Tren Progres + Progress Pekerjaan ── */}
+      {role === 'maf' && (
+        <>
+          {/* 1. Chart tren progres — paling atas */}
+          <SectionPanel label="Tren Progres Pembangunan" isMobile={isMobile}>
+            <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare progressOnly />
+          </SectionPanel>
+
+          {/* 2. Progress Pekerjaan — reuse BerandaWeekOverWeek, filter inline */}
+          <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
+            <BerandaWeekOverWeek
+              programs={programs}
+              snapshots={snapshots}
+              subPrograms={subPrograms}
+              rencanaMap={rencanaMap}
+              progressLapangan={progressLapangan}
+              freshnessDays={freshnessDays}
+              lastUpdated={mostRecentUpdate}
+              externalTab={mafFilter}
+              onExternalTabChange={setMafFilter}
+              role={role}
+              onProgramClick={id => {
+                if (onOpenDetail) onOpenDetail(id, mafFilter)
+                else setPopupDetailId(id)
+              }}
+            />
+          </SectionPanel>
+        </>
+      )}
 
       {/* ── POPUP: Progres Pekerjaan ── */}
       {showProgressModal && (

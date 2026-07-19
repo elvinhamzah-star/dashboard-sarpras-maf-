@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redesign Preview — Navy Korporat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy-900:#0A1B34; --navy-800:#0F2748; --navy-700:#173257; --navy-600:#22436F;
+    --ink:#0E1B2E; --slate:#5B6B82; --slate-2:#8A98AC;
+    --line:#E6EAF1; --paper:#F6F8FB; --white:#fff;
+    --accent:#C69A4C; --accent-deep:#8B6628; --accent-soft:#EFE4CB;
+  }
+
+  html, body { width:100%; height:100%; background:#0a0e14; display:flex; align-items:center; justify-content:center;
+    font-family:'Inter', system-ui, sans-serif; overflow:hidden; -webkit-font-smoothing:antialiased; }
+
+  #stage-wrap { width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; }
+  #stage { width:960px; height:540px; position:relative; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,.55); background:#000; }
+
+  /* theme muted tokens */
+  .s-dark  { --muted: rgba(255,255,255,.55); }
+  .s-light { --muted: var(--slate); }
+
+  .slide {
+    position:absolute; inset:0; display:none; flex-direction:column;
+    padding:5.6% 6.4% 4.4%; overflow:hidden;
+  }
+  .slide.active { display:flex; }
+  .s-dark  { background:
+      radial-gradient(120% 90% at 12% 8%, #16345f 0%, var(--navy-900) 46%, #070f1f 100%);
+      color:#fff; }
+  .s-light { background:var(--paper); color:var(--ink); }
+
+  /* ── shared chrome ─────────────────────────────── */
+  .topbar { display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:.72em; }
+  .brand-mark { width:2.15em; height:2.15em; border:1.6px solid var(--accent); border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:.62em; letter-spacing:.02em; color:var(--accent); }
+  .brand-name { display:flex; flex-direction:column; gap:.15em; }
+  .brand-name b { font-size:.62em; font-weight:700; letter-spacing:.03em; }
+  .brand-name span { font-size:.5em; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .topbar-tag { font-size:.5em; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
+
+  .eyebrow { display:inline-flex; align-items:center; gap:.6em; font-size:.55em; font-weight:700;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--accent-deep); }
+  .s-dark .eyebrow { color:var(--accent); }
+  .eyebrow::before { content:''; width:1.7em; height:2px; background:var(--accent); border-radius:2px; }
+
+  .h1 { font-family:'Inter',sans-serif; font-weight:800; font-size:3.05em; line-height:1.02; letter-spacing:-.025em; }
+  .h2 { font-family:'Inter',sans-serif; font-weight:800; font-size:2.05em; line-height:1.05; letter-spacing:-.02em; }
+  .lede { font-size:.72em; font-weight:400; line-height:1.6; color:var(--muted); max-width:30em; }
+
+  .rule { height:1px; background:var(--line); }
+  .s-dark .rule { background:rgba(255,255,255,.14); }
+
+  .footer { margin-top:auto; padding-top:1.1em; display:flex; align-items:center; justify-content:space-between;
+    border-top:1px solid var(--line); }
+  .s-dark .footer { border-top-color:rgba(255,255,255,.14); }
+  .footer-l { font-size:.5em; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+  .footer-r { font-size:.5em; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600;
+    display:flex; align-items:center; gap:.6em; }
+  .footer-r b { font-family:'Inter',sans-serif; font-size:1.15em; font-weight:600; color:var(--ink); letter-spacing:0; }
+  .s-dark .footer-r b { color:#fff; }
+
+  /* ── SLIDE 1 cover ─────────────────────────────── */
+  #s1 .cover-body { margin-top:auto; margin-bottom:auto; }
+  #s1 .h1 { color:#fff; margin:.5em 0 .55em; }
+  .cover-meta { display:flex; gap:2.6em; margin-top:2.4em; }
+  .cm-col { display:flex; flex-direction:column; gap:.3em; }
+  .cm-label { display:flex; align-items:center; gap:.5em; font-size:.5em; font-weight:700; letter-spacing:.16em;
+    text-transform:uppercase; color:rgba(255,255,255,.5); }
+  .cm-label::before { content:''; width:.55em; height:.55em; border:1.4px solid var(--accent); border-radius:2px; }
+  .cm-val { font-size:.66em; font-weight:600; color:rgba(255,255,255,.92); padding-left:1.05em; }
+  .cover-watermark { position:absolute; right:-4%; top:50%; transform:translateY(-50%);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:19em; line-height:.8; color:rgba(255,255,255,.035);
+    letter-spacing:-.04em; pointer-events:none; user-select:none; }
+
+  /* ── SLIDE 2 KPI ───────────────────────────────── */
+  .head-row { display:flex; align-items:flex-end; justify-content:space-between; gap:2em; }
+  .head-row .h2 { margin-top:.4em; }
+  .head-meta { font-size:.56em; color:var(--slate); font-weight:500; text-align:right; line-height:1.5; padding-bottom:.2em; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1em; margin-top:1.3em; }
+  .kpi { background:var(--white); border:1px solid var(--line); border-radius:12px; padding:1.15em 1.05em 1.05em;
+    display:flex; flex-direction:column; gap:.55em; box-shadow:0 1px 2px rgba(15,39,72,.04); position:relative; overflow:hidden; }
+  .kpi::before { content:''; position:absolute; left:0; top:1.15em; bottom:1.05em; width:3px; border-radius:0 3px 3px 0; background:var(--accent); }
+  .kpi-label { font-size:.5em; font-weight:700; letter-spacing:.11em; text-transform:uppercase; color:var(--slate); padding-left:.6em; }
+  .kpi-num { font-family:'Inter',sans-serif; font-weight:800; font-size:2em; line-height:1; letter-spacing:-.02em;
+    color:var(--ink); font-variant-numeric:tabular-nums; padding-left:.5em; white-space:nowrap; display:flex; align-items:baseline; gap:.14em; }
+  .kpi-num i { font-style:normal; font-size:.44em; font-weight:600; color:var(--slate); letter-spacing:0; }
+  .kpi-num small { font-size:.42em; font-weight:600; color:var(--slate); letter-spacing:0; }
+  .kpi-sub { font-size:.5em; color:var(--slate-2); font-weight:500; padding-left:.6em; }
+
+  .serap { margin-top:1.15em; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:1.1em 1.35em; }
+  .serap-top { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:.85em; }
+  .serap-top .lbl { font-size:.55em; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--slate); }
+  .serap-top .pct { font-family:'Inter',sans-serif; font-weight:600; font-size:1.35em; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .serap-track { height:9px; border-radius:6px; background:#EAEFF6; overflow:hidden; display:flex; }
+  .serap-fill { height:100%; background:linear-gradient(90deg,var(--navy-600),var(--navy-800)); border-radius:6px 0 0 6px; }
+  .serap-legend { display:flex; gap:1.8em; margin-top:.9em; }
+  .sl-item { display:flex; align-items:center; gap:.5em; font-size:.5em; color:var(--slate); font-weight:500; }
+  .sl-dot { width:.7em; height:.7em; border-radius:2px; }
+
+  /* ── SLIDE 3 pilar cards ───────────────────────── */
+  .pilar-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1em; margin-top:1.8em; flex:1; }
+  .pcard { background:var(--white); border:1px solid var(--line); border-radius:12px; padding:1.25em 1.15em 1.2em;
+    display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(15,39,72,.04); position:relative; overflow:hidden; }
+  .pcard::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent); }
+  .pc-idx { font-family:'Inter',sans-serif; font-weight:600; font-size:.85em; color:var(--accent-deep); letter-spacing:.02em; }
+  .pc-name { font-size:.8em; font-weight:700; line-height:1.25; color:var(--ink); margin-top:.5em; min-height:2.5em; }
+  .pc-div { height:1px; background:var(--line); margin:.95em 0 .9em; }
+  .pc-hero { display:flex; align-items:baseline; gap:.5em; }
+  .pc-hero b { font-family:'Inter',sans-serif; font-weight:800; font-size:1.85em; line-height:1; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .pc-hero span { font-size:.5em; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--slate-2); }
+  .pc-ang { display:flex; align-items:baseline; justify-content:space-between; gap:.5em; margin-top:.75em; }
+  .pc-ang span { font-size:.46em; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--slate-2); white-space:nowrap; }
+  .pc-ang b { font-family:'Inter',sans-serif; font-weight:600; font-size:.88em; color:var(--slate); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .pc-serap { margin-top:auto; padding-top:1.1em; }
+  .pc-serap-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.4em; }
+  .pc-serap-top span { font-size:.46em; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--slate); }
+  .pc-serap-top b { font-size:.62em; font-weight:700; color:var(--accent-deep); font-variant-numeric:tabular-nums; }
+  .pc-track { height:7px; border-radius:4px; background:#EAEFF6; overflow:hidden; }
+  .pc-fill { height:100%; background:var(--navy-600); border-radius:4px; }
+
+  /* ── nav ───────────────────────────────────────── */
+  #nav { position:fixed; bottom:16px; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:14px; z-index:100; }
+  .nav-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:#fff; width:30px; height:30px;
+    border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
+  .nav-btn:hover { background:rgba(255,255,255,.24); }
+  .dots { display:flex; gap:6px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; }
+  .dot-on { background:var(--accent); }
+  .slide-info { color:rgba(255,255,255,.5); font-size:12px; min-width:34px; text-align:center; }
+</style>
+</head>
+<body>
+<div id="stage-wrap">
+<div id="stage">
+
+  <!-- SLIDE 1 — COVER -->
+  <div class="slide s-dark active" id="s1">
+    <div class="cover-watermark">MAF</div>
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">MAF</div>
+        <div class="brand-name">
+          <b>Madrasah Al-Fatih</b>
+          <span>Sarana &amp; Prasarana</span>
+        </div>
+      </div>
+      <div class="topbar-tag">Laporan Pertanggungjawaban</div>
+    </div>
+
+    <div class="cover-body">
+      <div class="eyebrow">Periode Juli 2026</div>
+      <div class="h1">Laporan Progress<br>Sarana &amp; Prasarana</div>
+      <div class="lede">Rekap capaian pekerjaan, realisasi anggaran, dan status program pengembangan fasilitas Madrasah Al-Fatih.</div>
+
+      <div class="cover-meta">
+        <div class="cm-col"><div class="cm-label">Disusun oleh</div><div class="cm-val">Tim Rumah Tangga MAF</div></div>
+        <div class="cm-col"><div class="cm-label">Dilaporkan kepada</div><div class="cm-val">Peradaban Baik Bahagia (PBB)</div></div>
+        <div class="cm-col"><div class="cm-label">Periode</div><div class="cm-val">Juli 2026</div></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-l">Madrasah Al-Fatih &middot; Sarpras</div>
+      <div class="footer-r"><b>01</b></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — RINGKASAN EKSEKUTIF -->
+  <div class="slide s-light" id="s2">
+    <div class="head-row">
+      <div>
+        <div class="eyebrow">Ringkasan Eksekutif</div>
+        <div class="h2">Potret Capaian Semester</div>
+      </div>
+      <div class="head-meta">25 program &middot; 4 pilar<br>Data per Juli 2026</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Total Anggaran</div>
+        <div class="kpi-num"><i>Rp</i>2,07<small>M</small></div>
+        <div class="kpi-sub">Alokasi 25 program</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Realisasi</div>
+        <div class="kpi-num">32,8<small>%</small></div>
+        <div class="kpi-sub">Rp&nbsp;679 jt terserap</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Program Selesai</div>
+        <div class="kpi-num">8<small>/ 25</small></div>
+        <div class="kpi-sub">32% tuntas 100%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Dana On-hold</div>
+        <div class="kpi-num"><i>Rp</i>1,36<small>M</small></div>
+        <div class="kpi-sub">3 program tertunda</div>
+      </div>
+    </div>
+
+    <div class="serap">
+      <div class="serap-top">
+        <div class="lbl">Serapan Anggaran Keseluruhan</div>
+        <div class="pct">32,8%</div>
+      </div>
+      <div class="serap-track"><div class="serap-fill" style="width:32.8%"></div></div>
+      <div class="serap-legend">
+        <div class="sl-item"><span class="sl-dot" style="background:var(--navy-700)"></span>Terserap Rp 679 jt</div>
+        <div class="sl-item"><span class="sl-dot" style="background:#EAEFF6"></span>Sisa Rp 1,39 M</div>
+        <div class="sl-item"><span class="sl-dot" style="background:var(--accent)"></span>On-hold Rp 1,36 M</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-l">Laporan Progress Sarpras &middot; Juli 2026</div>
+      <div class="footer-r">Ringkasan Eksekutif <b>02</b></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — 4 PILAR -->
+  <div class="slide s-light" id="s3">
+    <div class="head-row">
+      <div>
+        <div class="eyebrow">Kerangka Program</div>
+        <div class="h2">Empat Pilar Solusi</div>
+      </div>
+      <div class="head-meta">25 program terbagi<br>dalam 4 pilar kerja</div>
+    </div>
+
+    <div class="pilar-grid">
+      <div class="pcard">
+        <div class="pc-idx">01</div>
+        <div class="pc-name">Infrastruktur &amp; Lingkungan</div>
+        <div class="pc-div"></div>
+        <div class="pc-hero"><b>9</b><span>Program</span></div>
+        <div class="pc-ang"><span>Anggaran</span><b>Rp 1,64 M</b></div>
+        <div class="pc-serap">
+          <div class="pc-serap-top"><span>Serapan</span><b>38,2%</b></div>
+          <div class="pc-track"><div class="pc-fill" style="width:38.2%"></div></div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div class="pc-idx">02</div>
+        <div class="pc-name">Air Bersih</div>
+        <div class="pc-div"></div>
+        <div class="pc-hero"><b>2</b><span>Program</span></div>
+        <div class="pc-ang"><span>Anggaran</span><b>Rp 146 jt</b></div>
+        <div class="pc-serap">
+          <div class="pc-serap-top"><span>Serapan</span><b>13,1%</b></div>
+          <div class="pc-track"><div class="pc-fill" style="width:13.1%"></div></div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div class="pc-idx">03</div>
+        <div class="pc-name">Pengelolaan Sampah</div>
+        <div class="pc-div"></div>
+        <div class="pc-hero"><b>3</b><span>Program</span></div>
+        <div class="pc-ang"><span>Anggaran</span><b>Rp 109 jt</b></div>
+        <div class="pc-serap">
+          <div class="pc-serap-top"><span>Serapan</span><b>5,9%</b></div>
+          <div class="pc-track"><div class="pc-fill" style="width:5.9%"></div></div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div class="pc-idx">04</div>
+        <div class="pc-name">Sarana Tim Sarpras</div>
+        <div class="pc-div"></div>
+        <div class="pc-hero"><b>11</b><span>Program</span></div>
+        <div class="pc-ang"><span>Anggaran</span><b>Rp 176 jt</b></div>
+        <div class="pc-serap">
+          <div class="pc-serap-top"><span>Serapan</span><b>54,7%</b></div>
+          <div class="pc-track"><div class="pc-fill" style="width:54.7%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-l">Laporan Progress Sarpras &middot; Juli 2026</div>
+      <div class="footer-r">Kerangka Program <b>03</b></div>
+    </div>
+  </div>
+
+</div><!-- #stage -->
+</div><!-- #stage-wrap -->
+
+<div id="nav">
+  <button class="nav-btn" id="btn-prev">&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-info">1 / 3</span>
+  <button class="nav-btn" id="btn-next">&#8594;</button>
+</div>
+
+<script>
+const N = 3;
+let cur = 0;
+const dotsEl = document.getElementById('dots');
+for (let i=0;i<N;i++){ const d=document.createElement('div'); d.className='dot'+(i===0?' dot-on':''); d.addEventListener('click',()=>go(i)); dotsEl.appendChild(d); }
+function go(n){
+  document.querySelectorAll('.slide')[cur].classList.remove('active');
+  cur=((n%N)+N)%N;
+  document.querySelectorAll('.slide')[cur].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('dot-on',i===cur));
+  document.querySelector('.slide-info').textContent=(cur+1)+' / '+N;
+}
+document.getElementById('btn-prev').addEventListener('click',()=>go(cur-1));
+document.getElementById('btn-next').addEventListener('click',()=>go(cur+1));
+document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'||e.key==='ArrowDown')go(cur+1); if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(cur-1); });
+window.go = go;
+
+const stage=document.getElementById('stage');
+function resize(){
+  const wrap=document.getElementById('stage-wrap');
+  const scale=Math.min(wrap.clientWidth/960, wrap.clientHeight/540);
+  stage.style.transform='scale('+scale+')';
+  stage.style.transformOrigin='center center';
+  stage.style.fontSize=scale+'rem';
+}
+window.addEventListener('resize',resize);
+resize();
+</script>
+</body>
+</html>

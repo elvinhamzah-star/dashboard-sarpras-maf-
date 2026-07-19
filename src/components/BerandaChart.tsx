@@ -9,6 +9,8 @@ interface BerandaChartProps {
   programs: Program[]
   /** Saat true, render tanpa kartu + judul sendiri (dipakai di dalam SectionPanel) */
   bare?: boolean
+  /** Saat true, hanya tampilkan line chart progress % — sembunyikan bars keuangan (untuk MAF) */
+  progressOnly?: boolean
 }
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
@@ -102,11 +104,22 @@ function calcMonthProgress(programs: Program[], yearMonth: string): number | nul
   return Math.round(weightedSum / totalAnggaran)
 }
 
-export default function BerandaChart({ transactions, snapshots, programs, bare = false }: BerandaChartProps) {
+export default function BerandaChart({ transactions, snapshots, programs, bare = false, progressOnly = false }: BerandaChartProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  // For progressOnly: measure actual container width so all months fit exactly
+  const progressContainerRef = useRef<HTMLDivElement>(null)
+  const [containerW, setContainerW] = useState(300)
+  useEffect(() => {
+    if (!progressOnly || !progressContainerRef.current) return
+    const ro = new ResizeObserver(entries => {
+      setContainerW(entries[0].contentRect.width)
+    })
+    ro.observe(progressContainerRef.current)
+    return () => ro.disconnect()
+  }, [progressOnly])
 
   // Spending per month
   const byMonth: Record<string, { masuk: number; keluar: number }> = {}
@@ -183,8 +196,126 @@ export default function BerandaChart({ transactions, snapshots, programs, bare =
 
       {/* Chart */}
       <div style={{ position: 'relative' }}>
-        {/* Tooltip — di dalam area plot (atas) supaya tak nembus tepi panel & terpotong */}
-        <div style={{
+        {/* ── progressOnly: SVG area line chart (untuk MAF) ── */}
+        {progressOnly && hasProgress && (() => {
+          const svgH = isMobile ? 110 : 140
+          const pts = progressByMonth.map((p, i) => ({ x: i, y: p ?? 0, label: months[i].label, ym: months[i].ym }))
+          const n = pts.length
+          if (n === 0) return null
+          const lastIdx = n - 1
+
+          // Y-axis fixed to 100% so users can gauge progress relative to completion
+          const maxAxis = 100
+          const guides = [25, 50, 75, 100]
+
+          const AREA_ID = 'prog-area-grad'
+          // PAD_LEFT = PAD_RIGHT supaya titik Jan & Jul simetris dari tepi
+          // Y-axis labels berada di zona PAD_LEFT (kiri), tidak overlap ke chart
+          const PAD_LEFT = isMobile ? 30 : 32
+          const PAD_RIGHT = isMobile ? 14 : 16
+          // Subtract small buffer so SVG content never hits the overflow:hidden boundary of parent card
+          const svgW = Math.max(200, containerW - 4)
+          const chartW = svgW - PAD_LEFT - PAD_RIGHT
+
+          const getX = (i: number) => PAD_LEFT + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW)
+          // map pct to Y within svgH with small top/bottom padding
+          const getY = (pct: number) => svgH * 0.06 + (1 - pct / maxAxis) * svgH * 0.88
+
+          return (
+            <div ref={progressContainerRef} style={{ position: 'relative', width: '100%' }}>
+              <svg
+                width={svgW}
+                height={svgH + 22}
+                style={{ display: 'block', overflow: 'visible' }}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
+                <defs>
+                  <linearGradient id={AREA_ID} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C_PROGRESS} stopOpacity="0.2" />
+                    <stop offset="100%" stopColor={C_PROGRESS} stopOpacity="0.01" />
+                  </linearGradient>
+                </defs>
+
+                {/* Guide lines — full width chart; Y labels di zona kiri (PAD_LEFT) */}
+                {guides.map(pct => {
+                  const y = getY(pct)
+                  return (
+                    <g key={pct}>
+                      <line x1={PAD_LEFT} y1={y} x2={svgW - PAD_RIGHT} y2={y} stroke="var(--border-subtle)" strokeWidth="1" />
+                      <text x={PAD_LEFT - 4} y={y + 3} fontSize="8" fill="var(--text-muted)" opacity="0.8" textAnchor="end">{pct}%</text>
+                    </g>
+                  )
+                })}
+
+                {/* Area fill */}
+                <path
+                  d={[
+                    `M ${getX(0)} ${getY(pts[0].y)}`,
+                    ...pts.slice(1).map((p, i) => `L ${getX(i + 1)} ${getY(p.y)}`),
+                    `L ${getX(lastIdx)} ${svgH}`,
+                    `L ${getX(0)} ${svgH}`,
+                    'Z',
+                  ].join(' ')}
+                  fill={`url(#${AREA_ID})`}
+                />
+
+                {/* Line */}
+                <polyline
+                  points={pts.map((p, i) => `${getX(i)},${getY(p.y)}`).join(' ')}
+                  fill="none"
+                  stroke={C_PROGRESS}
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+
+                {/* Dots + hover areas */}
+                {pts.map((p, i) => {
+                  const cx = getX(i)
+                  const cy = getY(p.y)
+                  const isHov = hoveredIdx === i
+                  const isLast = i === lastIdx
+                  const showLabel = isHov || (isLast && hoveredIdx === null)
+                  return (
+                    <g key={p.ym}>
+                      {/* Invisible hit area */}
+                      <rect
+                        x={cx - chartW / (2 * Math.max(n - 1, 1))}
+                        y={0}
+                        width={chartW / Math.max(n - 1, 1)}
+                        height={svgH}
+                        fill="transparent"
+                        onMouseEnter={() => setHoveredIdx(i)}
+                      />
+                      {/* Dot — last point slightly bigger always */}
+                      <circle
+                        cx={cx} cy={cy}
+                        r={isLast ? (isHov ? 6 : 5) : (isHov ? 5 : 3.5)}
+                        fill={C_PROGRESS}
+                        stroke="#fff"
+                        strokeWidth={isLast || isHov ? 2 : 1.5}
+                      />
+                      {/* Value label — always on last, hover on others */}
+                      {showLabel && (
+                        <text x={cx} y={cy - 10} textAnchor="middle" fontSize="10" fontWeight="700" fill={C_PROGRESS}>{p.y}%</text>
+                      )}
+                      {/* Month label — last always blue, hover blue */}
+                      <text
+                        x={cx} y={svgH + 16}
+                        textAnchor="middle" fontSize="9"
+                        fill={isLast || isHov ? C_PROGRESS : 'var(--text-muted)'}
+                        fontWeight={isLast || isHov ? '700' : '400'}
+                      >{p.label}</text>
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+          )
+        })()}
+
+        {/* ── Normal tooltip (untuk chart reguler) ── */}
+        {!progressOnly && <div style={{
           position: 'absolute', top: 0,
           ...tipPos,
           backgroundColor: '#1E293B', color: '#fff',
@@ -215,10 +346,10 @@ export default function BerandaChart({ transactions, snapshots, programs, bare =
               </div>
             )}
           </div>
-        </div>
+        </div>}
 
-        {/* Dual Y-axis + Scrollable bars */}
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+        {/* Dual Y-axis + Scrollable bars — hidden in progressOnly mode */}
+        {!progressOnly && <div style={{ display: 'flex', alignItems: 'flex-start' }}>
 
           {/* Left Y-axis — Rupiah scale */}
           <div style={{ width: 44, flexShrink: 0, position: 'relative', height: BAR_H }}>
@@ -369,11 +500,11 @@ export default function BerandaChart({ transactions, snapshots, programs, bare =
             </div>
           )}
 
-        </div>
+        </div>}
       </div>
 
-      {/* Footer legend — 3 kolom sejajar 1 baris; keterangan boleh turun di dalam kolom */}
-      <div style={{
+      {/* Footer legend — hanya untuk chart reguler */}
+      {!progressOnly && <div style={{
         display: 'flex',
         gap: isMobile ? 16 : 28,
         flexWrap: 'nowrap',
@@ -394,7 +525,7 @@ export default function BerandaChart({ transactions, snapshots, programs, bare =
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   )
 }

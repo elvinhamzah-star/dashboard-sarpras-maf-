@@ -223,6 +223,7 @@ export default function App() {
         <PekerjaanDetail
           programId={selectedProgramId}
           isAdmin={isAdmin}
+          role={role}
           onBack={handlePekerjaanBack}
           onNavigate={(page, pid, cat) => {
             setSelectedProgramId(null)
@@ -535,7 +536,7 @@ export default function App() {
         </div>
 
         {/* Mobile bottom navigation */}
-        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
+        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} role={role} />}
       </div>
 
 

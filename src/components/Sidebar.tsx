@@ -239,7 +239,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {menuItems.filter(item => !item.adminOnly || isAdmin).map(item => {
+        {menuItems.filter(item => (!item.adminOnly || isAdmin) && !(role === 'maf' && item.id === 'keuangan')).map(item => {
           const isActive = currentPage === item.id
           return (
             <button

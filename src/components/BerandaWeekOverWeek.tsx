@@ -24,9 +24,11 @@ interface Props {
   onExternalTabChange?: (tab: string) => void
   /** Spacious mode: lebih banyak padding & gap untuk tampilan dalam popup lebar */
   spacious?: boolean
+  role?: 'pbb' | 'maf' | null
 }
 
 const TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
+const TABS_MAF = ['Selesai', 'On Going', 'On Hold', 'Perencanaan']
 
 const TAB_ICONS: Record<string, JSX.Element> = {
   'On Going': (
@@ -59,8 +61,9 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious }: Props) {
-  const [internalTab, setInternalTab] = useState('On Going')
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role }: Props) {
+  const isMaf = role === 'maf'
+  const [internalTab, setInternalTab] = useState(isMaf ? 'Selesai' : 'On Going')
   const activeTab = externalTab ?? internalTab
   const setActiveTab = (tab: string) => {
     setInternalTab(tab)
@@ -136,58 +139,51 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
         gap: 10,
         marginBottom: 14,
       }}>
-        {progressLapangan && (
+        {progressLapangan && (() => {
+          const progColor = isMaf ? '#1A6FE8' : '#7C3AED'
+          const progBorder = isMaf ? 'rgba(26,111,232,0.25)' : 'rgba(124,58,237,0.25)'
+          const progIconBg = isMaf ? 'rgba(26,111,232,0.1)' : 'rgba(124,58,237,0.1)'
+          return (
           <div style={{
             backgroundColor: 'var(--card)',
             borderRadius: 14,
             padding: isNarrow ? '10px 14px' : '14px 16px',
-            border: isNarrow ? '1px solid var(--border)' : '1.5px solid rgba(124,58,237,0.25)',
+            border: isNarrow ? '1px solid var(--border)' : `1.5px solid ${progBorder}`,
             gridColumn: isNarrow ? '1 / -1' : 'auto',
             display: 'flex',
-            flexDirection: isNarrow ? 'row' : 'column',
-            alignItems: isNarrow ? 'center' : 'flex-start',
-            gap: isNarrow ? 12 : 0,
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: 0,
           }}>
-            <div style={{
-              width: isNarrow ? 26 : 32, height: isNarrow ? 26 : 32, borderRadius: 8,
-              backgroundColor: 'rgba(124,58,237,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#7C3AED', marginBottom: isNarrow ? 0 : 10,
-              flexShrink: 0,
-            }}>
-              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
-              </svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 4 }}>
-                Progress Pekerjaan
+            {/* Icon + angka berdampingan — sama untuk mobile dan desktop */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isNarrow ? 8 : 10, marginBottom: isNarrow ? 2 : 4 }}>
+              <div style={{
+                width: isNarrow ? 22 : 28, height: isNarrow ? 22 : 28, borderRadius: 7,
+                backgroundColor: progIconBg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: progColor, flexShrink: 0,
+              }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
+                </svg>
               </div>
-              {isNarrow ? null : (
-                <>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                    {progressLapangan}%
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, marginTop: 4 }}>
-                    Dari {programs.length} Pekerjaan
-                  </div>
-                </>
-              )}
-            </div>
-            {isNarrow && (
-              <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#7C3AED', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                  {progressLapangan}%
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>
-                  Dari {programs.length} Pekerjaan
-                </div>
+              <div style={{ fontSize: isNarrow ? 15 : 20, fontWeight: 700, color: progColor, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {progressLapangan}%
               </div>
-            )}
+            </div>
+            <div style={{ fontSize: isNarrow ? 8.5 : 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
+              Progress Pekerjaan
+            </div>
+            <div style={{ fontSize: isNarrow ? 9 : 10, color: 'var(--text-muted)', fontWeight: 500 }}>
+              Dari {programs.length} Pekerjaan
+            </div>
           </div>
-        )}
+          )
+        })()}
 
-        {TABS.map(tab => {
+        {(isMaf ? TABS_MAF : TABS).map(tab => {
           const isActive = activeTab === tab
           const color = STATUS_COLORS[tab] || '#888'
           const count = countByStatus[tab] || 0
@@ -196,7 +192,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
-                textAlign: 'left',
+                textAlign: 'center',
                 backgroundColor: isActive ? `${color}10` : 'var(--card)',
                 borderRadius: isNarrow ? 12 : 14,
                 padding: isNarrow ? '10px 12px' : '14px 16px',
@@ -220,21 +216,26 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 }
               }}
             >
-              <div style={{
-                width: isNarrow ? 24 : 32, height: isNarrow ? 24 : 32, borderRadius: 7,
-                backgroundColor: isActive ? `${color}26` : 'rgba(0,0,0,0.05)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: isActive ? color : 'var(--text-muted)', marginBottom: isNarrow ? 6 : 10,
-              }}>
-                {TAB_ICONS[tab]}
+              {/* Baris atas: icon + angka berdampingan */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isNarrow ? 6 : 8, marginBottom: isNarrow ? 4 : 5 }}>
+                <div style={{
+                  width: isNarrow ? 20 : 26, height: isNarrow ? 20 : 26, borderRadius: 6,
+                  backgroundColor: isActive ? `${color}26` : 'rgba(0,0,0,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: isActive ? color : 'var(--text-muted)', flexShrink: 0,
+                }}>
+                  {TAB_ICONS[tab]}
+                </div>
+                <div style={{ fontSize: isNarrow ? 15 : 20, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                  {count}
+                </div>
               </div>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 2 : 4 }}>
+              {/* Label status */}
+              <div style={{ fontSize: isNarrow ? 8.5 : 10, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
                 {tab}
               </div>
-              <div style={{ fontSize: isNarrow ? 16 : 20, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                {count}
-              </div>
-              <div style={{ fontSize: 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 500, marginTop: isNarrow ? 2 : 4, opacity: isActive ? 0.8 : 1 }}>
+              {/* Sub */}
+              <div style={{ fontSize: isNarrow ? 9 : 10, color: isActive ? color : 'var(--text-muted)', fontWeight: 400, opacity: isActive ? 0.8 : 1 }}>
                 Pekerjaan
               </div>
             </button>
@@ -357,15 +358,17 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
                     )}
                   </div>
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    {p.total_anggaran ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-                        {formatRupiah(p.total_anggaran)}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ditetapkan</span>
-                    )}
-                  </div>
+                  {!isMaf && (
+                    <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                      {p.total_anggaran ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
+                          {formatRupiah(p.total_anggaran)}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ditetapkan</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {rencana.length > 0 && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>

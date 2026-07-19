@@ -288,10 +288,7 @@ export default function LaporanAset() {
                   boxShadow: active ? `0 0 0 3px ${color}15` : '0 1px 3px rgba(0,0,0,0.05)',
                 }}
               >
-                <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: active ? color : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                  {counts[k]}
-                </span>
-                <span style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 600, letterSpacing: '0.04em', marginTop: 1, textTransform: 'uppercase' }}>
+                <span style={{ fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                   {label}
                 </span>
               </button>

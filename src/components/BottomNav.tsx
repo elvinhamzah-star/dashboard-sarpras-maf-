@@ -71,9 +71,11 @@ const TABS: Tab[] = [
 interface BottomNavProps {
   currentPage: string
   onNavigate: (page: string) => void
+  role?: 'pbb' | 'maf' | null
 }
 
-export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
+export default function BottomNav({ currentPage, onNavigate, role }: BottomNavProps) {
+  const visibleTabs = role === 'maf' ? TABS.filter(t => t.id !== 'keuangan') : TABS
   return (
     <nav
       style={{
@@ -88,7 +90,7 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
         zIndex: 30,
       }}
     >
-      {TABS.map(tab => {
+      {visibleTabs.map(tab => {
         const active = currentPage === tab.id
         return (
           <button

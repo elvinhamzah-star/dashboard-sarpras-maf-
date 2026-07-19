@@ -29,6 +29,7 @@ interface Props {
   /** compact=true → smaller padding/font, used inside popups */
   compact?: boolean
   isMobile?: boolean
+  role?: 'pbb' | 'maf' | null
 }
 
 export default function FilterSummaryBar({
@@ -37,8 +38,25 @@ export default function FilterSummaryBar({
   subPrograms,
   compact = false,
   isMobile = false,
+  role,
 }: Props) {
   if (programs.length === 0 || !status) return null
+  // MAF: hide semua keuangan untuk Perencanaan — hanya tampil Jumlah Program
+  if (role === 'maf' && status === 'Perencanaan') {
+    const pad     = compact ? '10px 12px' : isMobile ? '9px 11px' : '11px 14px'
+    const lblSize = compact ? 9   : isMobile ? 8.5 : 9
+    const valSize = compact ? 13  : isMobile ? 12  : 14
+    const subSize = compact ? 9   : isMobile ? 8.5 : 9.5
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: isMobile ? 10 : 12 }}>
+        <div style={{ backgroundColor: 'var(--surface-raised)', borderRadius: compact ? 7 : 9, padding: pad, border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+          <div style={{ fontSize: lblSize, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Jumlah Program</div>
+          <div style={{ fontSize: valSize, fontWeight: 700, color: '#6B7280', letterSpacing: '-0.02em' }}>{programs.length}</div>
+          <div style={{ fontSize: subSize, color: 'var(--text-muted)', marginTop: 2 }}>belum dimulai</div>
+        </div>
+      </div>
+    )
+  }
 
   // ── Aggregate derived totals ──────────────────────────────────────────────
   const derived = programs.map(p =>

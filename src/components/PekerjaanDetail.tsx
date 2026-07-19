@@ -26,6 +26,7 @@ import { deriveProgramTotals, deriveNilaiAset } from '../lib/deriveTotals'
 interface PekerjaanDetailProps {
   programId: string
   isAdmin: boolean
+  role?: 'pbb' | 'maf' | null
   onBack: () => void
   onNavigate?: (page: string, programId?: string, category?: string) => void
   /** true when rendered inside a modal/bottom-sheet: hides the back button & edge-swipe (the shell owns closing) */
@@ -34,7 +35,7 @@ interface PekerjaanDetailProps {
 
 type Tab = 'Ringkasan' | 'Detail Realisasi' | 'Dokumen' | 'Sub Pekerjaan'
 
-export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate, embedded = false }: PekerjaanDetailProps) {
+export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNavigate, embedded = false }: PekerjaanDetailProps) {
   const width = useWindowWidth()
   const isMobile = width < 600
   const isNarrow = width < 1100
@@ -338,13 +339,15 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
         </div>
       </div>
 
-      {/* Metric Cards — hidden for Selesai (HasilRingkasan shows Nilai/Anggaran/Efisiensi instead) */}
+      {/* Metric Cards — hidden for Selesai (HasilRingkasan shows Nilai/Anggaran/Efisiensi instead), hidden for MAF (no money) */}
       {program.status !== 'Selesai' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
         {[
-          { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
-          { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
-          { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
+          ...( (role !== 'maf' || program.status !== 'Perencanaan') ? [
+            { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
+            { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
+            { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
+          ] : []),
           { label: 'Progress', value: `${pct}%`, color: statusColor },
         ].map(c => (
           <div
@@ -477,9 +480,11 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                     ['Jenis Pekerjaan', program.jenis_pekerjaan || '-'],
                     ['Status', program.status],
                     ['Progress', `${pct}%`],
-                    ['Total Anggaran', formatRupiah(derived.total_anggaran)],
-                    ['Realisasi Terkini', formatRupiah(derived.realisasi_terkini)],
-                    ['Sisa Anggaran', formatRupiah(derived.sisa_anggaran)],
+                    ...( (role !== 'maf' || program.status !== 'Perencanaan') ? [
+                      ['Total Anggaran', formatRupiah(derived.total_anggaran)],
+                      ['Realisasi Terkini', formatRupiah(derived.realisasi_terkini)],
+                      ['Sisa Anggaran', formatRupiah(derived.sisa_anggaran)],
+                    ] : []),
                     ['Vendor', (() => { const subs = subPrograms.filter(s => s.program_id === program.id); if (subs.length === 0) return program.vendor || '-'; const u = [...new Set(subs.map(s => s.vendor).filter(Boolean))]; return u.length > 0 ? u.join(', ') : (program.vendor || '-') })()],
                     ['Catatan Pekerjaan', program.isu_utama
                       ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
@@ -714,7 +719,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                             </div>
                             <div>
                               {tx.tanggal && <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{formatTanggal(tx.tanggal)}</div>}
-                              {tx.nominal && <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
+                              {tx.nominal && (role !== 'maf' || program.status !== 'Perencanaan') && <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
                             </div>
                           </div>
                         ))}
@@ -817,6 +822,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                         {sp.progress_percent || 0}%
                       </span>
                     </div>
+                    {(role !== 'maf' || program.status !== 'Perencanaan') && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isAdmin ? 8 : 0 }}>
                       <div>
                         <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
@@ -831,6 +837,7 @@ export default function PekerjaanDetail({ programId, isAdmin, onBack, onNavigate
                         <div style={{ fontSize: 12, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
                       </div>
                     </div>
+                    )}
                     {isAdmin && (
                       <button
                         onClick={() => setEditingSubProgram(sp)}

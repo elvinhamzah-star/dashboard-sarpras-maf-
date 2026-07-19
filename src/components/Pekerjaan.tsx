@@ -182,6 +182,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
           programs={filtered}
           subPrograms={subPrograms}
           isMobile={isMobile}
+          role={role}
         />
       )}
 
@@ -260,6 +261,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                         </div>
                         {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
                       </div>
+                      {!(role === 'maf' && p.status === 'Perencanaan') && (
                       <div style={{ flexShrink: 0, textAlign: 'right' }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                           {formatRupiah(d.realisasi_terkini)}
@@ -268,6 +270,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                           dari {formatRupiah(d.total_anggaran)}
                         </div>
                       </div>
+                      )}
                     </div>
                     {/* Baris 2: progress bar + pct + status badge — selalu render */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 18 }}>
