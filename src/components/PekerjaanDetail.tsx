@@ -340,14 +340,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       </div>
 
       {/* Metric Cards — hidden for Selesai (HasilRingkasan shows Nilai/Anggaran/Efisiensi instead), hidden for MAF (no money) */}
-      {program.status !== 'Selesai' && (
+      {program.status === 'Selesai' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
         {[
-          ...( (role !== 'maf' || program.status !== 'Perencanaan') ? [
-            { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
-            { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
-            { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
-          ] : []),
+          { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
+          { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
+          { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
           { label: 'Progress', value: `${pct}%`, color: statusColor },
         ].map(c => (
           <div
@@ -480,7 +478,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     ['Jenis Pekerjaan', program.jenis_pekerjaan || '-'],
                     ['Status', program.status],
                     ['Progress', `${pct}%`],
-                    ...( (role !== 'maf' || program.status !== 'Perencanaan') ? [
+                    ...( program.status === 'Selesai' ? [
                       ['Total Anggaran', formatRupiah(derived.total_anggaran)],
                       ['Realisasi Terkini', formatRupiah(derived.realisasi_terkini)],
                       ['Sisa Anggaran', formatRupiah(derived.sisa_anggaran)],

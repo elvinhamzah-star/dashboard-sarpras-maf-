@@ -175,8 +175,8 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         })}
       </div>
 
-      {/* Filter Summary Bar — muncul saat filter aktif */}
-      {!loading && activeStatus !== '' && (
+      {/* Filter Summary Bar — hanya untuk Selesai */}
+      {!loading && activeStatus === 'Selesai' && (
         <FilterSummaryBar
           status={activeStatus}
           programs={filtered}
@@ -261,7 +261,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                         </div>
                         {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
                       </div>
-                      {!(role === 'maf' && p.status === 'Perencanaan') && (
+                      {p.status === 'Selesai' && (
                       <div style={{ flexShrink: 0, textAlign: 'right' }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                           {formatRupiah(d.realisasi_terkini)}

@@ -245,14 +245,14 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       )}
 
       <div style={{
-        backgroundColor: 'var(--card)',
-        borderRadius: spacious ? 0 : 14,
-        border: spacious ? 'none' : '1px solid var(--border-subtle)',
-        boxShadow: spacious ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
-        padding: spacious ? '16px 28px 24px' : '14px 16px 16px',
+        backgroundColor: 'transparent',
+        borderRadius: 0,
+        border: 'none',
+        boxShadow: 'none',
+        padding: spacious ? '0 28px 24px' : '0 0 4px',
         display: 'flex',
         flexDirection: 'column',
-        gap: spacious ? 14 : 12,
+        gap: spacious ? 10 : 8,
         marginBottom: spacious ? 0 : 20,
       }}>
         {filteredPrograms.length === 0 ? (
@@ -260,7 +260,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             Tidak Ada Pekerjaan Dengan Status Ini.
           </div>
         ) : activeTab === 'Selesai' ? (
-          filteredPrograms.map(p => {
+          filteredPrograms.map((p) => {
             const sisa = p.sisa_anggaran ?? (p.total_anggaran ?? 0) - (p.realisasi_terkini ?? 0)
             const isEfficient = sisa > 0
             const isOver = sisa < 0
@@ -282,7 +282,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)',
+                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {p.nama_pekerjaan}
@@ -292,10 +292,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     )}
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatRupiah(p.realisasi_terkini ?? 0)}
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>
+                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
                       dari {formatRupiah(p.total_anggaran ?? 0)}
                     </div>
                   </div>
@@ -304,7 +304,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                     {isEfficient && (
                       <span style={{
-                        fontSize: 10.5, fontWeight: 600, flexShrink: 0,
+                        fontSize: 9.5, fontWeight: 600, flexShrink: 0,
                         color: '#059669',
                         backgroundColor: 'rgba(5,150,105,0.1)',
                         padding: '2px 7px', borderRadius: 99,
@@ -314,7 +314,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     )}
                     {isOver && (
                       <span style={{
-                        fontSize: 10.5, fontWeight: 600, flexShrink: 0,
+                        fontSize: 9.5, fontWeight: 600, flexShrink: 0,
                         color: '#660000',
                         backgroundColor: 'rgba(220,38,38,0.08)',
                         padding: '2px 7px', borderRadius: 99,
@@ -328,7 +328,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             )
           })
         ) : activeTab === 'Perencanaan' ? (
-          filteredPrograms.map(p => {
+          filteredPrograms.map((p) => {
             const rencana = rencanaMap[p.id] || []
             const hoverColor = rencana.length > 0 ? 'rgba(220,38,38,0.06)' : 'rgba(0,0,0,0.04)'
             return (
@@ -349,7 +349,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)',
+                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {p.nama_pekerjaan}
@@ -358,17 +358,6 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
                     )}
                   </div>
-                  {!isMaf && (
-                    <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                      {p.total_anggaran ? (
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-                          {formatRupiah(p.total_anggaran)}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ditetapkan</span>
-                      )}
-                    </div>
-                  )}
                 </div>
                 {rencana.length > 0 && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
@@ -392,7 +381,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             )
           })
         ) : (
-          filteredPrograms.map(p => {
+          filteredPrograms.map((p) => {
             const wow = wowMap[p.id]
             const color = STATUS_COLORS[p.status] || '#1A6FE8'
             const isOnHold = p.status === 'On Hold'
@@ -415,7 +404,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)',
+                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {p.nama_pekerjaan}
@@ -425,7 +414,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     )}
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 60 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, color }}>
                       {effectivePct}%
                     </div>
                     {p.status === 'On Going' && wow && (
