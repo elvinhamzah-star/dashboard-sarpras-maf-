@@ -210,9 +210,10 @@ export default function LaporanAset() {
       {/* ── Print styles ──────────────────────────────────────────────────── */}
       <style>{`
         @media print {
-          body > * { display: none !important; }
-          #laporan-aset-print { display: block !important; }
-          #laporan-aset-print .no-print { display: none !important; }
+          body * { visibility: hidden; }
+          #laporan-aset-print, #laporan-aset-print * { visibility: visible; }
+          #laporan-aset-print { position: fixed; inset: 0; width: 100%; height: auto; }
+          #laporan-aset-print .no-print { display: none !important; visibility: hidden; }
           @page { margin: 16mm; size: A4 landscape; }
         }
       `}</style>
