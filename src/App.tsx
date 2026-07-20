@@ -314,7 +314,7 @@ export default function App() {
       case 'riwayat':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       case 'laporan-aset':
-        return isAdmin ? <LaporanAset /> : <Beranda isAdmin={isAdmin} role={role} />
+        return <LaporanAset />
       case 'laporan':
         return role === 'maf'
           ? <Beranda isAdmin={isAdmin} role={role} />

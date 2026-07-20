@@ -9,7 +9,63 @@
 
 type Tab = { id: string; label: string; icon: JSX.Element }
 
-const TABS: Tab[] = [
+const ICON_LAPORAN_ASET = (
+  <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 3h18v4H3z" /><path d="M3 10h18v4H3z" /><path d="M3 17h18v4H3z" />
+  </svg>
+)
+
+// Sarpras: Beranda, Pekerjaan, Galeri, Keuangan, Laporan Aset (Dokumen via PekerjaanDetail)
+const TABS_SARPRAS: Tab[] = [
+  {
+    id: 'beranda',
+    label: 'Beranda',
+    icon: (
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+        <path d="M9 21V12h6v9" />
+      </svg>
+    ),
+  },
+  {
+    id: 'pekerjaan',
+    label: 'Pekerjaan',
+    icon: (
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <line x1="9" y1="12" x2="15" y2="12" />
+        <line x1="9" y1="16" x2="13" y2="16" />
+      </svg>
+    ),
+  },
+  {
+    id: 'galeri',
+    label: 'Galeri',
+    icon: (
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="M21 15l-5-5L5 21" />
+      </svg>
+    ),
+  },
+  {
+    id: 'keuangan',
+    label: 'Keuangan',
+    icon: (
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" />
+        <path d="M4 6v12a2 2 0 0 0 2 2h14v-4" />
+        <circle cx="16" cy="14" r="1.4" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  { id: 'laporan-aset', label: 'Laporan', icon: ICON_LAPORAN_ASET },
+]
+
+// MAF: Beranda, Pekerjaan, Dokumen, Galeri, Laporan Aset
+const TABS_MAF: Tab[] = [
   {
     id: 'beranda',
     label: 'Beranda',
@@ -55,17 +111,7 @@ const TABS: Tab[] = [
       </svg>
     ),
   },
-  {
-    id: 'keuangan',
-    label: 'Keuangan',
-    icon: (
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" />
-        <path d="M4 6v12a2 2 0 0 0 2 2h14v-4" />
-        <circle cx="16" cy="14" r="1.4" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
+  { id: 'laporan-aset', label: 'Laporan', icon: ICON_LAPORAN_ASET },
 ]
 
 interface BottomNavProps {
@@ -75,7 +121,7 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ currentPage, onNavigate, role }: BottomNavProps) {
-  const visibleTabs = role === 'maf' ? TABS.filter(t => t.id !== 'keuangan') : TABS
+  const visibleTabs = role === 'maf' ? TABS_MAF : TABS_SARPRAS
   return (
     <nav
       style={{
