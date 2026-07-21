@@ -41,6 +41,10 @@ export default function FilterSummaryBar({
   role,
 }: Props) {
   if (programs.length === 0 || !status) return null
+  // MAF: jangan pernah memunculkan uang Man Power (Operasional) di ringkasan
+  // agregat apa pun — kecualikan dari seluruh perhitungan untuk role maf.
+  const vprograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  if (vprograms.length === 0) return null
   // MAF: hide semua keuangan untuk Perencanaan — hanya tampil Jumlah Program
   if (role === 'maf' && status === 'Perencanaan') {
     const pad     = compact ? '10px 12px' : isMobile ? '9px 11px' : '11px 14px'
@@ -51,7 +55,7 @@ export default function FilterSummaryBar({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: isMobile ? 10 : 12 }}>
         <div style={{ backgroundColor: 'var(--surface-raised)', borderRadius: compact ? 7 : 9, padding: pad, border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
           <div style={{ fontSize: lblSize, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Jumlah Program</div>
-          <div style={{ fontSize: valSize, fontWeight: 700, color: '#6B7280', letterSpacing: '-0.02em' }}>{programs.length}</div>
+          <div style={{ fontSize: valSize, fontWeight: 700, color: '#6B7280', letterSpacing: '-0.02em' }}>{vprograms.length}</div>
           <div style={{ fontSize: subSize, color: 'var(--text-muted)', marginTop: 2 }}>belum dimulai</div>
         </div>
       </div>
@@ -59,7 +63,7 @@ export default function FilterSummaryBar({
   }
 
   // ── Aggregate derived totals ──────────────────────────────────────────────
-  const derived = programs.map(p =>
+  const derived = vprograms.map(p =>
     deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id))
   )
 
@@ -95,7 +99,7 @@ export default function FilterSummaryBar({
     ? `efisiensi · ${effPct}% di bawah pagu`
     : isOver
       ? `melebihi pagu · ${effPct}% di atas pagu`
-      : `dari ${programs.length} pekerjaan`
+      : `dari ${vprograms.length} pekerjaan`
 
   // ── Build card definitions per status ─────────────────────────────────────
   let cards: Card[]
@@ -129,7 +133,7 @@ export default function FilterSummaryBar({
       {
         label: 'Total Anggaran',
         value: formatRupiah(totalAnggaran),
-        sub: `${programs.length} pekerjaan`,
+        sub: `${vprograms.length} pekerjaan`,
         accent: '#1A6FE8',
         bg: 'rgba(26,111,232,0.06)',
       },
@@ -160,7 +164,7 @@ export default function FilterSummaryBar({
       {
         label: 'Total Anggaran',
         value: formatRupiah(totalAnggaran),
-        sub: `${programs.length} pekerjaan`,
+        sub: `${vprograms.length} pekerjaan`,
         accent: '#1A6FE8',
         bg: 'rgba(26,111,232,0.06)',
       },
@@ -180,7 +184,7 @@ export default function FilterSummaryBar({
       },
       {
         label: 'Jumlah Program',
-        value: `${programs.length}`,
+        value: `${vprograms.length}`,
         sub: 'pekerjaan on hold',
         accent: '#6B7280',
         bg: 'rgba(107,114,128,0.06)',
@@ -198,7 +202,7 @@ export default function FilterSummaryBar({
       },
       {
         label: 'Jumlah Program',
-        value: `${programs.length}`,
+        value: `${vprograms.length}`,
         sub: 'belum dimulai',
         accent: '#6B7280',
         bg: 'rgba(107,114,128,0.06)',

@@ -1,7 +1,7 @@
 /**
  * LaporanAset
  *
- * Admin-only page: Laporan Perolehan Aset
+ * Admin-only page: Perolehan Aset & Realisasi
  * Rekap seluruh hasil_rincian dari pekerjaan Selesai,
  * dikelompokkan per pekerjaan, dengan filter kategori dan export.
  */
@@ -84,7 +84,7 @@ interface ProgramRow {
   totalBiaya: number
 }
 
-export default function LaporanAset() {
+export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boolean; role?: 'pbb' | 'maf' | null }) {
   const width = useWindowWidth()
   const isMobile = width < 600
 
@@ -99,8 +99,10 @@ export default function LaporanAset() {
     })
   }, [])
 
-  // Split: Selesai dengan data vs belum diisi
-  const selesai = programs.filter(p => p.status === 'Selesai')
+  // Split: Selesai dengan data vs belum diisi (Man Power disembunyikan untuk MAF)
+  const selesai = programs.filter(p =>
+    p.status === 'Selesai' && (role !== 'maf' || p.jenis_pekerjaan !== 'Operasional')
+  )
   const withData  = selesai.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
   const noData    = selesai.filter(p => (p.hasil_rincian?.length ?? 0) === 0)
 
@@ -221,75 +223,130 @@ export default function LaporanAset() {
       <div id="laporan-aset-print" style={{ padding: ps, width: '100%', boxSizing: 'border-box', animation: 'pageSlideIn 0.2s ease' }}>
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>
-              Laporan Perolehan Aset
-            </h1>
-            <p style={{ fontSize: isMobile ? 12 : 13.5, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
-              Inventaris aset dan material per kategori pekerjaan
-            </p>
-          </div>
+        {/* Desktop: judul + tombol sejajar. Mobile: judul disembunyikan, tombol hanya untuk admin */}
+        {(isAdmin || !isMobile) && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isMobile ? 'flex-end' : 'space-between', marginBottom: isMobile ? 14 : 24, gap: 12 }}>
+          {!isMobile && (
+            <div>
+              <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>
+                Perolehan Aset & Realisasi
+              </h1>
+              <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
+                Inventaris aset dan material per kategori pekerjaan
+              </p>
+            </div>
+          )}
 
           {/* Export buttons */}
           <div className="no-print" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button
               onClick={exportCSV}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '7px 11px' : '8px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-secondary)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px' : '8px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-secondary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)' }}
+              title="Export CSV"
             >
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              CSV
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              {!isMobile && 'CSV'}
             </button>
             <button
               onClick={exportPDF}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '7px 11px' : '8px 14px', borderRadius: 9, border: '1px solid var(--blue)', background: 'var(--blue)', color: '#fff', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px' : '8px 14px', borderRadius: 9, border: '1px solid var(--blue)', background: 'var(--blue)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--blue-dark)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--blue)' }}
+              title="Export PDF"
             >
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              PDF
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              {!isMobile && 'PDF'}
             </button>
           </div>
         </div>
+        )}
 
         {/* ── Summary cards ────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: isMobile ? 10 : 12 }}>
-          {[
-            { label: 'Total Nilai Aset', value: formatRupiah(totalNilai), accent: 'var(--blue)' },
-            { label: 'Jumlah Pekerjaan', value: `${totalProgram}`, accent: '#0f766e' },
-            { label: 'Jumlah Item', value: `${totalItems}`, accent: '#b45309' },
-          ].map((c, i) => (
-            <div key={i} style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: isMobile ? '10px 12px' : '14px 16px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
-              <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{c.label}</div>
-              <div style={{ fontSize: isMobile ? 14 : 18, fontWeight: 800, color: c.accent, letterSpacing: '-0.02em' }}>{c.value}</div>
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+            {/* Card 1: Total Nilai — full width, center stacked */}
+            <div style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: '10px 14px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Total Nilai Aset</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--blue)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalNilai)}</div>
             </div>
-          ))}
-        </div>
+            {/* Card 2+3: Pekerjaan + Item — berdampingan */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { label: 'Jumlah Pekerjaan', value: `${totalProgram}`, accent: 'var(--text-primary)' },
+                { label: 'Jumlah Item', value: `${totalItems}`, accent: 'var(--text-primary)' },
+              ].map((c, i) => (
+                <div key={i} style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: '9px 12px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{c.label}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: c.accent, letterSpacing: '-0.02em' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
+            {[
+              { label: 'Total Nilai Aset', value: formatRupiah(totalNilai), accent: 'var(--blue)' },
+              { label: 'Jumlah Pekerjaan', value: `${totalProgram}`, accent: '#0f766e' },
+              { label: 'Jumlah Item', value: `${totalItems}`, accent: '#b45309' },
+            ].map((c, i) => (
+              <div key={i} style={{ backgroundColor: 'var(--card)', borderRadius: 12, padding: '14px 16px', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{c.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: c.accent, letterSpacing: '-0.02em' }}>{c.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* ── Filter tabs ──────────────────────────────────────────────────── */}
-        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? 6 : 8, marginBottom: 20 }}>
-          {(['semua', 'fisik', 'barang', 'jasa'] as KatFilter[]).map(k => {
+        {/* ── Filter tabs — card style ─────────────────────────────────────── */}
+        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? 6 : 8, marginBottom: 16 }}>
+          {([
+            { k: 'semua',  label: 'Semua',    icon: (
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            )},
+            { k: 'fisik',  label: 'Fisik',    icon: (
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            )},
+            { k: 'barang', label: 'Barang',   icon: (
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            )},
+            { k: 'jasa',   label: 'Jasa',     icon: (
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            )},
+          ] as { k: KatFilter; label: string; icon: JSX.Element }[]).map(({ k, label, icon }) => {
             const active = filter === k
-            const color = k === 'semua' ? 'var(--blue)' : KAT_COLORS[k as HasilKategori]
-            const label = k === 'semua' ? 'Semua' : KAT_LABELS[k as HasilKategori]
+            const color = k === 'semua' ? '#1A6FE8' : KAT_COLORS[k as HasilKategori]
             return (
               <button
                 key={k}
                 onClick={() => setFilter(k)}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 3, padding: isMobile ? '10px 6px' : '11px 10px',
-                  borderRadius: 10,
-                  border: `1.5px solid ${active ? color : 'var(--border-subtle)'}`,
-                  background: active ? `${color}0f` : 'var(--card)',
+                  padding: isMobile ? '10px 6px' : '12px 8px',
+                  borderRadius: isMobile ? 12 : 14,
+                  border: active ? `1.5px solid ${color}` : '1px solid var(--border-subtle)',
+                  background: active ? `${color}10` : 'var(--card)',
                   color: active ? color : 'var(--text-muted)',
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                  boxShadow: active ? `0 0 0 3px ${color}15` : '0 1px 3px rgba(0,0,0,0.05)',
+                  boxShadow: active ? `0 0 0 3px ${color}15` : '0 1px 3px rgba(0,0,0,0.04)',
                 }}
               >
-                <span style={{ fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                {/* Icon + angka berdampingan */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 4 : 5, marginBottom: isMobile ? 4 : 5 }}>
+                  <div style={{
+                    width: isMobile ? 18 : 22, height: isMobile ? 18 : 22, borderRadius: 6,
+                    backgroundColor: active ? `${color}22` : 'rgba(0,0,0,0.05)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    {icon}
+                  </div>
+                  <span style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    {counts[k]}
+                  </span>
+                </div>
+                {/* Label */}
+                <span style={{ fontSize: isMobile ? 8.5 : 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1 }}>
                   {label}
                 </span>
               </button>
@@ -326,71 +383,117 @@ export default function LaporanAset() {
                       )}
                     </div>
 
-                    {/* Table inside card — kolom menyesuaikan kategori/mode */}
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                        <colgroup>
-                          {cols.map(col => (
-                            <col key={col.key} style={{ width: col.pct }} />
-                          ))}
-                        </colgroup>
-                        <thead>
-                          <tr>
+                    {/* Rincian — table di desktop, card list di mobile */}
+                    {isMobile ? (
+                      <div>
+                        {rincian.map((r, ri) => {
+                          const rowNo = no++
+                          const chip = STATUS_CHIP[r.status || 'Rencana'] || STATUS_CHIP.Rencana
+                          return (
+                            <div key={ri} style={{
+                              display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                              gap: 10, padding: '10px 14px',
+                              borderBottom: ri < rincian.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                              backgroundColor: ri % 2 === 1 ? 'rgba(15,23,42,0.025)' : 'transparent',
+                            }}>
+                              {/* Kiri: nomor + nama + detail */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0, minWidth: 20, display: 'inline-block' }}>{rowNo}.</span>
+                                  <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', lineHeight: 1.35 }}>{r.nama}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingLeft: 26 }}>
+                                  {r.aset && (
+                                    <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{r.aset}</span>
+                                  )}
+                                  {r.ukuran != null && (
+                                    <span style={{ fontSize: 10, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                                      {(r.ukuran).toLocaleString('id-ID')}{r.satuan ? ` ${r.satuan}` : ''}{mode === 'divisi' ? ' org' : ''}
+                                    </span>
+                                  )}
+                                  {mode === 'kegiatan' && r.status && (
+                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: chip.bg, color: chip.fg }}>
+                                      {r.status}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {/* Kanan: nilai */}
+                              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                                <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
+                                  {formatRupiah(r.biaya ?? 0)}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                          <colgroup>
                             {cols.map(col => (
-                              <th key={col.key} style={{ ...subThStyle, textAlign: col.align }}>
-                                {col.label}
-                              </th>
+                              <col key={col.key} style={{ width: col.pct }} />
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rincian.map((r, ri) => {
-                            const rowNo = no++
-                            return (
-                              <tr key={ri} style={{ backgroundColor: ri % 2 === 1 ? 'rgba(15,23,42,0.025)' : 'transparent' }}>
-                                {cols.map(col => {
-                                  switch (col.key) {
-                                    case 'no':
-                                      return <td key={col.key} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{rowNo}</td>
-                                    case 'nama':
-                                      return <td key={col.key} style={{ ...tdStyle, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nama}</td>
-                                    case 'aset':
-                                      return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.aset || '—'}</td>
-                                    case 'ukuran':
-                                      return (
-                                        <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                                          {(r.ukuran ?? 0).toLocaleString('id-ID')}{mode === 'divisi' ? ' org' : ''}
-                                        </td>
-                                      )
-                                    case 'satuan':
-                                      return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: isMobile ? 11 : 12 }}>{r.satuan}</td>
-                                    case 'status': {
-                                      const chip = STATUS_CHIP[r.status || 'Rencana'] || STATUS_CHIP.Rencana
-                                      return (
-                                        <td key={col.key} style={tdStyle}>
-                                          <span style={{ fontSize: isMobile ? 10 : 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.fg, whiteSpace: 'nowrap' }}>
-                                            {r.status || 'Rencana'}
-                                          </span>
-                                        </td>
-                                      )
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              {cols.map(col => (
+                                <th key={col.key} style={{ ...subThStyle, textAlign: col.align }}>
+                                  {col.label}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rincian.map((r, ri) => {
+                              const rowNo = no++
+                              return (
+                                <tr key={ri} style={{ backgroundColor: ri % 2 === 1 ? 'rgba(15,23,42,0.025)' : 'transparent' }}>
+                                  {cols.map(col => {
+                                    switch (col.key) {
+                                      case 'no':
+                                        return <td key={col.key} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{rowNo}</td>
+                                      case 'nama':
+                                        return <td key={col.key} style={{ ...tdStyle, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nama}</td>
+                                      case 'aset':
+                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.aset || '—'}</td>
+                                      case 'ukuran':
+                                        return (
+                                          <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                                            {(r.ukuran ?? 0).toLocaleString('id-ID')}{mode === 'divisi' ? ' org' : ''}
+                                          </td>
+                                        )
+                                      case 'satuan':
+                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: 12 }}>{r.satuan}</td>
+                                      case 'status': {
+                                        const chip = STATUS_CHIP[r.status || 'Rencana'] || STATUS_CHIP.Rencana
+                                        return (
+                                          <td key={col.key} style={tdStyle}>
+                                            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.fg, whiteSpace: 'nowrap' }}>
+                                              {r.status || 'Rencana'}
+                                            </span>
+                                          </td>
+                                        )
+                                      }
+                                      case 'biaya':
+                                        return <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>{formatRupiah(r.biaya ?? 0)}</td>
+                                      default:
+                                        return null
                                     }
-                                    case 'biaya':
-                                      return <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>{formatRupiah(r.biaya ?? 0)}</td>
-                                    default:
-                                      return null
-                                  }
-                                })}
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                  })}
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
                     {/* Card footer: subtotal */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: isMobile ? '8px 12px' : '9px 14px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-raised)' }}>
-                      <span style={{ fontSize: isMobile ? 11 : 11.5, color: 'var(--text-muted)', fontWeight: 500 }}>Total</span>
-                      <span style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalBiaya)}</span>
+                      <span style={{ fontSize: isMobile ? 10.5 : 11.5, color: 'var(--text-muted)', fontWeight: 500 }}>Total</span>
+                      <span style={{ fontSize: isMobile ? 11 : 13.5, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalBiaya)}</span>
                     </div>
 
                   </div>

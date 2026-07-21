@@ -106,12 +106,18 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       wowMap[p.id] = { delta: current - prev, prev }
     })
 
+  // MAF tidak boleh melihat pekerjaan Man Power (Operasional) — sembunyikan
+  // dari hitungan status maupun daftar per tab, konsisten dgn WoW & LaporanAset.
+  const visiblePrograms = isMaf
+    ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional')
+    : programs
+
   const countByStatus: Record<string, number> = {}
-  programs.forEach(p => {
+  visiblePrograms.forEach(p => {
     countByStatus[p.status] = (countByStatus[p.status] || 0) + 1
   })
 
-  const filteredPrograms = programs
+  const filteredPrograms = visiblePrograms
     .filter(p => p.status === activeTab)
     .sort((a, b) => {
       if (activeTab === 'Perencanaan') {

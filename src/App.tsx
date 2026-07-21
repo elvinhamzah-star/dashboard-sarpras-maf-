@@ -348,7 +348,7 @@ export default function App() {
       case 'riwayat':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
       case 'laporan-aset':
-        return <LaporanAset />
+        return <LaporanAset isAdmin={isAdmin} role={role} />
       case 'laporan':
         return role === 'maf'
           ? <Beranda isAdmin={isAdmin} role={role} />
@@ -368,7 +368,7 @@ export default function App() {
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
-    'laporan-aset': 'Laporan Perolehan Aset',
+    'laporan-aset': 'Perolehan Aset & Realisasi',
   }
 
   if (isMaintenance === null) return null
