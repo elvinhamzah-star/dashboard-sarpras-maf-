@@ -30,7 +30,7 @@ const GROUP_LABELS: Record<string, string> = {
 const ACCENT: Record<string, string> = {
   anggaran:   '#1A6FE8',
   realisasi:  '#059669',
-  sisa:       '#C2600A',
+  sisa:       '#D97706',
   penyerapan: '#1A6FE8',
 }
 
