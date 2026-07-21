@@ -205,7 +205,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
-  const progressPrograms = programs.filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
+  const progressPrograms = programs
+    .filter(p => role !== 'maf' || p.jenis_pekerjaan !== 'Operasional')
+    .filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
     ? (progressPrograms.reduce((s, p) => s + getEffectiveProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)

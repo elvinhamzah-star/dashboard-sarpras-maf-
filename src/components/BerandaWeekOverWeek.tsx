@@ -183,7 +183,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               Progress Pekerjaan
             </div>
             <div style={{ fontSize: isNarrow ? 9 : 10, color: 'var(--text-muted)', fontWeight: 500 }}>
-              Dari {programs.length} Pekerjaan
+              Dari {visiblePrograms.length} Pekerjaan
             </div>
           </div>
           )
