@@ -1,28 +1,46 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useCallback, useLayoutEffect, lazy, Suspense } from 'react'
 import { BackNavContext, TopBarTitleContext, type BackHandler } from './lib/backNav'
 import Sidebar from './components/Sidebar'
 import BottomNav from './components/BottomNav'
 import MobileAccountMenu from './components/MobileAccountMenu'
 import Beranda from './components/Beranda'
-import Pekerjaan from './components/Pekerjaan'
-import PekerjaanDetail from './components/PekerjaanDetail'
-import Keuangan from './components/Keuangan'
-import Galeri from './components/Galeri'
-import Dokumen from './components/Dokumen'
 import type { DocCategory } from './lib/supabase'
-import RiwayatLaporan from './components/RiwayatLaporan'
-import LaporanBulanan from './components/LaporanBulanan'
-import LaporanAset from './components/LaporanAset'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
-import AddPekerjaanModal from './components/AddPekerjaanModal'
-import PresentationMode from './components/PresentationMode'
+
+// Lazy-loaded pages/modals — split out of the initial bundle so first paint
+// (Login + Beranda) doesn't ship react-pdf, the gallery, or other heavy views.
+const Pekerjaan = lazy(() => import('./components/Pekerjaan'))
+const PekerjaanDetail = lazy(() => import('./components/PekerjaanDetail'))
+const Keuangan = lazy(() => import('./components/Keuangan'))
+const Galeri = lazy(() => import('./components/Galeri'))
+const Dokumen = lazy(() => import('./components/Dokumen'))
+const RiwayatLaporan = lazy(() => import('./components/RiwayatLaporan'))
+const LaporanBulanan = lazy(() => import('./components/LaporanBulanan'))
+const LaporanAset = lazy(() => import('./components/LaporanAset'))
+const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
+const PresentationMode = lazy(() => import('./components/PresentationMode'))
 import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan' | 'laporan-aset'
+
+// Shown while a lazy page chunk downloads. Kept minimal so the app chrome
+// (sidebar/top bar) stays visible and only the content area shows the spinner.
+function PageFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%',
+        border: '3px solid var(--border)', borderTopColor: 'var(--accent, #0958B1)',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+    </div>
+  )
+}
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
@@ -551,7 +569,9 @@ export default function App() {
             <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>
               <BackNavContext.Provider value={registerBack}>
                 <TopBarTitleContext.Provider value={registerTitle}>
-                  {renderPage()}
+                  <Suspense fallback={<PageFallback />}>
+                    {renderPage()}
+                  </Suspense>
                 </TopBarTitleContext.Provider>
               </BackNavContext.Provider>
             </div>
@@ -575,15 +595,19 @@ export default function App() {
       )}
 
       {showAddModal && (
-        <AddPekerjaanModal
-          key={addModalKey}
-          onClose={() => setShowAddModal(false)}
-          onAdded={handleAdded}
-        />
+        <Suspense fallback={null}>
+          <AddPekerjaanModal
+            key={addModalKey}
+            onClose={() => setShowAddModal(false)}
+            onAdded={handleAdded}
+          />
+        </Suspense>
       )}
 
       {showPresentation && (
-        <PresentationMode onClose={() => setShowPresentation(false)} />
+        <Suspense fallback={null}>
+          <PresentationMode onClose={() => setShowPresentation(false)} />
+        </Suspense>
       )}
     </div>
   )
