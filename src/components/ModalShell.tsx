@@ -36,6 +36,8 @@ export default function ModalShell({
   const isMobile = width < 600
   const [dragY, setDragY] = useState(0)
   const touchStartY = useRef<number | null>(null)
+  const touchStartX = useRef<number | null>(null)
+  const gestureMode = useRef<'none' | 'scroll' | 'drag'>('none')
   const isDragging = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -99,29 +101,42 @@ export default function ModalShell({
     setDragY(0)
     isDragging.current = false
     touchStartY.current = null
+    touchStartX.current = null
+    gestureMode.current = 'none'
   }
 
-  // Panel-level swipe: activates when content is scrolled to top
+  // Panel-level swipe-to-close. Only wired when ModalShell owns the scroll
+  // container (contentScroll=true); for contentScroll=false layouts the real
+  // scroller is a child we can't measure, so scrollTop reads 0 and every downward
+  // swipe would falsely dismiss — those use the top drag-handle instead.
   const onPanelTouchStart = (e: React.TouchEvent) => {
-    // Store start position but DON'T commit to drag yet — wait for confirmed downward gesture
     touchStartY.current = e.touches[0].clientY
+    touchStartX.current = e.touches[0].clientX
     isDragging.current = false
+    gestureMode.current = 'none'
   }
   const onPanelTouchMove = (e: React.TouchEvent) => {
     if (touchStartY.current === null) return
     const scrollTop = scrollContainerRef.current?.scrollTop ?? 0
     const delta = e.touches[0].clientY - touchStartY.current
-    // Only start drag-to-close when: at scroll top AND swiping downward > 10px
-    if (!isDragging.current) {
-      if (scrollTop === 0 && delta > 10) {
+    const dx = Math.abs(e.touches[0].clientX - (touchStartX.current ?? 0))
+    // Decide once per gesture, then latch — stops the scroll/dismiss flip-flop
+    // mid-swipe that let an intended scroll accidentally close the sheet.
+    if (gestureMode.current === 'none') {
+      if (Math.abs(delta) < 14 && dx < 14) return          // wait for a clear intent
+      // Dismiss only when: at content top, moving downward, vertical dominates.
+      if (scrollTop === 0 && delta > 0 && delta > dx) {
+        gestureMode.current = 'drag'
         isDragging.current = true
       } else {
-        return // let normal scroll happen
+        gestureMode.current = 'scroll'                      // hand off to native scroll
+        return
       }
     }
-    if (scrollTop > 0) { isDragging.current = false; setDragY(0); return }
+    if (gestureMode.current === 'scroll') return
+    if (scrollTop > 0) { gestureMode.current = 'scroll'; isDragging.current = false; setDragY(0); return }
     if (delta > 0) setDragY(delta)
-    else { isDragging.current = false; setDragY(0) }
+    else setDragY(0)
   }
 
   const visible = entered && !closing
@@ -150,9 +165,9 @@ export default function ModalShell({
     >
       <div
         ref={panelRef}
-        onTouchStart={isMobile ? onPanelTouchStart : undefined}
-        onTouchMove={isMobile ? onPanelTouchMove : undefined}
-        onTouchEnd={isMobile ? onTouchEnd : undefined}
+        onTouchStart={isMobile && contentScroll ? onPanelTouchStart : undefined}
+        onTouchMove={isMobile && contentScroll ? onPanelTouchMove : undefined}
+        onTouchEnd={isMobile && contentScroll ? onTouchEnd : undefined}
         style={{
           backgroundColor: panelColor,
           borderRadius: isMobile ? '20px 20px 0 0' : 16,
