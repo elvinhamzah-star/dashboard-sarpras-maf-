@@ -59,30 +59,33 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
     setTogglingRiwayat(false)
   }
 
-  const masukList = transactions.filter(t => t.jenis_transaksi === 'Masuk')
-  const keluarList = transactions.filter(t => t.jenis_transaksi === 'Keluar')
-  const keluarPBBList = transactions.filter(t => t.jenis_transaksi === 'Keluar PBB')
+  const isManPowerTx = (t: Transaction) => {
+    const n = (t.nama_pekerjaan || '').toLowerCase()
+    return n.includes('man power') || n.includes('honor')
+  }
+
+  // MAF must never see Man Power / Operasional finances in any total.
+  const visibleTx = role === 'maf' ? transactions.filter(t => !isManPowerTx(t)) : transactions
+
+  const masukList = visibleTx.filter(t => t.jenis_transaksi === 'Masuk')
+  const keluarList = visibleTx.filter(t => t.jenis_transaksi === 'Keluar')
+  const keluarPBBList = visibleTx.filter(t => t.jenis_transaksi === 'Keluar PBB')
 
   const totalMasuk = masukList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluar = keluarList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalKeluarPBB = keluarPBBList.reduce((s, t) => s + (t.nominal || 0), 0)
   const totalDeployment = totalMasuk + totalKeluarPBB
 
-  // Saldo Kas is a running balance — always computed across ALL transactions
-  const saldoKas = transactions.reduce(
+  // Saldo Kas is a running balance — computed across all transactions the role may see.
+  const saldoKas = visibleTx.reduce(
     (s, t) => s + (t.jenis_transaksi === 'Masuk' ? (t.nominal || 0) : t.jenis_transaksi === 'Keluar' ? -(t.nominal || 0) : 0),
     0,
   )
 
-  const isManPowerTx = (t: Transaction) => {
-    const n = (t.nama_pekerjaan || '').toLowerCase()
-    return n.includes('man power') || n.includes('honor')
-  }
-
   const filtered = (filterJenis === 'Semua'
-    ? transactions
-    : transactions.filter(t => t.jenis_transaksi === filterJenis)
-  ).filter(t => role !== 'maf' || !isManPowerTx(t))
+    ? visibleTx
+    : visibleTx.filter(t => t.jenis_transaksi === filterJenis)
+  )
 
   const itemsPerPage = 20
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -92,7 +95,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   // Monthly chart — Masuk vs (Keluar + Keluar PBB) — same as BerandaChart
   const chartData = (() => {
     const map: Record<string, { masuk: number; keluar: number }> = {}
-    transactions.forEach(t => {
+    visibleTx.forEach(t => {
       const ym = t.tanggal?.slice(0, 7)
       if (!ym) return
       if (!map[ym]) map[ym] = { masuk: 0, keluar: 0 }

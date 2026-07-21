@@ -64,64 +64,14 @@ const TABS_SARPRAS: Tab[] = [
   { id: 'laporan-aset', label: 'Laporan', icon: ICON_LAPORAN_ASET },
 ]
 
-// MAF: Beranda, Pekerjaan, Dokumen, Galeri, Laporan Aset
-const TABS_MAF: Tab[] = [
-  {
-    id: 'beranda',
-    label: 'Beranda',
-    icon: (
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
-        <path d="M9 21V12h6v9" />
-      </svg>
-    ),
-  },
-  {
-    id: 'pekerjaan',
-    label: 'Pekerjaan',
-    icon: (
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-        <rect x="9" y="3" width="6" height="4" rx="1" />
-        <line x1="9" y1="12" x2="15" y2="12" />
-        <line x1="9" y1="16" x2="13" y2="16" />
-      </svg>
-    ),
-  },
-  {
-    id: 'dokumen',
-    label: 'Dokumen',
-    icon: (
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    id: 'galeri',
-    label: 'Galeri',
-    icon: (
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <path d="M21 15l-5-5L5 21" />
-      </svg>
-    ),
-  },
-  { id: 'laporan-aset', label: 'Laporan', icon: ICON_LAPORAN_ASET },
-]
-
 interface BottomNavProps {
   currentPage: string
   onNavigate: (page: string) => void
   role?: 'pbb' | 'maf' | null
 }
 
-export default function BottomNav({ currentPage, onNavigate, role }: BottomNavProps) {
-  const visibleTabs = role === 'maf' ? TABS_MAF : TABS_SARPRAS
+export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
+  const visibleTabs = TABS_SARPRAS
   return (
     <nav
       style={{

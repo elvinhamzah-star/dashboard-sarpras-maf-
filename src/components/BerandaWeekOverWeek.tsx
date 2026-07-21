@@ -71,6 +71,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
   }
   const width = useWindowWidth()
   const isNarrow = width < 1100
+  // Program name in the list: bump up on desktop; mobile (<768, matches App) stays 11.5.
+  const nameSize = width < 768 ? 11.5 : 13.5
 
   const now = Date.now()
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000
@@ -288,7 +290,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
+                      fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {p.nama_pekerjaan}
@@ -355,7 +357,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
+                      fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {p.nama_pekerjaan}
@@ -388,10 +390,12 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
           })
         ) : (
           filteredPrograms.map((p) => {
-            const wow = wowMap[p.id]
             const color = STATUS_COLORS[p.status] || '#1A6FE8'
-            const isOnHold = p.status === 'On Hold'
             const effectivePct = getEffectiveProgress(p)
+            const realisasi = p.realisasi_terkini ?? 0
+            const anggaran = p.total_anggaran ?? 0
+            const sisa = p.sisa_anggaran ?? (anggaran - realisasi)
+            const isOver = sisa < 0
             return (
               <div
                 key={p.id}
@@ -401,7 +405,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 style={{
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
-                  border: `1.5px solid var(--border-subtle)`,
+                  border: '1.5px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -409,58 +413,59 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {p.nama_pekerjaan}
+                    {/* nama + progress badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <div style={{
+                        fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
+                      }}>
+                        {p.nama_pekerjaan}
+                      </div>
+                      <span style={{
+                        flexShrink: 0, fontSize: 9.5, fontWeight: 700,
+                        padding: '2px 7px', borderRadius: 99,
+                        color, backgroundColor: `${color}1F`,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {effectivePct}%
+                      </span>
                     </div>
                     {getVendorDisplay(p, subPrograms) && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{getVendorDisplay(p, subPrograms)}</div>
                     )}
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 60 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color }}>
-                      {effectivePct}%
-                    </div>
-                    {p.status === 'On Going' && wow && (
-                      wow.delta === null ? (
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>–</span>
-                      ) : wow.delta > 0 ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#059669' }}>▲ +{wow.delta}%</span>
-                      ) : wow.delta < 0 ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#660000' }}>▼ {wow.delta}%</span>
-                      ) : (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>→ 0%</span>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 10, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${effectivePct}%`,
-                    backgroundColor: color,
-                    borderRadius: 99,
-                  }} />
-                </div>
-
-                {p.isu_utama && (
-                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 4 }}>
-                      {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                          <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
-                          <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{line}</span>
+                    {p.isu_utama && (
+                      <div style={{ marginTop: 16 }}>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, paddingLeft: 4 }}>
+                          {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
+                              <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{line}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatRupiah(realisasi)}
+                    </div>
+                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
+                      dari {formatRupiah(anggaran)}
+                    </div>
+                    <span style={{
+                      fontSize: 9.5, fontWeight: 600,
+                      color: isOver ? '#660000' : color,
+                      backgroundColor: isOver ? 'rgba(220,38,38,0.08)' : `${color}1A`,
+                      padding: '2px 7px', borderRadius: 99,
+                      display: 'inline-block', marginTop: 6,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {isOver ? `Lebih ${formatRupiah(Math.abs(sisa))}` : `Sisa ${formatRupiah(sisa)}`}
+                    </span>
+                  </div>
+                </div>
               </div>
             )
           })

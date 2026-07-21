@@ -138,7 +138,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [popupDetailId, setPopupDetailId] = useState<string | null>(null)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showBlockedModal, setShowBlockedModal] = useState(false)
-  const [mafFilter, setMafFilter] = useState<string>('Selesai')
 
   useEffect(() => {
     if (initialDetailId) {
@@ -151,14 +150,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   // the user came from (Opsi B — preserves browsing context).
   useEffect(() => {
     if (initialStatusTab) {
-      if (role === 'maf') {
-        // MAF: filter inline, tidak buka popup
-        setMafFilter(initialStatusTab)
-      } else {
-        setPekerjaanTab(initialStatusTab)
-        setPopupDetailId(null)
-        setShowDetail(true)
-      }
+      setPekerjaanTab(initialStatusTab)
+      setPopupDetailId(null)
+      setShowDetail(true)
       onInitialStatusConsumed?.()
     }
   }, [initialStatusTab])
@@ -196,24 +190,32 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
-  const displayPrograms = programs
+  // MAF must never see Man Power / Operasional in any total, list, chart or count.
+  // Data arrives unfiltered, so gate once here and use these everywhere downstream.
+  const isManPowerTx = (t: Transaction) => {
+    const n = (t.nama_pekerjaan || '').toLowerCase()
+    return n.includes('man power') || n.includes('honor')
+  }
+  const visiblePrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  const visibleTransactions = role === 'maf' ? rawTransactions.filter(t => !isManPowerTx(t)) : rawTransactions
 
-  const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const totalRealisasi = rawTransactions
+  const displayPrograms = visiblePrograms
+
+  const totalAnggaran = visiblePrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const totalRealisasi = visibleTransactions
     .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
     .reduce((s, t) => s + (t.nominal || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
-  const progressPrograms = programs
-    .filter(p => role !== 'maf' || p.jenis_pekerjaan !== 'Operasional')
+  const progressPrograms = visiblePrograms
     .filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
     ? (progressPrograms.reduce((s, p) => s + getEffectiveProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
     : null
 
-  const mostRecentUpdate = programs.reduce((latest, p) => {
+  const mostRecentUpdate = visiblePrograms.reduce((latest, p) => {
     if (!p.updated_at) return latest
     return p.updated_at > latest ? p.updated_at : latest
   }, '')
@@ -283,7 +285,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'Selesai',
-      value: String(programs.filter(p => p.status === 'Selesai').length),
+      value: String(visiblePrograms.filter(p => p.status ==='Selesai').length),
       sub: 'Program selesai',
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
@@ -296,7 +298,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'On Going',
-      value: String(programs.filter(p => p.status === 'On Going').length),
+      value: String(visiblePrograms.filter(p => p.status ==='On Going').length),
       sub: 'Pekerjaan berjalan',
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
@@ -309,7 +311,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'On Hold',
-      value: String(programs.filter(p => p.status === 'On Hold').length),
+      value: String(visiblePrograms.filter(p => p.status ==='On Hold').length),
       sub: 'Ditangguhkan',
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
@@ -322,7 +324,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'Perencanaan',
-      value: String(programs.filter(p => p.status === 'Perencanaan').length),
+      value: String(visiblePrograms.filter(p => p.status ==='Perencanaan').length),
       sub: 'Belum mulai',
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
@@ -377,7 +379,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               Dashboard Sarpras MAF
             </h1>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
-              {role === 'maf' ? 'Ringkasan progres pekerjaan' : 'Ringkasan anggaran, realisasi & progres pekerjaan'}
+              Ringkasan anggaran, realisasi & progres pekerjaan
             </p>
             {formattedLastUpdated && (
               <div style={{ marginTop: 6 }}>
@@ -396,8 +398,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         </div>
       )}
 
-      {/* ── RINGKASAN: Keuangan ── (disembunyikan untuk MAF) */}
-      {role !== 'maf' && <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+      {/* ── RINGKASAN: Keuangan ── */}
+      {<SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
         {summaryCards.map(card => (
           <div
@@ -447,8 +449,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       <BerandaAlerts programs={displayPrograms} showOverdue={false} embedded />
       </SectionPanel>}
 
-      {/* ── RINGKASAN: Progress Pekerjaan (full-width) — non-MAF only ── */}
-      {role !== 'maf' && <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
+      {/* ── RINGKASAN: Progress Pekerjaan (full-width) ── */}
+      {<SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
       {(() => {
         const card = pekerjaanCards[0]
         const activeByTab = showDetail && pekerjaanTab === card.label
@@ -501,7 +503,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               </div>
               {/* Subtitle di luar flex row supaya tidak geser bar */}
               <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
-                Dari Total {programs.length} Pekerjaan
+                Dari Total {visiblePrograms.length} Pekerjaan
               </div>
             </div>
           </div>
@@ -557,42 +559,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </div>
       </SectionPanel>}
 
-      {/* ── SECTION 3: Realisasi & Progress (chart) — disembunyikan untuk MAF ── */}
-      {role !== 'maf' && (
-        <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
-          <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare />
-        </SectionPanel>
-      )}
-
-      {/* ── MAF ONLY: Tren Progres + Progress Pekerjaan ── */}
-      {role === 'maf' && (
-        <>
-          {/* 1. Chart tren progres — paling atas */}
-          <SectionPanel label="Tren Progres Pembangunan" isMobile={isMobile}>
-            <BerandaChart transactions={rawTransactions} snapshots={snapshots} programs={programs} bare progressOnly />
-          </SectionPanel>
-
-          {/* 2. Progress Pekerjaan — reuse BerandaWeekOverWeek, filter inline */}
-          <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
-            <BerandaWeekOverWeek
-              programs={programs}
-              snapshots={snapshots}
-              subPrograms={subPrograms}
-              rencanaMap={rencanaMap}
-              progressLapangan={progressLapangan}
-              freshnessDays={freshnessDays}
-              lastUpdated={mostRecentUpdate}
-              externalTab={mafFilter}
-              onExternalTabChange={setMafFilter}
-              role={role}
-              onProgramClick={id => {
-                if (onOpenDetail) onOpenDetail(id, mafFilter)
-                else setPopupDetailId(id)
-              }}
-            />
-          </SectionPanel>
-        </>
-      )}
+      {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
+      <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+        <BerandaChart transactions={visibleTransactions} snapshots={snapshots} programs={visiblePrograms} bare />
+      </SectionPanel>
 
       {/* ── POPUP: Progres Pekerjaan ── */}
       {showProgressModal && (

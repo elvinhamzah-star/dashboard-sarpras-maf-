@@ -213,14 +213,18 @@ export default function FilterSummaryBar({
   // ── Style tokens — intentionally understated, secondary to program cards ──
   // No shadow, no white bg — uses surface-raised so it visually sits "behind"
   // the white program cards below. Smaller fonts than PekerjaanDetail cards.
-  const gap     = compact ? 7 : isMobile ? 6 : 8
-  const pad     = compact ? '10px 12px' : isMobile ? '9px 11px' : '11px 14px'
-  const lblSize = compact ? 9   : isMobile ? 8.5 : 9
-  const valSize = compact ? 13  : isMobile ? 12  : 14
-  const subSize = compact ? 9   : isMobile ? 8.5 : 9.5
+  // Desktop popup (compact but wide viewport): cards were too small/cramped —
+  // give them a full-width grid + larger fonts and an accent top band.
+  const isPopupDesktop = compact && !isMobile
+  const gap     = isPopupDesktop ? 10 : compact ? 7 : isMobile ? 6 : 8
+  const pad     = isPopupDesktop ? '15px 16px 14px' : compact ? '10px 12px' : isMobile ? '9px 11px' : '11px 14px'
+  const lblSize = isPopupDesktop ? 10 : compact ? 9   : isMobile ? 8.5 : 9
+  const valSize = isPopupDesktop ? 18 : compact ? 13  : isMobile ? 12  : 14
+  const subSize = isPopupDesktop ? 10 : compact ? 9   : isMobile ? 8.5 : 9.5
+  const radius  = isPopupDesktop ? 10 : compact ? 7 : 9
 
-  // On mobile or compact: use horizontal scroll so cards never get squeezed
-  const useScroll = compact || (isMobile && cards.length > 2)
+  // Horizontal scroll only when squeezed (compact/mobile); desktop popup uses grid.
+  const useScroll = (compact && isMobile) || (isMobile && cards.length > 2)
   const outerStyle: React.CSSProperties = useScroll
     ? {
         display: 'flex',
@@ -239,7 +243,10 @@ export default function FilterSummaryBar({
         display: 'grid',
         gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
         gap,
-        marginBottom: isMobile ? 10 : 12,
+        // Desktop popup: frame with modal side padding + divider, like the compact bar.
+        marginBottom: isPopupDesktop ? 0 : isMobile ? 10 : 12,
+        padding: isPopupDesktop ? '14px 28px 18px' : 0,
+        borderBottom: isPopupDesktop ? '1px solid var(--border-subtle)' : 'none',
         flexShrink: 0,
         animation: 'fadeSlideDown 0.18s ease',
       }
@@ -250,8 +257,10 @@ export default function FilterSummaryBar({
         <div
           key={i}
           style={{
+            position: 'relative',
+            overflow: 'hidden',
             backgroundColor: 'var(--surface-raised)',
-            borderRadius: compact ? 7 : 9,
+            borderRadius: radius,
             padding: pad,
             border: '1px solid var(--border-subtle)',
             textAlign: 'center',
@@ -259,6 +268,9 @@ export default function FilterSummaryBar({
             ...(useScroll ? { flexShrink: 0, minWidth: compact ? 110 : 130 } : {}),
           }}
         >
+          {isPopupDesktop && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: card.accent }} />
+          )}
           <div style={{
             fontSize: lblSize,
             fontWeight: 600,
