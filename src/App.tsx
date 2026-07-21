@@ -54,6 +54,9 @@ export default function App() {
   // Deep link state for Dokumen dan Galeri pages (set by PekerjaanDetail onNavigate)
   const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
   const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
+  // When Dokumen was entered from PekerjaanDetail, back returns to that program's
+  // detail (mirrors galeriReturnProgramId) instead of straying to Beranda.
+  const [dokumenReturnProgramId, setDokumenReturnProgramId] = useState<string | null>(null)
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
   // When Galeri was entered via the "Dokumentasi" folder card in Dokumen,
   // its back button should return to Dokumen instead of Galeri's own list.
@@ -113,6 +116,7 @@ export default function App() {
     setDokumenCategory(null)
     setGaleriProgramId(null)
     setGaleriReturnToDokumen(false)
+    setDokumenReturnProgramId(null)
     if (page !== 'beranda') setBerandaReturnDetailId(null)
     setPekerjaanFromBeranda(false)
     setBerandaReturnTab(null)
@@ -231,6 +235,7 @@ export default function App() {
             if (page === 'dokumen') {
               setDokumenProgramId(pid ?? null)
               setDokumenCategory((cat as DocCategory) ?? null)
+              setDokumenReturnProgramId(selectedProgramId)  // remember where to return
             } else if (page === 'galeri') {
               setGaleriProgramId(pid ?? null)
               setGaleriReturnProgramId(selectedProgramId)  // remember where to return
@@ -281,6 +286,17 @@ export default function App() {
             role={role}
             initialProgramId={dokumenProgramId}
             initialCategory={dokumenCategory}
+            onExit={
+              dokumenReturnProgramId
+                ? () => {
+                    const pid = dokumenReturnProgramId
+                    setDokumenReturnProgramId(null)
+                    setDokumenProgramId(null)
+                    setSelectedProgramId(pid)
+                    setCurrentPage('pekerjaan')
+                  }
+                : undefined
+            }
             onNavigate={(page, pid) => {
               if (page === 'galeri') {
                 setDokumenProgramId(pid ?? null)
@@ -503,6 +519,13 @@ export default function App() {
                   setGaleriProgramId(null)
                   setCurrentPage('beranda')
                 }
+              } else if (currentPage === 'dokumen' && dokumenReturnProgramId) {
+                // Dokumen dibuka dari detail pekerjaan → balik ke detail itu, bukan beranda
+                const pid = dokumenReturnProgramId
+                setDokumenReturnProgramId(null)
+                setDokumenProgramId(null)
+                setSelectedProgramId(pid)
+                setCurrentPage('pekerjaan')
               } else if (currentPage !== 'beranda') {
                 // Semua halaman lain → beranda
                 setCurrentPage('beranda')

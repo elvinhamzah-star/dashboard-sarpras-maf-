@@ -17,6 +17,7 @@ interface Props {
   role: 'pbb' | 'maf' | null
   initialProgramId?: string | null
   initialCategory?: DocCategory | null
+  onExit?: () => void
   onNavigate?: (page: string, programId?: string) => void
 }
 
@@ -80,7 +81,7 @@ function ChevronRight() {
   )
 }
 
-export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }: Props) {
+export default function Dokumen({ isAdmin, role, initialProgramId, onExit, onNavigate }: Props) {
   const [programs, setPrograms] = useState<Program[]>([])
   const [docs, setDocs] = useState<ProgramDocument[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -202,9 +203,17 @@ export default function Dokumen({ isAdmin, role, initialProgramId, onNavigate }:
     setAddUrl('')
   }
 
-  // Drive the mobile top-bar ← arrow: each level goes up one. Level 0 (program
-  // list) is the page's top level → null (top bar shows the ☰ menu).
-  useBackHandler(level > 0 ? () => goLevel((level - 1) as 0 | 1 | 2) : null)
+  // Drive the mobile top-bar ← arrow. Levels 2–3 step up one. Level 1: if we were
+  // deep-linked here from a program detail (onExit set), back returns to that
+  // detail instead of dropping to the Dokumen list; otherwise step up to level 0.
+  // Level 0 (program list) is the page's top → null (top bar shows the ☰ menu).
+  useBackHandler(
+    level > 1
+      ? () => goLevel((level - 1) as 0 | 1 | 2)
+      : level === 1
+        ? (onExit ?? (() => goLevel(0)))
+        : null,
+  )
 
   const selProgram = programs.find(p => p.id === selProgramId)
 
