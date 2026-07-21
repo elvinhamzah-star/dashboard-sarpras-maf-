@@ -305,7 +305,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       >
         <div style={{ width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
           {thumbUrl ? (
-            <img src={thumbUrl} alt={doc.caption || ''}
+            <img src={thumbUrl} alt={doc.caption || ''} loading="lazy" decoding="async"
               style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease', display: 'block' }}
               onError={e => {
                 (e.target as HTMLImageElement).style.display = 'none'
@@ -507,7 +507,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 {/* Cover */}
                 <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
                   {cover ? (
-                    <img src={cover} alt={titikLabel}
+                    <img src={cover} alt={titikLabel} loading="lazy" decoding="async"
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
@@ -787,7 +787,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                           <>
                             <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
                               style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
-                              <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              <img src={t} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
                           </>
@@ -902,7 +902,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                           <>
                             <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
                               style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
-                              <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              <img src={t} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
                           </>
@@ -958,7 +958,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     {/* Cover */}
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
                       {cover ? (
-                        <img src={cover} alt={prog.nama_pekerjaan} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.3s' }}
+                        <img src={cover} alt={prog.nama_pekerjaan} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.3s' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                           onMouseEnter={e => { (e.target as HTMLImageElement).style.transform = 'scale(1.05)' }}
                           onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = 'scale(1)' }}
