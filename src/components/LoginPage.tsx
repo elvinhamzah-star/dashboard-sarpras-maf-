@@ -57,7 +57,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         backgroundColor: 'var(--bg)',
         display: 'flex',
         alignItems: 'center',

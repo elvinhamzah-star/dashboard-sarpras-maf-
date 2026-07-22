@@ -334,7 +334,7 @@ export default function RiwayatLaporan() {
   const SIDEBAR_W = 220
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
       {/* Page header */}
       {!isMobile && (
         <div style={{ padding: '28px 28px 0', flexShrink: 0 }}>
@@ -369,7 +369,7 @@ export default function RiwayatLaporan() {
               border: '1px solid var(--border-subtle)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
               overflowY: 'auto',
-              maxHeight: 'calc(100vh - 160px)',
+              maxHeight: 'calc(100dvh - 160px)',
             }}>
               <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
@@ -481,7 +481,7 @@ export default function RiwayatLaporan() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                     padding: '20px 22px',
                     overflowY: 'auto',
-                    maxHeight: 'calc(100vh - 280px)',
+                    maxHeight: 'calc(100dvh - 280px)',
                   }}>
                     <WeekReport note={selectedNote} livePrograms={programs} />
                   </div>

@@ -11,6 +11,7 @@ import {
   fetchTransactions,
 } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl } from '../lib/data'
+import { adminInsert, adminDelete } from '../lib/adminApi'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import UpdateProgressModal from './UpdateProgressModal'
@@ -54,6 +55,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
   const [addingSubProgram, setAddingSubProgram] = useState(false)
   const [buktiExpanded, setBuktiExpanded] = useState(false)
+  // Inline document management (replaces the removed Dokumen page).
+  const [docForm, setDocForm] = useState<{ folder: 'rab' | 'kontrak' | 'bukti_transaksi'; subfolder: string | null } | null>(null)
+  const [docName, setDocName] = useState('')
+  const [docUrl, setDocUrl] = useState('')
+  const [docSaving, setDocSaving] = useState(false)
+  const [deletingDocIds, setDeletingDocIds] = useState<Set<string>>(new Set())
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
 
@@ -94,6 +101,98 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   }
 
   useEffect(() => { load() }, [programId])
+
+  const handleAddDoc = async () => {
+    if (!docForm || !docName.trim() || docSaving) return
+    if (docForm.folder === 'bukti_transaksi' && !docForm.subfolder) return
+    setDocSaving(true)
+    await adminInsert('program_documents', {
+      program_id: programId,
+      folder: docForm.folder,
+      subfolder: docForm.subfolder,
+      file_name: docName.trim(),
+      file_url: docUrl.trim() || null,
+    })
+    setDocName(''); setDocUrl(''); setDocForm(null)
+    invalidateCache()
+    await load()
+    setDocSaving(false)
+  }
+
+  const handleDeleteDoc = async (doc: ProgramDocument) => {
+    if (!confirm(`Hapus "${doc.file_name}"?`)) return
+    setDeletingDocIds(prev => new Set(prev).add(doc.id))
+    await adminDelete('program_documents', doc.id)
+    setProgramDocs(prev => prev.filter(d => d.id !== doc.id))
+    invalidateCache()
+    setDeletingDocIds(prev => { const s = new Set(prev); s.delete(doc.id); return s })
+  }
+
+  // Admin-only trash button appended to a program_documents row.
+  const renderDocDelete = (doc: ProgramDocument) => {
+    if (!isAdmin) return null
+    const deleting = deletingDocIds.has(doc.id)
+    return (
+      <button
+        onClick={e => { e.stopPropagation(); handleDeleteDoc(doc) }}
+        disabled={deleting}
+        aria-label="Hapus dokumen"
+        style={{ border: '1px solid rgba(224,62,62,0.25)', backgroundColor: 'rgba(224,62,62,0.08)', color: '#E03E3E', width: 30, height: 30, borderRadius: 8, cursor: deleting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: deleting ? 0.5 : 1, fontFamily: 'inherit', padding: 0 }}
+      >
+        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    )
+  }
+
+  // Admin-only "+ Tambah" affordance: collapsed button, or the inline add form.
+  const renderDocAdd = (folder: 'rab' | 'kontrak' | 'bukti_transaksi', accent: string, label: string) => {
+    if (!isAdmin) return null
+    const open = docForm?.folder === folder
+    if (!open) {
+      return (
+        <button
+          onClick={() => { setDocForm({ folder, subfolder: folder === 'bukti_transaksi' ? 'invoice' : null }); setDocName(''); setDocUrl('') }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 10, borderRadius: 12, border: '1px dashed var(--border)', backgroundColor: 'transparent', color: 'var(--text-secondary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', width: '100%', fontFamily: 'inherit' }}
+        >
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah {label}
+        </button>
+      )
+    }
+    const subs = [{ id: 'invoice', label: 'Invoice' }, { id: 'pembayaran', label: 'Pembayaran' }, { id: 'struk', label: 'Struk' }]
+    const canSave = !!docName.trim() && !docSaving
+    const inputSt: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }
+    return (
+      <div style={{ border: `1px solid ${accent}55`, borderRadius: 12, backgroundColor: 'var(--card)', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah {label}</div>
+        {folder === 'bukti_transaksi' && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {subs.map(s => {
+              const active = docForm?.subfolder === s.id
+              return (
+                <button key={s.id} onClick={() => setDocForm(prev => prev ? { ...prev, subfolder: s.id } : prev)}
+                  style={{ fontSize: 12, padding: '5px 12px', borderRadius: 8, border: active ? `1px solid ${accent}` : '1px solid var(--border-subtle)', backgroundColor: active ? `${accent}18` : 'transparent', color: active ? accent : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {s.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
+        <input value={docName} onChange={e => setDocName(e.target.value)} placeholder="Nama dokumen" style={inputSt} />
+        <input value={docUrl} onChange={e => setDocUrl(e.target.value)} placeholder="Link / URL file (Google Drive, dll.)" onKeyDown={e => e.key === 'Enter' && handleAddDoc()} style={inputSt} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleAddDoc} disabled={!canSave}
+            style={{ flex: 1, padding: 9, borderRadius: 9, border: 'none', backgroundColor: canSave ? accent : 'var(--border)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: canSave ? 'pointer' : 'default', fontFamily: 'inherit', opacity: docSaving ? 0.6 : 1 }}>
+            {docSaving ? 'Menyimpan…' : 'Simpan'}
+          </button>
+          <button onClick={() => { setDocForm(null); setDocName(''); setDocUrl('') }}
+            style={{ padding: '9px 16px', borderRadius: 9, border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Batal
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Soft-mandatory: saat pekerjaan berstatus Selesai tapi data hasil belum
   // diisi, admin langsung diminta melengkapinya (baik setelah flip status via
@@ -557,26 +656,23 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                   {(() => {
                     const files = programDocs.filter(d => d.folder === 'rab')
                     const autoUrl = program.link_rab_detail
-                    const allFiles: { key: string; name: string; url: string | null }[] = [
+                    const allFiles: { key: string; name: string; url: string | null; doc?: ProgramDocument }[] = [
                       ...(autoUrl ? [{ key: '__rab_auto', name: `RAB · ${program.nama_pekerjaan}`, url: autoUrl }] : []),
-                      ...files.map(d => ({ key: d.id, name: d.file_name || `RAB · ${program.nama_pekerjaan}`, url: d.file_url ?? null })),
+                      ...files.map(d => ({ key: d.id, name: d.file_name || `RAB · ${program.nama_pekerjaan}`, url: d.file_url ?? null, doc: d })),
                     ]
-                    if (allFiles.length === 0) {
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
-                          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>RAB · {program.nama_pekerjaan}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada file RAB</div>
-                          </div>
-                        </div>
-                      )
-                    }
                     return (
                       <>
-                        {allFiles.map(f => (
+                        {allFiles.length === 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>RAB · {program.nama_pekerjaan}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada file RAB</div>
+                            </div>
+                          </div>
+                        ) : allFiles.map(f => (
                           <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: f.url ? 'pointer' : 'default' }}>
                             <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: f.url ? 'rgba(217,119,6,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -586,30 +682,29 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                               <div style={{ fontSize: 13, fontWeight: 600, color: f.url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
                             </div>
                             {f.url && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                            {f.doc && renderDocDelete(f.doc)}
                           </div>
                         ))}
+                        {renderDocAdd('rab', '#D97706', 'RAB')}
                       </>
                     )
                   })()}
                   {/* Kontrak — flat rows */}
                   {(() => {
                     const allFiles = programDocs.filter(d => d.folder === 'kontrak')
-                    if (allFiles.length === 0) {
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
-                          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>Kontrak · {program.nama_pekerjaan}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada kontrak</div>
-                          </div>
-                        </div>
-                      )
-                    }
                     return (
                       <>
-                        {allFiles.map(f => (
+                        {allFiles.length === 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>Kontrak · {program.nama_pekerjaan}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Belum ada kontrak</div>
+                            </div>
+                          </div>
+                        ) : allFiles.map(f => (
                           <div key={f.id} onClick={f.file_url ? () => openFile(f.file_url!, f.file_name) : undefined}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: f.file_url ? 'pointer' : 'default' }}>
                             <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: f.file_url ? 'rgba(37,99,235,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -619,8 +714,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                               <div style={{ fontSize: 13, fontWeight: 600, color: f.file_url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.file_name || `Kontrak · ${program.nama_pekerjaan}`}</div>
                             </div>
                             {f.file_url && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
+                            {renderDocDelete(f)}
                           </div>
                         ))}
+                        {renderDocAdd('kontrak', '#2563EB', 'Kontrak')}
                       </>
                     )
                   })()}
@@ -689,9 +786,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
                               {doc.file_name}
                             </div>
-                            {doc.subfolder && (
-                              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{doc.subfolder}</div>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                              {doc.subfolder
+                                ? <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{doc.subfolder}</span>
+                                : <span />}
+                              {renderDocDelete(doc)}
+                            </div>
                           </div>
                         ))}
                         {transactions.map((tx, i) => (
@@ -713,6 +813,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </div>
                         ))}
                       </div>
+                      {isAdmin && <div style={{ marginTop: 12 }}>{renderDocAdd('bukti_transaksi', '#059669', 'Bukti Transaksi')}</div>}
                     </>
                   )
                 })()}
