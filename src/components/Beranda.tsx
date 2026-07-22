@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
-import { formatRupiah, getTodayFormatted, getEffectiveProgress } from '../lib/data'
+import { formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
@@ -138,6 +138,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [popupDetailId, setPopupDetailId] = useState<string | null>(null)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showBlockedModal, setShowBlockedModal] = useState(false)
+  const [hoveredSummaryIdx, setHoveredSummaryIdx] = useState<number | null>(null)
+  const hoveredSummaryIdxRef = useRef<number | null>(null)
+  const activeModalRef = useRef<MetricModalType | null>(null)
 
   useEffect(() => {
     if (initialDetailId) {
@@ -190,6 +193,35 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     load()
   }, [])
 
+  useEffect(() => { activeModalRef.current = activeModal }, [activeModal])
+
+  useEffect(() => {
+    if (isMobile) return
+    const onMove = (e: MouseEvent) => {
+      if (activeModalRef.current !== null) {
+        if (hoveredSummaryIdxRef.current !== null) {
+          hoveredSummaryIdxRef.current = null
+          setHoveredSummaryIdx(null)
+        }
+        return
+      }
+      let found: number | null = null
+      document.querySelectorAll<HTMLElement>('.metric-summary-card').forEach((card, idx) => {
+        const rect = card.getBoundingClientRect()
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          found = idx
+        }
+      })
+      if (found !== hoveredSummaryIdxRef.current) {
+        hoveredSummaryIdxRef.current = found
+        setHoveredSummaryIdx(found)
+      }
+    }
+    document.addEventListener('mousemove', onMove, { passive: true })
+    return () => document.removeEventListener('mousemove', onMove)
+  }, [isMobile])
+
   // MAF must never see Man Power / Operasional in any total, list, chart or count.
   // Data arrives unfiltered, so gate once here and use these everywhere downstream.
   const isManPowerTx = (t: Transaction) => {
@@ -229,7 +261,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const summaryCards = [
     {
       label: 'Total Anggaran',
-      value: formatRupiah(totalAnggaran),
+      value: formatRupiahShort(totalAnggaran),
       iconType: 'anggaran',
       iconBg: 'rgba(26,111,232,0.08)',
       iconColor: 'rgba(26,111,232,0.6)',
@@ -239,7 +271,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'Total Realisasi',
-      value: formatRupiah(totalRealisasi),
+      value: formatRupiahShort(totalRealisasi),
       iconType: 'realisasi',
       iconBg: 'rgba(5,150,105,0.08)',
       iconColor: 'rgba(5,150,105,0.65)',
@@ -249,7 +281,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     },
     {
       label: 'Sisa Anggaran',
-      value: formatRupiah(totalSisa),
+      value: formatRupiahShort(totalSisa),
       iconType: 'sisa',
       iconBg: 'rgba(217,119,6,0.08)',
       iconColor: 'rgba(217,119,6,0.65)',
@@ -401,45 +433,30 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {/* ── RINGKASAN: Keuangan ── */}
       {<SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
-        {summaryCards.map(card => (
+        {summaryCards.map((card, idx) => (
           <div
             key={card.label}
+            className="metric-summary-card"
             onClick={() => setActiveModal(card.iconType as MetricModalType)}
             style={{
-              backgroundColor: 'var(--surface-raised)',
+              backgroundColor: hoveredSummaryIdx === idx ? card.accentColor + '0D' : 'var(--surface-raised)',
               borderRadius: 12,
               padding: isMobile ? '12px 13px' : '18px 20px',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              border: `1px solid ${hoveredSummaryIdx === idx ? card.accentColor : 'var(--border-subtle)'}`,
+              boxShadow: hoveredSummaryIdx === idx ? `0 4px 16px ${card.accentColor}28` : '0 1px 3px rgba(0,0,0,0.05)',
+              transform: hoveredSummaryIdx === idx ? 'translateY(-2px)' : 'none',
               transition: 'border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
               cursor: 'pointer',
             }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.borderColor = card.accentColor
-              el.style.backgroundColor = card.accentColor + '0D'
-              el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
-              el.style.transform = 'translateY(-2px)'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.borderColor = 'var(--border-subtle)'
-              el.style.backgroundColor = 'var(--surface-raised)'
-              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-              el.style.transform = 'translateY(0)'
-            }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
-              {/* Baris 1: Icon + Label berdampingan */}
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
                 <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
                   <MetricIcon type={card.iconType} />
                 </div>
                 <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{card.label}</div>
               </div>
-              {/* Baris 2: Nilai besar */}
-              <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word', textAlign: 'center' }}>{card.value}</div>
-              {/* Baris 3: Keterangan */}
+              <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: hoveredSummaryIdx === idx ? card.accentColor : card.valueColor, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word', textAlign: 'center', transition: 'color 0.18s ease' }}>{card.value}</div>
               <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 400, textAlign: 'center' }}>{card.trend}</div>
             </div>
           </div>
@@ -481,7 +498,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               el.style.borderColor = 'var(--border-subtle)'
             }}
           >
-            {/* Baris: icon + angka | progress bar — sejajar */}
             <div style={{ width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
@@ -490,7 +506,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   </div>
                   <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{card.value}</div>
                 </div>
-                {/* Progress bar — sama tinggi, tidak ada subtitle di dalam flex */}
                 <div style={{ flex: 1, height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: card.trackColor ?? 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
@@ -501,7 +516,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   }} />
                 </div>
               </div>
-              {/* Subtitle di luar flex row supaya tidak geser bar */}
               <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
                 Dari Total {visiblePrograms.length} Pekerjaan
               </div>
@@ -543,7 +557,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
-                {/* Icon + angka berdampingan */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
                   <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.iconColor, flexShrink: 0 }}>
                     <PekerjaanIcon type={card.iconType} />

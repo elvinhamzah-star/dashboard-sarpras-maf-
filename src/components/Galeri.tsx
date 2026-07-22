@@ -4,6 +4,7 @@ import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { useBackHandler, useTopBarTitle } from '../lib/backNav'
+import { forcePageRepaint } from '../lib/forceRepaint'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
@@ -250,6 +251,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [lightboxIndex, activeDocs.length])
+
+  // When the fullscreen lightbox closes, force a repaint so album-card hover
+  // behind it doesn't freeze (stale compositor tiles — see forcePageRepaint).
+  const prevLightbox = useRef<number | null>(null)
+  useEffect(() => {
+    if (prevLightbox.current !== null && lightboxIndex === null) forcePageRepaint()
+    prevLightbox.current = lightboxIndex
+  }, [lightboxIndex])
 
   // Reset image state + preload prev/next when lightbox navigates
   useEffect(() => {
@@ -952,16 +961,15 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     key={prog.id}
                     onClick={() => openFolder(prog.id)}
                     style={{ backgroundColor: 'var(--card)', borderRadius: 14, border: '1px solid var(--border-subtle)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', transition: 'box-shadow 0.18s, transform 0.18s' }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)'; el.style.transform = 'translateY(-2px)' }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'; el.style.transform = 'translateY(0)' }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.14)'; el.style.transform = 'translateY(-3px)'; const img = el.querySelector('img'); if (img) img.style.transform = 'scale(1.07)' }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'; el.style.transform = 'translateY(0)'; const img = el.querySelector('img'); if (img) img.style.transform = 'scale(1)' }}
                   >
-                    {/* Cover */}
+                    {/* Cover — zoom is driven by the card's hover handlers above so
+                        the whole album responds, not just the image itself. */}
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
                       {cover ? (
-                        <img src={cover} alt={prog.nama_pekerjaan} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.3s' }}
+                        <img src={cover} alt={prog.nama_pekerjaan} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.35s ease' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                          onMouseEnter={e => { (e.target as HTMLImageElement).style.transform = 'scale(1.05)' }}
-                          onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = 'scale(1)' }}
                         />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--border-strong)' }}>

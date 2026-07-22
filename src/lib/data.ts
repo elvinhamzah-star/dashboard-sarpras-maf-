@@ -17,6 +17,21 @@ export function formatRupiah(num: number): string {
   return 'Rp ' + num.toLocaleString('id-ID')
 }
 
+export function formatRupiahShort(num: number): string {
+  if (!num) return 'Rp 0'
+  const abs = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+  if (abs >= 1_000_000_000) {
+    const val = abs / 1_000_000_000
+    return `${sign}Rp ${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1).replace('.', ',')} M`
+  }
+  if (abs >= 1_000_000) {
+    const val = abs / 1_000_000
+    return `${sign}Rp ${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1).replace('.', ',')} Jt`
+  }
+  return `${sign}Rp ` + abs.toLocaleString('id-ID')
+}
+
 export function formatTanggal(dateStr: string): string {
   if (!dateStr) return '-'
   const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']

@@ -124,6 +124,24 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         </div>
       )}
 
+      <style>{`
+        @media (hover: hover) {
+          .pekerjaan-status-card:hover {
+            background-color: var(--accent-bg) !important;
+            border: 1.5px solid var(--accent) !important;
+            box-shadow: 0 2px 10px var(--accent-shadow) !important;
+          }
+          .pekerjaan-status-card:hover .psc-icon { background-color: var(--accent-icon-bg) !important; color: var(--accent) !important; }
+          .pekerjaan-status-card:hover .psc-count,
+          .pekerjaan-status-card:hover .psc-label { color: var(--accent) !important; }
+          .pekerjaan-row:hover {
+            border-color: var(--row-accent) !important;
+            background-color: var(--row-accent-bg) !important;
+            box-shadow: 0 2px 10px var(--row-accent-shadow) !important;
+            transform: translateY(-1px);
+          }
+        }
+      `}</style>
       {/* Status Overview Cards — display only, no filter, always 1 row */}
       <div style={{
         display: 'grid',
@@ -131,43 +149,50 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         gap: isMobile ? 8 : 14,
         marginBottom: isMobile ? 14 : 20,
       }}>
-        {STATUS_TABS.map(tab => {
+        {STATUS_TABS.map((tab) => {
           const color = STATUS_COLORS[tab] || '#888'
           const count = statusCounts[tab] || 0
           const isActive = activeStatus === tab
+          const showColor = isActive
           return (
             <div
               key={tab}
+              className="pekerjaan-status-card"
               onClick={() => setActiveStatus(prev => prev === tab ? '' : tab)}
               style={{
-                backgroundColor: isActive ? `${color}18` : 'var(--card)',
+                ['--accent']: color,
+                ['--accent-bg']: `${color}18`,
+                ['--accent-icon-bg']: `${color}28`,
+                ['--accent-shadow']: `${color}30`,
+                backgroundColor: showColor ? `${color}18` : 'var(--card)',
                 borderRadius: 12,
                 padding: isMobile ? '10px 8px' : '14px 16px',
-                border: isActive ? `1.5px solid ${color}` : '1px solid var(--border)',
+                border: showColor ? `1.5px solid ${color}` : '1px solid var(--border)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.18s',
-                boxShadow: isActive ? `0 2px 10px ${color}30` : 'none',
-              }}
+                boxShadow: showColor ? `0 2px 10px ${color}30` : 'none',
+              } as React.CSSProperties}
             >
               {/* Icon + Count side by side */}
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10, marginBottom: isMobile ? 4 : 8 }}>
-                <div style={{
+                <div className="psc-icon" style={{
                   width: isMobile ? 20 : 30, height: isMobile ? 20 : 30, borderRadius: 6,
-                  backgroundColor: isActive ? `${color}28` : 'rgba(0,0,0,0.05)',
+                  backgroundColor: showColor ? `${color}28` : 'rgba(0,0,0,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: isActive ? color : 'var(--text-secondary)', flexShrink: 0,
+                  color: showColor ? color : 'var(--text-secondary)', flexShrink: 0,
+                  transition: 'color 0.18s, background-color 0.18s',
                 }}>
                   {TAB_ICONS[tab]}
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 24, fontWeight: 700, color: isActive ? color : 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                <div className="psc-count" style={{ fontSize: isMobile ? 16 : 24, fontWeight: 700, color: showColor ? color : 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1, transition: 'color 0.18s' }}>
                   {count}
                 </div>
               </div>
               {/* Label below */}
-              <div style={{ fontSize: isMobile ? 7 : 9.5, fontWeight: 700, color: isActive ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+              <div className="psc-label" style={{ fontSize: isMobile ? 7 : 9.5, fontWeight: 700, color: showColor ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.18s' }}>
                 {tab}
               </div>
             </div>
@@ -201,96 +226,61 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
             const isLocked = role === 'maf' && p.jenis_pekerjaan === 'Operasional'
             const vendor = getVendorDisplay(p)
             const showBar = p.status === 'On Going' || p.status === 'On Hold'
-            const dimmed = activeStatus === ''
             return (
               <div
                 key={p.id}
+                className={isLocked ? undefined : 'pekerjaan-row'}
                 onClick={() => handleCardClick(p)}
-                onMouseEnter={e => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
+                  ['--row-accent']: color,
+                  ['--row-accent-bg']: `${color}08`,
+                  ['--row-accent-shadow']: `${color}22`,
                   padding: isMobile ? '13px 12px' : '16px 16px',
                   borderRadius: 10,
                   border: '1px solid var(--border-subtle)',
                   backgroundColor: 'var(--card)',
                   cursor: isLocked ? 'default' : 'pointer',
                   opacity: isLocked ? 0.7 : 1,
-                  transition: 'background-color 0.15s, box-shadow 0.18s',
-                }}
+                  transition: 'border-color 0.18s, background-color 0.18s, box-shadow 0.18s, transform 0.18s',
+                } as React.CSSProperties}
               >
-                {isMobile ? (
-                  /* ── MOBILE: gaya baris seperti halaman Dokumen — nomor urut + nama penuh (wrap) + status ── */
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Nomor urut pekerjaan (P-001 … P-025) */}
-                      <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
-                        {p.id}
-                      </span>
-                      {/* Nama pekerjaan — penuh, boleh wrap, tidak terpotong */}
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
-                        {p.nama_pekerjaan}
-                      </div>
-                      {/* Progress bar — hanya On Going & On Hold */}
-                      {showBar && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8 }}>
-                          <div style={{ flex: 1, height: 2, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease', opacity: dimmed ? 0.55 : 1 }} />
-                          </div>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
-                        </div>
-                      )}
+                {/* ── SHARED layout: ID sendiri di atas, lalu inner row [nama+vendor | pct%+badge] ── */}
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
+                  {p.id}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {/* Left: nama + vendor */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: isMobile ? 12 : 13.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em', ...(isMobile ? {} : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }) }}>
+                      {p.nama_pekerjaan}
                     </div>
-                    {isLocked
-                      ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 2 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                      : <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 20, fontSize: 9, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0, marginTop: 2, opacity: dimmed ? 0.55 : 1, transition: 'opacity 0.18s' }}>{p.status}</span>
-                    }
+                    {!isMobile && vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
                   </div>
-                ) : (
-                  /* ── DESKTOP: layout lengkap ── */
-                  <>
-                    {/* Baris 1: nama + realisasi */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
-                          {p.id}
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
-                            {p.nama_pekerjaan}
-                          </div>
-                        </div>
-                        {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
-                      </div>
-                      {p.status === 'Selesai' && (
-                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                  {/* Right column: pct% (plain) di atas badge, sejajar dengan nama */}
+                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+                    {showBar && (
+                      <span style={{ fontSize: isMobile ? 10 : 11, fontWeight: 700, color: isLocked ? '#C8D2E0' : color, fontVariantNumeric: 'tabular-nums' }}>
+                        Progres {pct}%
+                      </span>
+                    )}
+                    {p.status === 'Selesai' && (
+                      <>
+                        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                           {formatRupiah(d.realisasi_terkini)}
                         </div>
-                        <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>
-                          dari {formatRupiah(d.total_anggaran)}
-                        </div>
-                      </div>
-                      )}
-                    </div>
-                    {/* Baris 2: progress bar + pct + status badge — selalu render */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 18 }}>
-                      {showBar ? (
-                        <>
-                          <div style={{ flex: 1, height: 3, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', backgroundColor: isLocked ? '#C8D2E0' : color, borderRadius: 99, transition: 'width 0.3s ease', opacity: dimmed ? 0.55 : 1 }} />
+                        {!isMobile && (
+                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                            dari {formatRupiah(d.total_anggaran)}
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', minWidth: 30, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
-                        </>
-                      ) : (
-                        <div style={{ flex: 1 }} />
-                      )}
-                      {isLocked
-                        ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                        : <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, flexShrink: 0, opacity: dimmed ? 0.55 : 1, transition: 'opacity 0.18s' }}>{p.status}</span>
-                      }
-                    </div>
-                  </>
-                )}
+                        )}
+                      </>
+                    )}
+                    {isLocked
+                      ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                      : <span style={{ display: 'inline-block', padding: isMobile ? '2px 8px' : '3px 10px', borderRadius: 20, fontSize: isMobile ? 9.5 : 11, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, whiteSpace: 'nowrap' }}>{p.status}</span>
+                    }
+                  </div>
+                </div>
               </div>
             )
           })}

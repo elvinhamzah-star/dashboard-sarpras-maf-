@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { fetchTransactions, fetchAppConfig, Transaction, invalidateCache } from '../lib/supabase'
+import { forcePageRepaint } from '../lib/forceRepaint'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS, getFileEmbedUrl } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -36,6 +38,15 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const chartScrollRef = useRef<HTMLDivElement>(null)
   const [showDeploymentPopup, setShowDeploymentPopup] = useState(false)
   const [showSaldoPopup, setShowSaldoPopup] = useState(false)
+
+  // When either info popup closes, force a repaint so the card hover behind it
+  // doesn't freeze (same stale-compositor-tile issue ModalShell guards against).
+  const prevPopupOpen = useRef(false)
+  useEffect(() => {
+    const open = showDeploymentPopup || showSaldoPopup
+    if (prevPopupOpen.current && !open) forcePageRepaint()
+    prevPopupOpen.current = open
+  }, [showDeploymentPopup, showSaldoPopup])
 
   useEffect(() => {
     const load = async () => {
@@ -192,10 +203,18 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             border: '1px solid var(--border)',
             borderTop: '3px solid var(--blue)',
             cursor: 'pointer',
-            transition: 'box-shadow 0.15s',
+            transition: 'box-shadow 0.18s ease, transform 0.18s ease',
           }}
-          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(26,111,232,0.12)'}
-          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.boxShadow = '0 6px 20px rgba(26,111,232,0.16)'
+            el.style.transform = 'translateY(-2px)'
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.boxShadow = 'none'
+            el.style.transform = 'none'
+          }}
         >
           <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 6 : 10 }}>
             Total Deployment
@@ -218,10 +237,18 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             border: '1px solid var(--border)',
             borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#660000'}`,
             cursor: 'pointer',
-            transition: 'box-shadow 0.15s',
+            transition: 'box-shadow 0.18s ease, transform 0.18s ease',
           }}
-          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 16px ${saldoKas >= 0 ? 'rgba(5,150,105,0.12)' : 'rgba(102,0,0,0.12)'}`}
-          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.boxShadow = `0 6px 20px ${saldoKas >= 0 ? 'rgba(5,150,105,0.16)' : 'rgba(102,0,0,0.16)'}`
+            el.style.transform = 'translateY(-2px)'
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.boxShadow = 'none'
+            el.style.transform = 'none'
+          }}
         >
           <div style={{ fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 6 : 10 }}>
             Saldo Kas
@@ -642,11 +669,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
         />
       )}
 
-      {/* ── Popup: Total Deployment ── */}
-      {showDeploymentPopup && (
+      {/* ── Popup: Total Deployment ──
+          Portaled to <body> so it escapes the page-transition wrapper
+          (transform/will-change creates a containing block that would
+          otherwise clip this position:fixed overlay → "nothing shows"). */}
+      {showDeploymentPopup && createPortal(
         <div
           onClick={() => setShowDeploymentPopup(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
         >
           <div
             onClick={e => e.stopPropagation()}
@@ -694,14 +724,15 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               Tutup
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── Popup: Saldo Kas ── */}
-      {showSaldoPopup && (
+      {/* ── Popup: Saldo Kas ── (portaled to <body>, same reason as above) */}
+      {showSaldoPopup && createPortal(
         <div
           onClick={() => setShowSaldoPopup(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
         >
           <div
             onClick={e => e.stopPropagation()}
@@ -757,7 +788,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               Tutup
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

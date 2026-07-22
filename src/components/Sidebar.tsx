@@ -39,18 +39,6 @@ const menuItems = [
     ),
   },
   {
-    id: 'dokumen',
-    label: 'Dokumen',
-    icon: (
-      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-      </svg>
-    ),
-  },
-  {
     id: 'galeri',
     label: 'Galeri Dokumentasi',
     icon: (
@@ -166,8 +154,12 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
     <div
       style={{
         width: isMobile ? 270 : isOpen ? 248 : 68,
-        minHeight: '100vh',
-        height: '100%',
+        // 100dvh (dynamic viewport height), not 100vh: on mobile/tablet
+        // browsers 100vh includes the address-bar area, so the flex column
+        // grows taller than the visible screen and the bottom section
+        // (Admin / Keluar) gets pushed off-screen. dvh tracks the actually
+        // visible height, keeping the nav scrollable and the footer pinned.
+        height: '100dvh',
         backgroundColor: '#0A1628',
         transition: isMobile
           ? 'transform 0.34s cubic-bezier(0.32,0.72,0,1)'

@@ -4,7 +4,6 @@ import Sidebar from './components/Sidebar'
 import BottomNav from './components/BottomNav'
 import MobileAccountMenu from './components/MobileAccountMenu'
 import Beranda from './components/Beranda'
-import type { DocCategory } from './lib/supabase'
 import PinModal from './components/PinModal'
 import LoginPage from './components/LoginPage'
 
@@ -14,7 +13,6 @@ const Pekerjaan = lazy(() => import('./components/Pekerjaan'))
 const PekerjaanDetail = lazy(() => import('./components/PekerjaanDetail'))
 const Keuangan = lazy(() => import('./components/Keuangan'))
 const Galeri = lazy(() => import('./components/Galeri'))
-const Dokumen = lazy(() => import('./components/Dokumen'))
 const RiwayatLaporan = lazy(() => import('./components/RiwayatLaporan'))
 const LaporanBulanan = lazy(() => import('./components/LaporanBulanan'))
 const LaporanAset = lazy(() => import('./components/LaporanAset'))
@@ -25,7 +23,7 @@ import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supa
 import { prefetchAll } from './lib/prefetch'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'dokumen' | 'galeri' | 'riwayat' | 'laporan' | 'laporan-aset'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan' | 'laporan-aset'
 
 // Shown while a lazy page chunk downloads. Kept minimal so the app chrome
 // (sidebar/top bar) stays visible and only the content area shows the spinner.
@@ -69,16 +67,7 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
   const [pekerjaanFilter, setPekerjaanFilter] = useState('')
-  // Deep link state for Dokumen dan Galeri pages (set by PekerjaanDetail onNavigate)
-  const [dokumenProgramId, setDokumenProgramId] = useState<string | null>(null)
-  const [dokumenCategory, setDokumenCategory] = useState<DocCategory | null>(null)
-  // When Dokumen was entered from PekerjaanDetail, back returns to that program's
-  // detail (mirrors galeriReturnProgramId) instead of straying to Beranda.
-  const [dokumenReturnProgramId, setDokumenReturnProgramId] = useState<string | null>(null)
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
-  // When Galeri was entered via the "Dokumentasi" folder card in Dokumen,
-  // its back button should return to Dokumen instead of Galeri's own list.
-  const [galeriReturnToDokumen, setGaleriReturnToDokumen] = useState(false)
   // When Galeri was entered from PekerjaanDetail, back returns to that program's detail.
   const [galeriReturnProgramId, setGaleriReturnProgramId] = useState<string | null>(null)
   const [berandaReturnDetailId, setBerandaReturnDetailId] = useState<string | null>(null)
@@ -130,11 +119,7 @@ export default function App() {
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page)
     setSelectedProgramId(null)
-    setDokumenProgramId(null)
-    setDokumenCategory(null)
     setGaleriProgramId(null)
-    setGaleriReturnToDokumen(false)
-    setDokumenReturnProgramId(null)
     if (page !== 'beranda') setBerandaReturnDetailId(null)
     setPekerjaanFromBeranda(false)
     setBerandaReturnTab(null)
@@ -247,16 +232,13 @@ export default function App() {
           isAdmin={isAdmin}
           role={role}
           onBack={handlePekerjaanBack}
-          onNavigate={(page, pid, cat) => {
+          onNavigate={(page, pid) => {
+            if (page === 'dokumen') return
             setSelectedProgramId(null)
             setCurrentPage(page as Page)
-            if (page === 'dokumen') {
-              setDokumenProgramId(pid ?? null)
-              setDokumenCategory((cat as DocCategory) ?? null)
-              setDokumenReturnProgramId(selectedProgramId)  // remember where to return
-            } else if (page === 'galeri') {
+            if (page === 'galeri') {
               setGaleriProgramId(pid ?? null)
-              setGaleriReturnProgramId(selectedProgramId)  // remember where to return
+              setGaleriReturnProgramId(selectedProgramId)
             }
           }}
         />
@@ -278,9 +260,9 @@ export default function App() {
             setSelectedProgramId(id)
             setCurrentPage('pekerjaan')
           }}
-          onNavigate={(page, pid, cat) => {
+          onNavigate={(page, pid) => {
+            if (page === 'dokumen') return
             setCurrentPage(page as Page)
-            if (page === 'dokumen') { setDokumenProgramId(pid ?? null); setDokumenCategory((cat as DocCategory) ?? null) }
             if (page === 'galeri') { setGaleriProgramId(pid ?? null); setBerandaReturnDetailId(pid ?? null) }
           }}
         />
@@ -297,43 +279,13 @@ export default function App() {
         )
       case 'keuangan':
         return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} role={role} />
-      case 'dokumen':
-        return (
-          <Dokumen
-            isAdmin={isAdmin}
-            role={role}
-            initialProgramId={dokumenProgramId}
-            initialCategory={dokumenCategory}
-            onExit={
-              dokumenReturnProgramId
-                ? () => {
-                    const pid = dokumenReturnProgramId
-                    setDokumenReturnProgramId(null)
-                    setDokumenProgramId(null)
-                    setSelectedProgramId(pid)
-                    setCurrentPage('pekerjaan')
-                  }
-                : undefined
-            }
-            onNavigate={(page, pid) => {
-              if (page === 'galeri') {
-                setDokumenProgramId(pid ?? null)
-                setGaleriProgramId(pid ?? null)
-                setGaleriReturnToDokumen(true)
-                setCurrentPage('galeri')
-              }
-            }}
-          />
-        )
       case 'galeri':
         return (
           <Galeri
             isAdmin={isAdmin}
             initialProgramId={galeriProgramId}
             onExit={
-              galeriReturnToDokumen
-                ? () => { setGaleriReturnToDokumen(false); setCurrentPage('dokumen') }
-                : galeriReturnProgramId
+              galeriReturnProgramId
                   ? () => {
                       const pid = galeriReturnProgramId
                       setGaleriReturnProgramId(null)
@@ -364,7 +316,6 @@ export default function App() {
     beranda: 'Dashboard Sarpras MAF',
     pekerjaan: 'Daftar 25 Pekerjaan',
     keuangan: 'Riwayat Keuangan',
-    dokumen: 'Dokumen Pekerjaan',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Riwayat Laporan',
     laporan: 'Laporan Bulanan',
@@ -523,11 +474,8 @@ export default function App() {
                 // Detail → daftar pekerjaan
                 setSelectedProgramId(null)
               } else if (currentPage === 'galeri') {
-                // Galeri → dokumen (jika masuk via dokumen), pekerjaan detail, atau beranda
-                if (galeriReturnToDokumen) {
-                  setGaleriReturnToDokumen(false)
-                  setCurrentPage('dokumen')
-                } else if (galeriReturnProgramId) {
+                // Galeri → pekerjaan detail, atau beranda
+                if (galeriReturnProgramId) {
                   const pid = galeriReturnProgramId
                   setGaleriReturnProgramId(null)
                   setGaleriProgramId(null)
@@ -537,13 +485,6 @@ export default function App() {
                   setGaleriProgramId(null)
                   setCurrentPage('beranda')
                 }
-              } else if (currentPage === 'dokumen' && dokumenReturnProgramId) {
-                // Dokumen dibuka dari detail pekerjaan → balik ke detail itu, bukan beranda
-                const pid = dokumenReturnProgramId
-                setDokumenReturnProgramId(null)
-                setDokumenProgramId(null)
-                setSelectedProgramId(pid)
-                setCurrentPage('pekerjaan')
               } else if (currentPage !== 'beranda') {
                 // Semua halaman lain → beranda
                 setCurrentPage('beranda')
@@ -560,10 +501,15 @@ export default function App() {
             style={{
               animation: 'pageSlideIn 0.28s cubic-bezier(0.25, 0.8, 0.35, 1)',
               minHeight: '100%',
-              // Promote to its own compositor layer so the transform/opacity slide
-              // runs on the GPU, not the main thread (which is busy mounting the
-              // heavy detail tree). Keeps the page-open motion from stuttering.
               willChange: 'transform, opacity',
+            }}
+            onAnimationEnd={e => {
+              // Release the GPU compositor layer after the slide animation ends.
+              // A permanent willChange keeps a stale compositor layer alive that
+              // freezes CSS :hover on cards after any modal (portal) closes.
+              if (e.animationName === 'pageSlideIn') {
+                ;(e.currentTarget as HTMLDivElement).style.willChange = 'auto'
+              }
             }}
           >
             <div style={{ maxWidth: isMobile ? undefined : 1060, margin: '0 auto' }}>

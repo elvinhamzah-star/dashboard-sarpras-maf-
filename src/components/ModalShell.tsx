@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { forcePageRepaint } from '../lib/forceRepaint'
 
 /**
  * Shared close trigger for children rendered inside a ModalShell.
@@ -58,6 +59,13 @@ export default function ModalShell({
       cancelAnimationFrame(raf2)
       if (closeTimer.current !== null) window.clearTimeout(closeTimer.current)
     }
+  }, [])
+
+  // On unmount, force a repaint to clear the stale compositor tiles this
+  // fixed backdrop-filter overlay can leave behind (which freeze hover on the
+  // page beneath until a tab switch). See forcePageRepaint for the full why.
+  useEffect(() => {
+    return () => forcePageRepaint()
   }, [])
 
   // Native touchmove listener with { passive: false } so we can call
@@ -153,9 +161,10 @@ export default function ModalShell({
       style={{
         position: 'fixed', inset: 0, zIndex,
         backgroundColor: backdropColor,
-        backdropFilter: isMobile ? undefined : 'blur(8px)',
-        WebkitBackdropFilter: isMobile ? undefined : 'blur(8px)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
         opacity: visible ? 1 : 0,
+        pointerEvents: closing ? 'none' : 'auto',
         transition: `opacity ${closing ? EXIT_MS : 200}ms ease`,
         display: 'flex',
         alignItems: isMobile ? 'flex-end' : 'center',
@@ -184,7 +193,10 @@ export default function ModalShell({
           transition: dragY > 0
             ? 'none'
             : `transform ${closing ? EXIT_MS : 280}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${closing ? EXIT_MS : 200}ms ease`,
-          willChange: 'transform',
+          // Promote to its own layer only while actually animating (enter/exit/drag);
+          // a permanent will-change keeps a stale compositor layer alive that can
+          // freeze hover repaints on the page behind after the modal unmounts.
+          willChange: !entered || closing || dragY > 0 ? 'transform' : 'auto',
           overflow: 'hidden',
         }}
       >

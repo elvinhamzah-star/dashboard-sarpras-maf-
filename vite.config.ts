@@ -24,7 +24,7 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/',
         scope: '/',
-        orientation: 'portrait-primary',
+        orientation: 'any',
         lang: 'id',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },

@@ -551,15 +551,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                   <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Dokumen & Lampiran</h3>
-                  {isAdmin && onNavigate && (
-                    <button
-                      onClick={() => onNavigate('dokumen', program.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      Kelola
-                      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {/* RAB — flat rows, satu baris per file */}

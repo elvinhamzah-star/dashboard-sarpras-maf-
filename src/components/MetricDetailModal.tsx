@@ -143,7 +143,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{p.nama_pekerjaan}</span>
             {valBox(
-              <span style={{ color: accent }}>{formatRupiah(p.total_anggaran || 0)}</span>,
+              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(p.total_anggaran || 0)}</span>,
               `${pct}% dari total`
             )}
           </div>
@@ -173,7 +173,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
               <span style={rankSt}>{r}</span>
               <span style={nameSt}>{p.nama_pekerjaan}</span>
               {valBox(
-                <span style={{ color }}>{formatRupiah(p.realisasi_terkini || 0)}</span>,
+                <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(p.realisasi_terkini || 0)}</span>,
                 `${pct}% terserap`
               )}
             </div>
@@ -194,7 +194,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{prog.nama_pekerjaan}</span>
             {valBox(
-              <span style={{ color: sisa > 0 ? accent : 'var(--text-muted)' }}>{formatRupiah(sisa)}</span>,
+              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(sisa)}</span>,
               `dari ${formatRupiah(prog.total_anggaran || 0)}`
             )}
           </div>
@@ -220,7 +220,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
               <span style={rankSt}>{i + 1}</span>
               <span style={nameSt}>{prog.nama_pekerjaan}</span>
               {valBox(
-                <span style={{ color: accent }}>{pct}%</span>,
+                <span style={{ color: 'var(--text-primary)' }}>{pct}%</span>,
                 formatRupiah(prog.realisasi_terkini || 0)
               )}
             </div>
@@ -250,39 +250,23 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     return null
   }
 
-  // Header stat: compact, one line, bold dark text — color lives only in the icon box
-  const renderStat = () => {
-    const st: React.CSSProperties = {
-      fontSize: isMobile ? 14 : 15,
-      fontWeight: 700,
-      color: 'var(--text-primary)',
-      letterSpacing: '-0.01em',
-      lineHeight: 1.3,
-      marginTop: 4,
-    }
-    if (type === 'anggaran')  return <div style={st}>{programs.length} Program Pekerjaan</div>
-    if (type === 'realisasi') return <div style={st}>{withRealisasi.length} / {programs.length} Terealisasi</div>
-    if (type === 'sisa')      return <div style={st}>{formatRupiah(totalSisa)}</div>
-    return                           <div style={st}>{penyerapan.toFixed(1)}% Penyerapan</div>
-  }
+  const headerTotal =
+    type === 'anggaran'  ? formatRupiah(totalAnggaran) :
+    type === 'realisasi' ? formatRupiah(totalRealisasi) :
+    type === 'sisa'      ? formatRupiah(totalSisa) :
+    `${penyerapan.toFixed(1)}%`
+
+  const headerSub =
+    type === 'anggaran'  ? `${programs.length} program pekerjaan` :
+    type === 'realisasi' ? `${withRealisasi.length} dari ${programs.length} program terealisasi` :
+    type === 'sisa'      ? `${penyerapan.toFixed(1)}% sudah terserap` :
+    `${formatRupiah(totalRealisasi)} dari ${formatRupiah(totalAnggaran)}`
 
   const ftrLeft =
     type === 'anggaran'   ? `${programs.length} program` :
     type === 'realisasi'  ? `${withRealisasi.length} program aktif` :
     type === 'sisa'       ? `${programs.length} program` :
-    formatRupiah(totalRealisasi)
-
-  const ftrLabel =
-    type === 'anggaran'   ? 'Total anggaran' :
-    type === 'realisasi'  ? 'Total realisasi' :
-    type === 'sisa'       ? 'Penyerapan' :
-    'Total anggaran'
-
-  const ftrValue =
-    type === 'anggaran'   ? formatRupiah(totalAnggaran) :
-    type === 'realisasi'  ? formatRupiah(totalRealisasi) :
-    type === 'sisa'       ? `${penyerapan.toFixed(1)}%` :
-    formatRupiah(totalAnggaran)
+    `${withRealisasi.length} program aktif`
 
   const iconSize = isMobile ? 40 : 44
 
@@ -299,21 +283,26 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         animation: 'fadeSlideDown 0.18s ease',
       }}>
         {/* Header */}
-        <div style={{ padding: '16px 24px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ padding: '12px 24px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <button
+              onClick={onClose}
+              style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent, flexShrink: 0 }}>
               {ICONS[type]}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{LABEL[type]}</div>
-              {renderStat()}
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{LABEL[type]}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{headerSub}</div>
             </div>
-            <button
-              onClick={onClose}
-              style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-muted)' }}
-            >
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>
+            </div>
           </div>
         </div>
         {/* List */}
@@ -324,16 +313,10 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
           }
         </div>
         {/* Footer */}
-        <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ftrLeft}</span>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ftrLabel}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{ftrValue}</div>
-            </div>
+        <div style={{ padding: '10px 24px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ftrLeft}</span>
           </div>
         </div>
       </div>
@@ -352,12 +335,18 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: isMobile ? '88vh' : '82vh' }}>
 
         {/* Header */}
-        <div
-          style={{ padding: isMobile ? `6px ${ps}px 14px` : `20px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-
-            {/* Colored icon box */}
+        <div style={{ padding: isMobile ? `10px ${ps}px 14px` : `14px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}>
+          {/* Close button — baris sendiri di atas */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: isMobile ? 8 : 10 }}>
+            <button
+              onClick={close}
+              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          {/* Content row: icon + label/sub | total sejajar kolom kanan list */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: iconSize, height: iconSize, borderRadius: 10,
               backgroundColor: `${accent}15`,
@@ -366,27 +355,22 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
             }}>
               {ICONS[type]}
             </div>
-
-            {/* Title block */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: isMobile ? 11 : 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                 {LABEL[type]}
               </div>
-              {renderStat()}
+              <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', marginTop: 2 }}>{headerSub}</div>
             </div>
-
-            {/* Close button — selalu tampil termasuk mobile */}
-            <button
-              onClick={close}
-              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: 'var(--text-secondary)' }}
-            >
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>
+            </div>
           </div>
         </div>
 
-        {/* List */}
-        <div style={{ overflowY: 'auto', flex: 1 }}>
+        {/* List — minHeight:0 is required or WebKit/Safari collapses this
+            flex:1 child to 0 height (min-height:auto ≠ 0 with overflow:auto),
+            hiding every row while header + footer stay visible. */}
+        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
           {programs.length === 0 ? (
             <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
               Tidak ada data
@@ -399,16 +383,10 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         </div>
 
         {/* Footer */}
-        <div style={{ padding: `12px ${ps}px`, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ftrLeft}</span>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ftrLabel}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{ftrValue}</div>
-            </div>
+        <div style={{ padding: `10px ${ps}px`, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ftrLeft}</span>
           </div>
         </div>
 
