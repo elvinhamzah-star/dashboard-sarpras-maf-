@@ -897,54 +897,58 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     borderRadius: 12,
                     backgroundColor: 'var(--card)',
                   }}>
-                    {/* Top row: nama (kiri) + progres & badge (kanan), center-aligned */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                    {/* 2-col layout: kiri=nama+vendor, kanan=badge+angka sejajar */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                      {/* Kiri: nomor + nama + vendor */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: sp.vendor ? 3 : 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             minWidth: 22, height: 22, borderRadius: 6,
                             backgroundColor: 'var(--blue)', color: '#fff',
                             fontSize: 11, fontWeight: 700, flexShrink: 0,
                           }}>{i + 1}</span>
-                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.3 }}>
                             {sp.nama_gedung}
                           </div>
                         </div>
                         {sp.vendor && (
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', paddingLeft: 29 }}>{sp.vendor}</div>
+                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', paddingLeft: 29 }}>{sp.vendor}</div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
-                          {sp.progress_percent || 0}%
-                        </span>
-                        <span style={{
-                          display: 'inline-block', padding: '2px 8px', borderRadius: 20,
-                          fontSize: 10.5, fontWeight: 700,
-                          backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
-                          color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
-                        }}>
-                          {sp.status}
-                        </span>
+                      {/* Kanan: persen+badge atas, anggaran/realisasi/sisa bawah */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
+                            {sp.progress_percent || 0}%
+                          </span>
+                          <span style={{
+                            display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                            fontSize: 10.5, fontWeight: 700,
+                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                          }}>
+                            {sp.status}
+                          </span>
+                        </div>
+                        {(role !== 'maf' || program.status !== 'Perencanaan') && (
+                        <div style={{ display: 'flex', gap: 14 }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
+                            <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
+                            <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
+                          </div>
+                        </div>
+                        )}
                       </div>
                     </div>
-                    {(role !== 'maf' || program.status !== 'Perencanaan') && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, marginBottom: isAdmin ? 8 : 0 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
-                        <div style={{ fontSize: 12, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
-                        <div style={{ fontSize: 12, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
-                      </div>
-                    </div>
-                    )}
                     {isAdmin && (
                       <button
                         onClick={() => setEditingSubProgram(sp)}
