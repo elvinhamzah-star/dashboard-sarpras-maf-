@@ -940,12 +940,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                       </span>
                     </div>
                     {(role !== 'maf' || program.status !== 'Perencanaan') && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isAdmin ? 8 : 0 }}>
-                      <div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, marginBottom: isAdmin ? 8 : 0 }}>
+                      <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
                         <div style={{ fontSize: 12, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
                       </div>
-                      <div style={{ textAlign: 'center' }}>
+                      <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
                         <div style={{ fontSize: 12, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
                       </div>
