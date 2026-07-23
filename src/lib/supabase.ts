@@ -129,6 +129,7 @@ export interface Documentation {
   tanggal: string
   created_at: string
   updated_at?: string
+  tampil_ringkasan?: boolean
 }
 
 export interface BeforeAfterPair {

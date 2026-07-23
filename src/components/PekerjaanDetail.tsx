@@ -4,14 +4,16 @@ import {
   Program,
   Transaction,
   ProgramDocument,
+  Documentation,
   invalidateCache,
   fetchPrograms,
   fetchSubPrograms,
   fetchProgramDocuments,
   fetchTransactions,
+  fetchDocumentation,
 } from '../lib/supabase'
-import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl } from '../lib/data'
-import { adminInsert, adminDelete } from '../lib/adminApi'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl, getDriveThumbnailUrl } from '../lib/data'
+import { adminInsert, adminDelete, adminUpdate } from '../lib/adminApi'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import UpdateProgressModal from './UpdateProgressModal'
@@ -61,6 +63,9 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [docUrl, setDocUrl] = useState('')
   const [docSaving, setDocSaving] = useState(false)
   const [deletingDocIds, setDeletingDocIds] = useState<Set<string>>(new Set())
+  const [galleryDocs, setGalleryDocs] = useState<Documentation[]>([])
+  const [showManageDocs, setShowManageDocs] = useState(false)
+  const [savingDocId, setSavingDocId] = useState<string | null>(null)
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
   const tabContentRef = useRef<HTMLDivElement>(null)
@@ -99,11 +104,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     // every open. When the cache is warm this resolves in a microtask — the page
     // renders instantly with no network buffering. Admin write paths call
     // invalidateCache(...) before load(), so post-save reloads still fetch fresh.
-    const [pRes, sRes, pdRes, tRes] = await Promise.all([
+    const [pRes, sRes, pdRes, tRes, docRes] = await Promise.all([
       fetchPrograms(),
       fetchSubPrograms(),
       fetchProgramDocuments(),
       fetchTransactions(),
+      fetchDocumentation(),
     ])
     const prog = (pRes.data as Program[] | null)?.find(p => p.id === programId) ?? null
     if (prog) {
@@ -119,6 +125,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     }
     if (sRes.data) setSubPrograms((sRes.data as SubProgram[]).filter(s => s.program_id === programId))
     if (pdRes.data) setProgramDocs((pdRes.data as ProgramDocument[]).filter(d => d.program_id === programId))
+    if (docRes.data) setGalleryDocs((docRes.data as Documentation[]).filter(d => d.program_id === programId && d.tipe_file === 'foto'))
     setLoading(false)
   }
 
@@ -230,8 +237,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const tabs: Tab[] = [
     'Ringkasan',
     ...(hasRincian || isAdmin ? ['Detail Realisasi' as Tab] : []),
-    'Dokumen',
     ...(subPrograms.length > 0 ? ['Sub Pekerjaan' as Tab] : []),
+    'Dokumen',
   ]
 
   if (loading) {
@@ -567,6 +574,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
               </div>
             )}
             <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
+            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} />
           </div>
         )}
 
@@ -642,7 +650,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 </tbody>
               </table>
             </div>
-
+            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} />
           </div>
         )}
 
@@ -915,29 +923,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         }}>
                           {sp.status}
                         </span>
-                        {sp.link_dokumentasi && (
-                          <a
-                            href={sp.link_dokumentasi}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: 10.5, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500,
-                              display: 'inline-flex', alignItems: 'center', gap: 3,
-                            }}
-                          >
-                            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                            Folder
-                          </a>
-                        )}
+                        <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
+                          {sp.progress_percent || 0}%
+                        </span>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                      <div style={{ flex: 1, height: 4, backgroundColor: 'var(--surface-2)', borderRadius: 10, overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.min(sp.progress_percent || 0, 100)}%`, height: '100%', backgroundColor: STATUS_COLORS[sp.status] || 'var(--blue)', borderRadius: 10 }} />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 28 }}>
-                        {sp.progress_percent || 0}%
-                      </span>
                     </div>
                     {(role !== 'maf' || program.status !== 'Perencanaan') && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, marginBottom: isAdmin ? 8 : 0 }}>
@@ -1188,6 +1177,117 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
 
       {pdfViewer && (
         <PdfViewerModal url={pdfViewer.url} name={pdfViewer.name} onClose={() => setPdfViewer(null)} />
+      )}
+
+      {showManageDocs && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} onClick={() => setShowManageDocs(false)}>
+          <div style={{ width: '100%', maxWidth: 600, background: 'var(--card)', borderRadius: '16px 16px 0 0', padding: '20px 16px 32px', maxHeight: '82dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Kelola Foto Ringkasan</h3>
+              <button onClick={() => setShowManageDocs(false)} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Ketuk foto untuk tampilkan/sembunyikan di halaman Ringkasan.</div>
+            {galleryDocs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '28px 12px', color: 'var(--text-muted)', fontSize: 13 }}>Belum ada foto di Galeri untuk pekerjaan ini.</div>
+            ) : (
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {galleryDocs.map(doc => {
+                    const thumb = getDriveThumbnailUrl(doc.link_foto, 'w400')
+                    const on = !!doc.tampil_ringkasan
+                    const isSaving = savingDocId === doc.id
+                    return (
+                      <div key={doc.id} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: on ? '2px solid var(--blue)' : '2px solid var(--border)', background: 'var(--surface-2)', cursor: isSaving ? 'wait' : 'pointer', opacity: isSaving ? 0.65 : 1, transition: 'border-color 0.15s, opacity 0.15s' }} onClick={async () => {
+                          if (isSaving) return
+                          const next = !on
+                          setSavingDocId(doc.id)
+                          setGalleryDocs(prev => prev.map(d => d.id === doc.id ? { ...d, tampil_ringkasan: next } : d))
+                          const { error } = await adminUpdate('documentation', { tampil_ringkasan: next }, doc.id)
+                          if (error) setGalleryDocs(prev => prev.map(d => d.id === doc.id ? { ...d, tampil_ringkasan: on } : d))
+                          setSavingDocId(null)
+                        }}>
+                        <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                          {thumb
+                            ? <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                          }
+                        </div>
+                        {(doc.fase || doc.caption) && (
+                          <div style={{ padding: '5px 8px 6px', fontSize: 10.5, color: 'var(--text-secondary)', fontWeight: 500, background: 'var(--card)', lineHeight: 1.4 }}>
+                            {doc.fase || doc.caption}
+                          </div>
+                        )}
+                        <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 6, background: on ? 'var(--blue)' : 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
+                          {on && <svg width="11" height="11" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface FeaturedDocsSectionProps {
+  galleryDocs: Documentation[]
+  setGalleryDocs: React.Dispatch<React.SetStateAction<Documentation[]>>
+  isAdmin: boolean
+  isMobile: boolean
+  savingDocId: string | null
+  setSavingDocId: (id: string | null) => void
+  onManage: () => void
+}
+
+function FeaturedDocsSection({ galleryDocs, isAdmin, isMobile, onManage }: FeaturedDocsSectionProps) {
+  const featuredDocs = galleryDocs.filter(d => d.tampil_ringkasan)
+  if (featuredDocs.length === 0 && !isAdmin) return null
+  return (
+    <div style={{ marginTop: 16, background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: isMobile ? '14px 15px' : '18px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: featuredDocs.length > 0 ? 12 : 0 }}>
+        <h3 style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>Dokumentasi</h3>
+        {isAdmin && (
+          <button
+            onClick={onManage}
+            style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--card)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, flexShrink: 0, transition: 'all 0.15s' }}
+            onMouseEnter={e => { const b = e.currentTarget; b.style.background = 'var(--blue)'; b.style.color = '#fff'; b.style.borderColor = 'var(--blue)' }}
+            onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'var(--card)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border-subtle)' }}
+          >
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+            Kelola Foto
+          </button>
+        )}
+      </div>
+      {featuredDocs.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '18px 12px', color: 'var(--text-muted)', fontSize: 12.5 }}>
+          Belum ada foto yang ditampilkan di sini.
+          {isAdmin && <div style={{ marginTop: 4, fontSize: 12 }}>Klik <strong>Kelola Foto</strong> untuk memilih foto.</div>}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 8 }}>
+          {featuredDocs.map(doc => {
+            const thumb = getDriveThumbnailUrl(doc.link_foto, 'w800')
+            return (
+              <div key={doc.id} style={{ borderRadius: 10, overflow: 'hidden', position: 'relative', aspectRatio: '4/3', background: 'var(--surface-2)' }}>
+                {thumb
+                  ? <img src={thumb} alt={doc.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                }
+                {(doc.fase || doc.caption) && (
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.6))', padding: '18px 8px 7px', fontSize: 10.5, fontWeight: 600, color: '#fff', lineHeight: 1.35 }}>
+                    {doc.fase || doc.caption}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
