@@ -912,8 +912,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     {sp.vendor && (
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{sp.vendor}</div>
                     )}
-                    {/* Progres % | Status badge row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: sp.vendor ? 0 : 6 }}>
+                    {/* Progres % | Status badge — grouped together, right-aligned */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 7, marginBottom: 14, marginTop: sp.vendor ? 4 : 8 }}>
                       <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
                         Progres {sp.progress_percent || 0}%
                       </span>
