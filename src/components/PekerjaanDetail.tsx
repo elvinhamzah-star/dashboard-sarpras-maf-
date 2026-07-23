@@ -912,8 +912,13 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             {sp.nama_gedung}
                           </div>
                         </div>
-                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--text-secondary)' }}>
+                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{
+                            display: 'inline-block', padding: '1px 7px', borderRadius: 20,
+                            fontSize: 10, fontWeight: 700,
+                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                          }}>
                             {sp.status}
                           </span>
                           <span style={{ fontSize: 10, color: 'var(--border)' }}>|</span>
