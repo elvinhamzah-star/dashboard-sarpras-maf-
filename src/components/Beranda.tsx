@@ -195,6 +195,14 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
   useEffect(() => { activeModalRef.current = activeModal }, [activeModal])
 
+  // Clear hover immediately when any modal opens — prevents color "stuck" after click
+  useEffect(() => {
+    if (activeModal !== null) {
+      hoveredSummaryIdxRef.current = null
+      setHoveredSummaryIdx(null)
+    }
+  }, [activeModal])
+
   useEffect(() => {
     if (isMobile) return
     const onMove = (e: MouseEvent) => {
@@ -437,7 +445,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           <div
             key={card.label}
             className="metric-summary-card"
-            onClick={() => setActiveModal(card.iconType as MetricModalType)}
+            onClick={() => {
+              hoveredSummaryIdxRef.current = null
+              setHoveredSummaryIdx(null)
+              setActiveModal(card.iconType as MetricModalType)
+            }}
             style={{
               backgroundColor: hoveredSummaryIdx === idx ? card.accentColor + '0D' : 'var(--surface-raised)',
               borderRadius: 12,
