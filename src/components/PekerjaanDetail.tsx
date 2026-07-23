@@ -897,34 +897,37 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     borderRadius: 12,
                     backgroundColor: 'var(--card)',
                   }}>
-                    {/* Name row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        minWidth: 22, height: 22, borderRadius: 6,
-                        backgroundColor: 'var(--blue)', color: '#fff',
-                        fontSize: 11, fontWeight: 700, flexShrink: 0,
-                      }}>{i + 1}</span>
-                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
-                        {sp.nama_gedung}
+                    {/* Top row: nama (kiri) + progres & badge (kanan), center-aligned */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: sp.vendor ? 3 : 0 }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            minWidth: 22, height: 22, borderRadius: 6,
+                            backgroundColor: 'var(--blue)', color: '#fff',
+                            fontSize: 11, fontWeight: 700, flexShrink: 0,
+                          }}>{i + 1}</span>
+                          <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                            {sp.nama_gedung}
+                          </div>
+                        </div>
+                        {sp.vendor && (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', paddingLeft: 29 }}>{sp.vendor}</div>
+                        )}
                       </div>
-                    </div>
-                    {sp.vendor && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{sp.vendor}</div>
-                    )}
-                    {/* Progres % | Status badge — grouped together, right-aligned */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 7, marginBottom: 14, marginTop: sp.vendor ? 4 : 8 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
-                        Progres {sp.progress_percent || 0}%
-                      </span>
-                      <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: 20,
-                        fontSize: 10.5, fontWeight: 700,
-                        backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
-                        color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
-                      }}>
-                        {sp.status}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
+                          {sp.progress_percent || 0}%
+                        </span>
+                        <span style={{
+                          display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                          fontSize: 10.5, fontWeight: 700,
+                          backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                          color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                        }}>
+                          {sp.status}
+                        </span>
+                      </div>
                     </div>
                     {(role !== 'maf' || program.status !== 'Perencanaan') && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, marginBottom: isAdmin ? 8 : 0 }}>
