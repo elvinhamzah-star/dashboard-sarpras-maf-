@@ -897,11 +897,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     borderRadius: 12,
                     backgroundColor: 'var(--card)',
                   }}>
-                    {/* 2-col layout: kiri=nama+vendor, kanan=badge+angka sejajar */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                      {/* Kiri: nomor + nama + vendor */}
+                    {/* 2-col: kiri=nomor+nama+status|progres, kanan=angka finansial */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      {/* Kiri: nomor + nama, baris bawah: status | Progres % */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             minWidth: 22, height: 22, borderRadius: 6,
@@ -912,42 +912,33 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             {sp.nama_gedung}
                           </div>
                         </div>
-                        {sp.vendor && (
-                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', paddingLeft: 29 }}>{sp.vendor}</div>
-                        )}
-                      </div>
-                      {/* Kanan: persen+badge atas, anggaran/realisasi/sisa bawah */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
-                            {sp.progress_percent || 0}%
-                          </span>
-                          <span style={{
-                            display: 'inline-block', padding: '2px 8px', borderRadius: 20,
-                            fontSize: 10.5, fontWeight: 700,
-                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
-                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
-                          }}>
+                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--text-secondary)' }}>
                             {sp.status}
                           </span>
+                          <span style={{ fontSize: 10, color: 'var(--border)' }}>|</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
+                            Progres {sp.progress_percent || 0}%
+                          </span>
                         </div>
-                        {(role !== 'maf' || program.status !== 'Perencanaan') && (
-                        <div style={{ display: 'flex', gap: 14 }}>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
-                            <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
-                            <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
-                          </div>
-                        </div>
-                        )}
                       </div>
+                      {/* Kanan: anggaran / realisasi / sisa */}
+                      {(role !== 'maf' || program.status !== 'Perencanaan') && (
+                      <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
+                          <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
+                          <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
+                        </div>
+                      </div>
+                      )}
                     </div>
                     {isAdmin && (
                       <button
