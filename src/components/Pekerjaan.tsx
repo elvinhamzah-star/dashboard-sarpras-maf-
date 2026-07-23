@@ -200,8 +200,8 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         })}
       </div>
 
-      {/* Filter Summary Bar — hanya untuk Selesai */}
-      {!loading && activeStatus === 'Selesai' && (
+      {/* Filter Summary Bar — tampil untuk semua status aktif */}
+      {!loading && !!activeStatus && (
         <FilterSummaryBar
           status={activeStatus}
           programs={filtered}
