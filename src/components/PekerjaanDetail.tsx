@@ -63,6 +63,28 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [deletingDocIds, setDeletingDocIds] = useState<Set<string>>(new Set())
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
+  const tabContentRef = useRef<HTMLDivElement>(null)
+  const [tabMinHeight, setTabMinHeight] = useState(0)
+  const [tabTransition, setTabTransition] = useState(false)
+
+  const handleTabChange = (tab: Tab) => {
+    if (tab === activeTab) return
+    const h = tabContentRef.current?.scrollHeight ?? 0
+    if (h > 0) {
+      setTabTransition(false)
+      setTabMinHeight(h)
+    }
+    setActiveTab(tab)
+  }
+
+  useEffect(() => {
+    if (tabMinHeight === 0) return
+    const raf = requestAnimationFrame(() => {
+      setTabTransition(true)
+      setTabMinHeight(0)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [activeTab])
 
   const openFile = (url: string, name: string) => {
     const embedUrl = getFileEmbedUrl(url)
@@ -501,7 +523,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
         {tabs.map(tab => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
             style={{
               padding: '7px 16px',
               borderRadius: 8,
@@ -522,12 +544,17 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
 
       {/* Tab Content */}
       <div
-        style={bareRingkasan ? {} : {
-          backgroundColor: 'var(--card)',
-          borderRadius: 14,
-          border: '1px solid var(--border-subtle)',
-          padding: isMobile ? '14px 14px' : '20px 24px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        ref={tabContentRef}
+        style={{
+          minHeight: tabMinHeight,
+          transition: tabTransition ? 'min-height 0.32s ease' : 'none',
+          ...(bareRingkasan ? {} : {
+            backgroundColor: 'var(--card)',
+            borderRadius: 14,
+            border: '1px solid var(--border-subtle)',
+            padding: isMobile ? '14px 14px' : '20px 24px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          })
         }}
       >
         {activeTab === 'Ringkasan' && isSelesai && (
