@@ -133,7 +133,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
   const freshnessColor = freshnessDays === null
     ? 'var(--text-muted)'
     : freshnessDays === 0
-      ? '#059669'
+      ? '#1B5E2B'
       : freshnessDays <= 3
         ? '#D97706'
         : '#660000'
@@ -276,7 +276,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               <div
                 key={p.id}
                 onClick={() => onProgramClick?.(p.id)}
-                onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(5,150,105,0.07)' }}
+                onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(27,94,43,0.07)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
                   padding: spacious ? '14px 16px' : '10px 12px',
@@ -313,8 +313,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     {isEfficient && (
                       <span style={{
                         fontSize: 9.5, fontWeight: 600, flexShrink: 0,
-                        color: '#059669',
-                        backgroundColor: 'rgba(5,150,105,0.1)',
+                        color: '#1B5E2B',
+                        backgroundColor: 'rgba(27,94,43,0.1)',
                         padding: '2px 7px', borderRadius: 99,
                       }}>
                         Efisiensi {formatRupiah(sisa)}

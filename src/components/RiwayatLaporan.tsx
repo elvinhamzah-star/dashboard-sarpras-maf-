@@ -97,7 +97,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
   const progress = live?.progress_percent ?? null
 
   const sections = [
-    { key: 'dikerjakan', label: 'Sudah Dikerjakan', color: '#059669', bg: 'rgba(5,150,105,0.07)', items: data.dikerjakan },
+    { key: 'dikerjakan', label: 'Sudah Dikerjakan', color: '#1B5E2B', bg: 'rgba(27,94,43,0.07)', items: data.dikerjakan },
     { key: 'kendala', label: 'Kendala / Update', color: '#D97706', bg: 'rgba(217,119,6,0.07)', items: data.kendala },
     { key: 'rencana', label: 'Rencana Pekan Depan', color: 'var(--blue)', bg: 'rgba(26,111,232,0.07)', items: data.rencana },
   ]
@@ -268,9 +268,9 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
 
       {selesaiEntries.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <SectionDivider label="Selesai" count={selesaiEntries.length} color="#059669" bg="rgba(5,150,105,0.1)" />
+          <SectionDivider label="Selesai" count={selesaiEntries.length} color="#1B5E2B" bg="rgba(27,94,43,0.1)" />
           {selesaiEntries.map(([id, data]) => (
-            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#059669" />
+            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#1B5E2B" />
           ))}
         </div>
       )}
@@ -462,8 +462,8 @@ export default function RiwayatLaporan() {
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 5,
                         padding: '5px 12px', borderRadius: 20,
-                        backgroundColor: 'rgba(5,150,105,0.1)',
-                        color: '#059669', fontSize: 11, fontWeight: 700,
+                        backgroundColor: 'rgba(27,94,43,0.1)',
+                        color: '#1B5E2B', fontSize: 11, fontWeight: 700,
                       }}>
                         <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                           <path d="M12 8v4l3 3"/><path d="M3.05 11a9 9 0 1 0 .5-4"/><polyline points="3 3 3 7 7 7"/>

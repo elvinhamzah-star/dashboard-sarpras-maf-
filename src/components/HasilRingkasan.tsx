@@ -102,7 +102,7 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateG
     color: 'var(--text-muted)',
     marginTop: 4,
   }
-  const washHemat: React.CSSProperties = { background: 'rgba(5,150,105,0.05)', border: '1px solid rgba(5,150,105,0.14)' }
+  const washHemat: React.CSSProperties = { background: 'rgba(27,94,43,0.05)', border: '1px solid rgba(27,94,43,0.14)' }
   const washOver: React.CSSProperties = { background: 'rgba(102,0,0,0.045)', border: '1px solid rgba(102,0,0,0.12)' }
 
   return (

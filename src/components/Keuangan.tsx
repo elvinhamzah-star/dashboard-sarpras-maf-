@@ -139,7 +139,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   }, [chartData.length])
 
   const filterCards = [
-    { jenis: 'Masuk', label: 'Dana Masuk', value: totalMasuk, count: masukList.length, color: '#059669', bgActive: 'rgba(5,150,105,0.09)' },
+    { jenis: 'Masuk', label: 'Dana Masuk', value: totalMasuk, count: masukList.length, color: '#1B5E2B', bgActive: 'rgba(27,94,43,0.09)' },
     { jenis: 'Keluar', label: 'Dana Keluar', value: totalKeluar, count: keluarList.length, color: '#660000', bgActive: 'rgba(102,0,0,0.09)' },
     { jenis: 'Keluar PBB', label: 'Dana Keluar PBB', value: totalKeluarPBB, count: keluarPBBList.length, color: '#D97706', bgActive: 'rgba(217,119,6,0.09)' },
   ]
@@ -235,13 +235,13 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             borderRadius: isMobile ? 12 : 14,
             padding: isMobile ? '14px 13px' : '20px 22px',
             border: '1px solid var(--border)',
-            borderTop: `3px solid ${saldoKas >= 0 ? '#059669' : '#660000'}`,
+            borderTop: `3px solid ${saldoKas >= 0 ? '#1B5E2B' : '#660000'}`,
             cursor: 'pointer',
             transition: 'box-shadow 0.18s ease, transform 0.18s ease',
           }}
           onMouseEnter={e => {
             const el = e.currentTarget as HTMLDivElement
-            el.style.boxShadow = `0 6px 20px ${saldoKas >= 0 ? 'rgba(5,150,105,0.16)' : 'rgba(102,0,0,0.16)'}`
+            el.style.boxShadow = `0 6px 20px ${saldoKas >= 0 ? 'rgba(27,94,43,0.16)' : 'rgba(102,0,0,0.16)'}`
             el.style.transform = 'translateY(-2px)'
           }}
           onMouseLeave={e => {
@@ -370,7 +370,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#059669', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#1B5E2B', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
                       {hovered && hovered.masuk > 0 ? formatRupiah(hovered.masuk) : '—'}
                     </span>
@@ -401,7 +401,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         <div style={{
                           width: BAR_W,
                           height: masukPct > 0 ? `${masukPct}%` : 3,
-                          backgroundColor: masukPct > 0 ? '#059669' : 'var(--border-subtle)',
+                          backgroundColor: masukPct > 0 ? '#1B5E2B' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
                           opacity: isHov ? 1 : 0.72,
                           transition: 'opacity 0.15s ease',
@@ -436,7 +436,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#059669', flexShrink: 0 }} />
+                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#1B5E2B', flexShrink: 0 }} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>Masuk</span>
                 </div>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 16 }}>Dana kas masuk</span>
@@ -467,7 +467,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
             </div>
             {filterJenis !== 'Semua' && (() => {
-              const color = filterJenis === 'Masuk' ? '#059669' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
+              const color = filterJenis === 'Masuk' ? '#1B5E2B' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
               return (
                 <button
                   onClick={() => { setFilterJenis('Semua'); setPage(1) }}
@@ -504,7 +504,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {paged.map(t => {
                 const isMasukTx = t.jenis_transaksi === 'Masuk'
                 const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
-                const nominalColor = isMasukTx ? '#059669' : isKeluarPBBTx ? '#D97706' : '#660000'
+                const nominalColor = isMasukTx ? '#1B5E2B' : isKeluarPBBTx ? '#D97706' : '#660000'
                 const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: '#fff' }
                 return (
                   <div
@@ -687,9 +687,9 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {formatRupiah(totalDeployment)}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(5,150,105,0.06)', borderRadius: 10, border: '1px solid rgba(5,150,105,0.15)' }}>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(27,94,43,0.06)', borderRadius: 10, border: '1px solid rgba(27,94,43,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Masuk</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#1B5E2B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Masuk</div>
                   <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{masukList.length} transaksi</div>
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</div>
@@ -708,7 +708,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  <span style={{ color: '#059669', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span style={{ color: '#1B5E2B', fontWeight: 700, flexShrink: 0 }}>•</span>
                   <span><strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> — dana yang diterima dan dicatat langsung dalam kas Sarpras</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
@@ -743,9 +743,9 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {formatRupiah(saldoKas)}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(5,150,105,0.06)', borderRadius: 10, border: '1px solid rgba(5,150,105,0.15)' }}>
+              <div style={{ padding: '12px 14px', backgroundColor: 'rgba(27,94,43,0.06)', borderRadius: 10, border: '1px solid rgba(27,94,43,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Masuk</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#1B5E2B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Masuk</div>
                   <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{masukList.length} transaksi</div>
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>+{formatRupiah(totalMasuk)}</div>
@@ -757,9 +757,9 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>−{formatRupiah(totalKeluar)}</div>
               </div>
-              <div style={{ padding: '12px 14px', backgroundColor: saldoKas >= 0 ? 'rgba(5,150,105,0.06)' : 'rgba(102,0,0,0.05)', borderRadius: 10, border: `1px solid ${saldoKas >= 0 ? 'rgba(5,150,105,0.2)' : 'rgba(102,0,0,0.15)'}` }}>
+              <div style={{ padding: '12px 14px', backgroundColor: saldoKas >= 0 ? 'rgba(27,94,43,0.06)' : 'rgba(102,0,0,0.05)', borderRadius: 10, border: `1px solid ${saldoKas >= 0 ? 'rgba(27,94,43,0.2)' : 'rgba(102,0,0,0.15)'}` }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 5 }}>Saldo Kas</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: saldoKas >= 0 ? '#059669' : '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
               </div>
             </div>
             <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
@@ -768,7 +768,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  <span style={{ color: '#059669', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span style={{ color: '#1B5E2B', fontWeight: 700, flexShrink: 0 }}>•</span>
                   <span>Seluruh <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> yang telah diterima ke kas Sarpras</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>

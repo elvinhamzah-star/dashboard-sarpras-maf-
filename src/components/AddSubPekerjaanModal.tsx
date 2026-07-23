@@ -160,7 +160,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
               style={inputStyle}
             />
             {realisasi > 0 && (
-              <div style={{ fontSize: 11, color: '#059669', marginTop: 4 }}>{formatRupiah(realisasi)}</div>
+              <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(realisasi)}</div>
             )}
           </div>
         </div>

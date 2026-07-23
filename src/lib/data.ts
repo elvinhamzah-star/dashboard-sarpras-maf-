@@ -62,7 +62,7 @@ export function monthsFromDates(dates: (string | undefined | null)[]): string[] 
 
 // Updated darker transaction colors
 export const TRANSACTION_COLORS: Record<string, { bg: string; text: string; light: string }> = {
-  'Masuk': { bg: '#059669', text: '#fff', light: 'rgba(5,150,105,0.1)' },
+  'Masuk': { bg: '#1B5E2B', text: '#fff', light: 'rgba(27,94,43,0.1)' },
   'Keluar': { bg: '#660000', text: '#fff', light: 'rgba(102,0,0,0.1)' },
   'Keluar PBB': { bg: '#92400e', text: '#fff', light: 'rgba(146,64,14,0.1)' },
 }

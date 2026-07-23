@@ -150,7 +150,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
                 boxSizing: 'border-box',
               }}
             />
-            <div style={{ fontSize: 11, color: '#059669', marginTop: 4 }}>{formatRupiah(realisasi)}</div>
+            <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(realisasi)}</div>
           </div>
         </div>
 

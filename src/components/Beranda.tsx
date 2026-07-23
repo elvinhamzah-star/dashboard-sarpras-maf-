@@ -281,11 +281,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       label: 'Total Realisasi',
       value: formatRupiahShort(totalRealisasi),
       iconType: 'realisasi',
-      iconBg: 'rgba(5,150,105,0.08)',
-      iconColor: 'rgba(5,150,105,0.65)',
+      iconBg: 'rgba(27,94,43,0.08)',
+      iconColor: 'rgba(27,94,43,0.65)',
       valueColor: 'var(--text-primary)',
       trend: `${penyerapan}% Terserap`,
-      accentColor: '#059669',
+      accentColor: '#1B5E2B',
     },
     {
       label: 'Sisa Anggaran',
@@ -330,10 +330,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
       trackColor: 'rgba(0,0,0,0.06)',
-      iconBg: 'rgba(5,150,105,0.08)',
-      iconColor: 'rgba(5,150,105,0.65)',
+      iconBg: 'rgba(27,94,43,0.08)',
+      iconColor: 'rgba(27,94,43,0.65)',
       iconType: 'Selesai',
-      accentColor: '#059669',
+      accentColor: '#1B5E2B',
       onClick: () => { setPekerjaanTab('Selesai'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
@@ -617,8 +617,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
               const pct = getEffectiveProgress(p)
               const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
-              const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#059669', 'Perencanaan': '#660000' }
-              const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(5,150,105,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
+              const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#1B5E2B', 'Perencanaan': '#660000' }
+              const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(27,94,43,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
               const color = statusColors[p.status] || 'var(--blue)'
               return (
                 <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 12, padding: isMobile ? '13px 14px' : '14px 16px', border: '1px solid var(--border-subtle)' }}>

@@ -265,7 +265,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                     )}
                     {p.status === 'Selesai' && (
                       <>
-                        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#059669' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+                        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                           {formatRupiah(d.realisasi_terkini)}
                         </div>
                         {!isMobile && (

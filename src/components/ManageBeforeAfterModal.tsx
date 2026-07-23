@@ -142,7 +142,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
     const id = slot === 'before' ? beforeId : afterId
     const d = docById(id)
     const t = thumb(d)
-    const accent = slot === 'before' ? '#660000' : '#059669'
+    const accent = slot === 'before' ? '#660000' : '#1B5E2B'
     return (
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: accent, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -210,7 +210,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
         <button
           onClick={handleSelesai}
           disabled={saving}
-          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.07)', color: '#059669', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 20, opacity: saving ? 0.7 : 1 }}
+          style={{ width: '100%', padding: '9px', borderRadius: 9, border: '1px solid rgba(27,94,43,0.3)', backgroundColor: 'rgba(27,94,43,0.07)', color: '#1B5E2B', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 20, opacity: saving ? 0.7 : 1 }}
         >
           {(beforeId && afterId) ? (saving ? 'Menyimpan...' : 'Simpan & Selesai') : 'Selesai'}
         </button>

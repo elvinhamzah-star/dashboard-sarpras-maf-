@@ -671,7 +671,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                   alignItems: 'baseline',
                   padding: '11px 13px',
                   borderRadius: 10,
-                  background: 'rgba(5,150,105,0.07)',
+                  background: 'rgba(27,94,43,0.07)',
                   marginTop: 10,
                 }}
               >

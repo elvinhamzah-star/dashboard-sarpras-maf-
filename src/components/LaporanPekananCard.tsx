@@ -124,8 +124,8 @@ const SECTIONS = [
     field: 'dikerjakan' as const,
     label: 'Sudah Dikerjakan',
     placeholder: 'Progres Atau Pencapaian Pekan Ini...',
-    color: '#059669',
-    bg: 'rgba(5,150,105,0.07)',
+    color: '#1B5E2B',
+    bg: 'rgba(27,94,43,0.07)',
   },
   {
     field: 'kendala' as const,
@@ -782,7 +782,7 @@ export default function LaporanPekananCard({ isAdmin, programs }: LaporanPekanan
                           {sLabel}
                         </span>
                         {s.field === 'dikerjakan' && (
-                          <span style={{ fontSize: 11, fontWeight: 700, color: '#059669' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#1B5E2B' }}>
                             {selectedProgram.progress_percent ?? 0}%
                           </span>
                         )}

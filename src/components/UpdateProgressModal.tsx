@@ -112,7 +112,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
               onChange={e => setRealisasi(e.target.value)}
               style={inputStyle}
             />
-            <div style={{ fontSize: 11, color: '#059669', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
+            <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
           </div>
 
           <div>

@@ -24,6 +24,7 @@ import EditProgramModal from './EditProgramModal'
 import HasilFormModal from './HasilFormModal'
 import HasilRingkasan from './HasilRingkasan'
 import HasilRincianCard from './HasilRincianCard'
+import FilterSummaryBar from './FilterSummaryBar'
 import { deriveProgramTotals, deriveNilaiAset } from '../lib/deriveTotals'
 
 interface PekerjaanDetailProps {
@@ -123,7 +124,14 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     } else {
       setProgram(null)
     }
-    if (sRes.data) setSubPrograms((sRes.data as SubProgram[]).filter(s => s.program_id === programId))
+    if (sRes.data) {
+      const STATUS_ORDER: Record<string, number> = { 'Selesai': 0, 'On Going': 1, 'On Hold': 2, 'Perencanaan': 3 }
+      setSubPrograms(
+        (sRes.data as SubProgram[])
+          .filter(s => s.program_id === programId)
+          .sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
+      )
+    }
     if (pdRes.data) setProgramDocs((pdRes.data as ProgramDocument[]).filter(d => d.program_id === programId))
     if (docRes.data) setGalleryDocs((docRes.data as Documentation[]).filter(d => d.program_id === programId && d.tipe_file === 'foto'))
     setLoading(false)
@@ -467,34 +475,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
         </div>
       </div>
 
-      {/* Metric Cards — hidden for Selesai (HasilRingkasan shows Nilai/Anggaran/Efisiensi instead), hidden for MAF (no money) */}
-      {program.status === 'Selesai' && (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
-        {[
-          { label: 'Total Anggaran', value: formatRupiah(derived.total_anggaran), color: 'var(--blue)' },
-          { label: 'Realisasi Terkini', value: formatRupiah(derived.realisasi_terkini), color: '#059669' },
-          { label: 'Sisa Anggaran', value: formatRupiah(derived.sisa_anggaran), color: '#D97706' },
-          { label: 'Progress', value: `${pct}%`, color: statusColor },
-        ].map(c => (
-          <div
-            key={c.label}
-            style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: 12,
-              padding: isMobile ? '10px 12px' : '16px 18px',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            <div style={{ fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: isMobile ? 4 : 8 }}>
-              {c.label}
-            </div>
-            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 700, color: c.color, letterSpacing: '-0.03em' }}>{c.value}</div>
-          </div>
-        ))}
-      </div>
-      )}
-
       {/* Progress Bar — hidden for completed works (100% is redundant once done) */}
       {program.status !== 'Selesai' && (
         <div
@@ -523,6 +503,17 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
             />
           </div>
         </div>
+      )}
+
+      {/* Metric summary bar for non-Selesai statuses */}
+      {program.status !== 'Selesai' && role !== 'maf' && (
+        <FilterSummaryBar
+          status={program.status}
+          programs={[program]}
+          subPrograms={subPrograms}
+          isMobile={isMobile}
+          role={role}
+        />
       )}
 
       {/* Tabs */}
@@ -626,7 +617,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </div>
                         ))
                       : '-'],
-                    ['Dibuat', formatTanggal(program.created_at)],
                   ].map(([label, value], i, arr) => {
                     const isCatatan = label === 'Catatan Pekerjaan'
                     const isLast = i === arr.length - 1
@@ -778,8 +768,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     const has = txDocs.length > 0 || transactions.length > 0
                     return (
                       <div onClick={has ? () => setBuktiExpanded(true) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: has ? 'pointer' : 'default' }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: has ? 'rgba(5,150,105,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="18" height="18" fill="none" stroke={has ? '#059669' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+                        <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: has ? 'rgba(27,94,43,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="18" height="18" fill="none" stroke={has ? '#1B5E2B' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: has ? 'var(--text-primary)' : 'var(--text-muted)', letterSpacing: '-0.01em' }}>Bukti Transaksi · {program.nama_pekerjaan}</div>
@@ -815,8 +805,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             onClick={doc.file_url ? () => openFile(doc.file_url!, doc.file_name) : undefined}
                             style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: doc.file_url ? 'pointer' : 'default', minHeight: 110 }}
                           >
-                            <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(5,150,105,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <svg width="18" height="18" fill="none" stroke="#059669" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(27,94,43,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="18" height="18" fill="none" stroke="#1B5E2B" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             </div>
                             <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
                               {doc.file_name}
@@ -843,12 +833,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             </div>
                             <div>
                               {tx.tanggal && <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{formatTanggal(tx.tanggal)}</div>}
-                              {tx.nominal && (role !== 'maf' || program.status !== 'Perencanaan') && <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
+                              {tx.nominal && (role !== 'maf' || program.status !== 'Perencanaan') && <div style={{ fontSize: 11, color: '#1B5E2B', fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{formatRupiah(tx.nominal)}</div>}
                             </div>
                           </div>
                         ))}
                       </div>
-                      {isAdmin && <div style={{ marginTop: 12 }}>{renderDocAdd('bukti_transaksi', '#059669', 'Bukti Transaksi')}</div>}
+                      {isAdmin && <div style={{ marginTop: 12 }}>{renderDocAdd('bukti_transaksi', '#1B5E2B', 'Bukti Transaksi')}</div>}
                     </>
                   )
                 })()}
@@ -903,10 +893,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                           <span style={{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            minWidth: 22, height: 22, borderRadius: 6,
-                            backgroundColor: 'var(--blue)', color: '#fff',
-                            fontSize: 11, fontWeight: 700, flexShrink: 0,
+                            fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+                            flexShrink: 0, minWidth: 18, textAlign: 'right',
                           }}>{i + 1}</span>
                           <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.3 }}>
                             {sp.nama_gedung}
@@ -936,12 +924,23 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
-                          <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
+                          <div style={{ fontSize: 11, color: '#1B5E2B', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Sisa</div>
-                          <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.sisa_anggaran || 0)}</div>
-                        </div>
+                        {(() => {
+                          const sisa = sp.sisa_anggaran || 0
+                          const isOver = sisa < 0
+                          const isDone = sp.status === 'Selesai' && sisa >= 0
+                          const label = isOver ? 'Melebihi' : isDone ? 'Efisiensi' : 'Sisa'
+                          const color = isOver ? '#660000' : isDone ? '#1B5E2B' : '#D97706'
+                          return (
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: 8.5, color: isOver ? '#660000' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>{label}</div>
+                              <div style={{ fontSize: 11, color, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                                {isOver ? `−${formatRupiah(Math.abs(sisa))}` : formatRupiah(sisa)}
+                              </div>
+                            </div>
+                          )
+                        })()}
                       </div>
                       )}
                     </div>
@@ -965,7 +964,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                   <thead>
                     <tr>
-                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa', 'Status', 'Dokumentasi', ''].map(h => (
+                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa / Efisiensi', 'Status', 'Dokumentasi', ''].map(h => (
                         <th
                           key={h}
                           style={{
@@ -1015,11 +1014,13 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                           {formatRupiah(sp.total_anggaran || 0)}
                         </td>
-                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#059669', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#1B5E2B', fontWeight: 600, whiteSpace: 'nowrap' }}>
                           {formatRupiah(sp.realisasi_terkini || 0)}
                         </td>
-                        <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#D97706', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {formatRupiah(sp.sisa_anggaran || 0)}
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', color: (sp.sisa_anggaran || 0) < 0 ? '#660000' : sp.status === 'Selesai' ? '#1B5E2B' : '#D97706' }}>
+                          {(sp.sisa_anggaran || 0) < 0
+                            ? `−${formatRupiah(Math.abs(sp.sisa_anggaran || 0))}`
+                            : formatRupiah(sp.sisa_anggaran || 0)}
                         </td>
                         <td style={{ padding: '11px 14px' }}>
                           <span

@@ -20,7 +20,7 @@ const BAR_W = 18
 const BAR_GAP = 4
 
 // Chart color palette — picked from existing dashboard elements
-const C_MASUK    = '#059669'  // green — konsisten dengan badge Masuk di Keuangan
+const C_MASUK    = '#1B5E2B'  // green — konsisten dengan badge Masuk di Keuangan
 const C_KELUAR   = '#660000'  // dark red — konsisten dengan badge Keluar
 const C_PROGRESS = '#1A6FE8'  // blue — seragam dengan aksen utama dashboard
 

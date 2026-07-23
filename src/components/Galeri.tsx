@@ -23,7 +23,7 @@ interface GaleriProps {
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
   'Kondisi Awal':     { color: '#660000', bg: 'rgba(102,0,0,0.1)' },
   'Proses Pekerjaan': { color: 'var(--blue)', bg: 'rgba(26,111,232,0.1)' },
-  'Kondisi Akhir':    { color: '#059669', bg: 'rgba(5,150,105,0.1)' },
+  'Kondisi Akhir':    { color: '#1B5E2B', bg: 'rgba(27,94,43,0.1)' },
   'Dokumentasi':      { color: 'var(--text-secondary)', bg: 'rgba(0,0,0,0.06)' },
 }
 
@@ -606,16 +606,16 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   Kembali
                 </button>
               )}
-              {!isMobile && (
-                <>
-                  <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
-                    Galeri Dokumentasi
-                  </h1>
+              <>
+                <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>
+                  Galeri Dokumentasi
+                </h1>
+                {!isMobile && (
                   <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
                     Foto dokumentasi progres setiap pekerjaan
                   </p>
-                </>
-              )}
+                )}
+              </>
             </>
           )}
 

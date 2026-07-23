@@ -519,7 +519,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', backgroundColor: 'var(--bg)', marginBottom: 8 }}>
-              <svg width="18" height="18" fill="none" stroke="#059669" strokeWidth="1.75" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+              <svg width="18" height="18" fill="none" stroke="#1B5E2B" strokeWidth="1.75" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>

@@ -50,7 +50,7 @@ function countStatus(items: HasilRincianItem[]) {
 }
 
 const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
-  Selesai: { bg: 'rgba(5,150,105,0.12)', fg: '#047857' },
+  Selesai: { bg: 'rgba(27,94,43,0.12)', fg: '#047857' },
   Berjalan: { bg: 'rgba(26,111,232,0.12)', fg: '#1A6FE8' },
   Rencana: { bg: 'rgba(217,119,6,0.13)', fg: '#B45309' },
 }

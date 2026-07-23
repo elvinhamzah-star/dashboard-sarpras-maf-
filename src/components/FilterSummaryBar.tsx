@@ -93,7 +93,7 @@ export default function FilterSummaryBar({
     : isOver
       ? `-${formatRupiah(netDiff)}`
       : 'Tepat Sesuai Pagu'
-  const effColor  = isUnder ? '#059669' : isOver ? '#660000' : '#6B7280'
+  const effColor  = isUnder ? '#1B5E2B' : isOver ? '#660000' : '#6B7280'
   // Sub: label + percentage below/above pagu
   const effSub    = isUnder
     ? `efisiensi · ${effPct}% di bawah pagu`
@@ -117,15 +117,15 @@ export default function FilterSummaryBar({
         label: 'Nilai Realisasi',
         value: formatRupiah(totalRealisasi),
         sub: `${serapPct}% terserap`,
-        accent: '#059669',
-        bg: 'rgba(5,150,105,0.06)',
+        accent: '#1B5E2B',
+        bg: 'rgba(27,94,43,0.06)',
       },
       {
         label: 'Efisiensi Anggaran',
         value: effValue,
         sub: effSub,
         accent: effColor,
-        bg: isOver ? 'rgba(220,38,38,0.06)' : isUnder ? 'rgba(5,150,105,0.06)' : 'rgba(107,114,128,0.06)',
+        bg: isOver ? 'rgba(220,38,38,0.06)' : isUnder ? 'rgba(27,94,43,0.06)' : 'rgba(107,114,128,0.06)',
       },
     ]
   } else if (status === 'On Going') {
@@ -141,8 +141,8 @@ export default function FilterSummaryBar({
         label: 'Realisasi Terkini',
         value: formatRupiah(totalRealisasi),
         sub: `${serapPct}% terserap`,
-        accent: '#059669',
-        bg: 'rgba(5,150,105,0.06)',
+        accent: '#1B5E2B',
+        bg: 'rgba(27,94,43,0.06)',
       },
       {
         label: 'Sisa Anggaran',
@@ -172,8 +172,8 @@ export default function FilterSummaryBar({
         label: 'Realisasi Terkini',
         value: formatRupiah(totalRealisasi),
         sub: `${serapPct}% terserap`,
-        accent: '#059669',
-        bg: 'rgba(5,150,105,0.06)',
+        accent: '#1B5E2B',
+        bg: 'rgba(27,94,43,0.06)',
       },
       {
         label: 'Dana Tertahan',
