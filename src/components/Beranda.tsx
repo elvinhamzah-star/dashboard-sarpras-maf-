@@ -205,6 +205,21 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
   useEffect(() => {
     if (isMobile) return
+    // Cache card rects and hit-test against the cache on mousemove. The rects
+    // only change on scroll / resize / layout — never on pointer movement — so
+    // calling getBoundingClientRect on every mousemove was a pure layout thrash
+    // (~60–120 sync reflows/sec while the cursor moves). Recompute only when
+    // geometry actually changes; the move handler is then pure arithmetic.
+    let rects: { l: number; r: number; t: number; b: number }[] = []
+    const recompute = () => {
+      rects = [...document.querySelectorAll<HTMLElement>('.metric-summary-card')].map(c => {
+        const r = c.getBoundingClientRect()
+        return { l: r.left, r: r.right, t: r.top, b: r.bottom }
+      })
+    }
+    // Defer initial measure one frame so cards are painted in their final spot.
+    const raf = requestAnimationFrame(recompute)
+
     const onMove = (e: MouseEvent) => {
       if (activeModalRef.current !== null) {
         if (hoveredSummaryIdxRef.current !== null) {
@@ -213,21 +228,27 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         }
         return
       }
+      if (rects.length === 0) recompute()
       let found: number | null = null
-      document.querySelectorAll<HTMLElement>('.metric-summary-card').forEach((card, idx) => {
-        const rect = card.getBoundingClientRect()
-        if (e.clientX >= rect.left && e.clientX <= rect.right &&
-            e.clientY >= rect.top && e.clientY <= rect.bottom) {
-          found = idx
-        }
-      })
+      for (let i = 0; i < rects.length; i++) {
+        const r = rects[i]
+        if (e.clientX >= r.l && e.clientX <= r.r && e.clientY >= r.t && e.clientY <= r.b) { found = i; break }
+      }
       if (found !== hoveredSummaryIdxRef.current) {
         hoveredSummaryIdxRef.current = found
         setHoveredSummaryIdx(found)
       }
     }
     document.addEventListener('mousemove', onMove, { passive: true })
-    return () => document.removeEventListener('mousemove', onMove)
+    // capture:true so it also catches scroll on the app's inner scroll container.
+    document.addEventListener('scroll', recompute, { capture: true, passive: true })
+    window.addEventListener('resize', recompute, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('scroll', recompute, { capture: true } as EventListenerOptions)
+      window.removeEventListener('resize', recompute)
+    }
   }, [isMobile])
 
   // MAF must never see Man Power / Operasional in any total, list, chart or count.
