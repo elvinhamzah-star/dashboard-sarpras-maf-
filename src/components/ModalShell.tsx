@@ -54,9 +54,17 @@ export default function ModalShell({
     raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => setEntered(true))
     })
+    // Safety net: rAF is PAUSED while the document is hidden and gets throttled
+    // on mobile right after resume-from-background / momentum scroll. Without a
+    // fallback the panel mounts at opacity 0 and never becomes visible — the
+    // "popup gak muncul" bug. This timer guarantees the modal appears even if
+    // the rAF chain above never fires. setEntered(true) is idempotent, so on a
+    // normal foreground device the rAF wins first and the enter animation plays.
+    const enterFallback = window.setTimeout(() => setEntered(true), 100)
     return () => {
       cancelAnimationFrame(raf1)
       cancelAnimationFrame(raf2)
+      window.clearTimeout(enterFallback)
       if (closeTimer.current !== null) window.clearTimeout(closeTimer.current)
     }
   }, [])

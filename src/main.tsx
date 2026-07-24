@@ -2,6 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import ErrorBoundary, { reloadOnceGuarded } from './components/ErrorBoundary.tsx'
+
+// Vite memancarkan event ini saat sebuah chunk lazy gagal di-load (deploy baru
+// menghapus hash chunk lama sementara client masih pakai index.html lama).
+// Jaring pertama: reload sekali untuk ambil index + chunk terbaru.
+window.addEventListener('vite:preloadError', (e) => {
+  e.preventDefault()
+  reloadOnceGuarded()
+})
 
 // ── iOS input zoom prevention ─────────────────────────────────────────────────
 // iOS Safari zooms in when an input with font-size < 16px gets focus.
@@ -24,6 +33,8 @@ if (vpMeta) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )
