@@ -964,7 +964,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                   <thead>
                     <tr>
-                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa / Efisiensi', 'Status', 'Dokumentasi', ''].map(h => (
+                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa / Efisiensi', 'Status', ''].map(h => (
                         <th
                           key={h}
                           style={{
@@ -1037,34 +1037,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           >
                             {sp.status}
                           </span>
-                        </td>
-                        <td style={{ padding: '11px 14px' }}>
-                          {sp.link_dokumentasi ? (
-                            <a
-                              href={sp.link_dokumentasi}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 5,
-                                backgroundColor: 'var(--bg)',
-                                color: 'var(--text-secondary)',
-                                padding: '5px 10px',
-                                borderRadius: 7,
-                                fontSize: 11,
-                                fontWeight: 500,
-                                textDecoration: 'none',
-                                border: '1px solid var(--border-subtle)',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                              Folder
-                            </a>
-                          ) : (
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>—</span>
-                          )}
                         </td>
                         {isAdmin && (
                           <td style={{ padding: '11px 14px', textAlign: 'right' }}>
