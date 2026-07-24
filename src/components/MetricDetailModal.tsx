@@ -332,10 +332,10 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       contentScroll={false}
     >
       {close => (
-      {/* Definite height is the sole anchor for the scrollable list below.
-          Do NOT add flex:1 here — on WebKit/Safari flex-basis:0% wins over the
-          explicit height and collapses this column to just header+footer
-          (list rows vanish); Blink tolerates it, so it only breaks on iPhone. */}
+      // Definite height is the sole anchor for the scrollable list below.
+      // Do NOT add flex:1 here — on WebKit/Safari flex-basis:0% wins over the
+      // explicit height and collapses this column to just header+footer (list
+      // rows vanish); Blink tolerates it, so it only breaks on iPhone.
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: isMobile ? '88vh' : '82vh' }}>
 
         {/* Header */}
