@@ -161,11 +161,15 @@ export default function ModalShell({
       style={{
         position: 'fixed', inset: 0, zIndex,
         backgroundColor: backdropColor,
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
+        // Animate the blur radius with opacity: full glass while open, but
+        // ramped to 0 on exit so no active backdrop-filter layer survives to
+        // unmount — that lingering layer is what leaves Chrome's stale
+        // compositor tiles and freezes hover on the page behind.
+        backdropFilter: visible ? 'blur(6px)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(6px)' : 'blur(0px)',
         opacity: visible ? 1 : 0,
         pointerEvents: closing ? 'none' : 'auto',
-        transition: `opacity ${closing ? EXIT_MS : 200}ms ease`,
+        transition: `opacity ${closing ? EXIT_MS : 200}ms ease, backdrop-filter ${closing ? EXIT_MS : 200}ms ease, -webkit-backdrop-filter ${closing ? EXIT_MS : 200}ms ease`,
         display: 'flex',
         alignItems: isMobile ? 'flex-end' : 'center',
         justifyContent: 'center',

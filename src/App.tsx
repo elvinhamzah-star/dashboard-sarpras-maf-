@@ -408,7 +408,8 @@ export default function App() {
               gap: 12,
               padding: '12px 16px',
               backgroundColor: 'var(--bg-glass)',
-              backdropFilter: 'saturate(150%) blur(16px)',
+              backdropFilter: 'saturate(140%) blur(10px)',
+              WebkitBackdropFilter: 'saturate(140%) blur(10px)',
               borderBottom: '1px solid var(--border)',
             }}
           >
