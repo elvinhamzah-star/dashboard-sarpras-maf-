@@ -4,6 +4,8 @@ import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { Transaction } from '../lib/supabase'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface EditTransactionModalProps {
   transaction: Transaction
@@ -96,12 +98,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
         {/* Tanggal */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Tanggal</label>
-          <input
-            type="date"
-            value={tanggal}
-            onChange={e => setTanggal(e.target.value)}
-            style={inputStyle}
-          />
+          <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
         </div>
 
         {/* Nama Pekerjaan */}
@@ -179,15 +176,17 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
           </div>
           <div>
             <label style={labelStyle}>Sumber</label>
-            <select
+            <Dropdown
               value={sumber}
-              onChange={e => setSumber(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-            >
-              <option>PBB</option>
-              <option>Hamzah</option>
-              <option>Lainnya</option>
-            </select>
+              onChange={setSumber}
+              zIndex={1300}
+              options={[
+                { value: 'PBB', label: 'PBB' },
+                { value: 'Hamzah', label: 'Hamzah' },
+                { value: 'Lainnya', label: 'Lainnya' },
+              ]}
+            />
+
           </div>
         </div>
 

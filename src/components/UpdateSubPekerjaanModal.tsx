@@ -4,6 +4,7 @@ import { SubProgram } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
 
 interface UpdateSubPekerjaanModalProps {
   subProgram: SubProgram
@@ -158,27 +159,9 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Status
           </label>
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid var(--border)',
-              fontSize: 14,
-              color: 'var(--text-primary)',
-              backgroundColor: 'var(--card)',
-              outline: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <option>Perencanaan</option>
-            <option>On Going</option>
-            <option>Selesai</option>
-            <option>On Hold</option>
-          </select>
+          <Dropdown value={status} onChange={setStatus} zIndex={1300}
+            options={['Perencanaan', 'On Going', 'Selesai', 'On Hold'].map(s => ({ value: s, label: s }))} />
+
         </div>
 
         <div style={{ marginBottom: 24 }}>

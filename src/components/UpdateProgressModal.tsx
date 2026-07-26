@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
 import { Program } from '../lib/supabase'
 import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
@@ -119,15 +120,9 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Status
             </label>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-            >
-              {STATUS_OPTIONS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <Dropdown value={status} onChange={setStatus} zIndex={1300}
+              options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
+
           </div>
         </div>
 

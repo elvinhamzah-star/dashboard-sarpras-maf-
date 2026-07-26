@@ -3,6 +3,7 @@ import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
 
 interface AddSubPekerjaanModalProps {
   programId: string
@@ -167,13 +168,9 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
 
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Status</label>
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer' }}
-          >
-            {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-          </select>
+          <Dropdown value={status} onChange={setStatus} zIndex={1300}
+            options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
+
         </div>
 
         <div style={{ marginBottom: 24 }}>

@@ -418,7 +418,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input ref={searchRef} type="text" value={programSearch} onChange={e => setProgramSearch(e.target.value)} placeholder="Cari program..."
-                  style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: 8, border: '1px solid var(--border-subtle)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)' }} />
+                  style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: 8, border: '1px solid var(--border-subtle)', fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)' }} />
               </div>
             </div>
             <div style={{ maxHeight: 260, overflowY: 'auto' }}>
@@ -462,7 +462,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 value={programSearch}
                 onChange={e => setProgramSearch(e.target.value)}
                 placeholder="Cari program..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 34px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 34px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }}
               />
             </div>
             {/* List */}
@@ -1148,7 +1148,14 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       })()}
 
       {isAdmin && showAddModal && (
-        <AddDocumentationModal programs={programs} onClose={() => setShowAddModal(false)}
+        <AddDocumentationModal
+          programs={programs}
+          // Level 2/3: kunci program & isi titik dari konteks halaman supaya
+          // foto/video tak nyasar ke pekerjaan lain atau bikin titik baru gara² typo.
+          initialProgramId={openFolderId ?? undefined}
+          lockProgram={!!openFolderId}
+          initialTitik={selectedTitik !== null && selectedTitik !== TITIK_ALL ? selectedTitik : undefined}
+          onClose={() => setShowAddModal(false)}
           onSuccess={async () => { invalidateCache('documentation', 'documentation_program_ids'); const { data } = await fetchDocumentation(); if (data) setDocs(data); setShowAddModal(false) }} />
       )}
       {isAdmin && editingDoc && (

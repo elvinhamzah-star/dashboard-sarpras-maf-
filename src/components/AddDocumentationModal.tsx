@@ -5,11 +5,19 @@ import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
 import { isValidDriveLink, extractDriveFileId } from '../lib/data'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface AddDocumentationModalProps {
   programs: Program[]
   onClose: () => void
   onSuccess: () => void
+  /** Pre-fill when opened from a specific Galeri level (per-pekerjaan / per-titik)
+   *  so the user can't mistype the program or titik and misfile the media. */
+  initialProgramId?: string
+  initialTitik?: string
+  /** Lock the pre-filled program picker (level 2/3 context is unambiguous). */
+  lockProgram?: boolean
 }
 
 interface LinkRow {
@@ -56,11 +64,11 @@ function detectFileType(link: string): Promise<'foto' | 'video'> {
   })
 }
 
-export default function AddDocumentationModal({ programs, onClose, onSuccess }: AddDocumentationModalProps) {
+export default function AddDocumentationModal({ programs, onClose, onSuccess, initialProgramId, initialTitik, lockProgram }: AddDocumentationModalProps) {
   useEscapeKey(onClose)
-  const [programId, setProgramId] = useState('')
+  const [programId, setProgramId] = useState(initialProgramId ?? '')
   const [fase, setFase] = useState('Kondisi Awal')
-  const [titik, setTitik] = useState('')
+  const [titik, setTitik] = useState(initialTitik ?? '')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
   const [rows, setRows] = useState<LinkRow[]>([newRow()])
   const [saving, setSaving] = useState(false)
@@ -228,13 +236,14 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
             <button
               ref={triggerRef}
               type="button"
-              onClick={() => dropdownOpen ? (setDropdownOpen(false), setSearch('')) : openDropdown()}
+              disabled={lockProgram}
+              onClick={() => { if (lockProgram) return; dropdownOpen ? (setDropdownOpen(false), setSearch('')) : openDropdown() }}
               style={{
                 width: '100%', padding: '10px 14px', borderRadius: 10,
                 border: `1px solid ${dropdownOpen ? 'var(--blue)' : 'var(--border)'}`,
-                backgroundColor: 'var(--card)', fontSize: 13,
+                backgroundColor: lockProgram ? 'var(--surface-subtle)' : 'var(--card)', fontSize: 13,
                 color: programId ? 'var(--text-primary)' : 'var(--text-muted)',
-                fontFamily: 'inherit', cursor: 'pointer',
+                fontFamily: 'inherit', cursor: lockProgram ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
                 textAlign: 'left', outline: 'none',
                 boxShadow: dropdownOpen ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
@@ -244,13 +253,19 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedProgramName || 'Pilih program...'}
               </span>
-              <svg width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
-                style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
+              {lockProgram ? (
+                <svg width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
+                  style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              )}
             </button>
 
-            {dropdownOpen && createPortal(
+            {dropdownOpen && !lockProgram && createPortal(
               <div ref={portalRef} style={{
                 position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width,
                 zIndex: 500, backgroundColor: 'var(--card)', borderRadius: 12,
@@ -270,7 +285,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
                       placeholder="Cari program..."
                       style={{
                         width: '100%', padding: '8px 10px 8px 30px', borderRadius: 8,
-                        border: '1px solid var(--border-subtle)', fontSize: 16,
+                        border: '1px solid var(--border-subtle)', fontSize: 14,
                         color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none',
                         boxSizing: 'border-box', backgroundColor: 'var(--surface-raised)',
                       }}
@@ -311,24 +326,16 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess }: 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={labelStyle}>Fase</label>
-            <select
+            <Dropdown
               value={fase}
-              onChange={e => setFase(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-            >
-              {['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
+              onChange={setFase}
+              zIndex={1300}
+              options={['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => ({ value: f, label: f }))}
+            />
           </div>
           <div>
             <label style={labelStyle}>Tanggal</label>
-            <input
-              type="date"
-              value={tanggal}
-              onChange={e => setTanggal(e.target.value)}
-              style={inputStyle}
-            />
+            <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>

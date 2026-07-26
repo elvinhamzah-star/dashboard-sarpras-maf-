@@ -3,6 +3,8 @@ import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface Props {
   program: Program
@@ -105,19 +107,17 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field label="Status">
-              <select value={status} onChange={e => setStatus(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <Dropdown value={status} onChange={setStatus} zIndex={1300}
+                options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
             </Field>
 
             <Field label="Jenis Pekerjaan">
-              <select
+              <Dropdown
                 value={JENIS_OPTIONS.includes(jenis) ? jenis : 'Lainnya'}
-                onChange={e => setJenis(e.target.value)}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-              >
-                {JENIS_OPTIONS.map(j => <option key={j} value={j}>{j}</option>)}
-              </select>
+                onChange={setJenis}
+                zIndex={1300}
+                options={JENIS_OPTIONS.map(j => ({ value: j, label: j }))}
+              />
             </Field>
           </div>
 
@@ -143,20 +143,10 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field label="Tanggal Mulai">
-              <input
-                type="date"
-                value={tanggalMulai}
-                onChange={e => setTanggalMulai(e.target.value)}
-                style={inputStyle}
-              />
+              <DatePicker value={tanggalMulai} onChange={setTanggalMulai} zIndex={1300} />
             </Field>
             <Field label="Tanggal Selesai">
-              <input
-                type="date"
-                value={tanggalSelesai}
-                onChange={e => setTanggalSelesai(e.target.value)}
-                style={inputStyle}
-              />
+              <DatePicker value={tanggalSelesai} onChange={setTanggalSelesai} zIndex={1300} />
             </Field>
           </div>
         </div>

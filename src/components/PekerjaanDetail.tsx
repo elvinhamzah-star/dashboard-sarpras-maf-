@@ -116,9 +116,16 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     if (prog) {
       setProgram(prog)
       // Transactions with a bukti link for this program (cache is already sorted tanggal desc).
+      // Transaksi sering ditag dengan suffix tahapan, mis. "... (Tahap 1)",
+      // sedangkan nama program tidak — jadi cocokkan pakai nama dasar (buang
+      // trailing "(Tahap/Termin/Periode ...)") supaya semua transaksi pekerjaan
+      // ini otomatis muncul di Bukti Transaksi, bukan cuma yang namanya persis.
+      const baseName = (s: string) =>
+        (s || '').replace(/\s*\((?:tahap|termin|periode)\b[^)]*\)\s*$/i, '').trim()
+      const progBase = baseName(prog.nama_pekerjaan)
       setTransactions(
         ((tRes.data as Transaction[] | null) ?? []).filter(
-          t => t.nama_pekerjaan === prog.nama_pekerjaan && t.link_bukti,
+          t => baseName(t.nama_pekerjaan) === progBase && t.link_bukti,
         ),
       )
     } else {
@@ -198,7 +205,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     }
     const subs = [{ id: 'invoice', label: 'Invoice' }, { id: 'pembayaran', label: 'Pembayaran' }, { id: 'struk', label: 'Struk' }]
     const canSave = !!docName.trim() && !docSaving
-    const inputSt: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', fontSize: 16, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }
+    const inputSt: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', fontSize: 14, color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--surface-raised)' }
     return (
       <div style={{ border: `1px solid ${accent}55`, borderRadius: 12, backgroundColor: 'var(--card)', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah {label}</div>

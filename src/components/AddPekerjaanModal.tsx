@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
 
 interface AddPekerjaanModalProps {
   onClose: () => void
@@ -137,13 +138,12 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
             <div key={f.key} style={{ gridColumn: ['program','nama_pekerjaan','isu_utama','link_rab_detail','link_dokumentasi','link_bukti_transaksi'].includes(f.key) ? 'span 2' : f.key === 'id' ? 'span 1' : 'span 1' }}>
               <label style={labelStyle}>{f.label}</label>
               {f.options ? (
-                <select
+                <Dropdown
                   value={form[f.key as keyof typeof form]}
-                  onChange={e => update(f.key, e.target.value)}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                >
-                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+                  onChange={v => update(f.key, v)}
+                  zIndex={1300}
+                  options={f.options.map(o => ({ value: o, label: o }))}
+                />
               ) : (
                 <input
                   type={f.type || 'text'}

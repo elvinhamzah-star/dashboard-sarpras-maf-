@@ -4,6 +4,8 @@ import { Documentation, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { isValidDriveLink } from '../lib/data'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface EditDocumentationModalProps {
   doc: Documentation
@@ -108,24 +110,16 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={labelStyle}>Fase</label>
-            <select
+            <Dropdown
               value={fase}
-              onChange={e => setFase(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-            >
-              {['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
+              onChange={setFase}
+              zIndex={1300}
+              options={['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => ({ value: f, label: f }))}
+            />
           </div>
           <div>
             <label style={labelStyle}>Tanggal</label>
-            <input
-              type="date"
-              value={tanggal}
-              onChange={e => setTanggal(e.target.value)}
-              style={inputStyle}
-            />
+            <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
           </div>
         </div>
 
