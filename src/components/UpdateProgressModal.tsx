@@ -105,15 +105,12 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Realisasi Terkini (Rp)
             </label>
-            <input
-              type="number"
-              min="0"
-              step="100000"
-              value={realisasi}
-              onChange={e => setRealisasi(e.target.value)}
-              style={inputStyle}
-            />
-            <div style={{ fontSize: 11, color: '#1B5E2B', marginTop: 4 }}>{formatRupiah(parseFloat(realisasi) || 0)}</div>
+            <div style={{ ...inputStyle, backgroundColor: 'var(--surface-2)', color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+              {formatRupiah(parseFloat(realisasi) || 0)}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              Dihitung otomatis dari transaksi — lihat <strong>Saldo per Pekerjaan</strong> di halaman Keuangan.
+            </div>
           </div>
 
           <div>

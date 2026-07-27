@@ -8,7 +8,7 @@ import { useWindowWidth } from '../lib/useWindowWidth'
 import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
 import PdfViewerModal from './PdfViewerModal'
-import TalanganPanel from './TalanganPanel'
+import SaldoPekerjaanPanel from './SaldoPekerjaanPanel'
 
 interface KeuanganProps {
   isAdmin?: boolean
@@ -39,6 +39,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const chartScrollRef = useRef<HTMLDivElement>(null)
   const [showDeploymentPopup, setShowDeploymentPopup] = useState(false)
   const [showSaldoPopup, setShowSaldoPopup] = useState(false)
+  const [activeTab, setActiveTab] = useState<'arus-kas' | 'saldo'>('arus-kas')
 
   // When either info popup closes, force a repaint so the card hover behind it
   // doesn't freeze (same stale-compositor-tile issue ModalShell guards against).
@@ -191,6 +192,38 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           </div>
         )}
       </div>
+
+      {/* Tab switcher — Saldo per Pekerjaan hanya admin */}
+      {isAdmin && (
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, backgroundColor: 'var(--surface-2)', borderRadius: 10, padding: 4, alignSelf: 'flex-start', width: 'fit-content' }}>
+          {(['arus-kas', 'saldo'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '7px 16px',
+                borderRadius: 7,
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                backgroundColor: activeTab === tab ? 'var(--card)' : 'transparent',
+                color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+                boxShadow: activeTab === tab ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              }}
+            >
+              {tab === 'arus-kas' ? 'Arus Kas' : 'Saldo per Pekerjaan'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'saldo' && isAdmin && <SaldoPekerjaanPanel />}
+
+      {/* Arus kas content — hidden (not unmounted) when saldo tab active, so state/cache stays intact */}
+      <div style={{ display: activeTab === 'saldo' && isAdmin ? 'none' : undefined }}>
 
       {/* === ROW 1: Total Deployment + Saldo Kas (display only) === */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 10 : 14, marginBottom: isMobile ? 10 : 12 }}>
@@ -603,8 +636,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
         </div>
       )}
 
-      {/* Catatan Talangan — khusus admin, terpisah total dari arus kas di atas */}
-      {isAdmin && <TalanganPanel />}
+      </div>{/* end arus-kas wrapper */}
 
       {/* Mobile FABs — Tambah + Toggle Riwayat */}
       {isAdmin && isMobile && (
