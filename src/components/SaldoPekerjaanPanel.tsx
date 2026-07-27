@@ -11,6 +11,11 @@ interface Row {
   sisaPengajuan: number
 }
 
+interface Unmatched {
+  masuk: number
+  keluar: number
+}
+
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
   fontSize: 11,
@@ -33,12 +38,14 @@ export default function SaldoPekerjaanPanel() {
   const width = useWindowWidth()
   const isMobile = width < 600
   const [rows, setRows] = useState<Row[]>([])
+  const [unmatched, setUnmatched] = useState<Unmatched>({ masuk: 0, keluar: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([fetchPrograms(), fetchTransactions()]).then(([pRes, tRes]) => {
       if (!pRes.data || !tRes.data) { setLoading(false); return }
       const txs = tRes.data
+      const programNames = new Set(pRes.data.map(p => p.nama_pekerjaan))
 
       const computed: Row[] = pRes.data.map(p => {
         const masuk = txs
@@ -57,7 +64,16 @@ export default function SaldoPekerjaanPanel() {
         return a.program.nama_pekerjaan.localeCompare(b.program.nama_pekerjaan)
       })
 
+      // Transaksi yang nama_pekerjaan-nya tidak cocok ke program manapun (Man Power, dll)
+      const unmatchedMasuk = txs
+        .filter(t => !programNames.has(t.nama_pekerjaan) && t.jenis_transaksi === 'Masuk')
+        .reduce((s, t) => s + (t.nominal || 0), 0)
+      const unmatchedKeluar = txs
+        .filter(t => !programNames.has(t.nama_pekerjaan) && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
+        .reduce((s, t) => s + (t.nominal || 0), 0)
+
       setRows(computed)
+      setUnmatched({ masuk: unmatchedMasuk, keluar: unmatchedKeluar })
       setLoading(false)
     })
   }, [])
@@ -66,8 +82,8 @@ export default function SaldoPekerjaanPanel() {
     return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>Memuat data…</div>
   }
 
-  const totalMasuk = rows.reduce((s, r) => s + r.masuk, 0)
-  const totalKeluar = rows.reduce((s, r) => s + r.keluar, 0)
+  const totalMasuk = rows.reduce((s, r) => s + r.masuk, 0) + unmatched.masuk
+  const totalKeluar = rows.reduce((s, r) => s + r.keluar, 0) + unmatched.keluar
   const saldoKas = totalMasuk - totalKeluar
   const talanganRows = rows.filter(r => r.saldo < 0)
   const totalTalangan = talanganRows.reduce((s, r) => s + Math.abs(r.saldo), 0)
@@ -158,6 +174,24 @@ export default function SaldoPekerjaanPanel() {
                 </tr>
               )
             })}
+          {/* Baris transaksi tidak terkait program (Man Power, biaya umum, dll) */}
+          {(unmatched.masuk > 0 || unmatched.keluar > 0) && (
+            <tr style={{ backgroundColor: 'var(--surface-2)', opacity: 0.8 }}>
+              <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>—</td>
+              <td style={tdStyle}>
+                <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontStyle: 'italic' }}>Operasional / Tidak Terkait Pekerjaan</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Man Power, honor, biaya umum</div>
+              </td>
+              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: unmatched.masuk > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                {unmatched.masuk > 0 ? formatRupiah(unmatched.masuk) : '—'}
+              </td>
+              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: unmatched.keluar > 0 ? '#660000' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                {unmatched.keluar > 0 ? formatRupiah(unmatched.keluar) : '—'}
+              </td>
+              <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
+              <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
+            </tr>
+          )}
           </tbody>
           {/* Total row */}
           <tfoot>
