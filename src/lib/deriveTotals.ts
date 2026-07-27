@@ -79,10 +79,12 @@ export interface NilaiAsetInfo {
 }
 
 export function deriveNilaiAset(
-  program: Pick<Program, 'hasil_nilai_aset' | 'hasil_rincian' | 'realisasi_terkini'>,
+  program: Pick<Program, 'hasil_nilai_aset' | 'hasil_rincian' | 'realisasi_terkini' | 'hasil_kategori' | 'jenis_pekerjaan'>,
 ): NilaiAsetInfo {
   const rincian = program.hasil_rincian ?? []
-  const derived = rincian.reduce((s, r) => s + (Number(r.biaya) || 0), 0)
+  // Mode "barang" (Pengadaan): biaya tersimpan = harga satuan, subtotal baris = biaya × ukuran.
+  const isBarang = program.hasil_kategori ? program.hasil_kategori === 'barang' : program.jenis_pekerjaan === 'Pengadaan'
+  const derived = rincian.reduce((s, r) => s + (isBarang ? (Number(r.biaya) || 0) * (Number(r.ukuran) || 0) : (Number(r.biaya) || 0)), 0)
   const stored = program.hasil_nilai_aset ?? null
   const display = stored ?? (derived > 0 ? derived : (program.realisasi_terkini ?? 0))
   const mismatch = stored !== null && derived > 0 && stored !== derived

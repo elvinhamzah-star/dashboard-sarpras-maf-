@@ -41,13 +41,16 @@ interface ModeConfig {
   midLabel: string
   defaultSatuan: string
   totalLabel: string
+  biayaLabel: string
+  /** true untuk mode "item" (Pengadaan Barang): biaya = harga satuan, dikali ukuran (qty) jadi subtotal baris. */
+  biayaPerUnit: boolean
 }
 
 export const MODE_CONFIG: Record<RincianMode, ModeConfig> = {
-  lokasi: { header: 'Rincian Realisasi Pekerjaan', addLabel: 'Tambah baris', namaPlaceholder: 'Nama lokasi...', hasAset: true, asetPlaceholder: 'Nama aset / material...', midKind: 'num', showSatuan: true, midLabel: 'Volume', defaultSatuan: 'm²', totalLabel: 'Total Keseluruhan' },
-  item: { header: 'Rincian Pengadaan per Item', addLabel: 'Tambah item', namaPlaceholder: 'Nama item...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: true, midLabel: 'Jumlah', defaultSatuan: 'unit', totalLabel: 'Total Pengadaan' },
-  divisi: { header: 'Rincian Operasional', addLabel: 'Tambah divisi', namaPlaceholder: 'Nama divisi / tim...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: false, midLabel: 'Personel', defaultSatuan: 'org', totalLabel: 'Total Realisasi' },
-  kegiatan: { header: 'Rincian Kegiatan', addLabel: 'Tambah kegiatan', namaPlaceholder: 'Nama kegiatan...', hasAset: false, asetPlaceholder: '', midKind: 'status', showSatuan: false, midLabel: 'Status', defaultSatuan: '', totalLabel: 'Total Realisasi' },
+  lokasi: { header: 'Rincian Realisasi Pekerjaan', addLabel: 'Tambah baris', namaPlaceholder: 'Nama lokasi...', hasAset: true, asetPlaceholder: 'Nama aset / material...', midKind: 'num', showSatuan: true, midLabel: 'Volume', defaultSatuan: 'm²', totalLabel: 'Total Keseluruhan', biayaLabel: 'Biaya (Rp)', biayaPerUnit: false },
+  item: { header: 'Rincian Pengadaan per Item', addLabel: 'Tambah item', namaPlaceholder: 'Nama item...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: true, midLabel: 'Jumlah', defaultSatuan: 'unit', totalLabel: 'Total Pengadaan', biayaLabel: 'Harga Satuan (Rp)', biayaPerUnit: true },
+  divisi: { header: 'Rincian Operasional', addLabel: 'Tambah divisi', namaPlaceholder: 'Nama divisi / tim...', hasAset: false, asetPlaceholder: '', midKind: 'num', showSatuan: false, midLabel: 'Personel', defaultSatuan: 'org', totalLabel: 'Total Realisasi', biayaLabel: 'Biaya (Rp)', biayaPerUnit: false },
+  kegiatan: { header: 'Rincian Kegiatan', addLabel: 'Tambah kegiatan', namaPlaceholder: 'Nama kegiatan...', hasAset: false, asetPlaceholder: '', midKind: 'status', showSatuan: false, midLabel: 'Status', defaultSatuan: '', totalLabel: 'Total Realisasi', biayaLabel: 'Biaya (Rp)', biayaPerUnit: false },
 }
 
 /** Baris rincian kosong sesuai mode. */
@@ -400,8 +403,12 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   const delRincian = (i: number) => setRincian(r => r.filter((_, idx) => idx !== i))
 
   // Live total
+  // Mode "item" (Pengadaan Barang): biaya = harga satuan, subtotal baris = biaya × ukuran.
+  // Mode lain: biaya sudah merupakan total per baris.
+  const rowSubtotal = (r: HasilRincianItem) =>
+    mcfg.biayaPerUnit ? (Number(r.biaya) || 0) * (Number(r.ukuran) || 0) : (Number(r.biaya) || 0)
   const totUkuran = rincian.reduce((s, r) => s + (Number(r.ukuran) || 0), 0)
-  const totBiaya = rincian.reduce((s, r) => s + (Number(r.biaya) || 0), 0)
+  const totBiaya = rincian.reduce((s, r) => s + rowSubtotal(r), 0)
 
   // Nilai Aset auto-mengikuti total rincian sampai admin mengubahnya manual.
   // (cfg.rincian true untuk fisik/barang; untuk jasa nilai diisi langsung.)
@@ -649,7 +656,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                         </div>
                       )}
                       <div>
-                        <span style={capStyle}>Biaya (Rp)</span>
+                        <span style={capStyle}>{mcfg.biayaLabel}</span>
                         <input
                           value={r.biaya ? r.biaya.toLocaleString('id-ID') : ''}
                           onChange={e => setRincianAt(i, { biaya: digitsToNumber(e.target.value) })}
@@ -659,6 +666,15 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                         />
                       </div>
                     </div>
+
+                    {mcfg.biayaPerUnit && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 2 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Subtotal</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                          {formatRupiah(rowSubtotal(r))}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

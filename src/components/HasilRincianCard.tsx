@@ -68,7 +68,10 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
   const mode = rincianMode(kat, program.jenis_pekerjaan)
   const mcfg = MODE_CONFIG[mode]
 
-  const totBiaya = rincian.reduce((s, r) => s + (Number(r.biaya) || 0), 0)
+  // Mode "item" (Pengadaan Barang): biaya tersimpan = harga satuan, subtotal baris = biaya × ukuran.
+  const rowSubtotal = (r: HasilRincianItem) =>
+    mcfg.biayaPerUnit ? (Number(r.biaya) || 0) * (Number(r.ukuran) || 0) : (Number(r.biaya) || 0)
+  const totBiaya = rincian.reduce((s, r) => s + rowSubtotal(r), 0)
   const totUkuran = rincian.reduce((s, r) => s + (Number(r.ukuran) || 0), 0)
 
   const locGroups = mode === 'lokasi' ? groupByLocation(rincian) : []
@@ -292,10 +295,11 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
                         ) : (
                           <span style={tblSub}>
                             {(Number(r.ukuran) || 0).toLocaleString('id-ID')} {mode === 'divisi' ? 'orang' : r.satuan}
+                            {mode === 'item' && ` · ${formatRupiah(Number(r.biaya) || 0)}/${r.satuan}`}
                           </span>
                         )}
                       </div>
-                      <div style={tblVal}>{formatRupiah(r.biaya)}</div>
+                      <div style={tblVal}>{formatRupiah(rowSubtotal(r))}</div>
                     </div>
                   )
                 })}

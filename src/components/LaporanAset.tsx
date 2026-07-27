@@ -33,6 +33,12 @@ const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
   Rencana:  { bg: 'rgba(217,119,6,0.13)', fg: '#B45309' },
 }
 
+/** Mode "item" (Pengadaan Barang): biaya tersimpan = harga satuan, subtotal baris = biaya × ukuran. */
+function rowSubtotal(r: HasilRincianItem, kat: HasilKategori | null | undefined, jenis: string): number {
+  const isItem = (kat || katFromJenis(jenis)) === 'barang'
+  return isItem ? (Number(r.biaya) || 0) * (Number(r.ukuran) || 0) : (Number(r.biaya) || 0)
+}
+
 /** Kolom tabel rincian menyesuaikan mode (fisik→lokasi, barang→item, jasa→divisi/kegiatan). */
 interface ReportCol {
   key: 'no' | 'nama' | 'aset' | 'ukuran' | 'satuan' | 'status' | 'biaya'
@@ -122,7 +128,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
       return {
         program: p,
         rincian,
-        totalBiaya: rincian.reduce((s, r) => s + (r.biaya ?? 0), 0),
+        totalBiaya: rincian.reduce((s, r) => s + rowSubtotal(r, p.hasil_kategori, p.jenis_pekerjaan), 0),
       }
     })
 
@@ -148,7 +154,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
           r.aset ?? '-',
           String(r.ukuran ?? ''),
           r.satuan ?? '',
-          String(r.biaya ?? 0),
+          String(rowSubtotal(r, p.hasil_kategori, p.jenis_pekerjaan)),
         ])
       })
     })
@@ -421,7 +427,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
                               {/* Kanan: nilai */}
                               <div style={{ flexShrink: 0, textAlign: 'right' }}>
                                 <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-                                  {formatRupiah(r.biaya ?? 0)}
+                                  {formatRupiah(rowSubtotal(r, kat, p.jenis_pekerjaan))}
                                 </span>
                               </div>
                             </div>
@@ -477,7 +483,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
                                         )
                                       }
                                       case 'biaya':
-                                        return <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>{formatRupiah(r.biaya ?? 0)}</td>
+                                        return <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>{formatRupiah(rowSubtotal(r, kat, p.jenis_pekerjaan))}</td>
                                       default:
                                         return null
                                     }
