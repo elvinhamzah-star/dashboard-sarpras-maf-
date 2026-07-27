@@ -575,7 +575,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
               </div>
             )}
             <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
-            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} />
+            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
 
@@ -650,7 +650,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 </tbody>
               </table>
             </div>
-            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} />
+            <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
 
@@ -1227,9 +1227,10 @@ interface FeaturedDocsSectionProps {
   savingDocId: string | null
   setSavingDocId: (id: string | null) => void
   onManage: () => void
+  onNavigateGaleri?: () => void
 }
 
-function FeaturedDocsSection({ galleryDocs, isAdmin, isMobile, onManage }: FeaturedDocsSectionProps) {
+function FeaturedDocsSection({ galleryDocs, isAdmin, isMobile, onManage, onNavigateGaleri }: FeaturedDocsSectionProps) {
   const featuredDocs = galleryDocs.filter(d => d.tampil_ringkasan)
   if (featuredDocs.length === 0 && !isAdmin) return null
   return (
@@ -1272,6 +1273,15 @@ function FeaturedDocsSection({ galleryDocs, isAdmin, isMobile, onManage }: Featu
             )
           })}
         </div>
+      )}
+      {onNavigateGaleri && (
+        <button
+          onClick={onNavigateGaleri}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, width: '100%', padding: 9, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--blue)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          Lihat Dokumentasi Lengkap di Galeri
+          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
+        </button>
       )}
     </div>
   )

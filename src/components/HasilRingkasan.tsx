@@ -183,9 +183,11 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateG
       )}
 
       {/* 3. Kondisi Sebelum & Sesudah — dokumentasi di paling bawah.
-          Untuk admin, kartu selalu muncul (walau belum ada pasangan yang
+          Hanya relevan untuk pekerjaan Selesai — On Going/On Hold secara
+          definisi belum punya kondisi "Sesudah". Untuk admin di pekerjaan
+          Selesai, kartu selalu muncul (walau belum ada pasangan yang
           ditampilkan) agar tombol Kelola tetap tersedia dari halaman ini. */}
-      {(featuredPairs.length > 0 || isAdmin) && (
+      {program.status === 'Selesai' && (featuredPairs.length > 0 || isAdmin) && (
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 9, margin: '4px 2px 13px' }}>
             <h2 style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 700, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>Kondisi Sebelum &amp; Sesudah</h2>
