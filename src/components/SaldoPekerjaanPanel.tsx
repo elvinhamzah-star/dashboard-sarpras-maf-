@@ -231,7 +231,9 @@ export default function SaldoPekerjaanPanel() {
                       >
                         {isSaving ? '…' : (r.masuk > 0 ? formatRupiah(r.masuk) : '—')}
                         {!isSaving && (
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>✏️</span>
+                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ opacity: 0.5, flexShrink: 0 }}>
+                            <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
                         )}
                       </button>
                     )}
