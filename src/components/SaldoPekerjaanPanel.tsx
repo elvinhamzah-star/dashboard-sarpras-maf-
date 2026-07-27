@@ -128,41 +128,25 @@ export default function SaldoPekerjaanPanel() {
   const talanganRows = rows.filter(r => r.saldo < 0)
   const totalTalangan = talanganRows.reduce((s, r) => s + Math.abs(r.saldo), 0)
 
-  const SummaryCard = ({ label, value, color, bg, sub }: { label: string; value: number; color: string; bg: string; sub?: string }) => (
-    <div style={{ flex: 1, minWidth: 140, background: bg, borderRadius: 10, padding: '12px 14px' }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(value)}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{sub}</div>}
-    </div>
-  )
+  const saldoColor = saldoKas >= 0 ? '#1B5E2B' : '#660000'
 
   return (
     <div>
-      {/* Summary cards */}
+      {/* Summary cards — cuma 2: Saldo Kas (dgn breakdown) + Talangan (sinyal utama) */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <SummaryCard
-          label="Saldo Kas"
-          value={saldoKas}
-          color={saldoKas >= 0 ? '#1B5E2B' : '#660000'}
-          bg={saldoKas >= 0 ? 'rgba(27,94,43,0.08)' : 'rgba(102,0,0,0.08)'}
-          sub="Total alokasi − keluar"
-        />
-        <SummaryCard
-          label="Total Dana Dialokasikan"
-          value={totalMasuk}
-          color="#1A6FE8"
-          bg="rgba(26,111,232,0.07)"
-          sub={`${rows.filter(r => r.masuk > 0).length} pekerjaan`}
-        />
-        <SummaryCard label="Total Dana Keluar" value={totalKeluar} color="#660000" bg="rgba(102,0,0,0.07)" />
+        <div style={{ flex: 1, minWidth: 200, background: 'var(--card)', border: '1px solid var(--border)', borderTop: `2px solid ${saldoKas >= 0 ? 'rgba(27,94,43,0.4)' : 'rgba(102,0,0,0.4)'}`, borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: saldoColor, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo Kas</div>
+          <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+            Masuk {formatRupiah(totalMasuk)} &middot; Keluar {formatRupiah(totalKeluar)}
+          </div>
+        </div>
         {totalTalangan > 0 && (
-          <SummaryCard
-            label="Total Talangan"
-            value={totalTalangan}
-            color="#D97706"
-            bg="rgba(217,119,6,0.09)"
-            sub={`${talanganRows.length} pekerjaan perlu dana`}
-          />
+          <div style={{ flex: 1, minWidth: 200, background: 'var(--card)', border: '1px solid var(--border)', borderTop: '2px solid rgba(217,119,6,0.5)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#D97706', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Talangan</div>
+            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalTalangan)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{talanganRows.length} pekerjaan perlu dana duluan</div>
+          </div>
         )}
       </div>
 
@@ -173,7 +157,7 @@ export default function SaldoPekerjaanPanel() {
             <tr>
               <th style={{ ...thStyle, textAlign: 'center', width: 40 }}>No</th>
               <th style={{ ...thStyle, textAlign: 'left' }}>Nama Pekerjaan</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>Dana Dialokasikan</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Dana Masuk</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Dana Keluar</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Saldo</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Sisa Pengajuan</th>
@@ -195,7 +179,7 @@ export default function SaldoPekerjaanPanel() {
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.program.status}</div>
                   </td>
 
-                  {/* Dana Dialokasikan — inline edit */}
+                  {/* Dana Masuk — inline edit, netral (bukan hijau) */}
                   <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {isEditing ? (
                       <input
@@ -225,7 +209,7 @@ export default function SaldoPekerjaanPanel() {
                     ) : (
                       <button
                         onClick={() => startEdit(r)}
-                        title="Klik untuk ubah alokasi"
+                        title="Klik untuk ubah dana masuk"
                         style={{
                           background: 'none',
                           border: 'none',
@@ -239,13 +223,13 @@ export default function SaldoPekerjaanPanel() {
                           fontSize: 'inherit',
                           fontVariantNumeric: 'tabular-nums',
                           whiteSpace: 'nowrap',
-                          color: isSaving ? 'var(--text-muted)' : (r.masuk > 0 ? '#1B5E2B' : 'var(--text-muted)'),
+                          color: isSaving ? 'var(--text-muted)' : 'var(--text-primary)',
                           fontFamily: 'inherit',
                         }}
                       >
                         {isSaving ? '…' : (r.masuk > 0 ? formatRupiah(r.masuk) : '—')}
                         {!isSaving && (
-                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ opacity: 0.5, flexShrink: 0 }}>
+                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ opacity: 0.4, flexShrink: 0 }}>
                             <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                           </svg>
                         )}
@@ -253,9 +237,12 @@ export default function SaldoPekerjaanPanel() {
                     )}
                   </td>
 
-                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: r.keluar > 0 ? '#660000' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                  {/* Dana Keluar — netral (bukan merah) */}
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: r.keluar > 0 ? 'var(--text-primary)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                     {r.keluar > 0 ? formatRupiah(r.keluar) : '—'}
                   </td>
+
+                  {/* Saldo — satu-satunya kolom berwarna (sinyal utama) */}
                   <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {r.saldo === 0 ? (
                       <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -289,7 +276,7 @@ export default function SaldoPekerjaanPanel() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Nama pekerjaan di transaksi tak cocok ke daftar pekerjaan saat ini</div>
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
-                <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                   {formatRupiah(unmatchedKeluar)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
@@ -302,9 +289,9 @@ export default function SaldoPekerjaanPanel() {
               <td colSpan={2} style={{ ...tdStyle, fontWeight: 700, fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                 Total
               </td>
-              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: '#1B5E2B', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</td>
-              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluar)}</td>
-              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : '#660000', fontVariantNumeric: 'tabular-nums' }}>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</td>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluar)}</td>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: saldoColor, fontVariantNumeric: 'tabular-nums' }}>
                 {saldoKas >= 0 ? '+' : '−'}{formatRupiah(Math.abs(saldoKas))}
               </td>
               <td style={tdStyle} />
@@ -314,7 +301,7 @@ export default function SaldoPekerjaanPanel() {
       </div>
 
       <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
-        Klik nominal di kolom Dana Dialokasikan untuk input alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Dialokasikan.
+        Klik nominal di kolom Dana Masuk untuk input alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Masuk.
       </div>
     </div>
   )
