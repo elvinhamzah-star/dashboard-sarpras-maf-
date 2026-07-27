@@ -279,13 +279,14 @@ export default function SaldoPekerjaanPanel() {
               )
             })}
 
-            {/* Baris keluar yang tidak terkait pekerjaan spesifik (Man Power, dll) */}
+            {/* Transaksi Keluar yang nama_pekerjaan-nya tak cocok ke program manapun
+                (mis. nama pekerjaan direname/dihapus setelah transaksi dicatat) */}
             {unmatchedKeluar > 0 && (
               <tr style={{ backgroundColor: 'var(--surface-2)', opacity: 0.8 }}>
                 <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>—</td>
                 <td style={tdStyle}>
-                  <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontStyle: 'italic' }}>Operasional / Tidak Terkait Pekerjaan</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Man Power, honor, biaya umum</div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontStyle: 'italic' }}>Tidak Terkait Pekerjaan Manapun</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Nama pekerjaan di transaksi tak cocok ke daftar pekerjaan saat ini</div>
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
                 <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>
