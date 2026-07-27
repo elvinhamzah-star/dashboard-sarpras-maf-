@@ -1,4 +1,4 @@
-import { Program, SubProgram } from './supabase'
+import { Program, SubProgram, Transaction } from './supabase'
 import { getEffectiveProgress } from './data'
 
 export interface DerivedTotals {
@@ -10,15 +10,33 @@ export interface DerivedTotals {
   realisasiFromSubs: boolean
 }
 
+/**
+ * Realisasi = single source of truth adalah transaksi Keluar/Keluar PBB yang
+ * nama_pekerjaan-nya cocok persis dengan program. Dihitung ulang tiap render
+ * (bukan snapshot di kolom programs.realisasi_terkini) supaya kalau admin
+ * mengedit nama_pekerjaan transaksi (mis. betulkan salah ketik), realisasi
+ * otomatis re-sync tanpa perlu rekonsiliasi manual.
+ */
+function sumRealisasiFromTransactions(namaPekerjaan: string, transactions: Pick<Transaction, 'nama_pekerjaan' | 'jenis_transaksi' | 'nominal'>[]): number {
+  return transactions
+    .filter(t => t.nama_pekerjaan === namaPekerjaan && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
+    .reduce((s, t) => s + (t.nominal || 0), 0)
+}
+
 export function deriveProgramTotals(
-  program: Pick<Program, 'jenis_pekerjaan' | 'progress_percent' | 'total_anggaran' | 'realisasi_terkini' | 'sisa_anggaran'>,
+  program: Pick<Program, 'jenis_pekerjaan' | 'progress_percent' | 'total_anggaran' | 'realisasi_terkini' | 'sisa_anggaran' | 'nama_pekerjaan'>,
   subs: Pick<SubProgram, 'progress_percent' | 'total_anggaran' | 'realisasi_terkini'>[],
+  transactions?: Pick<Transaction, 'nama_pekerjaan' | 'jenis_transaksi' | 'nominal'>[],
 ): DerivedTotals {
   if (subs.length === 0) {
+    const total_anggaran = program.total_anggaran || 0
+    const realisasi_terkini = transactions
+      ? sumRealisasiFromTransactions(program.nama_pekerjaan, transactions)
+      : (program.realisasi_terkini || 0)
     return {
-      total_anggaran: program.total_anggaran || 0,
-      realisasi_terkini: program.realisasi_terkini || 0,
-      sisa_anggaran: program.sisa_anggaran || 0,
+      total_anggaran,
+      realisasi_terkini,
+      sisa_anggaran: total_anggaran - realisasi_terkini,
       progress_percent: getEffectiveProgress(program),
       hasSubs: false,
       realisasiFromSubs: false,

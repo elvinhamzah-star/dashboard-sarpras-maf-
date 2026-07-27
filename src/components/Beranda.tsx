@@ -781,6 +781,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       status={pekerjaanTab}
                       programs={displayPrograms.filter(p => p.status === pekerjaanTab)}
                       subPrograms={subPrograms}
+                      transactions={visibleTransactions}
                       compact
                       isMobile={isMobile}
                     />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchSubPrograms, Program, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchSubPrograms, fetchTransactions, Program, SubProgram, Transaction } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
 import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -46,6 +46,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   const isNarrow = width < 1100
   const [programs, setPrograms] = useState<Program[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [showBlockedModal, setShowBlockedModal] = useState(false)
 
@@ -58,9 +59,10 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data }, { data: subData }] = await Promise.all([fetchPrograms(), fetchSubPrograms()])
+      const [{ data }, { data: subData }, { data: txData }] = await Promise.all([fetchPrograms(), fetchSubPrograms(), fetchTransactions()])
       if (data) setPrograms(data)
       if (subData) setSubPrograms(subData)
+      if (txData) setTransactions(txData)
       setLoading(false)
     }
     load()
@@ -83,7 +85,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   }
 
   const getDerived = (p: Program) =>
-    deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id))
+    deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id), transactions)
 
   // Filter by status (if active), then sort by ID
   const filtered = programs
@@ -206,6 +208,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
           status={activeStatus}
           programs={filtered}
           subPrograms={subPrograms}
+          transactions={transactions}
           isMobile={isMobile}
           role={role}
         />

@@ -55,6 +55,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [hasilDismissed, setHasilDismissed] = useState(false)
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Set transaksi TIDAK difilter (beda dari `transactions` di atas yang cuma
+  // yang punya link_bukti) — dipakai untuk hitung Realisasi Terkini yang
+  // harus mencakup semua transaksi Keluar, bukan cuma yang ada buktinya.
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
   const [addingSubProgram, setAddingSubProgram] = useState(false)
   const [buktiExpanded, setBuktiExpanded] = useState(false)
@@ -123,11 +127,9 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       const baseName = (s: string) =>
         (s || '').replace(/\s*\((?:tahap|termin|periode)\b[^)]*\)\s*$/i, '').trim()
       const progBase = baseName(prog.nama_pekerjaan)
-      setTransactions(
-        ((tRes.data as Transaction[] | null) ?? []).filter(
-          t => baseName(t.nama_pekerjaan) === progBase && t.link_bukti,
-        ),
-      )
+      const allTx = (tRes.data as Transaction[] | null) ?? []
+      setTransactions(allTx.filter(t => baseName(t.nama_pekerjaan) === progBase && t.link_bukti))
+      setAllTransactions(allTx)
     } else {
       setProgram(null)
     }
@@ -294,7 +296,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     )
   }
 
-  const derived = deriveProgramTotals(program, subPrograms.filter(s => s.program_id === program.id))
+  const derived = deriveProgramTotals(program, subPrograms.filter(s => s.program_id === program.id), allTransactions)
   const pct = derived.progress_percent
   const nilaiInfo = deriveNilaiAset(program)
   const statusColor = STATUS_COLORS[program.status] || 'var(--blue)'
@@ -518,6 +520,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           status={program.status}
           programs={[program]}
           subPrograms={subPrograms}
+          transactions={allTransactions}
           isMobile={isMobile}
           role={role}
         />

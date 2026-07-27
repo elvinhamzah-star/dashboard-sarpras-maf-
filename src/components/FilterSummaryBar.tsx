@@ -10,7 +10,7 @@
  *  • Beranda.tsx showDetail popup — compact size, between header and list
  */
 
-import { Program, SubProgram } from '../lib/supabase'
+import { Program, SubProgram, Transaction } from '../lib/supabase'
 import { deriveProgramTotals } from '../lib/deriveTotals'
 import { formatRupiah } from '../lib/data'
 
@@ -26,6 +26,7 @@ interface Props {
   status: string
   programs: Program[]
   subPrograms: SubProgram[]
+  transactions?: Transaction[]
   /** compact=true → smaller padding/font, used inside popups */
   compact?: boolean
   isMobile?: boolean
@@ -36,6 +37,7 @@ export default function FilterSummaryBar({
   status,
   programs,
   subPrograms,
+  transactions,
   compact = false,
   isMobile = false,
   role,
@@ -64,7 +66,7 @@ export default function FilterSummaryBar({
 
   // ── Aggregate derived totals ──────────────────────────────────────────────
   const derived = vprograms.map(p =>
-    deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id))
+    deriveProgramTotals(p, subPrograms.filter(s => s.program_id === p.id), transactions)
   )
 
   const totalAnggaran  = derived.reduce((s, d) => s + d.total_anggaran, 0)
