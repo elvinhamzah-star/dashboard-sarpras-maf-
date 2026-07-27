@@ -8,6 +8,7 @@ import { useWindowWidth } from '../lib/useWindowWidth'
 import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
 import PdfViewerModal from './PdfViewerModal'
+import TalanganPanel from './TalanganPanel'
 
 interface KeuanganProps {
   isAdmin?: boolean
@@ -601,6 +602,9 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           )}
         </div>
       )}
+
+      {/* Catatan Talangan — khusus admin, terpisah total dari arus kas di atas */}
+      {isAdmin && <TalanganPanel />}
 
       {/* Mobile FABs — Tambah + Toggle Riwayat */}
       {isAdmin && isMobile && (

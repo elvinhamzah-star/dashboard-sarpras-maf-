@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, Talangan } from './supabase'
 
 // The admin PIN is held in memory only after a successful server-side verification.
 // It is never persisted and is required for every write (insert/update/delete),
@@ -83,6 +83,13 @@ export async function adminDelete(table: string, id: string | number) {
     p_id: String(id),
   })
   return { error }
+}
+
+// Baca catatan talangan (PIN-gated). RLS tabel `talangan` tidak punya policy
+// publik, jadi HANYA lewat fungsi ini datanya bisa dibaca — anon key saja tak cukup.
+export async function getTalangan(): Promise<{ data: Talangan[] | null; error: unknown }> {
+  const { data, error } = await supabase.rpc('get_talangan', { p_pin: adminPin })
+  return { data: (data as Talangan[]) ?? null, error }
 }
 
 export async function upsertMonthlyReport(bulan: string, catatan: string, rencana: string) {

@@ -115,6 +115,21 @@ export interface Transaction {
   created_at: string
 }
 
+// Catatan talangan (admin-only, private). Pekerjaan yang dibayari duluan karena
+// dananya belum cair. Terpisah TOTAL dari `transactions`/arus kas — angkanya tidak
+// pernah masuk saldoKas/Masuk/Keluar. Dibaca via PIN-gated RPC `get_talangan`.
+export interface Talangan {
+  id: string
+  program_id: string
+  nama_pekerjaan?: string | null
+  nominal: number
+  tanggal: string
+  keterangan?: string | null
+  status: 'berjalan' | 'selesai'
+  created_at: string
+  settled_at?: string | null
+}
+
 export interface Documentation {
   id: string
   program_id: string
