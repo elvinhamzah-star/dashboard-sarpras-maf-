@@ -56,11 +56,8 @@ export default function SaldoPekerjaanPanel() {
         return { program: p, masuk, keluar, saldo: masuk - keluar, sisaPengajuan: (p.total_anggaran || 0) - masuk }
       })
 
-      computed.sort((a, b) => {
-        if (a.saldo < 0 && b.saldo >= 0) return -1
-        if (a.saldo >= 0 && b.saldo < 0) return 1
-        return a.program.nama_pekerjaan.localeCompare(b.program.nama_pekerjaan)
-      })
+      // Urutan sama seperti Halaman Pekerjaan (P-001 -> P-025), biar gak bikin bingung
+      computed.sort((a, b) => a.program.id.localeCompare(b.program.id))
 
       // Keluar yang tidak terkait pekerjaan spesifik (Man Power, dll)
       const unmatched = txs
@@ -111,11 +108,7 @@ export default function SaldoPekerjaanPanel() {
       const saldo = masuk - r.keluar
       const sisaPengajuan = (r.program.total_anggaran || 0) - masuk
       return { ...r, masuk, saldo, sisaPengajuan, program: { ...r.program, dana_masuk: nominal } }
-    }).sort((a, b) => {
-      if (a.saldo < 0 && b.saldo >= 0) return -1
-      if (a.saldo >= 0 && b.saldo < 0) return 1
-      return a.program.nama_pekerjaan.localeCompare(b.program.nama_pekerjaan)
-    }))
+    }).sort((a, b) => a.program.id.localeCompare(b.program.id)))
   }
 
   if (loading) {
