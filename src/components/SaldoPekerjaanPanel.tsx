@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchPrograms, fetchTransactions, Program } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, invalidateCache, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -40,6 +40,7 @@ export default function SaldoPekerjaanPanel() {
   const [editValue, setEditValue] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const savedRef = useRef(false)
 
   const loadData = () => {
     Promise.all([fetchPrograms(), fetchTransactions()]).then(([pRes, tRes]) => {
@@ -79,19 +80,31 @@ export default function SaldoPekerjaanPanel() {
   }, [editingId])
 
   const startEdit = (r: Row) => {
+    savedRef.current = false
     setEditingId(r.program.id)
     setEditValue(r.masuk > 0 ? String(r.masuk) : '')
   }
 
-  const cancelEdit = () => { setEditingId(null); setEditValue('') }
+  const cancelEdit = () => { savedRef.current = true; setEditingId(null); setEditValue('') }
 
-  const saveEdit = async (programId: string) => {
-    const nominal = parseInt(editValue.replace(/\D/g, ''), 10) || 0
+  const saveEdit = async (programId: string, value: string) => {
+    // Enter memicu onKeyDown lalu blur saat input di-unmount — guard ini
+    // memastikan hanya panggilan pertama yang benar-benar menyimpan.
+    if (savedRef.current) return
+    savedRef.current = true
+
+    const nominal = parseInt(value.replace(/\D/g, ''), 10) || 0
     setSavingId(programId)
     setEditingId(null)
-    await adminUpdate('programs', { dana_masuk: nominal }, programId)
+    const { error } = await adminUpdate('programs', { dana_masuk: nominal }, programId)
     setSavingId(null)
-    // Update local state tanpa reload penuh
+
+    if (error) {
+      alert('Gagal menyimpan: ' + (error instanceof Error ? error.message : String(error)))
+      return
+    }
+
+    invalidateCache('programs')
     setRows(prev => prev.map(r => {
       if (r.program.id !== programId) return r
       const masuk = nominal
@@ -183,7 +196,7 @@ export default function SaldoPekerjaanPanel() {
                   </td>
 
                   {/* Dana Dialokasikan — inline edit */}
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {isEditing ? (
                       <input
                         ref={inputRef}
@@ -191,10 +204,10 @@ export default function SaldoPekerjaanPanel() {
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onKeyDown={e => {
-                          if (e.key === 'Enter') saveEdit(r.program.id)
+                          if (e.key === 'Enter') saveEdit(r.program.id, editValue)
                           if (e.key === 'Escape') cancelEdit()
                         }}
-                        onBlur={() => saveEdit(r.program.id)}
+                        onBlur={() => saveEdit(r.program.id, editValue)}
                         style={{
                           width: 130,
                           padding: '5px 8px',
@@ -225,6 +238,7 @@ export default function SaldoPekerjaanPanel() {
                           fontWeight: 600,
                           fontSize: 'inherit',
                           fontVariantNumeric: 'tabular-nums',
+                          whiteSpace: 'nowrap',
                           color: isSaving ? 'var(--text-muted)' : (r.masuk > 0 ? '#1B5E2B' : 'var(--text-muted)'),
                           fontFamily: 'inherit',
                         }}
@@ -239,10 +253,10 @@ export default function SaldoPekerjaanPanel() {
                     )}
                   </td>
 
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: r.keluar > 0 ? '#660000' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: r.keluar > 0 ? '#660000' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                     {r.keluar > 0 ? formatRupiah(r.keluar) : '—'}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {r.saldo === 0 ? (
                       <span style={{ color: 'var(--text-muted)' }}>—</span>
                     ) : (
@@ -258,7 +272,7 @@ export default function SaldoPekerjaanPanel() {
                       </div>
                     )}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: r.sisaPengajuan <= 0 ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: r.sisaPengajuan <= 0 ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                     {r.sisaPengajuan > 0 ? formatRupiah(r.sisaPengajuan) : (r.sisaPengajuan === 0 ? '—' : <span style={{ color: '#660000' }}>Over RAB</span>)}
                   </td>
                 </tr>
@@ -274,7 +288,7 @@ export default function SaldoPekerjaanPanel() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Man Power, honor, biaya umum</div>
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>
                   {formatRupiah(unmatchedKeluar)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>—</td>
@@ -287,9 +301,9 @@ export default function SaldoPekerjaanPanel() {
               <td colSpan={2} style={{ ...tdStyle, fontWeight: 700, fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                 Total
               </td>
-              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#1B5E2B', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</td>
-              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluar)}</td>
-              <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : '#660000', fontVariantNumeric: 'tabular-nums' }}>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: '#1B5E2B', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</td>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluar)}</td>
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : '#660000', fontVariantNumeric: 'tabular-nums' }}>
                 {saldoKas >= 0 ? '+' : '−'}{formatRupiah(Math.abs(saldoKas))}
               </td>
               <td style={tdStyle} />
@@ -299,7 +313,7 @@ export default function SaldoPekerjaanPanel() {
       </div>
 
       <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
-        Klik ✏️ di kolom Dana Dialokasikan untuk input alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Dialokasikan.
+        Klik nominal di kolom Dana Dialokasikan untuk input alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Dialokasikan.
       </div>
     </div>
   )
