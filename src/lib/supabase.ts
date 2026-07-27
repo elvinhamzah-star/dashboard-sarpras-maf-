@@ -74,6 +74,7 @@ export interface Program {
   hasil_dampak?: string[] | null
   hasil_rincian?: HasilRincianItem[] | null
   hasil_filled_at?: string | null
+  dana_masuk?: number | null
 }
 
 export interface ProgramSnapshot {
