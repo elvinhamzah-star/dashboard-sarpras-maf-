@@ -152,7 +152,7 @@ export default function SaldoPekerjaanPanel() {
 
       {/* Tabel */}
       <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--border)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: isMobile ? 12 : 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: isMobile ? 11 : 12 }}>
           <thead>
             <tr>
               <th style={{ ...thStyle, textAlign: 'center', width: 40 }}>No</th>
