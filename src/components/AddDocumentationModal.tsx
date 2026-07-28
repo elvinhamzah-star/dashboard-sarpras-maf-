@@ -25,6 +25,10 @@ interface LinkRow {
   link: string
   caption: string
   tipeFile: 'foto' | 'video' | null // null = belum terdeteksi
+  // true setelah user klik ikon tipe buat koreksi manual — deteksi otomatis
+  // (yang kadang salah nebak video sebagai foto, krn Drive juga bikin
+  // thumbnail gambar buat video) berhenti menimpa pilihan user setelahnya.
+  manualType: boolean
 }
 
 const inputStyle: React.CSSProperties = {
@@ -50,7 +54,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 function newRow(): LinkRow {
-  return { id: crypto.randomUUID(), link: '', caption: '', tipeFile: null }
+  return { id: crypto.randomUUID(), link: '', caption: '', tipeFile: null, manualType: false }
 }
 
 function detectFileType(link: string): Promise<'foto' | 'video'> {
@@ -121,10 +125,20 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
 
   const triggerDetect = (id: string, link: string) => {
     if (!isValidDriveLink(link.trim())) return
-    setRows(prev => prev.map(r => r.id === id ? { ...r, tipeFile: null } : r))
+    setRows(prev => prev.map(r => r.id === id ? { ...r, tipeFile: null, manualType: false } : r))
     detectFileType(link.trim()).then(tipeFile => {
-      setRows(prev => prev.map(r => r.id === id ? { ...r, tipeFile } : r))
+      // Deteksi ini berbasis "apakah link me-render sebagai gambar" — Drive
+      // juga bikin thumbnail gambar buat video, jadi kadang salah nebak
+      // video jadi foto. Jangan timpa kalau user sudah koreksi manual
+      // (mis. hasil paste-massal, klik keburu sebelum promise ini resolve).
+      setRows(prev => prev.map(r => r.id === id && !r.manualType ? { ...r, tipeFile } : r))
     })
+  }
+
+  const toggleType = (id: string) => {
+    setRows(prev => prev.map(r => r.id === id
+      ? { ...r, tipeFile: r.tipeFile === 'video' ? 'foto' : 'video', manualType: true }
+      : r))
   }
 
   const updateRow = (id: string, field: 'link' | 'caption', value: string) => {
@@ -147,7 +161,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
     if (links.length <= 1) return
 
     e.preventDefault()
-    const pasted: LinkRow[] = links.map(link => ({ id: crypto.randomUUID(), link, caption: '', tipeFile: null }))
+    const pasted: LinkRow[] = links.map(link => ({ id: crypto.randomUUID(), link, caption: '', tipeFile: null, manualType: false }))
     setRows(prev => {
       const idx = prev.findIndex(r => r.id === id)
       const before = prev.slice(0, idx)
@@ -377,7 +391,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {rows.map((row, i) => {
               const isInvalid = row.link.trim() && !isValidDriveLink(row.link.trim())
-              const isDetecting = row.link.trim() && isValidDriveLink(row.link.trim()) && row.tipeFile === null
+              const isDetecting = !!row.link.trim() && isValidDriveLink(row.link.trim()) && row.tipeFile === null
               return (
                 <div key={row.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   {/* Row number */}
@@ -405,13 +419,22 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
                           backgroundColor: isInvalid ? 'rgba(239,68,68,0.03)' : 'var(--card)',
                         }}
                       />
-                      {/* Type indicator icon */}
+                      {/* Type indicator icon — bisa diklik buat koreksi manual kalau deteksi
+                          otomatis salah nebak (Drive bikin thumbnail gambar buat video juga,
+                          jadi kadang video salah kedeteksi foto). */}
                       {row.link.trim() && !isInvalid && (
-                        <div style={{
-                          position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          width: 20, height: 20,
-                        }}>
+                        <button
+                          type="button"
+                          onClick={() => !isDetecting && toggleType(row.id)}
+                          disabled={isDetecting}
+                          title={isDetecting ? 'Mendeteksi tipe file…' : `Terdeteksi ${row.tipeFile === 'video' ? 'Video' : 'Foto'} — klik untuk koreksi`}
+                          style={{
+                            position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 20, height: 20, padding: 0, border: 'none', background: 'transparent',
+                            cursor: isDetecting ? 'default' : 'pointer',
+                          }}
+                        >
                           {isDetecting ? (
                             /* Spinner */
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CAABB" strokeWidth="2.5" style={{ animation: 'spin 0.8s linear infinite' }}>
@@ -419,16 +442,16 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
                             </svg>
                           ) : row.tipeFile === 'video' ? (
                             /* Play icon — video */
-                            <div title="Video" style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(124,58,237,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(124,58,237,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="9" height="9" fill="#7C3AED" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                             </div>
                           ) : (
                             /* Camera icon — foto */
-                            <div title="Foto" style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(16,185,129,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(16,185,129,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="10" height="10" fill="none" stroke="#10B981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             </div>
                           )}
-                        </div>
+                        </button>
                       )}
                     </div>
                     {/* Caption */}

@@ -301,8 +301,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           if (img) img.style.transform = 'scale(1.06)'
           const ov = el.querySelector('.cap-ov') as HTMLElement | null
           if (ov) ov.style.opacity = '1'
-          const ac = el.querySelector('.adm-ac') as HTMLElement | null
-          if (ac) ac.style.opacity = '1'
           // Preload full-res on hover so click is instant
           const viewUrl = getDriveViewUrl(doc.link_foto)
           if (viewUrl) new Image().src = viewUrl
@@ -315,8 +313,6 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           if (img) img.style.transform = 'scale(1)'
           const ov = el.querySelector('.cap-ov') as HTMLElement | null
           if (ov) ov.style.opacity = '0'
-          const ac = el.querySelector('.adm-ac') as HTMLElement | null
-          if (ac) ac.style.opacity = '0'
         }}
         onClick={() => setLightboxIndex(globalIndex)}
       >
@@ -363,11 +359,13 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{formatTanggal(doc.tanggal)}</div>
         </div>
         {isAdmin && (
-          <div className="adm-ac" style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 4, opacity: 0, transition: 'opacity 0.18s' }}>
+          // Selalu tampil (bukan opacity:0 sampai di-hover) — supaya gak
+          // bergantung ke mekanisme hover yang gampang macet lintas browser.
+          <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 4 }}>
             <button onClick={e => { e.stopPropagation(); setEditingDoc(doc) }}
-              style={{ backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit' }}>✏️</button>
+              style={{ backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>✏️</button>
             <button onClick={e => { e.stopPropagation(); handleDelete(doc.id) }}
-              style={{ backgroundColor: 'rgba(102,0,0,0.7)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit' }}>✕</button>
+              style={{ backgroundColor: 'rgba(102,0,0,0.7)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: 50, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'inherit', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>✕</button>
           </div>
         )}
       </div>
