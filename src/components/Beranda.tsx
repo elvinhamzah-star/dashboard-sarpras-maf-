@@ -141,6 +141,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [hoveredSummaryIdx, setHoveredSummaryIdx] = useState<number | null>(null)
   const hoveredSummaryIdxRef = useRef<number | null>(null)
   const activeModalRef = useRef<MetricModalType | null>(null)
+  // Hover di-drive lewat React state (bukan mutasi style langsung) supaya gak
+  // ketiban/ke-reset kalau komponen re-render sementara kursor masih di atas
+  // card (mis. saat data di background refresh) — beda dari gaya lama yang
+  // rawan "hover ngilang" tanpa perlu ada modal yang kebuka dulu.
+  const [hoveredProgressCard, setHoveredProgressCard] = useState(false)
+  const [hoveredStatusIdx, setHoveredStatusIdx] = useState<number | null>(null)
 
   useEffect(() => {
     if (initialDetailId) {
@@ -202,6 +208,13 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       setHoveredSummaryIdx(null)
     }
   }, [activeModal])
+
+  useEffect(() => {
+    if (showProgressModal || showDetail) {
+      setHoveredProgressCard(false)
+      setHoveredStatusIdx(null)
+    }
+  }, [showProgressModal, showDetail])
 
   useEffect(() => {
     if (isMobile) return
@@ -511,8 +524,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               backgroundColor: 'var(--surface-raised)',
               borderRadius: 12,
               padding: isMobile ? '14px 16px' : '18px 24px',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              border: `1px solid ${hoveredProgressCard ? card.accentColor : 'var(--border-subtle)'}`,
+              boxShadow: hoveredProgressCard ? `0 4px 16px ${card.accentColor}28` : '0 1px 3px rgba(0,0,0,0.05)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -520,16 +533,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               cursor: 'pointer',
               transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
             }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
-              el.style.borderColor = card.accentColor
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-              el.style.borderColor = 'var(--border-subtle)'
-            }}
+            onMouseEnter={() => setHoveredProgressCard(true)}
+            onMouseLeave={() => setHoveredProgressCard(false)}
           >
             <div style={{ width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
@@ -559,35 +564,25 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       {/* ── RINGKASAN: Status Pekerjaan (2×2 mobile / 4 kolom desktop) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginTop: isMobile ? 10 : 14 }}>
-        {pekerjaanCards.slice(1).map(card => {
+        {pekerjaanCards.slice(1).map((card, idx) => {
           const activeByTab = showDetail && pekerjaanTab === card.label
+          const isHovered = hoveredStatusIdx === idx
           return (
             <div
               key={card.label}
               onClick={card.onClick}
               style={{
-                backgroundColor: activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)',
+                backgroundColor: isHovered ? card.accentColor + '0D' : activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)',
                 borderRadius: 12,
                 padding: isMobile ? '12px 13px' : '18px 20px',
-                border: activeByTab ? '1.5px solid var(--border)' : '1px solid var(--border-subtle)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                border: isHovered ? `1px solid ${card.accentColor}` : activeByTab ? '1.5px solid var(--border)' : '1px solid var(--border-subtle)',
+                boxShadow: isHovered ? `0 4px 16px ${card.accentColor}28` : '0 1px 3px rgba(0,0,0,0.05)',
+                transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
                 transition: 'border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
                 cursor: 'pointer',
               }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.borderColor = card.accentColor
-                el.style.backgroundColor = card.accentColor + '0D'
-                el.style.boxShadow = `0 4px 16px ${card.accentColor}28`
-                el.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.borderColor = activeByTab ? 'var(--border)' : 'var(--border-subtle)'
-                el.style.backgroundColor = activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)'
-                el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-                el.style.transform = 'translateY(0)'
-              }}
+              onMouseEnter={() => setHoveredStatusIdx(idx)}
+              onMouseLeave={() => setHoveredStatusIdx(null)}
             >
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
