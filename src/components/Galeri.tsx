@@ -819,7 +819,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '78%', margin: isMobile ? undefined : '0 auto' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
@@ -934,7 +934,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '78%', margin: isMobile ? undefined : '0 auto' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
