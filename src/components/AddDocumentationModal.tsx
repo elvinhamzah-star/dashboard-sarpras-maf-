@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
-import { isValidDriveLink, extractDriveFileId } from '../lib/data'
+import { isValidDriveLink, extractDriveFileId, titikFieldConfig } from '../lib/data'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -118,7 +118,9 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
     setDropdownOpen(true)
   }
 
-  const selectedProgramName = programs.find(p => p.id === programId)?.nama_pekerjaan ?? ''
+  const selectedProgram = programs.find(p => p.id === programId)
+  const selectedProgramName = selectedProgram?.nama_pekerjaan ?? ''
+  const titikCfg = titikFieldConfig(selectedProgram?.jenis_pekerjaan)
   const filteredPrograms = programs.filter(p =>
     p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
   )
@@ -353,12 +355,12 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={labelStyle}>Titik / Lokasi <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }}>(opsional — contoh: "Gedung A", "Titik 1")</span></label>
+          <label style={labelStyle}>{titikCfg.label} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }}>(opsional — {titikCfg.placeholder})</span></label>
           <input
             type="text"
             value={titik}
             onChange={e => setTitik(e.target.value)}
-            placeholder="Kosongkan jika tidak ada titik spesifik"
+            placeholder={`Kosongkan jika tidak ada ${titikCfg.label.split(' / ')[0].toLowerCase()} spesifik`}
             style={inputStyle}
           />
         </div>

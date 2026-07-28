@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useEscapeKey } from '../lib/useEscapeKey'
 import { Documentation, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
-import { isValidDriveLink } from '../lib/data'
+import { isValidDriveLink, titikFieldConfig } from '../lib/data'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -36,8 +36,9 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.04em',
 }
 
-export default function EditDocumentationModal({ doc, programs: _programs, onClose, onSuccess }: EditDocumentationModalProps) {
+export default function EditDocumentationModal({ doc, programs, onClose, onSuccess }: EditDocumentationModalProps) {
   useEscapeKey(onClose)
+  const titikCfg = titikFieldConfig(programs.find(p => p.id === doc.program_id)?.jenis_pekerjaan)
   const [fase, setFase] = useState(doc.fase || 'Kondisi Awal')
   const [tipeFile, setTipeFile] = useState<'foto' | 'video'>(doc.tipe_file || 'foto')
   const [tanggal, setTanggal] = useState(doc.tanggal || '')
@@ -125,12 +126,12 @@ export default function EditDocumentationModal({ doc, programs: _programs, onClo
 
         {/* Titik */}
         <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Titik / Lokasi <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }}>(opsional)</span></label>
+          <label style={labelStyle}>{titikCfg.label} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }}>(opsional)</span></label>
           <input
             type="text"
             value={titik}
             onChange={e => setTitik(e.target.value)}
-            placeholder='Contoh: "Gedung A", "Titik 1"'
+            placeholder={titikCfg.placeholder}
             style={inputStyle}
           />
         </div>

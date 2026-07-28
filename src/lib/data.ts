@@ -123,3 +123,21 @@ export function getEffectiveProgress(p: { jenis_pekerjaan: string; progress_perc
   }
   return Number(p.progress_percent) || 0
 }
+
+// Label & placeholder field "titik" (sub-folder pengelompokan foto di Galeri)
+// menyesuaikan jenis_pekerjaan — "Titik/Lokasi" cuma masuk akal buat pekerjaan
+// fisik (Proyek). Pengadaan yang bundling beberapa komponen beda (mis. "Restorasi
+// Mobil" + "Tempat Pengolahan Sampah") itu bukan lokasi; Program (kampanye/
+// sosialisasi) sub-bagiannya lebih ke kegiatan/acara.
+export function titikFieldConfig(jenisPekerjaan: string | undefined): { label: string; placeholder: string } {
+  switch (jenisPekerjaan) {
+    case 'Proyek':
+      return { label: 'Titik / Lokasi', placeholder: 'Contoh: "Gedung A", "Titik 1"' }
+    case 'Program':
+      return { label: 'Kegiatan', placeholder: 'Contoh: "Sosialisasi ke Santri", "Lomba Kebersihan"' }
+    case 'Pengadaan':
+    case 'Operasional':
+    default:
+      return { label: 'Bagian / Komponen', placeholder: 'Contoh: "Mobil Kebersihan", "Tempat Pengolahan Sampah"' }
+  }
+}
