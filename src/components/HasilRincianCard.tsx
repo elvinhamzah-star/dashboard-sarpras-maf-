@@ -77,7 +77,7 @@ export default function HasilRincianCard({ program, isMobile, defaultOpen = fals
   const locGroups = mode === 'lokasi' ? groupByLocation(rincian) : []
   const asetRollup = mode === 'lokasi' ? rollupByAset(rincian) : []
   const distinctAset = new Set(rincian.map(r => (r.aset || '').trim()).filter(Boolean))
-  const showRingkasan = mode === 'lokasi' && distinctAset.size >= 2
+  const showRingkasan = mode === 'lokasi' && distinctAset.size >= 2 && locGroups.length >= 2
   const statusCounts = mode === 'kegiatan' ? countStatus(rincian) : { selesai: 0, berjalan: 0, rencana: 0 }
 
   if (rincian.length === 0) return null

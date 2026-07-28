@@ -205,7 +205,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Tambah Dokumentasi</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Tipe foto/video terdeteksi otomatis dari link Drive
+            Pilih tipe foto atau video untuk tiap link
           </div>
         </div>
 
