@@ -41,12 +41,22 @@ function PageFallback() {
 }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('dashboard_auth') === '1')
+  // Dev-only: login viewer (username/PIN) juga di-skip otomatis di `npm run dev`
+  // — role 'pbb' (akses penuh) supaya testing lokal gak kejegal 2 gerbang login
+  // sekaligus. Sama seperti isAdmin di bawah: cuma aktif kalau import.meta.env.DEV,
+  // dead-code-eliminated total di build produksi.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => import.meta.env.DEV || sessionStorage.getItem('dashboard_auth') === '1')
   const [role, setRole] = useState<'pbb' | 'maf' | null>(
-    () => (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null,
+    () => import.meta.env.DEV ? 'pbb' : (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null,
   )
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
-  const [isAdmin, setIsAdmin] = useState(false)
+  // Dev-only: mode admin otomatis kebuka pas `npm run dev` (import.meta.env.DEV),
+  // supaya UI admin bisa dites tanpa PIN saat kerja lokal. Vite mati-total-kan
+  // baris ini di build produksi (import.meta.env.DEV selalu false di sana), jadi
+  // situs asli tetap butuh PIN seperti biasa. Ini CUMA buka tampilan admin —
+  // operasi simpan/hapus tetap ditolak server kalau PIN aslinya belum diverifikasi
+  // (adminPin di adminApi.ts tetap null sampai PinModal benar-benar sukses).
+  const [isAdmin, setIsAdmin] = useState(() => import.meta.env.DEV)
   const edgeSwipeStartX = useRef<number | null>(null)
   const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
