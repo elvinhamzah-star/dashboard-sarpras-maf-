@@ -5,6 +5,7 @@ import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveEmbedUrl,
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { useBackHandler, useTopBarTitle } from '../lib/backNav'
 import { forcePageRepaint } from '../lib/forceRepaint'
+import { useRepaintOnClose } from '../lib/useRepaintOnClose'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
@@ -259,6 +260,13 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     if (prevLightbox.current !== null && lightboxIndex === null) forcePageRepaint()
     prevLightbox.current = lightboxIndex
   }, [lightboxIndex])
+
+  // Modal admin lain (ModalShell, pakai backdrop-filter) kena bug compositor
+  // yang sama — tanpa ini tombol ✏️/✕ dan "Kelola" di kartu belakangnya jadi
+  // "ngilang" dan butuh klik super presisi setelah modal ditutup.
+  useRepaintOnClose(editingDoc !== null)
+  useRepaintOnClose(showAddModal)
+  useRepaintOnClose(showManageBA)
 
   // Reset image state + preload prev/next when lightbox navigates
   useEffect(() => {
