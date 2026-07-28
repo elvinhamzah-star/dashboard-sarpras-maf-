@@ -507,7 +507,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     const totalProgDocs = docs.filter(d => d.program_id === openFolderId).length
     return (
       <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(165px, 1fr))', gap: isMobile ? 12 : 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: isMobile ? 12 : 16 }}>
           {currentDistinctTitik.map(titik => {
             const titikDocs = docs.filter(d => d.program_id === openFolderId && (d.titik?.trim() || '') === titik)
             const cover = getDriveThumbnailUrl(titikDocs[0]?.link_foto)
@@ -819,7 +819,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : 560, margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
@@ -837,7 +837,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           ) : folderDocs.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Tidak ada foto untuk fase ini.</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: isMobile ? 10 : 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: isMobile ? 10 : 14 }}>
               {folderDocs.map(doc => renderPhotoCard(doc, folderDocs.indexOf(doc)))}
             </div>
           )}
@@ -934,7 +934,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : 560, margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
@@ -959,7 +959,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
           {mobilePrograms.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 60 }}>Belum ada dokumentasi foto.</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(165px, 1fr))', gap: isMobile ? 12 : 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: isMobile ? 12 : 16 }}>
               {mobilePrograms.map(prog => {
                 const progDocs = docs.filter(d => d.program_id === prog.id)
                 const cover = getDriveThumbnailUrl(progDocs[0]?.link_foto)
