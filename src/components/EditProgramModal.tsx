@@ -13,7 +13,10 @@ interface Props {
 }
 
 const STATUS_OPTIONS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
-const JENIS_OPTIONS = ['Pengadaan', 'Konstruksi', 'Operasional', 'Pemeliharaan', 'Lainnya']
+// "Proyek" & "Program" ditambahkan karena itu nilai asli yang beneran dipakai
+// programs.jenis_pekerjaan di data (bukan cuma "Konstruksi"/"Operasional") —
+// kalau gak ada di daftar ini, dropdown nampilin "Lainnya" yang membingungkan.
+const JENIS_OPTIONS = ['Proyek', 'Pengadaan', 'Konstruksi', 'Operasional', 'Pemeliharaan', 'Program', 'Lainnya']
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -54,7 +57,13 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const effectiveJenis = jenis === 'Lainnya' ? jenisCustom : jenis
+  // Field custom (Lainnya) ditampilin & dipakai di kondisi yang sama: jenis
+  // literal 'Lainnya', ATAU jenis lama yang gak ada di daftar preset (mis.
+  // data lawas). Sebelumnya effectiveJenis cuma ngecek 'Lainnya' doang, jadi
+  // kalau jenis-nya nilai lawas yang gak dikenal, ubahan di field custom itu
+  // kepakai buat NAMPILIN tapi kePISKAN pas SIMPAN — silently reverted.
+  const jenisNeedsCustomField = jenis === 'Lainnya' || !JENIS_OPTIONS.includes(jenis)
+  const effectiveJenis = jenisNeedsCustomField ? jenisCustom : jenis
 
   const handleSave = async () => {
     if (!nama.trim()) { setError('Nama pekerjaan tidak boleh kosong'); return }
@@ -121,7 +130,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
             </Field>
           </div>
 
-          {(jenis === 'Lainnya' || !JENIS_OPTIONS.includes(jenis)) && (
+          {jenisNeedsCustomField && (
             <Field label="Jenis Pekerjaan (Lainnya)">
               <input value={jenisCustom} onChange={e => setJenisCustom(e.target.value)} style={inputStyle} placeholder="Masukkan jenis pekerjaan..." />
             </Field>
