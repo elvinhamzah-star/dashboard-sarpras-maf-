@@ -41,45 +41,59 @@ function rowSubtotal(r: HasilRincianItem, kat: HasilKategori | null | undefined,
 
 /** Kolom tabel rincian menyesuaikan mode (fisik→lokasi, barang→item, jasa→divisi/kegiatan). */
 interface ReportCol {
-  key: 'no' | 'nama' | 'aset' | 'ukuran' | 'satuan' | 'status' | 'biaya'
+  key: 'no' | 'nama' | 'aset' | 'ukuran' | 'satuan' | 'biaya'
   label: string
   align: 'left' | 'center' | 'right'
   /** Lebar kolom dalam persen — total harus 100%. */
   pct: string
 }
 
+// Lebar kolom TETAP per key, sama untuk semua mode — supaya kolom (terutama
+// Satuan & Nilai) selalu jatuh di posisi horizontal yang sama antar kategori,
+// tidak geser cuma karena satu program pakai kolom Aset dan yang lain tidak.
+const COL_PCT: Record<ReportCol['key'], string> = {
+  no: '5%', nama: '22%', aset: '25%', ukuran: '12%', satuan: '13%', biaya: '23%',
+}
+
 function columnsForMode(mode: RincianMode): ReportCol[] {
+  const col = (key: ReportCol['key'], label: string, align: ReportCol['align']): ReportCol =>
+    ({ key, label, align, pct: COL_PCT[key] })
   switch (mode) {
     case 'lokasi':
       return [
-        { key: 'no', label: 'No', align: 'center', pct: '5%' },
-        { key: 'nama', label: 'Lokasi', align: 'left', pct: '22%' },
-        { key: 'aset', label: 'Aset', align: 'left', pct: '28%' },
-        { key: 'ukuran', label: 'Volume', align: 'right', pct: '12%' },
-        { key: 'satuan', label: 'Satuan', align: 'left', pct: '13%' },
-        { key: 'biaya', label: 'Nilai', align: 'right', pct: '20%' },
+        col('no', 'No', 'center'),
+        col('nama', 'Lokasi', 'left'),
+        col('aset', 'Aset', 'left'),
+        col('ukuran', 'Volume', 'right'),
+        col('satuan', 'Satuan', 'left'),
+        col('biaya', 'Nilai', 'right'),
       ]
     case 'item':
       return [
-        { key: 'no', label: 'No', align: 'center', pct: '6%' },
-        { key: 'nama', label: 'Barang', align: 'left', pct: '39%' },
-        { key: 'ukuran', label: 'Jumlah', align: 'right', pct: '15%' },
-        { key: 'satuan', label: 'Satuan', align: 'left', pct: '15%' },
-        { key: 'biaya', label: 'Nilai', align: 'right', pct: '25%' },
+        col('no', 'No', 'center'),
+        col('nama', 'Barang', 'left'),
+        col('aset', '', 'left'),
+        col('ukuran', 'Jumlah', 'right'),
+        col('satuan', 'Satuan', 'left'),
+        col('biaya', 'Nilai', 'right'),
       ]
     case 'divisi':
       return [
-        { key: 'no', label: 'No', align: 'center', pct: '7%' },
-        { key: 'nama', label: 'Divisi', align: 'left', pct: '43%' },
-        { key: 'ukuran', label: 'Personel', align: 'right', pct: '20%' },
-        { key: 'biaya', label: 'Nilai', align: 'right', pct: '30%' },
+        col('no', 'No', 'center'),
+        col('nama', 'Divisi', 'left'),
+        col('aset', '', 'left'),
+        col('ukuran', 'Personel', 'right'),
+        col('satuan', '', 'left'),
+        col('biaya', 'Nilai', 'right'),
       ]
     case 'kegiatan':
       return [
-        { key: 'no', label: 'No', align: 'center', pct: '7%' },
-        { key: 'nama', label: 'Kegiatan', align: 'left', pct: '43%' },
-        { key: 'status', label: 'Status', align: 'left', pct: '20%' },
-        { key: 'biaya', label: 'Nilai', align: 'right', pct: '30%' },
+        col('no', 'No', 'center'),
+        col('nama', 'Kegiatan', 'left'),
+        col('aset', '', 'left'),
+        col('ukuran', '', 'right'),
+        col('satuan', 'Status', 'left'),
+        col('biaya', 'Nilai', 'right'),
       ]
   }
 }
@@ -461,27 +475,35 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
                                       case 'no':
                                         return <td key={col.key} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}>{rowNo}</td>
                                       case 'nama':
-                                        return <td key={col.key} style={{ ...tdStyle, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nama}</td>
+                                        // Wrap (bukan potong-ellipsis) — nama lokasi/barang/divisi/
+                                        // kegiatan gak boleh kepotong walau kolomnya sama-ratakan
+                                        // di semua kategori.
+                                        return <td key={col.key} style={{ ...tdStyle, fontWeight: 500, wordBreak: 'break-word' }}>{r.nama}</td>
                                       case 'aset':
-                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.aset || '—'}</td>
+                                        // Kolom Aset cuma dipakai mode lokasi — mode lain tetap
+                                        // render sel kosong (bukan "—") supaya lebar tetap sama
+                                        // tapi gak menyiratkan ada data yang hilang.
+                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-secondary)', wordBreak: 'break-word' }}>{mode === 'lokasi' ? (r.aset || '—') : ''}</td>
                                       case 'ukuran':
                                         return (
                                           <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                                            {(r.ukuran ?? 0).toLocaleString('id-ID')}{mode === 'divisi' ? ' org' : ''}
+                                            {mode === 'kegiatan' ? '' : `${(r.ukuran ?? 0).toLocaleString('id-ID')}${mode === 'divisi' ? ' org' : ''}`}
                                           </td>
                                         )
                                       case 'satuan':
-                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: 12 }}>{r.satuan}</td>
-                                      case 'status': {
-                                        const chip = STATUS_CHIP[r.status || 'Rencana'] || STATUS_CHIP.Rencana
-                                        return (
-                                          <td key={col.key} style={tdStyle}>
-                                            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.fg, whiteSpace: 'nowrap' }}>
-                                              {r.status || 'Rencana'}
-                                            </span>
-                                          </td>
-                                        )
-                                      }
+                                        // Slot ini dipakai buat badge Status di mode kegiatan
+                                        // (posisinya tetap sama, cuma isinya beda per mode).
+                                        if (mode === 'kegiatan') {
+                                          const chip = STATUS_CHIP[r.status || 'Rencana'] || STATUS_CHIP.Rencana
+                                          return (
+                                            <td key={col.key} style={tdStyle}>
+                                              <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.fg, whiteSpace: 'nowrap' }}>
+                                                {r.status || 'Rencana'}
+                                              </span>
+                                            </td>
+                                          )
+                                        }
+                                        return <td key={col.key} style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: 12 }}>{mode === 'divisi' ? '' : r.satuan}</td>
                                       case 'biaya':
                                         return <td key={col.key} style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' }}>{formatRupiah(rowSubtotal(r, kat, p.jenis_pekerjaan))}</td>
                                       default:
