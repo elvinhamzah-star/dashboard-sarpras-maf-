@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import ExcelJS from 'exceljs'
 import { fetchPrograms } from '../lib/supabase'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
@@ -151,33 +152,105 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
   const totalItems   = filtered.reduce((s, r) => s + r.rincian.length, 0)
   const totalProgram = filtered.length
 
-  // ── Export CSV ──────────────────────────────────────────────────────────────
-  const exportCSV = () => {
-    const rows: string[][] = [
-      ['No', 'ID Pekerjaan', 'Nama Pekerjaan', 'Kategori', 'Lokasi / Item', 'Aset / Material', 'Volume', 'Satuan', 'Biaya (Rp)'],
+  // ── Export Excel ─────────────────────────────────────────────────────────────
+  // Gaya warna netral disamain sama tampilan halaman (bukan warna-warni) --
+  // section per pekerjaan cuma background abu muda + badge kategori kecil,
+  // header kolom abu, subtotal per pekerjaan, total keseluruhan di baris akhir.
+  const COLOR = {
+    text: 'FF0F172A', muted: 'FF64748B', border: 'FFD1D5DB', rowBorder: 'FFEEF1F5',
+    headerBg: 'FFF8FAFC', sectionBg: 'FFF1F5F9', zebra: 'FFFAFBFC',
+    badge: 'FF5B8FD6',
+  }
+  const exportExcel = async () => {
+    const wb = new ExcelJS.Workbook()
+    wb.creator = 'Dashboard Sarpras MAF'
+    wb.created = new Date()
+    const ws = wb.addWorksheet('Perolehan Aset', { pageSetup: { orientation: 'landscape', fitToPage: true } })
+    ws.columns = [
+      { width: 6 }, { width: 30 }, { width: 28 }, { width: 10 }, { width: 10 }, { width: 18 },
     ]
+
+    const tanggal = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+    ws.mergeCells('A1:F1')
+    ws.getCell('A1').value = 'Laporan Perolehan Aset & Realisasi'
+    ws.getCell('A1').font = { bold: true, size: 14, color: { argb: COLOR.text } }
+
+    ws.mergeCells('A2:F2')
+    ws.getCell('A2').value = `Sarpras MAF · Diekspor ${tanggal} · Total ${formatRupiah(totalNilai)} · ${totalProgram} Pekerjaan · ${totalItems} Item`
+    ws.getCell('A2').font = { size: 10, color: { argb: COLOR.muted } }
+    ws.addRow([])
+
+    const header = ws.addRow(['No', 'Lokasi / Barang', 'Aset / Material', 'Volume', 'Satuan', 'Biaya (Rp)'])
+    header.eachCell(cell => {
+      cell.font = { bold: true, size: 9, color: { argb: COLOR.muted } }
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.headerBg } }
+      cell.border = { bottom: { style: 'thin', color: { argb: COLOR.border } } }
+    })
+    header.getCell(1).alignment = { horizontal: 'center' }
+    header.getCell(4).alignment = { horizontal: 'right' }
+    header.getCell(6).alignment = { horizontal: 'right' }
+
     let no = 1
-    filtered.forEach(({ program: p, rincian }) => {
-      rincian.forEach(r => {
-        rows.push([
-          String(no++),
-          p.id,
-          p.nama_pekerjaan,
-          KAT_LABELS[p.hasil_kategori as HasilKategori] ?? '-',
+    filtered.forEach(({ program: p, rincian, totalBiaya }) => {
+      const katLabel = p.hasil_kategori ? KAT_LABELS[p.hasil_kategori as HasilKategori] : null
+
+      const secRow = ws.addRow([p.nama_pekerjaan])
+      ws.mergeCells(`A${secRow.number}:F${secRow.number}`)
+      const secCell = secRow.getCell(1)
+      secCell.value = katLabel
+        ? { richText: [
+            { font: { bold: true, size: 11.5, color: { argb: COLOR.text } }, text: p.nama_pekerjaan },
+            { font: { size: 9, color: { argb: COLOR.badge } }, text: `   ${katLabel}` },
+          ] }
+        : p.nama_pekerjaan
+      secRow.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.sectionBg } } })
+
+      rincian.forEach((r, ri) => {
+        const row = ws.addRow([
+          no++,
           r.nama,
-          r.aset ?? '-',
-          String(r.ukuran ?? ''),
-          r.satuan ?? '',
-          String(rowSubtotal(r, p.hasil_kategori, p.jenis_pekerjaan)),
+          r.aset || '',
+          r.ukuran ?? '',
+          r.satuan || '',
+          rowSubtotal(r, p.hasil_kategori, p.jenis_pekerjaan),
         ])
+        if (ri % 2 === 1) row.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.zebra } } })
+        row.eachCell(cell => { cell.border = { bottom: { style: 'thin', color: { argb: COLOR.rowBorder } } } })
+        row.getCell(1).alignment = { horizontal: 'center' }
+        row.getCell(1).font = { size: 9, color: { argb: COLOR.muted } }
+        row.getCell(4).alignment = { horizontal: 'right' }
+        row.getCell(6).alignment = { horizontal: 'right' }
+        row.getCell(6).numFmt = '#,##0'
+      })
+
+      const subRow = ws.addRow(['', '', '', '', 'Subtotal', totalBiaya])
+      ws.mergeCells(`A${subRow.number}:E${subRow.number}`)
+      subRow.getCell(5).alignment = { horizontal: 'right' }
+      subRow.getCell(6).alignment = { horizontal: 'right' }
+      subRow.getCell(6).numFmt = '#,##0'
+      subRow.eachCell(cell => {
+        cell.font = { bold: true, color: { argb: COLOR.text } }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.headerBg } }
+        cell.border = { top: { style: 'thin', color: { argb: COLOR.border } } }
       })
     })
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+
+    const totalRow = ws.addRow(['', '', '', '', 'TOTAL KESELURUHAN', totalNilai])
+    ws.mergeCells(`A${totalRow.number}:E${totalRow.number}`)
+    totalRow.getCell(5).alignment = { horizontal: 'right' }
+    totalRow.getCell(6).alignment = { horizontal: 'right' }
+    totalRow.getCell(6).numFmt = '#,##0'
+    totalRow.eachCell(cell => {
+      cell.font = { bold: true, size: 11, color: { argb: COLOR.text } }
+      cell.border = { top: { style: 'medium', color: { argb: COLOR.text } } }
+    })
+
+    const buf = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buf as ArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `laporan-perolehan-aset-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `laporan-perolehan-aset-${new Date().toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -234,8 +307,13 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
         @media print {
           body * { visibility: hidden; }
           #laporan-aset-print, #laporan-aset-print * { visibility: visible; }
-          #laporan-aset-print { position: fixed; inset: 0; width: 100%; height: auto; }
+          /* position:absolute (bukan fixed) -- fixed mengunci elemen ke satu
+             "jendela" halaman cetak, jadi konten yang lebih panjang dari 1
+             halaman kepotong/hilang. Absolute tetap ngeluarin elemen dari
+             layout normal tapi kontennya bisa mengalir ke halaman berikutnya. */
+          #laporan-aset-print { position: absolute; left: 0; top: 0; width: 100%; }
           #laporan-aset-print .no-print { display: none !important; visibility: hidden; }
+          #laporan-aset-print .aset-group { break-inside: avoid; page-break-inside: avoid; }
           @page { margin: 16mm; size: A4 landscape; }
         }
       `}</style>
@@ -260,14 +338,14 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
           {/* Export buttons */}
           <div className="no-print" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button
-              onClick={exportCSV}
+              onClick={exportExcel}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px' : '8px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-secondary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)' }}
-              title="Export CSV"
+              title="Export Excel"
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              {!isMobile && 'CSV'}
+              {!isMobile && 'Excel'}
             </button>
             <button
               onClick={exportPDF}
@@ -389,7 +467,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
                 const mode = rincianMode(kat, p.jenis_pekerjaan)
                 const cols = columnsForMode(mode)
                 return (
-                  <div key={p.id} style={{ backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-subtle)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                  <div key={p.id} className="aset-group" style={{ backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-subtle)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
                     {/* Card header: nama (kiri) + badge status (kanan atas) */}
                     <div style={{ ...groupHeaderStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
