@@ -51,6 +51,10 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [lightboxImgLoaded, setLightboxImgLoaded] = useState(false)
   const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
+  // Rasio asli foto (width/height) — dipakai supaya box lightbox menyesuaikan
+  // ke bentuk foto (portrait tetap tinggi, landscape tetap lebar), bukan
+  // dipaksa 4:3 yang bikin foto portrait kepotong & kezoom.
+  const [lightboxAspect, setLightboxAspect] = useState<number | null>(null)
   const [editingDoc, setEditingDoc] = useState<Documentation | null>(null)
   const [error, setError] = useState('')
   const [showProgramDropdown, setShowProgramDropdown] = useState(false)
@@ -273,6 +277,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     if (lightboxIndex === null) return
     setLightboxImgLoaded(false)
     setLightboxIsVideo(false)
+    setLightboxAspect(null)
     ;[lightboxIndex - 1, lightboxIndex + 1].forEach(idx => {
       const d = activeDocs[idx]
       if (!d) return
@@ -661,11 +666,12 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 Kembali ke Daftar
               </button>}
               {/* Desktop: tampilkan breadcrumb/judul di body. Mobile: judul di top bar */}
+              {/* Nama program & titik ditumpuk vertikal (bukan kesamping) — biar judul
+                  titik tetap kebaca sebagai judul, bukan tenggelam jadi teks panjang. */}
               {!isMobile && (openFolderHasManyTitik && titikDisplayName !== null ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)', letterSpacing: '-0.01em' }}>{openProgramName}</span>
-                  <svg width="12" height="12" fill="none" stroke="var(--text-muted)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                  <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{titikDisplayName}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', letterSpacing: '-0.01em', marginBottom: 3 }}>{openProgramName}</div>
+                  <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>{titikDisplayName}</h1>
                 </div>
               ) : (
                 <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
@@ -1094,12 +1100,43 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       HD
                     </a>
                   </div>
-                ) : (
-                  <div style={{ position: 'relative', width: '100%', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: '4/3', maxHeight: isMobile ? 480 : 600 }}>
-                    <img src={getDriveThumbnailUrl(doc.link_foto) || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }} />
-                    <img key={doc.id} src={getDriveViewUrl(doc.link_foto) || ''} alt={doc.caption || ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }} onLoad={() => setLightboxImgLoaded(true)} onError={() => setLightboxIsVideo(true)} />
+                ) : (() => {
+                  // Box mengikuti rasio asli foto (lightboxAspect, dari naturalWidth/Height
+                  // pas gambar load) — bukan dipaksa 4:3 — supaya foto portrait tetap utuh
+                  // tinggi & foto landscape tetap lebar, gak kepotong/kezoom. 4:3 cuma
+                  // fallback sebelum rasio aslinya diketahui.
+                  // width dihitung via min(100%, capH*ratio) supaya width jadi dimensi
+                  // "definite" — box absolutely-positioned <img> gak punya intrinsic size
+                  // sendiri, jadi aspect-ratio+height/max-height auto TIDAK bisa dipakai
+                  // (box collapse ke 0×0); width eksplisit ini yang bikin ukurannya jalan.
+                  const ratio = lightboxAspect || 4 / 3
+                  const capH = isMobile ? 480 : 600
+                  return (
+                  <div style={{ position: 'relative', background: '#111', borderRadius: isMobile ? 0 : '16px 16px 0 0', lineHeight: 0, overflow: 'hidden', aspectRatio: String(ratio), width: `min(100%, ${capH * ratio}px)`, margin: '0 auto' }}>
+                    <img
+                      src={getDriveThumbnailUrl(doc.link_foto) || ''}
+                      alt=""
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: lightboxImgLoaded ? 0 : 1, transition: 'opacity 0.25s' }}
+                      onLoad={e => {
+                        const { naturalWidth: w, naturalHeight: h } = e.currentTarget
+                        if (w && h) setLightboxAspect(w / h)
+                      }}
+                    />
+                    <img
+                      key={doc.id}
+                      src={getDriveViewUrl(doc.link_foto) || ''}
+                      alt={doc.caption || ''}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: lightboxImgLoaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                      onLoad={e => {
+                        const { naturalWidth: w, naturalHeight: h } = e.currentTarget
+                        if (w && h) setLightboxAspect(w / h)
+                        setLightboxImgLoaded(true)
+                      }}
+                      onError={() => setLightboxIsVideo(true)}
+                    />
                   </div>
-                )}
+                  )
+                })()}
 
                 {/* Mobile nav arrows — gradient strips on left/right */}
                 {isMobile && hasPrev && (
