@@ -314,7 +314,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
           #laporan-aset-print { position: absolute; left: 0; top: 0; width: 100%; }
           #laporan-aset-print .no-print { display: none !important; visibility: hidden; }
           #laporan-aset-print .aset-group { break-inside: avoid; page-break-inside: avoid; }
-          @page { margin: 16mm; size: A4 landscape; }
+          @page { margin: 16mm; size: A4 portrait; }
         }
       `}</style>
 
