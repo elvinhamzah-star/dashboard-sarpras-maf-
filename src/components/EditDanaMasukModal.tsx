@@ -101,6 +101,11 @@ export default function EditDanaMasukModal({ programId, namaPekerjaan, currentVa
                   style={inputStyle}
                   autoFocus
                 />
+                {nominal > 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--blue)', marginTop: 4, fontWeight: 500, textAlign: 'right' }}>
+                    {formatRupiah(nominal)}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

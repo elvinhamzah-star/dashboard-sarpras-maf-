@@ -130,7 +130,7 @@ export default function SaldoPekerjaanPanel() {
               return (
                 <tr
                   key={r.program.id}
-                  style={{ backgroundColor: isTalangan ? 'rgba(217,119,6,0.04)' : 'transparent' }}
+                  style={{ backgroundColor: isTalangan ? 'rgba(217,119,6,0.1)' : 'transparent' }}
                 >
                   <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>{i + 1}</td>
                   <td style={tdStyle}>
