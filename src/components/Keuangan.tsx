@@ -300,7 +300,6 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: isMobile ? 16 : 22 }}>
         {filterCards.map(card => {
           const isActive = filterJenis === card.jenis
-          const isDimmed = filterJenis !== 'Semua' && !isActive
           return (
             <button
               key={card.jenis}
@@ -334,11 +333,10 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.15s',
-                opacity: isDimmed ? 0.42 : 1,
                 fontFamily: 'inherit',
               }}
             >
-              <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isMobile ? card.label.replace('Dana ', '') : card.label}
               </div>
               <div style={{ fontSize: isMobile ? 12 : 19, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
