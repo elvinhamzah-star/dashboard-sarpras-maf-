@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, invalidateCache, Program } from '../lib/supabase'
-import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import EditDanaMasukModal from './EditDanaMasukModal'
 
 interface Row {
   program: Program
@@ -36,11 +36,7 @@ export default function SaldoPekerjaanPanel() {
   const [rows, setRows] = useState<Row[]>([])
   const [unmatchedKeluar, setUnmatchedKeluar] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const savedRef = useRef(false)
+  const [editingRow, setEditingRow] = useState<Row | null>(null)
 
   const loadData = () => {
     Promise.all([fetchPrograms(), fetchTransactions()]).then(([pRes, tRes]) => {
@@ -72,35 +68,7 @@ export default function SaldoPekerjaanPanel() {
 
   useEffect(() => { loadData() }, [])
 
-  useEffect(() => {
-    if (editingId && inputRef.current) inputRef.current.focus()
-  }, [editingId])
-
-  const startEdit = (r: Row) => {
-    savedRef.current = false
-    setEditingId(r.program.id)
-    setEditValue(r.masuk > 0 ? String(r.masuk) : '')
-  }
-
-  const cancelEdit = () => { savedRef.current = true; setEditingId(null); setEditValue('') }
-
-  const saveEdit = async (programId: string, value: string) => {
-    // Enter memicu onKeyDown lalu blur saat input di-unmount — guard ini
-    // memastikan hanya panggilan pertama yang benar-benar menyimpan.
-    if (savedRef.current) return
-    savedRef.current = true
-
-    const nominal = parseInt(value.replace(/\D/g, ''), 10) || 0
-    setSavingId(programId)
-    setEditingId(null)
-    const { error } = await adminUpdate('programs', { dana_masuk: nominal }, programId)
-    setSavingId(null)
-
-    if (error) {
-      alert('Gagal menyimpan: ' + (error instanceof Error ? error.message : String(error)))
-      return
-    }
-
+  const handleDanaMasukSaved = (programId: string, nominal: number) => {
     invalidateCache('programs')
     setRows(prev => prev.map(r => {
       if (r.program.id !== programId) return r
@@ -138,7 +106,7 @@ export default function SaldoPekerjaanPanel() {
           <div style={{ flex: 1, minWidth: 200, background: 'var(--card)', border: '1px solid var(--border)', borderTop: '2px solid rgba(217,119,6,0.5)', borderRadius: 10, padding: '12px 14px' }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: '#D97706', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Talangan</div>
             <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalTalangan)}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{talanganRows.length} pekerjaan perlu dana duluan</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{talanganRows.length} Pekerjaan</div>
           </div>
         )}
       </div>
@@ -159,8 +127,6 @@ export default function SaldoPekerjaanPanel() {
           <tbody>
             {rows.map((r, i) => {
               const isTalangan = r.saldo < 0
-              const isEditing = editingId === r.program.id
-              const isSaving = savingId === r.program.id
               return (
                 <tr
                   key={r.program.id}
@@ -172,87 +138,52 @@ export default function SaldoPekerjaanPanel() {
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.program.status}</div>
                   </td>
 
-                  {/* Dana Masuk — inline edit, netral (bukan hijau) */}
+                  {/* Dana Masuk — teks biasa (bukan angka utama), buka modal buat edit */}
                   <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {isEditing ? (
-                      <input
-                        ref={inputRef}
-                        type="number"
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') saveEdit(r.program.id, editValue)
-                          if (e.key === 'Escape') cancelEdit()
-                        }}
-                        onBlur={() => saveEdit(r.program.id, editValue)}
-                        style={{
-                          width: 130,
-                          padding: '5px 8px',
-                          borderRadius: 6,
-                          border: '1.5px solid var(--blue)',
-                          fontSize: 13,
-                          textAlign: 'right',
-                          fontFamily: 'inherit',
-                          outline: 'none',
-                          backgroundColor: 'var(--card)',
-                          color: 'var(--text-primary)',
-                        }}
-                        placeholder="0"
-                      />
-                    ) : (
-                      <button
-                        onClick={() => startEdit(r)}
-                        title="Klik untuk ubah dana masuk"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '2px 6px',
-                          borderRadius: 6,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          fontWeight: 600,
-                          fontSize: 'inherit',
-                          fontVariantNumeric: 'tabular-nums',
-                          whiteSpace: 'nowrap',
-                          color: isSaving ? 'var(--text-muted)' : 'var(--text-primary)',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {isSaving ? '…' : (r.masuk > 0 ? formatRupiah(r.masuk) : '—')}
-                        {!isSaving && (
-                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ opacity: 0.4, flexShrink: 0 }}>
-                            <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                          </svg>
-                        )}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setEditingRow(r)}
+                      title="Klik untuk ubah dana masuk"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '2px 6px',
+                        borderRadius: 6,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        fontWeight: 400,
+                        fontSize: 'inherit',
+                        fontVariantNumeric: 'tabular-nums',
+                        whiteSpace: 'nowrap',
+                        color: 'var(--text-secondary)',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {r.masuk > 0 ? formatRupiah(r.masuk) : '—'}
+                      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ opacity: 0.4, flexShrink: 0 }}>
+                        <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
                   </td>
 
-                  {/* Dana Keluar — netral (bukan merah) */}
-                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: r.keluar > 0 ? 'var(--text-primary)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                  {/* Dana Keluar — teks biasa juga, bukan angka utama */}
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 400, color: r.keluar > 0 ? 'var(--text-secondary)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                     {r.keluar > 0 ? formatRupiah(r.keluar) : '—'}
                   </td>
 
-                  {/* Saldo — satu-satunya kolom berwarna (sinyal utama) */}
+                  {/* Saldo — angka utama: bold hitam, tanpa tanda plus. Baris talangan
+                      ditandai lewat tint background (di atas), minus sudah cukup jelasin defisit. */}
                   <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {r.saldo === 0 ? (
                       <span style={{ color: 'var(--text-muted)' }}>—</span>
                     ) : (
-                      <div>
-                        <div style={{ fontWeight: 700, color: isTalangan ? '#D97706' : '#1B5E2B' }}>
-                          {isTalangan ? '−' : '+'}{formatRupiah(Math.abs(r.saldo))}
-                        </div>
-                        {isTalangan && (
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#D97706', backgroundColor: 'rgba(217,119,6,0.13)', borderRadius: 20, padding: '1px 7px', display: 'inline-block', marginTop: 2 }}>
-                            TALANGAN
-                          </div>
-                        )}
-                      </div>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {isTalangan ? '−' : ''}{formatRupiah(Math.abs(r.saldo))}
+                      </span>
                     )}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: r.sisaPengajuan <= 0 ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: r.sisaPengajuan <= 0 ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                     {r.sisaPengajuan > 0 ? formatRupiah(r.sisaPengajuan) : (r.sisaPengajuan === 0 ? '—' : <span style={{ color: '#660000' }}>Over RAB</span>)}
                   </td>
                 </tr>
@@ -284,8 +215,8 @@ export default function SaldoPekerjaanPanel() {
               </td>
               <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalMasuk)}</td>
               <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluar)}</td>
-              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: saldoColor, fontVariantNumeric: 'tabular-nums' }}>
-                {saldoKas >= 0 ? '+' : '−'}{formatRupiah(Math.abs(saldoKas))}
+              <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                {saldoKas < 0 ? '−' : ''}{formatRupiah(Math.abs(saldoKas))}
               </td>
               <td style={tdStyle} />
             </tr>
@@ -294,8 +225,18 @@ export default function SaldoPekerjaanPanel() {
       </div>
 
       <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
-        Klik nominal di kolom Dana Masuk untuk input alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Masuk.
+        Klik nominal di kolom Dana Masuk untuk ubah alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Masuk.
       </div>
+
+      {editingRow && (
+        <EditDanaMasukModal
+          programId={editingRow.program.id}
+          namaPekerjaan={editingRow.program.nama_pekerjaan}
+          currentValue={editingRow.masuk}
+          onClose={() => setEditingRow(null)}
+          onSuccess={nominal => handleDanaMasukSaved(editingRow.program.id, nominal)}
+        />
+      )}
     </div>
   )
 }
