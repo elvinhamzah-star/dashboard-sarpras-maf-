@@ -85,6 +85,22 @@ export async function adminDelete(table: string, id: string | number) {
   return { error }
 }
 
+// Upload bukti transaksi via PIN-gated Edge Function -- the bucket itself has
+// no public write policy, so this (not a direct storage.upload call) is the
+// only way a file gets in. PIN never leaves this module except inside the
+// multipart body sent straight to the function.
+export async function adminUploadBukti(file: File): Promise<{ url: string | null; error: string | null }> {
+  if (!adminPin) return { url: null, error: 'PIN admin belum diverifikasi' }
+  const form = new FormData()
+  form.append('pin', adminPin)
+  form.append('file', file)
+  const { data, error } = await supabase.functions.invoke('upload-bukti', { body: form })
+  if (error) return { url: null, error: error.message || 'Gagal upload file' }
+  const url = (data as { url?: string; error?: string } | null)?.url
+  if (!url) return { url: null, error: (data as { error?: string } | null)?.error || 'Gagal upload file' }
+  return { url, error: null }
+}
+
 // Baca catatan talangan (PIN-gated). RLS tabel `talangan` tidak punya policy
 // publik, jadi HANYA lewat fungsi ini datanya bisa dibaca — anon key saja tak cukup.
 export async function getTalangan(): Promise<{ data: Talangan[] | null; error: unknown }> {

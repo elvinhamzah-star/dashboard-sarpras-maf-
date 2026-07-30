@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useEscapeKey } from '../lib/useEscapeKey'
-import { adminInsert } from '../lib/adminApi'
+import { adminInsert, adminUploadBukti } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { supabase } from '../lib/supabase'
 import ModalShell from './ModalShell'
@@ -11,13 +11,13 @@ import DatePicker from './ui/DatePicker'
 const ACCEPTED = 'application/pdf,image/png,image/jpeg'
 const MAX_MB = 10
 
+// Upload goes through a PIN-gated Edge Function (see adminUploadBukti) --
+// the bucket has no public write policy, so a direct storage.upload() here
+// would just fail with an RLS error now.
 async function uploadBukti(file: File): Promise<string> {
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const { error } = await supabase.storage.from('bukti-transaksi').upload(path, file, { upsert: false })
-  if (error) throw new Error(error.message)
-  const { data } = supabase.storage.from('bukti-transaksi').getPublicUrl(path)
-  return data.publicUrl
+  const { url, error } = await adminUploadBukti(file)
+  if (error || !url) throw new Error(error || 'Gagal upload file')
+  return url
 }
 
 interface Program { id: string; nama_pekerjaan: string }
