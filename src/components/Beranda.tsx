@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
-import LaporanPekananCard from './LaporanPekananCard'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
@@ -130,7 +129,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
-  const [showLaporan, setShowLaporan] = useState(false)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
   const [pekerjaanTab, setPekerjaanTab] = useState('On Going')
@@ -865,36 +863,6 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
             </div>
           )}
         </ModalShell>
-      )}
-
-      {/* Laporan Pekanan — admin only */}
-      {isAdmin && (
-      <div style={{ marginTop: 12 }}>
-        <button
-          onClick={() => setShowLaporan(v => !v)}
-          style={{
-            width: '100%', padding: '10px 16px',
-            borderRadius: 10,
-            border: showLaporan ? '1px solid rgba(26,111,232,0.25)' : '1px solid var(--border)',
-            backgroundColor: showLaporan ? 'rgba(26,111,232,0.06)' : 'var(--card)',
-            color: showLaporan ? 'var(--blue)' : 'var(--text-secondary)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 6, fontFamily: 'inherit', transition: 'all 0.15s',
-          }}
-        >
-          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"
-            style={{ transform: showLaporan ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          {showLaporan ? 'Sembunyikan Laporan Pekanan' : 'Tampilkan Laporan Pekanan'}
-        </button>
-        {showLaporan && (
-          <div style={{ marginTop: 12 }}>
-            <LaporanPekananCard isAdmin={isAdmin} programs={programs} />
-          </div>
-        )}
-      </div>
       )}
 
       {/* Modal: Akses Dibatasi (MAF user klik Man Power) */}

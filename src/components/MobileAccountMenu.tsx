@@ -149,7 +149,7 @@ export default function MobileAccountMenu({
           }}
         >
           {isAdmin && role !== 'maf' && item(
-            'riwayat', 'Riwayat Laporan',
+            'riwayat', 'Laporan Progress',
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3" /><path d="M3.05 11a9 9 0 1 0 .5-4" /><polyline points="3 3 3 7 7 7" /></svg>,
             run(onRiwayat), { badge: 'Admin' },
           )}

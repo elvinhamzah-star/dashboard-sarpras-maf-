@@ -13,7 +13,7 @@ const Pekerjaan = lazy(() => import('./components/Pekerjaan'))
 const PekerjaanDetail = lazy(() => import('./components/PekerjaanDetail'))
 const Keuangan = lazy(() => import('./components/Keuangan'))
 const Galeri = lazy(() => import('./components/Galeri'))
-const RiwayatLaporan = lazy(() => import('./components/RiwayatLaporan'))
+const LaporanProgress = lazy(() => import('./components/LaporanProgress'))
 const LaporanBulanan = lazy(() => import('./components/LaporanBulanan'))
 const LaporanAset = lazy(() => import('./components/LaporanAset'))
 const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
@@ -308,7 +308,7 @@ export default function App() {
           />
         )
       case 'riwayat':
-        return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <RiwayatLaporan />
+        return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <LaporanProgress />
       case 'laporan-aset':
         return <LaporanAset isAdmin={isAdmin} role={role} />
       case 'laporan':
@@ -327,7 +327,7 @@ export default function App() {
     pekerjaan: 'Daftar 25 Pekerjaan',
     keuangan: 'Riwayat Keuangan',
     galeri: 'Galeri Dokumentasi',
-    riwayat: 'Riwayat Laporan',
+    riwayat: 'Laporan Progress',
     laporan: 'Laporan Bulanan',
     'laporan-aset': 'Perolehan Aset & Realisasi',
   }
