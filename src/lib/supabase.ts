@@ -286,20 +286,3 @@ export async function fetchProgramDocuments() {
   return { data, error }
 }
 
-export interface MonthlyReport {
-  id: number
-  bulan: string
-  catatan_evaluasi: string
-  rencana: string
-  created_at: string
-  updated_at: string
-}
-
-export async function fetchMonthlyReport(bulan: string): Promise<{ data: MonthlyReport | null; error: unknown }> {
-  const { data, error } = await supabase
-    .from('monthly_reports')
-    .select('*')
-    .eq('bulan', bulan)
-    .maybeSingle()
-  return { data: data as MonthlyReport | null, error }
-}

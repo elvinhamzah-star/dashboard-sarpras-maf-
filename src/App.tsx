@@ -14,7 +14,6 @@ const PekerjaanDetail = lazy(() => import('./components/PekerjaanDetail'))
 const Keuangan = lazy(() => import('./components/Keuangan'))
 const Galeri = lazy(() => import('./components/Galeri'))
 const LaporanProgress = lazy(() => import('./components/LaporanProgress'))
-const LaporanBulanan = lazy(() => import('./components/LaporanBulanan'))
 const LaporanAset = lazy(() => import('./components/LaporanAset'))
 const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
 const PresentationMode = lazy(() => import('./components/PresentationMode'))
@@ -23,7 +22,7 @@ import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supa
 import { prefetchAll } from './lib/prefetch'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan' | 'laporan-aset'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan-aset'
 
 // Shown while a lazy page chunk downloads. Kept minimal so the app chrome
 // (sidebar/top bar) stays visible and only the content area shows the spinner.
@@ -311,10 +310,6 @@ export default function App() {
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <LaporanProgress />
       case 'laporan-aset':
         return <LaporanAset isAdmin={isAdmin} role={role} />
-      case 'laporan':
-        return role === 'maf'
-          ? <Beranda isAdmin={isAdmin} role={role} />
-          : <LaporanBulanan isAdmin={isAdmin} />
       default:
         return <Beranda isAdmin={isAdmin} role={role} />
     }
@@ -328,7 +323,6 @@ export default function App() {
     keuangan: 'Riwayat Keuangan',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Laporan Progress',
-    laporan: 'Laporan Bulanan',
     'laporan-aset': 'Perolehan Aset & Realisasi',
   }
 
