@@ -16,6 +16,7 @@ interface MobileAccountMenuProps {
   togglingMaintenance: boolean
   onRiwayat: () => void
   onShowPinModal: () => void
+  onShowChangePinModal: () => void
   onLogoutAdmin: () => void
   onLogoutDashboard: () => void
   onToggleMaintenance?: () => void
@@ -29,6 +30,7 @@ export default function MobileAccountMenu({
   togglingMaintenance,
   onRiwayat,
   onShowPinModal,
+  onShowChangePinModal,
   onLogoutAdmin,
   onLogoutDashboard,
   onToggleMaintenance,
@@ -158,6 +160,12 @@ export default function MobileAccountMenu({
             'maintenance', isMaintenance ? 'Nonaktifkan Maintenance' : 'Mode Maintenance',
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2 2.5-2.5z" /></svg>,
             run(onToggleMaintenance), { disabled: togglingMaintenance },
+          )}
+
+          {isAdmin && role !== 'maf' && item(
+            'change-pin', 'Ganti PIN',
+            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><circle cx="12" cy="16.5" r="1.2" /></svg>,
+            run(onShowChangePinModal),
           )}
 
           {role !== 'maf' && (isAdmin

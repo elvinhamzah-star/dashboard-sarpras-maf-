@@ -8,6 +8,7 @@ interface SidebarProps {
   role: 'pbb' | 'maf' | null
   onLogout: () => void
   onShowPinModal: () => void
+  onShowChangePinModal?: () => void
   onLogoutDashboard: () => void
   isMaintenance?: boolean
   onToggleMaintenance?: () => void
@@ -86,7 +87,7 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onShowChangePinModal, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
 
   // Tombol maintenance — tampil hanya kalau admin, dipakai di 3 layout variant
@@ -147,6 +148,63 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
     >
       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </button>
+  ) : null
+
+  // Tombol ganti PIN admin — hanya admin, non-MAF (role MAF gak punya akses admin sama sekali)
+  const changePinBtn = isAdmin && role !== 'maf' && onShowChangePinModal ? (
+    <button
+      onClick={onShowChangePinModal}
+      title="Ganti PIN"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        color: '#93C5FD',
+        backgroundColor: 'rgba(26,111,232,0.1)',
+        border: '1px solid rgba(26,111,232,0.2)',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+        padding: '10px 12px',
+        borderRadius: 9,
+        width: '100%',
+        marginBottom: 8,
+        transition: 'all 0.15s',
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+        <circle cx="12" cy="16.5" r="1.2"/>
+      </svg>
+      Ganti PIN
+    </button>
+  ) : null
+
+  const changePinBtnCollapsed = isAdmin && role !== 'maf' && onShowChangePinModal ? (
+    <button
+      onClick={onShowChangePinModal}
+      title="Ganti PIN"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        backgroundColor: 'rgba(26,111,232,0.1)',
+        border: '1px solid rgba(26,111,232,0.2)',
+        cursor: 'pointer',
+        color: '#60A5FA',
+        padding: 0,
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+        <circle cx="12" cy="16.5" r="1.2"/>
       </svg>
     </button>
   ) : null
@@ -295,6 +353,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         {expanded && isMobile ? (
           <div>
             {maintenanceBtn}
+            {changePinBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -378,6 +437,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         ) : expanded ? (
           <div>
             {maintenanceBtn}
+            {changePinBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -461,6 +521,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             {maintenanceBtnCollapsed}
+            {changePinBtnCollapsed}
             {role !== 'maf' && (
               <button
                 onClick={isAdmin ? onLogout : onShowPinModal}

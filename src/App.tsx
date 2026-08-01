@@ -5,6 +5,7 @@ import BottomNav from './components/BottomNav'
 import MobileAccountMenu from './components/MobileAccountMenu'
 import Beranda from './components/Beranda'
 import PinModal from './components/PinModal'
+import ChangePinModal from './components/ChangePinModal'
 import LoginPage from './components/LoginPage'
 
 // Lazy-loaded pages/modals — split out of the initial bundle so first paint
@@ -59,6 +60,7 @@ export default function App() {
   const edgeSwipeStartX = useRef<number | null>(null)
   const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
+  const [showChangePinModal, setShowChangePinModal] = useState(false)
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
   // Default sidebar tertutup (rail 68px di desktop, off-canvas di mobile).
   // User bisa membukanya lewat tombol toggle.
@@ -367,6 +369,7 @@ export default function App() {
         onLogout={() => { clearAdminPin(); setIsAdmin(false) }}
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
+        onShowChangePinModal={() => setShowChangePinModal(true)}
         isMaintenance={isMaintenance ?? false}
         onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
         togglingMaintenance={togglingMaintenance}
@@ -452,6 +455,7 @@ export default function App() {
               togglingMaintenance={togglingMaintenance}
               onRiwayat={() => handleNavigate('riwayat')}
               onShowPinModal={() => setShowPinModal(true)}
+              onShowChangePinModal={() => setShowChangePinModal(true)}
               onLogoutAdmin={() => { clearAdminPin(); setIsAdmin(false) }}
               onLogoutDashboard={handleLogoutDashboard}
               onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
@@ -543,6 +547,10 @@ export default function App() {
           }}
           onClose={() => setShowPinModal(false)}
         />
+      )}
+
+      {showChangePinModal && (
+        <ChangePinModal onClose={() => setShowChangePinModal(false)} />
       )}
 
       {showAddModal && (
