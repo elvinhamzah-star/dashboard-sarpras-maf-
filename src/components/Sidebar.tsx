@@ -9,6 +9,8 @@ interface SidebarProps {
   onLogout: () => void
   onShowPinModal: () => void
   onShowChangePinModal?: () => void
+  onBackupDatabase?: () => void
+  backingUp?: boolean
   onLogoutDashboard: () => void
   isMaintenance?: boolean
   onToggleMaintenance?: () => void
@@ -87,7 +89,7 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onShowChangePinModal, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onShowChangePinModal, onBackupDatabase, backingUp = false, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
 
   // Tombol maintenance — tampil hanya kalau admin, dipakai di 3 layout variant
@@ -205,6 +207,67 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         <rect x="3" y="11" width="18" height="11" rx="2"/>
         <path d="M7 11V7a5 5 0 0110 0v4"/>
         <circle cx="12" cy="16.5" r="1.2"/>
+      </svg>
+    </button>
+  ) : null
+
+  // Tombol backup database — download JSON semua data ke perangkat (Rp0, tanpa upgrade plan)
+  const backupBtn = isAdmin && role !== 'maf' && onBackupDatabase ? (
+    <button
+      onClick={onBackupDatabase}
+      disabled={backingUp}
+      title="Backup Database"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        color: 'rgba(255,255,255,0.55)',
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(255,255,255,0.08)',
+        cursor: backingUp ? 'wait' : 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+        padding: '10px 12px',
+        borderRadius: 9,
+        width: '100%',
+        marginBottom: 8,
+        transition: 'all 0.15s',
+        opacity: backingUp ? 0.6 : 1,
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      {backingUp ? 'Menyiapkan...' : 'Backup Database'}
+    </button>
+  ) : null
+
+  const backupBtnCollapsed = isAdmin && role !== 'maf' && onBackupDatabase ? (
+    <button
+      onClick={onBackupDatabase}
+      disabled={backingUp}
+      title="Backup Database"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(255,255,255,0.08)',
+        cursor: backingUp ? 'wait' : 'pointer',
+        color: 'rgba(255,255,255,0.4)',
+        padding: 0,
+        opacity: backingUp ? 0.6 : 1,
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
     </button>
   ) : null
@@ -354,6 +417,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           <div>
             {maintenanceBtn}
             {changePinBtn}
+            {backupBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -438,6 +502,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           <div>
             {maintenanceBtn}
             {changePinBtn}
+            {backupBtn}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -522,6 +587,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             {maintenanceBtnCollapsed}
             {changePinBtnCollapsed}
+            {backupBtnCollapsed}
             {role !== 'maf' && (
               <button
                 onClick={isAdmin ? onLogout : onShowPinModal}

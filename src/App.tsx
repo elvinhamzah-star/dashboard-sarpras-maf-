@@ -21,6 +21,7 @@ const PresentationMode = lazy(() => import('./components/PresentationMode'))
 import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
+import { downloadBackup } from './lib/backup'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
 type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan-aset'
@@ -61,6 +62,15 @@ export default function App() {
   const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
   const [showChangePinModal, setShowChangePinModal] = useState(false)
+  const [backingUp, setBackingUp] = useState(false)
+
+  const handleBackupDatabase = async () => {
+    if (backingUp) return
+    setBackingUp(true)
+    const { ok, error } = await downloadBackup()
+    setBackingUp(false)
+    if (!ok) alert('Gagal membuat backup: ' + (error ?? 'unknown error'))
+  }
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
   // Default sidebar tertutup (rail 68px di desktop, off-canvas di mobile).
   // User bisa membukanya lewat tombol toggle.
@@ -370,6 +380,8 @@ export default function App() {
         onLogoutDashboard={handleLogoutDashboard}
         onShowPinModal={() => setShowPinModal(true)}
         onShowChangePinModal={() => setShowChangePinModal(true)}
+        onBackupDatabase={handleBackupDatabase}
+        backingUp={backingUp}
         isMaintenance={isMaintenance ?? false}
         onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
         togglingMaintenance={togglingMaintenance}
@@ -456,6 +468,8 @@ export default function App() {
               onRiwayat={() => handleNavigate('riwayat')}
               onShowPinModal={() => setShowPinModal(true)}
               onShowChangePinModal={() => setShowChangePinModal(true)}
+              onBackupDatabase={handleBackupDatabase}
+              backingUp={backingUp}
               onLogoutAdmin={() => { clearAdminPin(); setIsAdmin(false) }}
               onLogoutDashboard={handleLogoutDashboard}
               onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
