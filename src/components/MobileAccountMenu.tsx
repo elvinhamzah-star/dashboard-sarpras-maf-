@@ -41,6 +41,7 @@ export default function MobileAccountMenu({
   onPresentasi: _onPresentasi,
 }: MobileAccountMenuProps) {
   const [open, setOpen] = useState(false)
+  const [showAdminTools, setShowAdminTools] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -160,22 +161,50 @@ export default function MobileAccountMenu({
             run(onRiwayat), { badge: 'Admin' },
           )}
 
-          {isAdmin && onToggleMaintenance && item(
-            'maintenance', isMaintenance ? 'Nonaktifkan Maintenance' : 'Mode Maintenance',
-            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2 2.5-2.5z" /></svg>,
-            run(onToggleMaintenance), { disabled: togglingMaintenance },
-          )}
-
-          {isAdmin && role !== 'maf' && item(
-            'change-pin', 'Ganti PIN',
-            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><circle cx="12" cy="16.5" r="1.2" /></svg>,
-            run(onShowChangePinModal),
-          )}
-
-          {isAdmin && role !== 'maf' && item(
-            'backup', backingUp ? 'Menyiapkan Backup...' : 'Backup Database',
-            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
-            run(onBackupDatabase), { disabled: backingUp },
+          {isAdmin && role !== 'maf' && (
+            <>
+              <button
+                onClick={() => setShowAdminTools(v => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+                  padding: '10px 11px', borderRadius: 9, border: 'none',
+                  background: showAdminTools ? 'var(--surface-raised)' : 'none',
+                  cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                  color: 'var(--text-secondary)', transition: 'background-color 0.15s', textAlign: 'left',
+                }}
+              >
+                <span style={{ display: 'flex', flexShrink: 0, color: 'var(--text-muted)' }}>
+                  <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  </svg>
+                </span>
+                Alat Admin
+                <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"
+                  style={{ marginLeft: 'auto', flexShrink: 0, transform: showAdminTools ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {showAdminTools && (
+                <div style={{ paddingLeft: 8, borderLeft: '2px solid var(--border-subtle)', marginLeft: 11 }}>
+                  {onToggleMaintenance && item(
+                    'maintenance', isMaintenance ? 'Nonaktifkan Maintenance' : 'Mode Maintenance',
+                    <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2 2.5-2.5z" /></svg>,
+                    run(onToggleMaintenance), { disabled: togglingMaintenance },
+                  )}
+                  {item(
+                    'change-pin', 'Ganti PIN',
+                    <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><circle cx="12" cy="16.5" r="1.2" /></svg>,
+                    run(onShowChangePinModal),
+                  )}
+                  {item(
+                    'backup', backingUp ? 'Menyiapkan Backup...' : 'Backup Database',
+                    <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+                    run(onBackupDatabase), { disabled: backingUp },
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {role !== 'maf' && (isAdmin

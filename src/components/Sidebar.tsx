@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 interface SidebarProps {
   currentPage: string
   onNavigate: (page: string) => void
@@ -91,6 +93,8 @@ const menuItems = [
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onShowChangePinModal, onBackupDatabase, backingUp = false, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {
   const expanded = isMobile ? true : isOpen
+  const [showAdminTools, setShowAdminTools] = useState(false)
+  const hasAdminTools = isAdmin && role !== 'maf' && !!(onToggleMaintenance || onShowChangePinModal || onBackupDatabase)
 
   // Tombol maintenance — tampil hanya kalau admin, dipakai di 3 layout variant
   const maintenanceBtn = isAdmin && onToggleMaintenance ? (
@@ -271,6 +275,73 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       </svg>
     </button>
   ) : null
+
+  // Maintenance/Ganti PIN/Backup digabung di bawah satu toggle "Alat Admin"
+  // (level 2) biar sidebar gak numpuk banyak tombol di level 1.
+  const adminToolsToggle = hasAdminTools ? (
+    <button
+      onClick={() => setShowAdminTools(v => !v)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        color: showAdminTools ? '#93C5FD' : 'rgba(255,255,255,0.45)',
+        backgroundColor: showAdminTools ? 'rgba(26,111,232,0.1)' : 'transparent',
+        border: `1px solid ${showAdminTools ? 'rgba(26,111,232,0.2)' : 'rgba(255,255,255,0.08)'}`,
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+        padding: '10px 12px',
+        borderRadius: 9,
+        width: '100%',
+        marginBottom: showAdminTools ? 4 : 8,
+        transition: 'all 0.15s',
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      Alat Admin
+      <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"
+        style={{ marginLeft: 'auto', flexShrink: 0, transform: showAdminTools ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  ) : null
+
+  const adminToolsPanel = hasAdminTools && showAdminTools ? (
+    <div style={{ paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.08)', marginLeft: 4, marginBottom: 4 }}>
+      {maintenanceBtn}
+      {changePinBtn}
+      {backupBtn}
+    </div>
+  ) : null
+
+  const adminToolsToggleCollapsed = hasAdminTools ? (
+    <button
+      onClick={() => { setShowAdminTools(true); onToggle() }}
+      title="Alat Admin"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(255,255,255,0.08)',
+        cursor: 'pointer',
+        color: 'rgba(255,255,255,0.4)',
+        padding: 0,
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  ) : null
   return (
     <div
       style={{
@@ -415,9 +486,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
       <div style={{ padding: '10px 8px 16px', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         {expanded && isMobile ? (
           <div>
-            {maintenanceBtn}
-            {changePinBtn}
-            {backupBtn}
+            {adminToolsToggle}
+            {adminToolsPanel}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -500,9 +570,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : expanded ? (
           <div>
-            {maintenanceBtn}
-            {changePinBtn}
-            {backupBtn}
+            {adminToolsToggle}
+            {adminToolsPanel}
             {role === 'maf' ? null : isAdmin ? (
               <button
                 onClick={onLogout}
@@ -585,9 +654,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            {maintenanceBtnCollapsed}
-            {changePinBtnCollapsed}
-            {backupBtnCollapsed}
+            {adminToolsToggleCollapsed}
             {role !== 'maf' && (
               <button
                 onClick={isAdmin ? onLogout : onShowPinModal}
