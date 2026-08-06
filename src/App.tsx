@@ -7,6 +7,7 @@ import Beranda from './components/Beranda'
 import PinModal from './components/PinModal'
 import ChangePinModal from './components/ChangePinModal'
 import LoginPage from './components/LoginPage'
+import InventarisPublicPage from './components/InventarisPublicPage'
 
 // Lazy-loaded pages/modals — split out of the initial bundle so first paint
 // (Login + Beranda) doesn't ship react-pdf, the gallery, or other heavy views.
@@ -16,6 +17,7 @@ const Keuangan = lazy(() => import('./components/Keuangan'))
 const Galeri = lazy(() => import('./components/Galeri'))
 const LaporanProgress = lazy(() => import('./components/LaporanProgress'))
 const LaporanAset = lazy(() => import('./components/LaporanAset'))
+const InventarisBarang = lazy(() => import('./components/InventarisBarang'))
 const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
 const PresentationMode = lazy(() => import('./components/PresentationMode'))
 import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
@@ -24,7 +26,7 @@ import { prefetchAll } from './lib/prefetch'
 import { downloadBackup } from './lib/backup'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
-type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan-aset'
+type Page = 'beranda' | 'pekerjaan' | 'keuangan' | 'galeri' | 'riwayat' | 'laporan-aset' | 'inventaris'
 
 // Shown while a lazy page chunk downloads. Kept minimal so the app chrome
 // (sidebar/top bar) stays visible and only the content area shows the spinner.
@@ -41,7 +43,7 @@ function PageFallback() {
   )
 }
 
-export default function App() {
+function DashboardApp() {
   // Dev-only: login viewer (username/PIN) juga di-skip otomatis di `npm run dev`
   // — role 'pbb' (akses penuh) supaya testing lokal gak kejegal 2 gerbang login
   // sekaligus. Sama seperti isAdmin di bawah: cuma aktif kalau import.meta.env.DEV,
@@ -322,6 +324,8 @@ export default function App() {
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <LaporanProgress />
       case 'laporan-aset':
         return <LaporanAset isAdmin={isAdmin} role={role} />
+      case 'inventaris':
+        return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <InventarisBarang />
       default:
         return <Beranda isAdmin={isAdmin} role={role} />
     }
@@ -336,6 +340,7 @@ export default function App() {
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Laporan Progress',
     'laporan-aset': 'Perolehan Aset & Realisasi',
+    inventaris: 'Inventaris Barang',
   }
 
   if (isMaintenance === null) return null
@@ -466,6 +471,7 @@ export default function App() {
               isMaintenance={isMaintenance ?? false}
               togglingMaintenance={togglingMaintenance}
               onRiwayat={() => handleNavigate('riwayat')}
+              onInventaris={() => handleNavigate('inventaris')}
               onShowPinModal={() => setShowPinModal(true)}
               onShowChangePinModal={() => setShowChangePinModal(true)}
               onBackupDatabase={handleBackupDatabase}
@@ -584,4 +590,14 @@ export default function App() {
       )}
     </div>
   )
+}
+
+// /aset/:kode is a public, unauthenticated QR-scan target -- checked before any
+// of DashboardApp's auth/maintenance state, so scanning a sticker never hits
+// the login screen. Path-based (not query param) so it reads as a proper URL;
+// needs a matching SPA rewrite in vercel.json for direct/fresh loads in prod.
+export default function App() {
+  const match = window.location.pathname.match(/^\/aset\/([^/]+)\/?$/)
+  if (match) return <InventarisPublicPage kode={decodeURIComponent(match[1])} />
+  return <DashboardApp />
 }

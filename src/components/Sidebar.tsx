@@ -89,6 +89,19 @@ const menuItems = [
       </svg>
     ),
   },
+  {
+    id: 'inventaris',
+    label: 'Inventaris Barang',
+    adminOnly: true,
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+        <rect x="3" y="7" width="7" height="7" rx="1"/>
+        <rect x="14" y="7" width="7" height="7" rx="1"/>
+        <rect x="3" y="18" width="7" height="3" rx="1"/>
+        <rect x="14" y="18" width="7" height="3" rx="1"/>
+      </svg>
+    ),
+  },
 ]
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = false, onToggle, isAdmin, role, onLogout, onShowPinModal, onShowChangePinModal, onBackupDatabase, backingUp = false, onLogoutDashboard, isMaintenance = false, onToggleMaintenance, togglingMaintenance = false }: SidebarProps) {

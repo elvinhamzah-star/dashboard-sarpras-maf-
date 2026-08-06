@@ -160,6 +160,30 @@ export interface BeforeAfterPair {
   created_at?: string
 }
 
+// Inventaris Barang — 1 kode unik per JENIS barang (bukan per unit fisik), QR
+// di stiker fisiknya mengarah ke halaman publik /aset/:kode (tanpa login).
+export type KondisiUnit = 'Baik' | 'Rusak Ringan' | 'Rusak Berat'
+
+export interface InventarisItem {
+  id: string
+  kode: string
+  nama_barang: string
+  spesifikasi?: string | null
+  foto?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface InventarisUnit {
+  id: string
+  item_id: string
+  urutan: number
+  kondisi: KondisiUnit
+  tim?: string | null
+  last_checked_at: string
+  created_at: string
+}
+
 // MAF management role credentials. Mirrors the sessionStorage-backed
 // dashboard_role flag in App.tsx: that flag survives a page reload, so these
 // credentials must too, or a reload would leave the UI rendering in MAF mode
@@ -238,6 +262,28 @@ export async function fetchBeforeAfterPairs() {
   const { data, error } = await supabase.from('before_after_pairs').select('*').order('urutan', { ascending: true })
   if (data) toCache('before_after_pairs', data)
   return { data, error }
+}
+export async function fetchInventarisItems() {
+  const cached = fromCache<InventarisItem[]>('inventaris_items')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('inventaris_items').select('*').order('kode', { ascending: true })
+  if (data) toCache('inventaris_items', data)
+  return { data, error }
+}
+export async function fetchInventarisUnits() {
+  const cached = fromCache<InventarisUnit[]>('inventaris_units')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('inventaris_units').select('*').order('urutan', { ascending: true })
+  if (data) toCache('inventaris_units', data)
+  return { data, error }
+}
+// Dipakai halaman publik /aset/:kode -- gak lewat cache (satu-off, dan gak perlu
+// ikut ke-invalidate bareng cache admin).
+export async function fetchInventarisItemByKode(kode: string) {
+  const { data: item, error: itemError } = await supabase.from('inventaris_items').select('*').eq('kode', kode).maybeSingle()
+  if (itemError || !item) return { item: null as InventarisItem | null, units: [] as InventarisUnit[], error: itemError }
+  const { data: units, error: unitsError } = await supabase.from('inventaris_units').select('*').eq('item_id', item.id).order('urutan', { ascending: true })
+  return { item: item as InventarisItem, units: (units ?? []) as InventarisUnit[], error: unitsError }
 }
 export async function fetchSnapshots() {
   const cached = fromCache<ProgramSnapshot[]>('snapshots')

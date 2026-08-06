@@ -12,6 +12,18 @@ export const STATUS_BG: Record<string, string> = {
   'On Hold': 'rgba(217,119,6,0.1)',
 }
 
+export const KONDISI_COLORS: Record<string, string> = {
+  'Baik': '#059669',
+  'Rusak Ringan': '#D97706',
+  'Rusak Berat': '#660000',
+}
+
+export const KONDISI_BG: Record<string, string> = {
+  'Baik': 'rgba(5,150,105,0.1)',
+  'Rusak Ringan': 'rgba(217,119,6,0.1)',
+  'Rusak Berat': 'rgba(102,0,0,0.1)',
+}
+
 export function formatRupiah(num: number): string {
   if (!num) return 'Rp 0'
   return 'Rp ' + num.toLocaleString('id-ID')

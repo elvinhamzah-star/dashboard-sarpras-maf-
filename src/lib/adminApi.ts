@@ -67,6 +67,26 @@ export async function adminUpdate(
   return { data, error }
 }
 
+// Bikin item inventaris baru + unit-unit awalnya sekaligus (atomik) -- kode
+// (TS-0001, dst) di-generate server-side, gak bisa dibikin lewat adminInsert biasa.
+export async function adminCreateInventarisItem(args: {
+  namaBarang: string
+  spesifikasi: string
+  foto: string
+  jumlahUnit: number
+  tim: string
+}) {
+  const { data, error } = await supabase.rpc('admin_create_inventaris_item', {
+    p_pin: adminPin,
+    p_nama_barang: args.namaBarang,
+    p_spesifikasi: args.spesifikasi,
+    p_foto: args.foto,
+    p_jumlah_unit: args.jumlahUnit,
+    p_tim: args.tim,
+  })
+  return { data: data as { id: string; kode: string } | null, error }
+}
+
 export async function adminUpsertConfig(key: string, value: string) {
   const { error } = await supabase.rpc('admin_upsert_config', {
     p_pin: adminPin,

@@ -15,6 +15,7 @@ interface MobileAccountMenuProps {
   isMaintenance: boolean
   togglingMaintenance: boolean
   onRiwayat: () => void
+  onInventaris: () => void
   onShowPinModal: () => void
   onShowChangePinModal: () => void
   onBackupDatabase: () => void
@@ -31,6 +32,7 @@ export default function MobileAccountMenu({
   isMaintenance,
   togglingMaintenance,
   onRiwayat,
+  onInventaris,
   onShowPinModal,
   onShowChangePinModal,
   onBackupDatabase,
@@ -159,6 +161,12 @@ export default function MobileAccountMenu({
             'riwayat', 'Laporan Progress',
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M12 8v4l3 3" /><path d="M3.05 11a9 9 0 1 0 .5-4" /><polyline points="3 3 3 7 7 7" /></svg>,
             run(onRiwayat), { badge: 'Admin' },
+          )}
+
+          {isAdmin && role !== 'maf' && item(
+            'inventaris', 'Inventaris Barang',
+            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="7" width="7" height="7" rx="1" /><rect x="14" y="7" width="7" height="7" rx="1" /><rect x="3" y="18" width="7" height="3" rx="1" /><rect x="14" y="18" width="7" height="3" rx="1" /></svg>,
+            run(onInventaris),
           )}
 
           {isAdmin && role !== 'maf' && (
