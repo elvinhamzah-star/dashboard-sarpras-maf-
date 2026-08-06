@@ -6,6 +6,26 @@ interface InventarisPublicPageProps {
   kode: string
 }
 
+function daysSince(dateStr: string): number {
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+}
+
+const ICON_PIN = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" style={{ flexShrink: 0 }}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+  </svg>
+)
+const ICON_TEAM = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A99AB" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+)
+const ICON_CLOCK = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A99AB" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+
 export default function InventarisPublicPage({ kode }: InventarisPublicPageProps) {
   const [item, setItem] = useState<InventarisItem | null>(null)
   const [units, setUnits] = useState<InventarisUnit[]>([])
@@ -22,6 +42,7 @@ export default function InventarisPublicPage({ kode }: InventarisPublicPageProps
   }, [kode])
 
   const thumb = item?.foto ? getDriveThumbnailUrl(item.foto, 'w800') : null
+  const singleUnit = units.length === 1 ? units[0] : null
 
   return (
     <div style={{
@@ -53,7 +74,7 @@ export default function InventarisPublicPage({ kode }: InventarisPublicPageProps
         {!loading && item && (
           <>
             {/* Kartu produk */}
-            <div style={{ backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 10px rgba(15,28,46,0.06)', marginBottom: 16 }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 10px rgba(15,28,46,0.06)', marginBottom: 12 }}>
               {thumb ? (
                 <img src={thumb} alt={item.nama_barang} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block', backgroundColor: '#EEF1F5' }} />
               ) : (
@@ -70,35 +91,104 @@ export default function InventarisPublicPage({ kode }: InventarisPublicPageProps
               </div>
             </div>
 
-            {/* List unit -- feed/katalog style */}
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, paddingLeft: 2 }}>
-              {units.length} Unit
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {units.map(unit => (
-                <div key={unit.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-                  backgroundColor: '#fff', borderRadius: 12, padding: '12px 14px',
-                  boxShadow: '0 1px 4px rgba(15,28,46,0.04)',
-                }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 600, color: '#1E293B' }}>Unit {unit.urutan}</span>
-                  <span style={{
-                    fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 99,
-                    color: KONDISI_COLORS[unit.kondisi], backgroundColor: KONDISI_BG[unit.kondisi],
-                  }}>
-                    {unit.kondisi}
-                  </span>
+            {singleUnit ? (
+              // 1 unit -- lebur semua info jadi satu kartu ringkasan, gak perlu list terpisah.
+              <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14 }}>
+                <Row label="Total unit" value="1 unit" />
+                <Row label="Kondisi" value={<KondisiPill kondisi={singleUnit.kondisi} />} />
+                <Divider />
+                <Row icon={ICON_TEAM} label="Penanggung jawab" value={singleUnit.tim || 'Belum ada tim'} muted={!singleUnit.tim} />
+                <Row icon={ICON_CLOCK} label="Pemeriksaan terakhir" value={`${daysSince(singleUnit.last_checked_at)} hari lalu`} last />
+              </div>
+            ) : (
+              <>
+                <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
+                  <Row label="Total unit" value={`${units.length} unit`} last />
                 </div>
-              ))}
-              {units.length === 0 && (
-                <div style={{ textAlign: 'center', padding: 24, color: '#8A99AB', fontSize: 12.5, backgroundColor: '#fff', borderRadius: 12 }}>
-                  Belum ada unit terdaftar.
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {units.map(unit => (
+                    <div key={unit.id} style={{
+                      backgroundColor: '#fff', borderRadius: 10, padding: '11px 12px',
+                      borderLeft: unit.kondisi !== 'Baik' ? `3px solid ${KONDISI_COLORS[unit.kondisi]}` : undefined,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <span style={{ color: unit.lokasi ? '#8A99AB' : '#C7CDD6' }}>{ICON_PIN}</span>
+                          <span style={{
+                            fontSize: 13.5, fontWeight: 500, color: unit.lokasi ? '#1E293B' : '#B0B8C4',
+                            fontStyle: unit.lokasi ? 'normal' : 'italic',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {unit.lokasi || 'Lokasi belum diisi'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 500, color: KONDISI_COLORS[unit.kondisi], flexShrink: 0 }}>{unit.kondisi}</span>
+                      </div>
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #F1F3F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                          {ICON_TEAM}
+                          <span style={{ fontSize: 11, color: unit.tim ? '#64748B' : '#B0B8C4', fontStyle: unit.tim ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {unit.tim || 'Belum ada tim'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                          {ICON_CLOCK}
+                          <span style={{ fontSize: 11, color: '#64748B' }}>{daysSince(unit.last_checked_at)} hari lalu</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {units.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 24, color: '#8A99AB', fontSize: 12.5, backgroundColor: '#fff', borderRadius: 12 }}>
+                      Belum ada unit terdaftar.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </>
         )}
       </div>
     </div>
+  )
+}
+
+function Row({
+  icon, label, value, muted, last,
+}: {
+  icon?: React.ReactNode
+  label: string
+  value: React.ReactNode
+  muted?: boolean
+  last?: boolean
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+      marginBottom: last ? 0 : 10,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {icon}
+        <span style={{ fontSize: 12, color: '#8A99AB' }}>{label}</span>
+      </div>
+      <span style={{ fontSize: 12.5, fontWeight: 500, color: muted ? '#B0B8C4' : '#1E293B', fontStyle: muted ? 'italic' : 'normal' }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function Divider() {
+  return <div style={{ height: 1, backgroundColor: '#F1F3F6', margin: '2px 0 10px' }} />
+}
+
+function KondisiPill({ kondisi }: { kondisi: InventarisUnit['kondisi'] }) {
+  return (
+    <span style={{
+      fontSize: 12.5, fontWeight: 500, padding: '4px 10px', borderRadius: 99,
+      color: KONDISI_COLORS[kondisi], backgroundColor: KONDISI_BG[kondisi],
+    }}>
+      {kondisi}
+    </span>
   )
 }

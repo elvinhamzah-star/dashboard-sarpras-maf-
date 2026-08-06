@@ -416,22 +416,23 @@ function ItemDetailView({
 }
 
 function UnitRow({ unit, onChange }: { unit: InventarisUnit; onChange: () => Promise<void> }) {
+  const [lokasi, setLokasi] = useState(unit.lokasi ?? '')
   const [kondisi, setKondisi] = useState<KondisiUnit>(unit.kondisi)
   const [tim, setTim] = useState(unit.tim ?? '')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const dirty = kondisi !== unit.kondisi || tim !== (unit.tim ?? '')
+  const dirty = lokasi !== (unit.lokasi ?? '') || kondisi !== unit.kondisi || tim !== (unit.tim ?? '')
   const days = daysSince(unit.last_checked_at)
 
   const save = async () => {
     setSaving(true)
-    const { error } = await adminUpdate('inventaris_units', { kondisi, tim: tim.trim() || null }, unit.id)
+    const { error } = await adminUpdate('inventaris_units', { lokasi: lokasi.trim() || null, kondisi, tim: tim.trim() || null }, unit.id)
     setSaving(false)
     if (!error) await onChange()
   }
 
   const remove = async () => {
-    if (!confirm(`Hapus Unit ${unit.urutan}?`)) return
+    if (!confirm(`Hapus unit ${unit.lokasi || `Unit ${unit.urutan}`}?`)) return
     setDeleting(true)
     const { error } = await adminDelete('inventaris_units', unit.id)
     setDeleting(false)
@@ -439,30 +440,40 @@ function UnitRow({ unit, onChange }: { unit: InventarisUnit; onChange: () => Pro
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: 12, borderRadius: 12, border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', width: 56, flexShrink: 0 }}>Unit {unit.urutan}</div>
-      <div style={{ width: 150, flexShrink: 0 }}>
-        <Dropdown value={kondisi} options={KONDISI_OPTIONS} onChange={v => setKondisi(v as KondisiUnit)} fontSize={13} />
+    <div style={{ padding: 12, borderRadius: 12, border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em', marginBottom: 8 }}>UNIT {unit.urutan}</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+        <input
+          value={lokasi}
+          onChange={e => setLokasi(e.target.value)}
+          placeholder="Lokasi (contoh: Halaman Depan)"
+          style={{ ...inputStyle, flex: 2, minWidth: 160, padding: '9px 12px', fontSize: 13 }}
+        />
+        <div style={{ flex: 1, minWidth: 130 }}>
+          <Dropdown value={kondisi} options={KONDISI_OPTIONS} onChange={v => setKondisi(v as KondisiUnit)} fontSize={13} />
+        </div>
       </div>
-      <input
-        value={tim}
-        onChange={e => setTim(e.target.value)}
-        placeholder="Tim penanggung jawab"
-        style={{ ...inputStyle, flex: 1, minWidth: 140, padding: '9px 12px', fontSize: 13 }}
-      />
-      <div style={{ fontSize: 11, color: days >= REMINDER_DAYS ? '#D97706' : 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-        Dicek {days} hari lalu
-      </div>
-      {dirty && (
-        <button onClick={save} disabled={saving}
-          style={{ padding: '7px 12px', borderRadius: 8, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, opacity: saving ? 0.7 : 1 }}>
-          {saving ? '...' : 'Simpan'}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <input
+          value={tim}
+          onChange={e => setTim(e.target.value)}
+          placeholder="Tim penanggung jawab"
+          style={{ ...inputStyle, flex: 1, minWidth: 140, padding: '9px 12px', fontSize: 13 }}
+        />
+        <div style={{ fontSize: 11, color: days >= REMINDER_DAYS ? '#D97706' : 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          Pemeriksaan terakhir: {days} hari lalu
+        </div>
+        {dirty && (
+          <button onClick={save} disabled={saving}
+            style={{ padding: '7px 12px', borderRadius: 8, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, opacity: saving ? 0.7 : 1 }}>
+            {saving ? '...' : 'Simpan'}
+          </button>
+        )}
+        <button onClick={remove} disabled={deleting}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}>
+          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
         </button>
-      )}
-      <button onClick={remove} disabled={deleting}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}>
-        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
-      </button>
+      </div>
     </div>
   )
 }

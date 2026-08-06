@@ -180,6 +180,7 @@ export interface InventarisUnit {
   urutan: number
   kondisi: KondisiUnit
   tim?: string | null
+  lokasi?: string | null
   last_checked_at: string
   created_at: string
 }
