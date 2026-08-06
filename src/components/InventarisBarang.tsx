@@ -270,6 +270,9 @@ function ItemDetailView({
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [addingUnit, setAddingUnit] = useState(false)
   const [deletingItem, setDeletingItem] = useState(false)
+  const [bulkKondisi, setBulkKondisi] = useState<KondisiUnit>(units[0]?.kondisi ?? 'Baik')
+  const [bulkTim, setBulkTim] = useState(units[0]?.tim ?? '')
+  const [bulkSaving, setBulkSaving] = useState(false)
 
   useEffect(() => {
     QRCode.toDataURL(publicUrl(item.kode), { width: 240, margin: 1 }).then(setQrDataUrl).catch(() => setQrDataUrl(''))
@@ -307,6 +310,18 @@ function ItemDetailView({
     })
     setAddingUnit(false)
     if (err) { setError('Gagal menambah unit: ' + err.message); return }
+    await onChange()
+  }
+
+  const bulkUpdate = async () => {
+    setBulkSaving(true)
+    setError('')
+    const results = await Promise.all(
+      units.map(u => adminUpdate('inventaris_units', { kondisi: bulkKondisi, tim: bulkTim.trim() || null }, u.id))
+    )
+    setBulkSaving(false)
+    const failed = results.find(r => r.error)
+    if (failed) { setError('Gagal update sebagian unit: ' + failed.error!.message); return }
     await onChange()
   }
 
@@ -390,6 +405,32 @@ function ItemDetailView({
           </div>
         </div>
       </div>
+
+      {/* Bulk update -- setnya banyak barang (misal 5 tempat sampah) biasa dicek bareng
+          dalam satu kunjungan, sama kondisi/tim-nya. Daripada edit satu-satu, terapkan
+          Kondisi + Tim ke semua unit sekaligus (lokasi tetap per-unit karena beda tempat). */}
+      {units.length > 1 && (
+        <div style={{ padding: 14, borderRadius: 12, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.04)', marginBottom: 16 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--blue)', marginBottom: 10 }}>Update Semua Unit Sekaligus</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 130 }}>
+              <label style={labelStyle}>Kondisi</label>
+              <Dropdown value={bulkKondisi} options={KONDISI_OPTIONS} onChange={v => setBulkKondisi(v as KondisiUnit)} fontSize={13} />
+            </div>
+            <div style={{ flex: 1, minWidth: 150 }}>
+              <label style={labelStyle}>Tim Penanggung Jawab</label>
+              <input value={bulkTim} onChange={e => setBulkTim(e.target.value)} placeholder="Tim penanggung jawab" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13 }} />
+            </div>
+            <button onClick={bulkUpdate} disabled={bulkSaving}
+              style={{ padding: '9px 16px', borderRadius: 9, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: bulkSaving ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+              {bulkSaving ? 'Menerapkan...' : `Terapkan ke ${units.length} Unit`}
+            </button>
+          </div>
+          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 8 }}>
+            Ini juga otomatis reset pemeriksaan terakhir semua unit ke hari ini.
+          </div>
+        </div>
+      )}
 
       {/* Units */}
       <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
