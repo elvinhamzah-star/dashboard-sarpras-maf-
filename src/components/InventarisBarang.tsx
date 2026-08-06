@@ -463,12 +463,16 @@ function UnitRow({ unit, onChange }: { unit: InventarisUnit; onChange: () => Pro
         <div style={{ fontSize: 11, color: days >= REMINDER_DAYS ? '#D97706' : 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
           Pemeriksaan terakhir: {days} hari lalu
         </div>
-        {dirty && (
-          <button onClick={save} disabled={saving}
-            style={{ padding: '7px 12px', borderRadius: 8, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, opacity: saving ? 0.7 : 1 }}>
-            {saving ? '...' : 'Simpan'}
-          </button>
-        )}
+        <button onClick={save} disabled={saving} title={dirty ? undefined : 'Simpan ulang tanpa perubahan -- reset hitungan pemeriksaan ke hari ini'}
+          style={{
+            padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+            border: dirty ? 'none' : '1px solid var(--border)',
+            backgroundColor: dirty ? 'var(--blue)' : 'var(--card)',
+            color: dirty ? '#fff' : 'var(--text-secondary)',
+            opacity: saving ? 0.7 : 1,
+          }}>
+          {saving ? '...' : dirty ? 'Simpan' : 'Konfirmasi Sudah Dicek'}
+        </button>
         <button onClick={remove} disabled={deleting}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}>
           <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
