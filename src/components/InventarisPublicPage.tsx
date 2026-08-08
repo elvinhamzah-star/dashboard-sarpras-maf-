@@ -91,60 +91,48 @@ export default function InventarisPublicPage({ kode }: InventarisPublicPageProps
               </div>
             </div>
 
-            {singleUnit ? (
-              // 1 unit -- lebur semua info jadi satu kartu ringkasan, gak perlu list terpisah.
-              <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14 }}>
-                <Row label="Total unit" value="1 unit" />
-                <Row label="Kondisi" value={<KondisiPill kondisi={singleUnit.kondisi} />} />
-                <Divider />
-                <Row icon={ICON_TEAM} label="Penanggung jawab" value={singleUnit.tim || 'Belum ada tim'} muted={!singleUnit.tim} />
-                <Row icon={ICON_CLOCK} label="Pemeriksaan terakhir" value={`${daysSince(singleUnit.last_checked_at)} hari lalu`} last />
+            {/* Info card -- level barang: jumlah unit, (kondisi kalau cuma 1 unit),
+                penanggung jawab, pengecekan terakhir. Ini SELALU dari data item,
+                bukan per-unit lagi (barang yang sama selalu dipegang & diperiksa
+                oleh 1 tim yang sama, sekaligus semua unitnya). */}
+            <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: units.length > 1 ? 10 : 0 }}>
+              <Row label="Total unit" value={`${units.length} unit`} />
+              {singleUnit && <Row label="Kondisi" value={<KondisiPill kondisi={singleUnit.kondisi} />} />}
+              <Divider />
+              <Row icon={ICON_TEAM} label="Penanggung jawab" value={item.tim || 'Belum ada tim'} muted={!item.tim} />
+              <Row icon={ICON_CLOCK} label="Pengecekan terakhir" value={`${daysSince(item.last_checked_at)} hari lalu`} last />
+            </div>
+
+            {/* List per-unit -- cuma kalau lebih dari 1 unit (lokasi & kondisi beda-beda
+                per unit; penanggung jawab & pengecekan terakhir udah di kartu atas). */}
+            {units.length > 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {units.map(unit => (
+                  <div key={unit.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                    backgroundColor: '#fff', borderRadius: 10, padding: '11px 12px',
+                    borderLeft: unit.kondisi !== 'Baik' ? `3px solid ${KONDISI_COLORS[unit.kondisi]}` : undefined,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <span style={{ color: unit.lokasi ? '#8A99AB' : '#C7CDD6' }}>{ICON_PIN}</span>
+                      <span style={{
+                        fontSize: 13.5, fontWeight: 500, color: unit.lokasi ? '#1E293B' : '#B0B8C4',
+                        fontStyle: unit.lokasi ? 'normal' : 'italic',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {unit.lokasi || 'Lokasi belum diisi'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: KONDISI_COLORS[unit.kondisi], flexShrink: 0 }}>{unit.kondisi}</span>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <>
-                <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
-                  <Row label="Total unit" value={`${units.length} unit`} last />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {units.map(unit => (
-                    <div key={unit.id} style={{
-                      backgroundColor: '#fff', borderRadius: 10, padding: '11px 12px',
-                      borderLeft: unit.kondisi !== 'Baik' ? `3px solid ${KONDISI_COLORS[unit.kondisi]}` : undefined,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <span style={{ color: unit.lokasi ? '#8A99AB' : '#C7CDD6' }}>{ICON_PIN}</span>
-                          <span style={{
-                            fontSize: 13.5, fontWeight: 500, color: unit.lokasi ? '#1E293B' : '#B0B8C4',
-                            fontStyle: unit.lokasi ? 'normal' : 'italic',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {unit.lokasi || 'Lokasi belum diisi'}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: 11, fontWeight: 500, color: KONDISI_COLORS[unit.kondisi], flexShrink: 0 }}>{unit.kondisi}</span>
-                      </div>
-                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #F1F3F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-                          {ICON_TEAM}
-                          <span style={{ fontSize: 11, color: unit.tim ? '#64748B' : '#B0B8C4', fontStyle: unit.tim ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {unit.tim || 'Belum ada tim'}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                          {ICON_CLOCK}
-                          <span style={{ fontSize: 11, color: '#64748B' }}>{daysSince(unit.last_checked_at)} hari lalu</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {units.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: 24, color: '#8A99AB', fontSize: 12.5, backgroundColor: '#fff', borderRadius: 12 }}>
-                      Belum ada unit terdaftar.
-                    </div>
-                  )}
-                </div>
-              </>
+            )}
+
+            {units.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 24, color: '#8A99AB', fontSize: 12.5, backgroundColor: '#fff', borderRadius: 12, marginTop: 10 }}>
+                Belum ada unit terdaftar.
+              </div>
             )}
           </>
         )}

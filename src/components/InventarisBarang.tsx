@@ -69,11 +69,11 @@ export default function InventarisBarang() {
   }, [units])
 
   const overdue = useMemo(() => {
-    return units
-      .map(u => ({ unit: u, item: items.find(it => it.id === u.item_id), days: daysSince(u.last_checked_at) }))
-      .filter((x): x is { unit: InventarisUnit; item: InventarisItem; days: number } => !!x.item && x.days >= REMINDER_DAYS)
+    return items
+      .map(item => ({ item, days: daysSince(item.last_checked_at) }))
+      .filter(x => x.days >= REMINDER_DAYS)
       .sort((a, b) => b.days - a.days)
-  }, [units, items])
+  }, [items])
 
   const selectedItem = items.find(i => i.id === selectedItemId) ?? null
 
@@ -154,7 +154,7 @@ export default function InventarisBarang() {
               </svg>
             </span>
             <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: '#D97706' }}>
-              {overdue.length} unit belum dicek lebih dari {REMINDER_DAYS} hari
+              {overdue.length} barang belum diperiksa lebih dari {REMINDER_DAYS} hari
             </span>
             <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2.4" viewBox="0 0 24 24"
               style={{ transform: showReminderList ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
@@ -163,9 +163,9 @@ export default function InventarisBarang() {
           </button>
           {showReminderList && (
             <div style={{ borderTop: '1px solid rgba(217,119,6,0.2)' }}>
-              {overdue.map(({ unit, item, days }) => (
+              {overdue.map(({ item, days }) => (
                 <button
-                  key={unit.id}
+                  key={item.id}
                   onClick={() => setSelectedItemId(item.id)}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
@@ -174,7 +174,7 @@ export default function InventarisBarang() {
                   }}
                 >
                   <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
-                    {item.nama_barang} <span style={{ color: 'var(--text-muted)' }}>· Unit {unit.urutan} ({item.kode})</span>
+                    {item.nama_barang} <span style={{ color: 'var(--text-muted)' }}>({item.kode})</span>
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#D97706', flexShrink: 0 }}>{days} hari</span>
                 </button>
@@ -265,14 +265,16 @@ function ItemDetailView({
   const [namaBarang, setNamaBarang] = useState(item.nama_barang)
   const [spesifikasi, setSpesifikasi] = useState(item.spesifikasi ?? '')
   const [foto, setFoto] = useState(item.foto ?? '')
+  const [tim, setTim] = useState(item.tim ?? '')
   const [savingInfo, setSavingInfo] = useState(false)
   const [error, setError] = useState('')
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [addingUnit, setAddingUnit] = useState(false)
   const [deletingItem, setDeletingItem] = useState(false)
   const [bulkKondisi, setBulkKondisi] = useState<KondisiUnit>(units[0]?.kondisi ?? 'Baik')
-  const [bulkTim, setBulkTim] = useState(units[0]?.tim ?? '')
   const [bulkSaving, setBulkSaving] = useState(false)
+  const [confirmingChecked, setConfirmingChecked] = useState(false)
+  const checkedDays = daysSince(item.last_checked_at)
 
   useEffect(() => {
     QRCode.toDataURL(publicUrl(item.kode), { width: 240, margin: 1 }).then(setQrDataUrl).catch(() => setQrDataUrl(''))
@@ -282,6 +284,7 @@ function ItemDetailView({
     setNamaBarang(item.nama_barang)
     setSpesifikasi(item.spesifikasi ?? '')
     setFoto(item.foto ?? '')
+    setTim(item.tim ?? '')
   }, [item])
 
   const saveInfo = async () => {
@@ -292,6 +295,7 @@ function ItemDetailView({
       nama_barang: namaBarang.trim(),
       spesifikasi: spesifikasi.trim() || null,
       foto: foto.trim() || null,
+      tim: tim.trim() || null,
     }, item.id)
     setSavingInfo(false)
     if (err) { setError('Gagal menyimpan: ' + err.message); return }
@@ -306,22 +310,33 @@ function ItemDetailView({
       item_id: item.id,
       urutan: nextUrutan,
       kondisi: 'Baik',
-      tim: null,
     })
     setAddingUnit(false)
     if (err) { setError('Gagal menambah unit: ' + err.message); return }
     await onChange()
   }
 
+  // Ubah kondisi unit (di sini atau di UnitRow) otomatis nge-refresh Pengecekan
+  // Terakhir lewat trigger DB (cuma kalau kondisinya beneran berubah). Kalau
+  // gak ada yang berubah nilainya, pakai tombol "Konfirmasi Pengecekan" di bawah.
   const bulkUpdate = async () => {
     setBulkSaving(true)
     setError('')
     const results = await Promise.all(
-      units.map(u => adminUpdate('inventaris_units', { kondisi: bulkKondisi, tim: bulkTim.trim() || null }, u.id))
+      units.map(u => adminUpdate('inventaris_units', { kondisi: bulkKondisi }, u.id))
     )
     setBulkSaving(false)
     const failed = results.find(r => r.error)
     if (failed) { setError('Gagal update sebagian unit: ' + failed.error!.message); return }
+    await onChange()
+  }
+
+  const confirmPengecekan = async () => {
+    setConfirmingChecked(true)
+    setError('')
+    const { error: err } = await adminUpdate('inventaris_items', { last_checked_at: new Date().toISOString() }, item.id)
+    setConfirmingChecked(false)
+    if (err) { setError('Gagal konfirmasi pengecekan: ' + err.message); return }
     await onChange()
   }
 
@@ -369,8 +384,10 @@ function ItemDetailView({
                 <textarea value={spesifikasi} onChange={e => setSpesifikasi(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical', marginBottom: 12 }} />
                 <label style={labelStyle}>Link Foto</label>
                 <input value={foto} onChange={e => setFoto(e.target.value)} placeholder="https://drive.google.com/..." style={{ ...inputStyle, marginBottom: 12 }} />
+                <label style={labelStyle}>Penanggung Jawab</label>
+                <input value={tim} onChange={e => setTim(e.target.value)} placeholder="Contoh: Tim Kebersihan" style={{ ...inputStyle, marginBottom: 12 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setEditingInfo(false); setNamaBarang(item.nama_barang); setSpesifikasi(item.spesifikasi ?? ''); setFoto(item.foto ?? '') }}
+                  <button onClick={() => { setEditingInfo(false); setNamaBarang(item.nama_barang); setSpesifikasi(item.spesifikasi ?? ''); setFoto(item.foto ?? ''); setTim(item.tim ?? '') }}
                     style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-muted)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
                     Batal
                   </button>
@@ -404,30 +421,51 @@ function ItemDetailView({
             </a>
           </div>
         </div>
+
+        {/* Jumlah unit, penanggung jawab, pengecekan terakhir -- level barang, bukan
+            per-unit lagi (barang yang sama selalu diperiksa & dipegang tim yang sama). */}
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Jumlah Unit</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{units.length} unit</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Penanggung Jawab</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: item.tim ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: item.tim ? 'normal' : 'italic' }}>
+              {item.tim || 'Belum ada tim'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pengecekan Terakhir</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: checkedDays >= REMINDER_DAYS ? '#D97706' : 'var(--text-primary)' }}>
+                {checkedDays} hari lalu
+              </span>
+              <button onClick={confirmPengecekan} disabled={confirmingChecked}
+                style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: confirmingChecked ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                {confirmingChecked ? '...' : 'Konfirmasi Pengecekan Hari Ini'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Bulk update -- setnya banyak barang (misal 5 tempat sampah) biasa dicek bareng
-          dalam satu kunjungan, sama kondisi/tim-nya. Daripada edit satu-satu, terapkan
-          Kondisi + Tim ke semua unit sekaligus (lokasi tetap per-unit karena beda tempat). */}
+      {/* Bulk update kondisi -- barang kaya ini biasa dicek bareng dalam satu kunjungan.
+          Daripada edit kondisi satu-satu, terapkan ke semua unit sekaligus. Penanggung
+          jawab & lokasi gak ikut sini -- lokasi karena emang beda per unit, penanggung
+          jawab karena udah pindah ke level barang (edit lewat "Edit Info" di atas). */}
       {units.length > 1 && (
         <div style={{ padding: 14, borderRadius: 12, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.04)', marginBottom: 16 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--blue)', marginBottom: 10 }}>Update Semua Unit Sekaligus</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--blue)', marginBottom: 10 }}>Update Kondisi Semua Unit Sekaligus</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ flex: 1, minWidth: 130 }}>
               <label style={labelStyle}>Kondisi</label>
               <Dropdown value={bulkKondisi} options={KONDISI_OPTIONS} onChange={v => setBulkKondisi(v as KondisiUnit)} fontSize={13} />
             </div>
-            <div style={{ flex: 1, minWidth: 150 }}>
-              <label style={labelStyle}>Tim Penanggung Jawab</label>
-              <input value={bulkTim} onChange={e => setBulkTim(e.target.value)} placeholder="Tim penanggung jawab" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13 }} />
-            </div>
             <button onClick={bulkUpdate} disabled={bulkSaving}
               style={{ padding: '9px 16px', borderRadius: 9, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: bulkSaving ? 0.7 : 1, whiteSpace: 'nowrap' }}>
               {bulkSaving ? 'Menerapkan...' : `Terapkan ke ${units.length} Unit`}
             </button>
-          </div>
-          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 8 }}>
-            Ini juga otomatis reset pemeriksaan terakhir semua unit ke hari ini.
           </div>
         </div>
       )}
@@ -459,15 +497,13 @@ function ItemDetailView({
 function UnitRow({ unit, onChange }: { unit: InventarisUnit; onChange: () => Promise<void> }) {
   const [lokasi, setLokasi] = useState(unit.lokasi ?? '')
   const [kondisi, setKondisi] = useState<KondisiUnit>(unit.kondisi)
-  const [tim, setTim] = useState(unit.tim ?? '')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const dirty = lokasi !== (unit.lokasi ?? '') || kondisi !== unit.kondisi || tim !== (unit.tim ?? '')
-  const days = daysSince(unit.last_checked_at)
+  const dirty = lokasi !== (unit.lokasi ?? '') || kondisi !== unit.kondisi
 
   const save = async () => {
     setSaving(true)
-    const { error } = await adminUpdate('inventaris_units', { lokasi: lokasi.trim() || null, kondisi, tim: tim.trim() || null }, unit.id)
+    const { error } = await adminUpdate('inventaris_units', { lokasi: lokasi.trim() || null, kondisi }, unit.id)
     setSaving(false)
     if (!error) await onChange()
   }
@@ -481,44 +517,27 @@ function UnitRow({ unit, onChange }: { unit: InventarisUnit; onChange: () => Pro
   }
 
   return (
-    <div style={{ padding: 12, borderRadius: 12, border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em', marginBottom: 8 }}>UNIT {unit.urutan}</div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-        <input
-          value={lokasi}
-          onChange={e => setLokasi(e.target.value)}
-          placeholder="Lokasi (contoh: Halaman Depan)"
-          style={{ ...inputStyle, flex: 2, minWidth: 160, padding: '9px 12px', fontSize: 13 }}
-        />
-        <div style={{ flex: 1, minWidth: 130 }}>
-          <Dropdown value={kondisi} options={KONDISI_OPTIONS} onChange={v => setKondisi(v as KondisiUnit)} fontSize={13} />
-        </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: 12, borderRadius: 12, border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em', flexShrink: 0, width: 56 }}>UNIT {unit.urutan}</div>
+      <input
+        value={lokasi}
+        onChange={e => setLokasi(e.target.value)}
+        placeholder="Lokasi (contoh: Halaman Depan)"
+        style={{ ...inputStyle, flex: 2, minWidth: 160, padding: '9px 12px', fontSize: 13 }}
+      />
+      <div style={{ flex: 1, minWidth: 130 }}>
+        <Dropdown value={kondisi} options={KONDISI_OPTIONS} onChange={v => setKondisi(v as KondisiUnit)} fontSize={13} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <input
-          value={tim}
-          onChange={e => setTim(e.target.value)}
-          placeholder="Tim penanggung jawab"
-          style={{ ...inputStyle, flex: 1, minWidth: 140, padding: '9px 12px', fontSize: 13 }}
-        />
-        <div style={{ fontSize: 11, color: days >= REMINDER_DAYS ? '#D97706' : 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-          Pemeriksaan terakhir: {days} hari lalu
-        </div>
-        <button onClick={save} disabled={saving} title={dirty ? undefined : 'Simpan ulang tanpa perubahan -- reset hitungan pemeriksaan ke hari ini'}
-          style={{
-            padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
-            border: dirty ? 'none' : '1px solid var(--border)',
-            backgroundColor: dirty ? 'var(--blue)' : 'var(--card)',
-            color: dirty ? '#fff' : 'var(--text-secondary)',
-            opacity: saving ? 0.7 : 1,
-          }}>
-          {saving ? '...' : dirty ? 'Simpan' : 'Konfirmasi Sudah Dicek'}
+      {dirty && (
+        <button onClick={save} disabled={saving}
+          style={{ padding: '7px 12px', borderRadius: 8, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, opacity: saving ? 0.7 : 1 }}>
+          {saving ? '...' : 'Simpan'}
         </button>
-        <button onClick={remove} disabled={deleting}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}>
-          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
-        </button>
-      </div>
+      )}
+      <button onClick={remove} disabled={deleting}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: '#dc2626', cursor: 'pointer', flexShrink: 0 }}>
+        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+      </button>
     </div>
   )
 }

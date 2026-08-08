@@ -170,6 +170,8 @@ export interface InventarisItem {
   nama_barang: string
   spesifikasi?: string | null
   foto?: string | null
+  tim?: string | null
+  last_checked_at: string
   created_at: string
   updated_at: string
 }
@@ -179,9 +181,7 @@ export interface InventarisUnit {
   item_id: string
   urutan: number
   kondisi: KondisiUnit
-  tim?: string | null
   lokasi?: string | null
-  last_checked_at: string
   created_at: string
 }
 
