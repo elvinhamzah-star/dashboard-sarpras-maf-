@@ -75,6 +75,10 @@ export interface Program {
   hasil_rincian?: HasilRincianItem[] | null
   hasil_filled_at?: string | null
   dana_masuk?: number | null
+  // Progress otomatis = realisasi_terkini / total_anggaran (dibulatkan), dijaga
+  // trigger DB sync_program_realisasi tiap transaksi berubah. Cuma untuk
+  // pekerjaan pengadaan murni belanja tanpa tahap instalasi/pemasangan.
+  auto_progress_from_realisasi?: boolean
 }
 
 export interface ProgramSnapshot {
