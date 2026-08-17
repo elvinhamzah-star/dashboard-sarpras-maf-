@@ -33,6 +33,39 @@ const FASE_LIST = ['Semua', 'Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir',
 // Sentinel: entered Level 3 directly (program has only 1 or 0 distinct titik — skip Level 2)
 const TITIK_ALL = '__all__'
 
+// Thumbnail <img> with a circular spinner overlay while the Drive image loads —
+// same ring-spinner treatment as PdfViewerModal's "Memuat dokumen..." state, so
+// every photo grid in the app buffers consistently instead of flashing an empty
+// (and differently-shaped, per aspect-ratio) placeholder box.
+function ThumbImg({ src, alt, style, onError }: {
+  src: string
+  alt: string
+  style: React.CSSProperties
+  onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void
+}) {
+  return (
+    <>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+        <div style={{ width: 22, height: 22, borderRadius: '50%', border: '2.5px solid rgba(0,0,0,0.12)', borderTopColor: 'var(--blue)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+      <img
+        src={src} alt={alt} loading="lazy" decoding="async"
+        style={{ ...style, opacity: 0, transition: [style.transition, 'opacity 0.25s ease'].filter(Boolean).join(', ') }}
+        onLoad={e => {
+          (e.target as HTMLImageElement).style.opacity = '1'
+          const sp = (e.target as HTMLImageElement).previousElementSibling as HTMLElement | null
+          if (sp) sp.style.display = 'none'
+        }}
+        onError={e => {
+          const sp = (e.target as HTMLImageElement).previousElementSibling as HTMLElement | null
+          if (sp) sp.style.display = 'none'
+          if (onError) onError(e)
+        }}
+      />
+    </>
+  )
+}
+
 export default function Galeri({ isAdmin = false, initialProgramId, onExit }: GaleriProps) {
   const width = useWindowWidth()
   const isMobile = width < 900
@@ -323,7 +356,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
       >
         <div style={{ width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden', position: 'relative' }}>
           {thumbUrl ? (
-            <img src={thumbUrl} alt={doc.caption || ''} loading="lazy" decoding="async"
+            <ThumbImg src={thumbUrl} alt={doc.caption || ''}
               style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease', display: 'block' }}
               onError={e => {
                 (e.target as HTMLImageElement).style.display = 'none'
@@ -527,7 +560,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 {/* Cover */}
                 <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
                   {cover ? (
-                    <img src={cover} alt={titikLabel} loading="lazy" decoding="async"
+                    <ThumbImg src={cover} alt={titikLabel}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
@@ -803,14 +836,26 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       </div>
                     )
                     return (
-                      <div style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
+                      <div className="ba-cell" style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
                         {d && t ? (
                           <>
-                            <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
+                            <div className="ba-imgwrap" onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
                               style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
-                              <img src={t} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              <ThumbImg src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                onError={e => {
+                                  const cell = (e.target as HTMLImageElement).closest('.ba-cell')
+                                  const wrap = cell?.querySelector('.ba-imgwrap') as HTMLElement | null
+                                  const fb = cell?.querySelector('.ba-fallback') as HTMLElement | null
+                                  if (wrap) wrap.style.display = 'none'
+                                  if (fb) fb.style.display = 'flex'
+                                }}
+                              />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
+                              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                              <span style={{ fontSize: 11.5, fontWeight: 500 }}>Gagal memuat</span>
+                            </div>
                           </>
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
@@ -918,14 +963,26 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                       </div>
                     )
                     return (
-                      <div style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
+                      <div className="ba-cell" style={{ flex: 1, position: 'relative', borderRadius: 11, overflow: 'hidden', aspectRatio: isMobile ? '4/3' : '16/10', background: 'var(--surface-raised)' }}>
                         {d && t ? (
                           <>
-                            <div onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
+                            <div className="ba-imgwrap" onClick={() => { const idx = baIndexOf(d); if (idx >= 0) setLightboxIndex(idx) }}
                               style={{ width: '100%', height: '100%', cursor: 'pointer' }}>
-                              <img src={t} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              <ThumbImg src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                onError={e => {
+                                  const cell = (e.target as HTMLImageElement).closest('.ba-cell')
+                                  const wrap = cell?.querySelector('.ba-imgwrap') as HTMLElement | null
+                                  const fb = cell?.querySelector('.ba-fallback') as HTMLElement | null
+                                  if (wrap) wrap.style.display = 'none'
+                                  if (fb) fb.style.display = 'flex'
+                                }}
+                              />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
+                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
+                              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                              <span style={{ fontSize: 11.5, fontWeight: 500 }}>Gagal memuat</span>
+                            </div>
                           </>
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
@@ -980,7 +1037,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                         the whole album responds, not just the image itself. */}
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: 'var(--surface-raised)', overflow: 'hidden' }}>
                       {cover ? (
-                        <img src={cover} alt={prog.nama_pekerjaan} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.35s ease' }}
+                        <ThumbImg src={cover} alt={prog.nama_pekerjaan} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.35s ease' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       ) : (
