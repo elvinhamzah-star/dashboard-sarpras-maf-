@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npm run build *)",
+      "Bash(npm audit *)",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_snapshot",
+      "mcp__Claude_Preview__preview_list",
+      "mcp__Claude_Browser__get_page_text",
+      "mcp__Claude_Browser__read_console_messages",
+      "mcp__visualize__read_me",
+      "mcp__Claude_Browser__find",
+      "mcp__e5cb8625-dbfd-4f3e-a3b5-89afe45e6df5__list_projects",
+      "mcp__e5cb8625-dbfd-4f3e-a3b5-89afe45e6df5__get_advisors",
+      "mcp__e5cb8625-dbfd-4f3e-a3b5-89afe45e6df5__list_tables",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_Preview__preview_logs",
+      "mcp__Claude_Browser__read_network_requests",
+      "mcp__Claude_Preview__preview_inspect"
+    ]
+  }
+}
