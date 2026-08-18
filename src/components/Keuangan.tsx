@@ -9,6 +9,8 @@ import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
 import PdfViewerModal from './PdfViewerModal'
 import SaldoPekerjaanPanel from './SaldoPekerjaanPanel'
+import PengeluaranPerPekerjaanModal from './PengeluaranPerPekerjaanModal'
+import Dropdown from './ui/Dropdown'
 
 interface KeuanganProps {
   isAdmin?: boolean
@@ -29,6 +31,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Masuk')
+  const [filterPekerjaan, setFilterPekerjaan] = useState<string>('Semua')
+  const [showPengeluaranModal, setShowPengeluaranModal] = useState(false)
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -95,10 +99,19 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
     0,
   )
 
-  const filtered = (filterJenis === 'Semua'
-    ? visibleTx
-    : visibleTx.filter(t => t.jenis_transaksi === filterJenis)
+  const filtered = visibleTx.filter(t =>
+    (filterJenis === 'Semua' || t.jenis_transaksi === filterJenis) &&
+    (filterPekerjaan === 'Semua' || t.nama_pekerjaan === filterPekerjaan)
   )
+
+  // Opsi dropdown "Pekerjaan" — cuma nama yang beneran ada transaksinya, biar
+  // gak ada pilihan yang hasilnya pasti kosong.
+  const pekerjaanOptions = [
+    { value: 'Semua', label: 'Semua Pekerjaan' },
+    ...Array.from(new Set(visibleTx.map(t => t.nama_pekerjaan).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b))
+      .map(nama => ({ value: nama, label: nama })),
+  ]
 
   const itemsPerPage = 20
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -489,7 +502,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       {showRiwayat && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
           {/* Riwayat header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: isMobile ? 13 : 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                 Riwayat Transaksi
@@ -498,32 +511,61 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 {filtered.length} Transaksi
               </div>
             </div>
-            {filterJenis !== 'Semua' && (() => {
-              const color = filterJenis === 'Masuk' ? '#1B5E2B' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
-              return (
-                <button
-                  onClick={() => { setFilterJenis('Semua'); setPage(1) }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '4px 10px 4px 10px',
-                    borderRadius: 99,
-                    border: `1px solid ${color}55`,
-                    backgroundColor: `${color}12`,
-                    color: color,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase',
-                    flexShrink: 0,
-                  }}
-                >
-                  {filterJenis}
-                  <span style={{ fontSize: 13, lineHeight: 1, opacity: 0.7 }}>×</span>
-                </button>
-              )
-            })()}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ width: isMobile ? 150 : 190 }}>
+                <Dropdown
+                  value={filterPekerjaan}
+                  options={pekerjaanOptions}
+                  onChange={v => { setFilterPekerjaan(v); setPage(1) }}
+                  fontSize={12}
+                />
+              </div>
+
+              <button
+                onClick={() => setShowPengeluaranModal(true)}
+                title="Lihat rincian pengeluaran dikelompokkan per pekerjaan"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '9px 12px', borderRadius: 10,
+                  border: '1px solid var(--border)', backgroundColor: 'var(--card)',
+                  color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
+                </svg>
+                Per Pekerjaan
+              </button>
+
+              {filterJenis !== 'Semua' && (() => {
+                const color = filterJenis === 'Masuk' ? '#1B5E2B' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
+                return (
+                  <button
+                    onClick={() => { setFilterJenis('Semua'); setPage(1) }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '4px 10px 4px 10px',
+                      borderRadius: 99,
+                      border: `1px solid ${color}55`,
+                      backgroundColor: `${color}12`,
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      letterSpacing: '0.02em',
+                      textTransform: 'uppercase',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {filterJenis}
+                    <span style={{ fontSize: 13, lineHeight: 1, opacity: 0.7 }}>×</span>
+                  </button>
+                )
+              })()}
+            </div>
           </div>
 
           {/* Loading / empty */}
@@ -700,6 +742,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           url={viewingBukti.url}
           name={viewingBukti.name}
           onClose={() => setViewingBukti(null)}
+        />
+      )}
+
+      {showPengeluaranModal && (
+        <PengeluaranPerPekerjaanModal
+          transactions={visibleTx}
+          onClose={() => setShowPengeluaranModal(false)}
+          onViewBukti={setViewingBukti}
         />
       )}
 
