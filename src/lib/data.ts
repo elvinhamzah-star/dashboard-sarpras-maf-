@@ -85,9 +85,14 @@ export function extractDriveFileId(link: string): string | null {
   return match ? match[1] : null
 }
 
+// drive.google.com/thumbnail is unreliable under gallery-style bulk/burst access —
+// observed taking 90s+ (sometimes never resolving) for a fresh batch of distinct
+// file IDs, likely Google's abuse throttling for many-different-IDs-at-once.
+// lh3.googleusercontent.com (Google's photo CDN, already used by getDriveViewUrl
+// below) resolves the same files in single-digit milliseconds.
 export function getDriveThumbnailUrl(driveLink: string, size = 'w400'): string | null {
   const fileId = extractDriveFileId(driveLink)
-  return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=${size}` : null
+  return fileId ? `https://lh3.googleusercontent.com/d/${fileId}=${size}` : null
 }
 
 // Full-res viewer URL (for lightbox)

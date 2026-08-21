@@ -37,27 +37,78 @@ const TITIK_ALL = '__all__'
 // same ring-spinner treatment as PdfViewerModal's "Memuat dokumen..." state, so
 // every photo grid in the app buffers consistently instead of flashing an empty
 // (and differently-shaped, per aspect-ratio) placeholder box.
+// Drive's thumbnail endpoint can sit queued for a long time when a page requests
+// dozens of thumbnails at once (browsers cap ~6 concurrent connections per host).
+// A stalled request never fires onError, so without a bound the spinner above
+// would spin forever instead of falling back like a real load failure does.
+const THUMB_TIMEOUT_MS = 15000
+
 function ThumbImg({ src, alt, style, onError }: {
   src: string
   alt: string
   style: React.CSSProperties
   onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void
 }) {
+  const imgRef = useRef<HTMLImageElement>(null)
+  const settledRef = useRef(false)
+
+  useEffect(() => {
+    settledRef.current = false
+    const img = imgRef.current
+    if (!img) return
+
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const fail = () => {
+      if (settledRef.current) return
+      settledRef.current = true
+      const sp = img.previousElementSibling as HTMLElement | null
+      if (sp) sp.style.display = 'none'
+      if (onError) onError({ target: img } as unknown as React.SyntheticEvent<HTMLImageElement>)
+    }
+
+    // Only start the countdown once the thumbnail is actually near the viewport —
+    // otherwise a legitimately lazy (loading="lazy", still off-screen) image would
+    // get falsely marked as failed before the browser ever requests it.
+    const io = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting && !timer) timer = setTimeout(fail, THUMB_TIMEOUT_MS)
+    }, { rootMargin: '200px' })
+    io.observe(img)
+
+    return () => {
+      io.disconnect()
+      if (timer) clearTimeout(timer)
+    }
+  }, [src])
+
   return (
     <>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
         <div style={{ width: 22, height: 22, borderRadius: '50%', border: '2.5px solid rgba(0,0,0,0.12)', borderTopColor: 'var(--blue)', animation: 'spin 0.8s linear infinite' }} />
       </div>
       <img
+        ref={imgRef}
         src={src} alt={alt} loading="lazy" decoding="async"
         style={{ ...style, opacity: 0, transition: [style.transition, 'opacity 0.25s ease'].filter(Boolean).join(', ') }}
         onLoad={e => {
-          (e.target as HTMLImageElement).style.opacity = '1'
+          settledRef.current = true
+          ;(e.target as HTMLImageElement).style.opacity = '1'
           const sp = (e.target as HTMLImageElement).previousElementSibling as HTMLElement | null
           if (sp) sp.style.display = 'none'
         }}
         onError={e => {
-          const sp = (e.target as HTMLImageElement).previousElementSibling as HTMLElement | null
+          // A handful of thumbnails fail only because of the connection-pool burst
+          // when a folder requests many distinct file IDs at once — the same file
+          // loads fine in isolation. One retry after a short delay absorbs that
+          // without adding a real delay for genuinely broken/inaccessible files
+          // (which fail again immediately on retry).
+          const img = e.target as HTMLImageElement
+          if (img.dataset.retried !== '1') {
+            img.dataset.retried = '1'
+            setTimeout(() => { img.src = src }, 800)
+            return
+          }
+          settledRef.current = true
+          const sp = img.previousElementSibling as HTMLElement | null
           if (sp) sp.style.display = 'none'
           if (onError) onError(e)
         }}
