@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminCreateInventarisItem } from '../lib/adminApi'
 import ModalShell from './ModalShell'
 
@@ -31,7 +30,6 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AddInventarisItemModal({ onClose, onSuccess }: AddInventarisItemModalProps) {
-  useEscapeKey(onClose)
   const [namaBarang, setNamaBarang] = useState('')
   const [spesifikasi, setSpesifikasi] = useState('')
   const [foto, setFoto] = useState('')
@@ -80,7 +78,7 @@ export default function AddInventarisItemModal({ onClose, onSuccess }: AddInvent
           </div>
 
           {error && (
-            <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: '#660000', fontSize: 12 }}>
+            <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: 'var(--color-danger)', fontSize: 12 }}>
               {error}
             </div>
           )}

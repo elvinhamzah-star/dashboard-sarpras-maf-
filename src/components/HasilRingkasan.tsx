@@ -16,6 +16,7 @@ interface Props {
   program: Program
   isMobile: boolean
   isAdmin?: boolean
+  role?: 'pbb' | 'maf' | null
   onNavigateGaleri?: () => void
 }
 
@@ -25,7 +26,7 @@ const NILAI_LABEL: Record<HasilKategori, { label: string; sub: string }> = {
   jasa: { label: 'Total Realisasi', sub: 'total realisasi operasional' },
 }
 
-export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateGaleri }: Props) {
+export default function HasilRingkasan({ program, isMobile, isAdmin, role, onNavigateGaleri }: Props) {
   const [pairs, setPairs] = useState<BeforeAfterPair[]>([])
   const [docs, setDocs] = useState<Documentation[]>([])
   const [showManageBA, setShowManageBA] = useState(false)
@@ -151,10 +152,10 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateG
           ) : (
             <>
               <div style={valStyle}>
-                {isOver && <span style={{ color: '#660000' }}>+ </span>}
+                {isOver && <span style={{ color: 'var(--color-danger)' }}>+ </span>}
                 {formatRupiah(Math.abs(efisiensi))}
               </div>
-              <div style={{ ...subStyle, color: isHemat ? 'var(--green)' : '#660000', fontWeight: 700 }}>
+              <div style={{ ...subStyle, color: isHemat ? 'var(--green)' : 'var(--color-danger)', fontWeight: 700 }}>
                 {pctStr}% {isHemat ? 'di bawah pagu' : 'di atas pagu'}
               </div>
             </>
@@ -231,7 +232,7 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, onNavigateG
                   <div style={{ flex: 1, position: 'relative', height: isMobile ? 160 : 280, background: kind === 'before' ? 'linear-gradient(135deg, #8a97a8, #6b7789)' : 'linear-gradient(135deg, #35a06b, #1f7d4e)', display: 'flex', alignItems: 'flex-end', padding: isMobile ? 9 : 11, overflow: 'hidden' }}>
                     {thumb && <img src={thumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
                     {/* Label Sebelum/Sesudah — style & font size disamakan dengan halaman Galeri */}
-                    <div style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                    <div style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 9 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
                       <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: kind === 'before' ? '#ff5a5a' : '#34d399' }} />
                       {kind === 'before' ? 'Sebelum' : 'Sesudah'}
                     </div>

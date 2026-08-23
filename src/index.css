@@ -4,11 +4,17 @@
 :root {
   --navy: #0D1829;
   --blue: #1A6FE8;
+  /* #660000 used to be overloaded for both genuine danger (overdue, over-budget,
+     blocked access, form errors) and purely categorical/neutral states
+     (Perencanaan status, Rencana/Catatan labels, Dana Keluar, Kondisi Awal) —
+     split so danger keeps its urgency and neutral states aren't falsely alarming. */
+  --color-danger: #660000;
+  --color-neutral-dark: #334155;
   --blue-dark: #0858b0;
   --blue-light: rgba(26,111,232,0.1);
   --text-primary: #0F1C2E;
   --text-secondary: #5C6B82;
-  --text-muted: #64748B;
+  --text-muted: #475569;
   --bg: #F1F4F9;
   --card: #ffffff;
   --card-hover: #F8FAFF;
@@ -28,6 +34,26 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --transition: all 0.18s ease;
+
+  /* Spacing/type scale — inline styles have no guardrail against drift the way
+     color already does via the tokens above. New/touched code should reach for
+     these instead of another one-off px value; not retrofitted across the
+     whole app in one pass (see Priority 4.2 in the 2026-08-23 audit — apply
+     gradually as files are touched, not as a standalone sweep). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
 }
 
 

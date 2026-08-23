@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { useEscapeKey } from '../lib/useEscapeKey'
+import { useState, useEffect } from 'react'
 import { adminUpdate } from '../lib/adminApi'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
+import { Z_MODAL_STACKED, Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
+import Dropdown from './ui/Dropdown'
 
 interface Props {
   program: Program
@@ -130,147 +130,6 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
-interface DropdownOption { value: string; label: string }
-
-/**
- * Dropdown kustom (trigger + panel di-portal ke body) — bukan `<select>` native,
- * supaya tampilan daftar pilihan konsisten dengan tema app (bukan menu OS bawaan).
- * Pola sama seperti kombobox "Pilih Pekerjaan" di AddTransactionModal.
- */
-function Dropdown({ value, options, onChange, placeholder }: {
-  value: string
-  options: DropdownOption[]
-  onChange: (v: string) => void
-  placeholder?: string
-}) {
-  const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      const inTrigger = wrapRef.current?.contains(e.target as Node)
-      const inPanel = panelRef.current?.contains(e.target as Node)
-      if (!inTrigger && !inPanel) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-
-  const openPanel = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-      const panelHeight = Math.min(240, options.length * 38 + 12)
-      const fitsBelow = rect.bottom + 6 + panelHeight < viewportHeight
-      setPos({
-        top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - panelHeight - 6),
-        left: rect.left,
-        width: rect.width,
-      })
-    }
-    setOpen(true)
-  }
-
-  const selected = options.find(o => o.value === value)
-
-  return (
-    <div ref={wrapRef}>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => (open ? setOpen(false) : openPanel())}
-        style={{
-          width: '100%',
-          padding: '9px 12px',
-          borderRadius: 9,
-          border: `1px solid ${open ? 'var(--blue)' : 'var(--border)'}`,
-          backgroundColor: 'var(--bg)',
-          fontSize: 14,
-          color: selected ? 'var(--text-primary)' : 'var(--text-muted)',
-          fontFamily: 'inherit',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
-          textAlign: 'left',
-          outline: 'none',
-          boxSizing: 'border-box',
-          boxShadow: open ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
-        }}
-      >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selected?.label ?? placeholder ?? 'Pilih...'}
-        </span>
-        <svg
-          width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
-          style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {open && createPortal(
-        <div
-          ref={panelRef}
-          style={{
-            position: 'fixed',
-            top: pos.top,
-            left: pos.left,
-            width: pos.width,
-            zIndex: 600,
-            backgroundColor: 'var(--card)',
-            borderRadius: 12,
-            border: '1px solid var(--border-subtle)',
-            boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ maxHeight: 240, overflowY: 'auto' }}>
-            {options.map((o, i) => (
-              <button
-                key={o.value}
-                type="button"
-                onClick={() => { onChange(o.value); setOpen(false) }}
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  border: 'none',
-                  borderBottom: i < options.length - 1 ? '1px solid var(--surface-min)' : 'none',
-                  backgroundColor: o.value === value ? 'rgba(26,111,232,0.06)' : 'transparent',
-                  color: o.value === value ? 'var(--blue)' : 'var(--text-primary)',
-                  fontSize: 13,
-                  fontWeight: o.value === value ? 600 : 400,
-                  fontFamily: 'inherit',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-                onMouseEnter={e => { if (o.value !== value) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)' }}
-                onMouseLeave={e => { if (o.value !== value) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
-              >
-                {o.value === value && (
-                  <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body,
-      )}
-    </div>
-  )
-}
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
@@ -348,12 +207,12 @@ function SatuanField({ value, onChange }: { value: string; onChange: (v: string)
         if (v === SATUAN_CUSTOM) { setManual(true); onChange('') }
         else onChange(v)
       }}
+      zIndex={Z_DROPDOWN_IN_MODAL}
     />
   )
 }
 
 export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
-  useEscapeKey(onClose)
 
   const initialKat: HasilKategori = program.hasil_kategori || katFromJenis(program.jenis_pekerjaan)
   const [kat, setKat] = useState<HasilKategori>(initialKat)
@@ -371,12 +230,18 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Tracks whether the admin has touched anything since opening, so "Nanti
+  // Saja" can warn before discarding in-progress edits (this form has no
+  // autosave/draft — a stray click otherwise loses everything typed).
+  const [isDirty, setIsDirty] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   const cfg = KAT_CONFIG[kat]
   const mode = rincianMode(kat, program.jenis_pekerjaan)
   const mcfg = MODE_CONFIG[mode]
 
   const changeKat = (k: HasilKategori) => {
+    setIsDirty(true)
     setKat(k)
     const nm = rincianMode(k, program.jenis_pekerjaan)
     const m = MODE_CONFIG[nm]
@@ -392,15 +257,15 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   }
 
   // Dampak handlers
-  const setDampakAt = (i: number, v: string) => setDampak(d => d.map((x, idx) => (idx === i ? v : x)))
-  const addDampak = () => setDampak(d => [...d, ''])
-  const delDampak = (i: number) => setDampak(d => (d.length > 1 ? d.filter((_, idx) => idx !== i) : d))
+  const setDampakAt = (i: number, v: string) => { setIsDirty(true); setDampak(d => d.map((x, idx) => (idx === i ? v : x))) }
+  const addDampak = () => { setIsDirty(true); setDampak(d => [...d, '']) }
+  const delDampak = (i: number) => { setIsDirty(true); setDampak(d => (d.length > 1 ? d.filter((_, idx) => idx !== i) : d)) }
 
   // Rincian handlers
   const setRincianAt = (i: number, patch: Partial<HasilRincianItem>) =>
-    setRincian(r => r.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
-  const addRincian = () => setRincian(r => [...r, emptyRow(mode)])
-  const delRincian = (i: number) => setRincian(r => r.filter((_, idx) => idx !== i))
+    { setIsDirty(true); setRincian(r => r.map((x, idx) => (idx === i ? { ...x, ...patch } : x))) }
+  const addRincian = () => { setIsDirty(true); setRincian(r => [...r, emptyRow(mode)]) }
+  const delRincian = (i: number) => { setIsDirty(true); setRincian(r => r.filter((_, idx) => idx !== i)) }
 
   // Live total
   // Mode "item" (Pengadaan Barang): biaya = harga satuan, subtotal baris = biaya × ukuran.
@@ -454,7 +319,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
   }
 
   return (
-    <ModalShell onClose={onClose} maxWidth={560} zIndex={320} backdropColor="rgba(13,24,41,0.6)">
+    <ModalShell onClose={onClose} maxWidth={560} zIndex={Z_MODAL_STACKED}>
       {close => (
         <div>
           {/* Banner */}
@@ -547,7 +412,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
               <label style={labelStyle}>{cfg.nilaiLabel}</label>
               <input
                 value={nilai}
-                onChange={e => { setNilaiTouched(true); setNilai(formatDigits(e.target.value)) }}
+                onChange={e => { setIsDirty(true); setNilaiTouched(true); setNilai(formatDigits(e.target.value)) }}
                 inputMode="numeric"
                 style={{ ...inputStyle, fontVariantNumeric: 'tabular-nums' }}
                 placeholder="0"
@@ -557,9 +422,9 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
               </div>
               {cfg.rincian && digitsToNumber(nilai) !== totBiaya && totBiaya > 0 && (
                 <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)' }}>
-                  <div style={{ fontSize: 11, color: '#660000', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 11, color: 'var(--color-danger)', lineHeight: 1.4 }}>
                     Berbeda dari total rincian (<b>{formatRupiah(totBiaya)}</b>).{' '}
-                    <button type="button" onClick={() => { setNilaiTouched(false); setNilai(totBiaya.toLocaleString('id-ID')) }} style={{ background: 'none', border: 'none', padding: 0, color: '#660000', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>Samakan</button>
+                    <button type="button" onClick={() => { setNilaiTouched(false); setNilai(totBiaya.toLocaleString('id-ID')) }} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-danger)', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>Samakan</button>
                   </div>
                 </div>
               )}
@@ -632,6 +497,7 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
                             value={r.status || 'Rencana'}
                             options={KEGIATAN_STATUS.map(s => ({ value: s, label: s }))}
                             onChange={v => setRincianAt(i, { status: v })}
+                            zIndex={Z_DROPDOWN_IN_MODAL}
                           />
                         </div>
                       ) : (
@@ -711,13 +577,29 @@ export default function HasilFormModal({ program, onClose, onSuccess }: Props) {
           </div>
 
           {/* Footer */}
+          {confirmDiscard && (
+            <div style={{ margin: '0 24px 12px', padding: '10px 12px', borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.08)', border: '1px solid rgba(102,0,0,0.28)', color: 'var(--color-danger)', fontSize: 12, lineHeight: 1.5 }}>
+              Ada perubahan yang belum disimpan — keluar sekarang akan membuangnya.
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '16px 24px 22px', marginTop: 6 }}>
             <button
-              onClick={close}
-              style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              onClick={() => {
+                if (isDirty && !confirmDiscard) { setConfirmDiscard(true); return }
+                close()
+              }}
+              style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: confirmDiscard ? 'var(--color-danger)' : 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Nanti Saja
+              {confirmDiscard ? 'Ya, Buang Perubahan' : 'Nanti Saja'}
             </button>
+            {confirmDiscard && (
+              <button
+                onClick={() => setConfirmDiscard(false)}
+                style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Lanjut Edit
+              </button>
+            )}
             <button
               onClick={handleSave}
               disabled={saving}

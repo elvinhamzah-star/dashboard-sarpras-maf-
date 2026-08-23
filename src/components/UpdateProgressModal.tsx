@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import { Program } from '../lib/supabase'
 import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 
 interface UpdateProgressModalProps {
   program: Program
@@ -15,7 +15,6 @@ interface UpdateProgressModalProps {
 const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
 export default function UpdateProgressModal({ program, onClose, onUpdated }: UpdateProgressModalProps) {
-  useEscapeKey(onClose)
   const [progress, setProgress] = useState(program.progress_percent?.toString() || '0')
   const [realisasi, setRealisasi] = useState(program.realisasi_terkini?.toString() || '0')
   const [status, setStatus] = useState(program.status || 'On Going')
@@ -117,7 +116,7 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Status
             </label>
-            <Dropdown value={status} onChange={setStatus} zIndex={1300}
+            <Dropdown value={status} onChange={setStatus} zIndex={Z_DROPDOWN_IN_MODAL}
               options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
 
           </div>

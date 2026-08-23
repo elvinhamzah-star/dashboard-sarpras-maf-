@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 
@@ -37,7 +37,6 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: AddSubPekerjaanModalProps) {
-  useEscapeKey(onClose)
   const [namaGedung, setNamaGedung] = useState('')
   const [vendor, setVendor] = useState('')
   const [progress, setProgress] = useState(0)
@@ -168,7 +167,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
 
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Status</label>
-          <Dropdown value={status} onChange={setStatus} zIndex={1300}
+          <Dropdown value={status} onChange={setStatus} zIndex={Z_DROPDOWN_IN_MODAL}
             options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
 
         </div>

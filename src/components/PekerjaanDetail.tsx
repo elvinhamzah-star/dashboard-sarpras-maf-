@@ -16,6 +16,7 @@ import { STATUS_COLORS, STATUS_BG, formatRupiah, formatTanggal, getFileEmbedUrl,
 import { adminInsert, adminDelete, adminUpdate } from '../lib/adminApi'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import AddSubPekerjaanModal from './AddSubPekerjaanModal'
@@ -26,6 +27,9 @@ import HasilRingkasan from './HasilRingkasan'
 import HasilRincianCard from './HasilRincianCard'
 import FilterSummaryBar from './FilterSummaryBar'
 import { deriveProgramTotals, deriveNilaiAset } from '../lib/deriveTotals'
+import { isRestrictedForRole } from '../lib/access'
+import { Z_MODAL_DEEPER } from '../lib/zIndex'
+import { useEdgeSwipeBack } from '../lib/useEdgeSwipeBack'
 
 interface PekerjaanDetailProps {
   programId: string
@@ -41,7 +45,7 @@ type Tab = 'Ringkasan' | 'Detail Realisasi' | 'Dokumen' | 'Sub Pekerjaan'
 
 export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNavigate, embedded = false }: PekerjaanDetailProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const isNarrow = width < 1100
   const [program, setProgram] = useState<Program | null>(null)
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
@@ -71,9 +75,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [galleryDocs, setGalleryDocs] = useState<Documentation[]>([])
   const [showManageDocs, setShowManageDocs] = useState(false)
   const [savingDocId, setSavingDocId] = useState<string | null>(null)
-  const swipeTouchStartX = useRef<number | null>(null)
-  const swipeTouchStartY = useRef<number | null>(null)
   const tabContentRef = useRef<HTMLDivElement>(null)
+  const swipeBack = useEdgeSwipeBack(onBack, !embedded)
   const [tabMinHeight, setTabMinHeight] = useState(0)
   const [tabTransition, setTabTransition] = useState(false)
 
@@ -296,6 +299,43 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     )
   }
 
+  // Backstop: block MAF from ever rendering a restricted (Operasional) program's
+  // detail, regardless of which caller/entry path got us here. Callers already
+  // check isRestrictedForRole before navigating, but this is the last line of
+  // defense so a future navigation path can't silently skip the restriction.
+  if (isRestrictedForRole(program, role)) {
+    return (
+      <div style={{ padding: 24 }}>
+        {!embedded && (
+          <button onClick={onBack}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 99, padding: '6px 14px 6px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s', marginBottom: 20 }}
+            onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = '#fff'; b.style.background = 'var(--blue)'; b.style.borderColor = 'var(--blue)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(255,255,255,0.2)' }}
+            onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.color = 'var(--text-secondary)'; b.style.background = 'var(--card)'; b.style.borderColor = 'var(--border-subtle)'; const ic = b.querySelector('.bk-ic') as HTMLElement | null; if (ic) ic.style.background = 'rgba(0,0,0,0.06)' }}
+          >
+            <span className="bk-ic" style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </span>
+            Kembali ke Daftar
+          </button>
+        )}
+        <div style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '32px 28px', maxWidth: 360, textAlign: 'center', border: '1px solid var(--border-subtle)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', margin: embedded ? '40px auto' : '0 auto' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'rgba(102,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <svg width="24" height="24" fill="none" stroke="var(--color-danger)" strokeWidth="1.75" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+            Akses Dibatasi
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            Butuh akses admin untuk melihat data ini.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const derived = deriveProgramTotals(program, subPrograms.filter(s => s.program_id === program.id), allTransactions)
   const pct = derived.progress_percent
   const nilaiInfo = deriveNilaiAset(program)
@@ -308,20 +348,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   return (
     <div
       style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px', width: '100%', boxSizing: 'border-box' }}
-      onTouchStart={embedded ? undefined : e => {
-        if (e.touches[0].clientX < 28) {
-          swipeTouchStartX.current = e.touches[0].clientX
-          swipeTouchStartY.current = e.touches[0].clientY
-        }
-      }}
-      onTouchEnd={embedded ? undefined : e => {
-        if (swipeTouchStartX.current === null) return
-        const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
-        const dy = Math.abs(e.changedTouches[0].clientY - (swipeTouchStartY.current || 0))
-        if (dx > 72 && dy < 80) onBack()
-        swipeTouchStartX.current = null
-        swipeTouchStartY.current = null
-      }}
+      {...swipeBack}
     >
 
       {/* Back button — wide screens only (≤768px uses the top-bar ← arrow).
@@ -569,12 +596,12 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           <div>
             {nilaiInfo.mismatch && (
               <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
-                <div style={{ fontSize: 12, color: '#660000', lineHeight: 1.45 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-danger)', lineHeight: 1.45 }}>
                   Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
                 </div>
               </div>
             )}
-            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
+            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} role={role} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
             <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
@@ -583,7 +610,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           <div>
             {nilaiInfo.mismatch && (
               <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
-                <div style={{ fontSize: 12, color: '#660000', lineHeight: 1.45 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-danger)', lineHeight: 1.45 }}>
                   Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
                 </div>
               </div>
@@ -613,11 +640,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     ['Jenis Pekerjaan', program.jenis_pekerjaan || '-'],
                     ['Status', program.status],
                     ['Progress', `${pct}%`],
-                    ...( program.status === 'Selesai' ? [
-                      ['Total Anggaran', formatRupiah(derived.total_anggaran)],
-                      ['Realisasi Terkini', formatRupiah(derived.realisasi_terkini)],
-                      ['Sisa Anggaran', formatRupiah(derived.sisa_anggaran)],
-                    ] : []),
+                    // Note: this table only renders in the !isSelesai branch (see
+                    // activeTab === 'Ringkasan' && isSelesai above for the Selesai
+                    // case), so a `program.status === 'Selesai'` row here would be
+                    // unreachable dead code — financial figures for non-Selesai
+                    // programs live in the FilterSummaryBar above instead.
                     ['Vendor', (() => { const subs = subPrograms.filter(s => s.program_id === program.id); if (subs.length === 0) return program.vendor || '-'; const u = [...new Set(subs.map(s => s.vendor).filter(Boolean))]; return u.length > 0 ? u.join(', ') : (program.vendor || '-') })()],
                     ['Catatan Pekerjaan', program.isu_utama
                       ? program.isu_utama.split('\n').filter((l: string) => l.trim()).map((line: string, idx: number) => (
@@ -711,7 +738,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           <div key={f.key} onClick={f.url ? () => openFile(f.url!, f.name) : undefined}
                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: f.url ? 'pointer' : 'default' }}>
                             <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: f.url ? 'rgba(217,119,6,0.1)' : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <svg width="18" height="18" fill="none" stroke={f.url ? '#D97706' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              <svg width="18" height="18" fill="none" stroke={f.url ? '#B45309' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: f.url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
@@ -720,7 +747,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             {f.doc && renderDocDelete(f.doc)}
                           </div>
                         ))}
-                        {renderDocAdd('rab', '#D97706', 'RAB')}
+                        {renderDocAdd('rab', '#B45309', 'RAB')}
                       </>
                     )
                   })()}
@@ -746,7 +773,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                               <svg width="18" height="18" fill="none" stroke={f.file_url ? '#2563EB' : 'var(--text-muted)'} strokeWidth="1.75" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: f.file_url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.file_name || `Kontrak · ${program.nama_pekerjaan}`}</div>
+                              <div title={f.file_name || `Kontrak · ${program.nama_pekerjaan}`} style={{ fontSize: 13, fontWeight: 600, color: f.file_url ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.file_name || `Kontrak · ${program.nama_pekerjaan}`}</div>
                             </div>
                             {f.file_url && <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>}
                             {renderDocDelete(f)}
@@ -836,7 +863,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: 'pointer', minHeight: 110 }}
                           >
                             <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <svg width="18" height="18" fill="none" stroke="#D97706" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                              <svg width="18" height="18" fill="none" stroke="#B45309" strokeWidth="1.75" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                             </div>
                             <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, flex: 1 }}>
                               {tx.deskripsi || `Transaksi ${i + 1}`}
@@ -929,11 +956,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                       {(role !== 'maf' || program.status !== 'Perencanaan') && (
                       <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
                           <div style={{ fontSize: 11, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.total_anggaran || 0)}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 8.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Realisasi</div>
                           <div style={{ fontSize: 11, color: '#1B5E2B', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(sp.realisasi_terkini || 0)}</div>
                         </div>
                         {(() => {
@@ -941,10 +968,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           const isOver = sisa < 0
                           const isDone = sp.status === 'Selesai' && sisa >= 0
                           const label = isOver ? 'Melebihi' : isDone ? 'Efisiensi' : 'Sisa'
-                          const color = isOver ? '#660000' : isDone ? '#1B5E2B' : '#D97706'
+                          const color = isOver ? 'var(--color-danger)' : isDone ? '#1B5E2B' : '#B45309'
                           return (
                             <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: 8.5, color: isOver ? '#660000' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>{label}</div>
+                              <div style={{ fontSize: 9, color: isOver ? 'var(--color-danger)' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>{label}</div>
                               <div style={{ fontSize: 11, color, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                                 {isOver ? `−${formatRupiah(Math.abs(sisa))}` : formatRupiah(sisa)}
                               </div>
@@ -996,7 +1023,9 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     </tr>
                   </thead>
                   <tbody>
-                    {subPrograms.map((sp, i) => (
+                    {subPrograms.map((sp, i) => {
+                    const showFinancial = role !== 'maf' || program.status !== 'Perencanaan'
+                    return (
                       <tr
                         key={sp.id}
                         style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
@@ -1022,13 +1051,13 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </div>
                         </td>
                         <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                          {formatRupiah(sp.total_anggaran || 0)}
+                          {showFinancial ? formatRupiah(sp.total_anggaran || 0) : '—'}
                         </td>
                         <td style={{ padding: '11px 14px', fontSize: 12.5, color: '#1B5E2B', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {formatRupiah(sp.realisasi_terkini || 0)}
+                          {showFinancial ? formatRupiah(sp.realisasi_terkini || 0) : '—'}
                         </td>
-                        <td style={{ padding: '11px 14px', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', color: (sp.sisa_anggaran || 0) < 0 ? '#660000' : sp.status === 'Selesai' ? '#1B5E2B' : '#D97706' }}>
-                          {(sp.sisa_anggaran || 0) < 0
+                        <td style={{ padding: '11px 14px', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', color: (sp.sisa_anggaran || 0) < 0 ? 'var(--color-danger)' : sp.status === 'Selesai' ? '#1B5E2B' : '#B45309' }}>
+                          {!showFinancial ? '—' : (sp.sisa_anggaran || 0) < 0
                             ? `−${formatRupiah(Math.abs(sp.sisa_anggaran || 0))}`
                             : formatRupiah(sp.sisa_anggaran || 0)}
                         </td>
@@ -1077,7 +1106,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </td>
                         )}
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
@@ -1164,11 +1193,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       )}
 
       {showManageDocs && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} onClick={() => setShowManageDocs(false)}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL_DEEPER, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} onClick={() => setShowManageDocs(false)}>
           <div style={{ width: '100%', maxWidth: 600, background: 'var(--card)', borderRadius: '16px 16px 0 0', padding: '20px 16px 32px', maxHeight: '82dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Kelola Foto Ringkasan</h3>
-              <button onClick={() => setShowManageDocs(false)} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
+              <button onClick={() => setShowManageDocs(false)} style={{ width: 40, height: 40, borderRadius: 10, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>

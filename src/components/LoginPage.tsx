@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { verifyLogin } from '../lib/adminApi'
 import { setMafCredentials } from '../lib/supabase'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
 interface LoginPageProps {
   onLogin: (role: 'pbb' | 'maf') => void
@@ -15,7 +16,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   // Auto-focus username only on desktop — prevents iOS viewport zoom
   useEffect(() => {
-    if (!window.matchMedia('(max-width: 768px)').matches) {
+    if (!window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches) {
       usernameRef.current?.focus()
     }
   }, [])
@@ -158,7 +159,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         {error && (
           <div style={{
             marginBottom: 16, padding: '9px 12px', borderRadius: 8,
-            backgroundColor: 'rgba(102,0,0,0.07)', color: '#660000',
+            backgroundColor: 'rgba(102,0,0,0.07)', color: 'var(--color-danger)',
             fontSize: 12.5, fontWeight: 500,
           }}>
             {error}

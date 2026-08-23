@@ -89,7 +89,7 @@ export default function PengeluaranPerPekerjaanModal({ transactions, onClose, on
                         .slice()
                         .sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime())
                         .map(t => {
-                          const nominalColor = t.jenis_transaksi === 'Keluar PBB' ? '#D97706' : '#660000'
+                          const nominalColor = t.jenis_transaksi === 'Keluar PBB' ? '#B45309' : 'var(--color-neutral-dark)'
                           return (
                             <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, backgroundColor: 'var(--surface-2)' }}>
                               <div style={{ minWidth: 0 }}>

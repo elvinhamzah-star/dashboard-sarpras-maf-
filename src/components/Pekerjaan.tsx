@@ -3,7 +3,10 @@ import { fetchPrograms, fetchSubPrograms, fetchTransactions, Program, SubProgram
 import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
 import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { isRestrictedForRole } from '../lib/access'
 import FilterSummaryBar from './FilterSummaryBar'
+import AksesDibatasiModal from './AksesDibatasiModal'
 
 interface PekerjaanProps {
   isAdmin: boolean
@@ -42,7 +45,7 @@ const TAB_ICONS: Record<string, JSX.Element> = {
 
 export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusProp = '', onFilterChange, onSelectProgram, onAddPekerjaan }: PekerjaanProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const isNarrow = width < 1100
   const [programs, setPrograms] = useState<Program[]>([])
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
@@ -69,7 +72,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   }, [])
 
   const handleCardClick = (p: Program) => {
-    if (role === 'maf' && p.jenis_pekerjaan === 'Operasional') {
+    if (isRestrictedForRole(p, role)) {
       setShowBlockedModal(true)
       return
     }
@@ -160,7 +163,14 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
             <div
               key={tab}
               className="pekerjaan-status-card"
+              role="button"
+              tabIndex={0}
+              aria-label={`Filter status ${tab}`}
+              aria-pressed={isActive}
               onClick={() => setActiveStatus(prev => prev === tab ? '' : tab)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveStatus(prev => prev === tab ? '' : tab) }
+              }}
               style={{
                 ['--accent']: color,
                 ['--accent-bg']: `${color}18`,
@@ -194,7 +204,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                 </div>
               </div>
               {/* Label below */}
-              <div className="psc-label" style={{ fontSize: isMobile ? 7 : 9.5, fontWeight: 700, color: showColor ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.18s' }}>
+              <div className="psc-label" style={{ fontSize: isMobile ? 9 : 9.5, fontWeight: 700, color: showColor ? color : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.18s' }}>
                 {tab}
               </div>
             </div>
@@ -226,14 +236,20 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
             const d = getDerived(p)
             const pct = d.progress_percent
             const color = STATUS_COLORS[p.status] || 'var(--blue)'
-            const isLocked = role === 'maf' && p.jenis_pekerjaan === 'Operasional'
+            const isLocked = isRestrictedForRole(p, role)
             const vendor = getVendorDisplay(p)
             const showBar = p.status === 'On Going' || p.status === 'On Hold'
             return (
               <div
                 key={p.id}
                 className={isLocked ? undefined : 'pekerjaan-row'}
+                role="button"
+                tabIndex={0}
+                aria-label={isLocked ? `${p.nama_pekerjaan} — akses dibatasi` : `Lihat detail ${p.nama_pekerjaan}`}
                 onClick={() => handleCardClick(p)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(p) }
+                }}
                 style={{
                   ['--row-accent']: color,
                   ['--row-accent-bg']: `${color}08`,
@@ -241,6 +257,10 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                   padding: isMobile ? '13px 12px' : '16px 16px',
                   borderRadius: 10,
                   border: '1px solid var(--border-subtle)',
+                  // Permanent (not hover-only) left accent — mobile has no hover to
+                  // reveal "this is tappable", so the affordance needs to be visible
+                  // at rest too.
+                  borderLeft: isLocked ? '1px solid var(--border-subtle)' : `3px solid ${color}55`,
                   backgroundColor: 'var(--card)',
                   cursor: isLocked ? 'default' : 'pointer',
                   opacity: isLocked ? 0.7 : 1,
@@ -254,7 +274,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {/* Left: nama + vendor */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: isMobile ? 12 : 13.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em', ...(isMobile ? {} : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }) }}>
+                    <div title={p.nama_pekerjaan} style={{ fontSize: isMobile ? 12 : 13.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em', ...(isMobile ? {} : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }) }}>
                       {p.nama_pekerjaan}
                     </div>
                     {!isMobile && vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
@@ -266,7 +286,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                         Progres {pct}%
                       </span>
                     )}
-                    {p.status === 'Selesai' && (
+                    {p.status === 'Selesai' && !isLocked && (
                       <>
                         <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                           {formatRupiah(d.realisasi_terkini)}
@@ -304,36 +324,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       )}
 
       {/* Modal: Akses Dibatasi */}
-      {showBlockedModal && (
-        <div
-          onClick={() => setShowBlockedModal(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '32px 28px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(10,22,40,0.2)' }}
-          >
-            <div style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'rgba(102,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="24" height="24" fill="none" stroke="#660000" strokeWidth="1.75" viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
-              Akses Dibatasi
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 24 }}>
-              Butuh akses admin untuk melihat data ini.
-            </div>
-            <button
-              onClick={() => setShowBlockedModal(false)}
-              style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Oke
-            </button>
-          </div>
-        </div>
-      )}
+      {showBlockedModal && <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />}
     </div>
   )
 }

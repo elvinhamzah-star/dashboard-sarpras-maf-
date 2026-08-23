@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminInsert, adminUploadBukti } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { supabase } from '../lib/supabase'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -50,7 +50,6 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AddTransactionModal({ onClose, onSuccess }: AddTransactionModalProps) {
-  useEscapeKey(onClose)
   const [programs, setPrograms] = useState<Program[]>([])
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
   const [pekerjaan, setPekerjaan] = useState('')
@@ -202,7 +201,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: '#660000', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: 'var(--color-danger)', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -210,7 +209,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
         {/* Tanggal */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Tanggal</label>
-          <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
+          <DatePicker value={tanggal} onChange={setTanggal} zIndex={Z_DROPDOWN_IN_MODAL} />
         </div>
 
         {/* Nama Pekerjaan — custom dropdown */}
@@ -260,7 +259,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 top: dropdownPos.top,
                 left: dropdownPos.left,
                 width: dropdownPos.width,
-                zIndex: 500,
+                zIndex: Z_DROPDOWN_IN_MODAL,
                 backgroundColor: 'var(--card)',
                 borderRadius: 12,
                 border: '1px solid var(--border-subtle)',
@@ -381,7 +380,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
                           )}
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span title={p.nama_pekerjaan} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.nama_pekerjaan}
                           </span>
                         </button>
@@ -461,7 +460,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
             <Dropdown
               value={sumber}
               onChange={setSumber}
-              zIndex={1300}
+              zIndex={Z_DROPDOWN_IN_MODAL}
               options={[
                 { value: 'PBB', label: 'PBB' },
                 { value: 'Hamzah', label: 'Hamzah' },

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
+import { Z_MODAL_STACKED, Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -43,7 +43,6 @@ const inputStyle: React.CSSProperties = {
 }
 
 export default function EditProgramModal({ program, onClose, onSuccess }: Props) {
-  useEscapeKey(onClose)
 
   const [nama, setNama] = useState(program.nama_pekerjaan)
   const [kategori, setKategori] = useState(program.program)
@@ -56,6 +55,11 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   const [tanggalSelesai, setTanggalSelesai] = useState(program.tanggal_selesai || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Realisasi Terkini is matched to transactions by exact nama_pekerjaan string
+  // (see deriveTotals.ts), so renaming silently zeroes it out everywhere unless
+  // the user explicitly acknowledges the risk first.
+  const [confirmingRename, setConfirmingRename] = useState(false)
+  const nameChanged = nama.trim() !== program.nama_pekerjaan
 
   // Field custom (Lainnya) ditampilin & dipakai di kondisi yang sama: jenis
   // literal 'Lainnya', ATAU jenis lama yang gak ada di daftar preset (mis.
@@ -69,6 +73,12 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
     if (!nama.trim()) { setError('Nama pekerjaan tidak boleh kosong'); return }
     const anggaranNum = Number(anggaran.replace(/\D/g, ''))
     if (isNaN(anggaranNum) || anggaranNum < 0) { setError('Total anggaran tidak valid'); return }
+
+    if (nameChanged && !confirmingRename) {
+      setError('')
+      setConfirmingRename(true)
+      return
+    }
 
     setSaving(true)
     setError('')
@@ -91,7 +101,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   }
 
   return (
-    <ModalShell onClose={onClose} maxWidth={540} zIndex={300} backdropColor="rgba(13,24,41,0.6)">
+    <ModalShell onClose={onClose} maxWidth={540} zIndex={Z_MODAL_STACKED}>
       {close => (
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 22 }}>
@@ -107,8 +117,14 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
           <Field label="Nama Pekerjaan">
-            <input value={nama} onChange={e => setNama(e.target.value)} style={inputStyle} placeholder="Nama pekerjaan..." />
+            <input value={nama} onChange={e => { setNama(e.target.value); setConfirmingRename(false) }} style={inputStyle} placeholder="Nama pekerjaan..." />
           </Field>
+
+          {confirmingRename && (
+            <div style={{ padding: '10px 12px', borderRadius: 8, backgroundColor: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', color: '#B45309', fontSize: 12, lineHeight: 1.5 }}>
+              Mengubah nama pekerjaan bisa memutus keterkaitan dengan transaksi yang sudah tercatat — Realisasi Terkini bisa jadi <strong>Rp 0</strong> di semua tampilan (transaksi dicocokkan lewat nama, bukan ID). Klik <strong>Simpan</strong> sekali lagi untuk melanjutkan, atau ubah kembali namanya untuk membatalkan.
+            </div>
+          )}
 
           <Field label="Kategori Program">
             <input value={kategori} onChange={e => setKategori(e.target.value)} style={inputStyle} placeholder="Misal: Warehouse & Office" />
@@ -116,7 +132,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field label="Status">
-              <Dropdown value={status} onChange={setStatus} zIndex={1300}
+              <Dropdown value={status} onChange={setStatus} zIndex={Z_DROPDOWN_IN_MODAL}
                 options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))} />
             </Field>
 
@@ -124,7 +140,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
               <Dropdown
                 value={JENIS_OPTIONS.includes(jenis) ? jenis : 'Lainnya'}
                 onChange={setJenis}
-                zIndex={1300}
+                zIndex={Z_DROPDOWN_IN_MODAL}
                 options={JENIS_OPTIONS.map(j => ({ value: j, label: j }))}
               />
             </Field>
@@ -152,10 +168,10 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field label="Tanggal Mulai">
-              <DatePicker value={tanggalMulai} onChange={setTanggalMulai} zIndex={1300} />
+              <DatePicker value={tanggalMulai} onChange={setTanggalMulai} zIndex={Z_DROPDOWN_IN_MODAL} />
             </Field>
             <Field label="Tanggal Selesai">
-              <DatePicker value={tanggalSelesai} onChange={setTanggalSelesai} zIndex={1300} />
+              <DatePicker value={tanggalSelesai} onChange={setTanggalSelesai} zIndex={Z_DROPDOWN_IN_MODAL} />
             </Field>
           </div>
         </div>
@@ -170,9 +186,9 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', backgroundColor: confirmingRename ? '#D97706' : 'var(--blue)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}
           >
-            {saving ? 'Menyimpan...' : 'Simpan'}
+            {saving ? 'Menyimpan...' : confirmingRename ? 'Ya, Tetap Simpan' : 'Simpan'}
           </button>
         </div>
       </div>

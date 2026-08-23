@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { changePin } from '../lib/adminApi'
 import ModalShell from './ModalShell'
 
@@ -9,7 +8,7 @@ interface ChangePinModalProps {
 
 const fieldStyle = (hasError: boolean): React.CSSProperties => ({
   width: '100%',
-  border: `1px solid ${hasError ? '#660000' : 'var(--border)'}`,
+  border: `1px solid ${hasError ? 'var(--color-danger)' : 'var(--border)'}`,
   borderRadius: 10,
   padding: '12px',
   textAlign: 'center',
@@ -24,7 +23,6 @@ const fieldStyle = (hasError: boolean): React.CSSProperties => ({
 })
 
 export default function ChangePinModal({ onClose }: ChangePinModalProps) {
-  useEscapeKey(onClose)
   const [currentPin, setCurrentPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -157,7 +155,7 @@ export default function ChangePinModal({ onClose }: ChangePinModalProps) {
               </div>
 
               {error && (
-                <div style={{ color: '#660000', fontSize: 12, marginTop: 12 }}>{error}</div>
+                <div style={{ color: 'var(--color-danger)', fontSize: 12, marginTop: 12 }}>{error}</div>
               )}
 
               <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>

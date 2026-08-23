@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
 interface LaporanPerProgram {
   dikerjakan: string[]
@@ -98,7 +99,7 @@ function ProgramCard({ id, data, meta, livePrograms, accentColor }: ProgramCardP
 
   const sections = [
     { key: 'dikerjakan', label: 'Sudah Dikerjakan', color: '#1B5E2B', bg: 'rgba(27,94,43,0.07)', items: data.dikerjakan },
-    { key: 'kendala', label: 'Kendala / Update', color: '#D97706', bg: 'rgba(217,119,6,0.07)', items: data.kendala },
+    { key: 'kendala', label: 'Kendala / Update', color: '#B45309', bg: 'rgba(217,119,6,0.07)', items: data.kendala },
     { key: 'rencana', label: 'Rencana Pekan Depan', color: 'var(--blue)', bg: 'rgba(26,111,232,0.07)', items: data.rencana },
   ]
 
@@ -250,18 +251,18 @@ function WeekReport({ note, livePrograms }: WeekReportProps) {
 
       {onholdEntries.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <SectionDivider label="On Hold" count={onholdEntries.length} color="#D97706" bg="rgba(217,119,6,0.1)" />
+          <SectionDivider label="On Hold" count={onholdEntries.length} color="#B45309" bg="rgba(217,119,6,0.1)" />
           {onholdEntries.map(([id, data]) => (
-            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#D97706" />
+            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#B45309" />
           ))}
         </div>
       )}
 
       {planningEntries.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <SectionDivider label="Perencanaan" count={planningEntries.length} color="#660000" bg="rgba(102,0,0,0.1)" />
+          <SectionDivider label="Perencanaan" count={planningEntries.length} color="var(--color-neutral-dark)" bg="rgba(51,65,85,0.1)" />
           {planningEntries.map(([id, data]) => (
-            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="#660000" />
+            <ProgramCard key={id} id={id} data={data} meta={programMeta[id]} livePrograms={livePrograms} accentColor="var(--color-neutral-dark)" />
           ))}
         </div>
       )}
@@ -287,7 +288,7 @@ export default function RiwayatLaporan() {
   const [showList, setShowList] = useState(true)
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)')
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
     const update = () => setIsMobile(mq.matches)
     update()
     mq.addEventListener('change', update)

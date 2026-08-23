@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useEscapeKey } from '../lib/useEscapeKey'
+import { Z_MODAL_NESTED } from '../lib/zIndex'
 
 function FileIcon({ color, size = 16 }: { color: string; size?: number }) {
   return (
@@ -28,23 +30,19 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
   const [closing, setClosing] = useState(false)
 
   const closeStarted = useRef(false)
-  const close = () => {
+  const close = useCallback(() => {
     if (closeStarted.current) return
     closeStarted.current = true
     setClosing(true)
     window.setTimeout(onClose, EXIT_MS)
-  }
+  }, [onClose])
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setEntered(true))
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+  useEscapeKey(close)
 
   const visible = entered && !closing
 
@@ -68,7 +66,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
     <div
       onClick={e => { if (e.target === e.currentTarget) close() }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 500,
+        position: 'fixed', inset: 0, zIndex: Z_MODAL_NESTED,
         backgroundColor: 'rgba(0,0,0,0.78)',
         backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -109,7 +107,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
               rel="noopener noreferrer"
               title="Unduh"
               style={{
-                width: 32, height: 32, borderRadius: 8,
+                width: 40, height: 40, borderRadius: 10,
                 border: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--bg)', color: 'var(--text-muted)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -125,7 +123,7 @@ export default function PdfViewerModal({ url, name, onClose }: { url: string; na
             <button
               onClick={close}
               style={{
-                width: 32, height: 32, borderRadius: 8,
+                width: 40, height: 40, borderRadius: 10,
                 border: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--bg)', color: 'var(--text-muted)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

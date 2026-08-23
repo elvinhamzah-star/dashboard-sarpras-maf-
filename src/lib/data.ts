@@ -1,26 +1,32 @@
+// 'On Hold' / 'Rusak Ringan' use #B45309 (not the lighter #D97706 used for
+// backgrounds/borders elsewhere) — #D97706 as TEXT on white is only 3.02:1,
+// below WCAG AA's 4.5:1 for normal text; #B45309 clears it at ~5:1.
+// 'Perencanaan' uses --color-neutral-dark (not --color-danger) — it's a
+// planning stage, not a warning; 'Rusak Berat' below IS a genuine danger
+// state (asset condition), so it keeps --color-danger.
 export const STATUS_COLORS: Record<string, string> = {
-  'Perencanaan': '#660000',
+  'Perencanaan': 'var(--color-neutral-dark)',
   'On Going': '#0A7BC8',
   'Selesai': '#1B5E2B',
-  'On Hold': '#D97706',
+  'On Hold': '#B45309',
 }
 
 export const STATUS_BG: Record<string, string> = {
-  'Perencanaan': 'rgba(102,0,0,0.1)',
+  'Perencanaan': 'rgba(51,65,85,0.1)',
   'On Going': 'rgba(10,123,200,0.1)',
   'Selesai': 'rgba(27,94,43,0.1)',
-  'On Hold': 'rgba(217,119,6,0.1)',
+  'On Hold': 'rgba(180,83,9,0.1)',
 }
 
 export const KONDISI_COLORS: Record<string, string> = {
   'Baik': '#059669',
-  'Rusak Ringan': '#D97706',
-  'Rusak Berat': '#660000',
+  'Rusak Ringan': '#B45309',
+  'Rusak Berat': 'var(--color-danger)',
 }
 
 export const KONDISI_BG: Record<string, string> = {
   'Baik': 'rgba(5,150,105,0.1)',
-  'Rusak Ringan': 'rgba(217,119,6,0.1)',
+  'Rusak Ringan': 'rgba(180,83,9,0.1)',
   'Rusak Berat': 'rgba(102,0,0,0.1)',
 }
 
@@ -75,7 +81,7 @@ export function monthsFromDates(dates: (string | undefined | null)[]): string[] 
 // Updated darker transaction colors
 export const TRANSACTION_COLORS: Record<string, { bg: string; text: string; light: string }> = {
   'Masuk': { bg: '#1B5E2B', text: '#fff', light: 'rgba(27,94,43,0.1)' },
-  'Keluar': { bg: '#660000', text: '#fff', light: 'rgba(102,0,0,0.1)' },
+  'Keluar': { bg: 'var(--color-neutral-dark)', text: '#fff', light: 'rgba(51,65,85,0.1)' },
   'Keluar PBB': { bg: '#92400e', text: '#fff', light: 'rgba(146,64,14,0.1)' },
 }
 
@@ -138,7 +144,7 @@ export function getEffectiveProgress(p: { jenis_pekerjaan: string; progress_perc
   if (p.jenis_pekerjaan === 'Operasional' && p.total_anggaran > 0) {
     return Math.min(100, Math.round((p.realisasi_terkini / p.total_anggaran) * 100))
   }
-  return Number(p.progress_percent) || 0
+  return Math.max(0, Math.min(100, Number(p.progress_percent) || 0))
 }
 
 // Label & placeholder field "titik" (sub-folder pengelompokan foto di Galeri)

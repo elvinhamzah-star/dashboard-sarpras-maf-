@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import ModalShell from './ModalShell'
@@ -44,7 +43,6 @@ const btnCancel: React.CSSProperties = {
 }
 
 export default function EditDanaMasukModal({ programId, namaPekerjaan, currentValue, onClose, onSuccess }: EditDanaMasukModalProps) {
-  useEscapeKey(onClose)
   const [value, setValue] = useState(currentValue > 0 ? String(currentValue) : '')
   const [step, setStep] = useState<'form' | 'confirm'>('form')
   const [saving, setSaving] = useState(false)

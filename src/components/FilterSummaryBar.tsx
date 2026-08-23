@@ -13,6 +13,7 @@
 import { Program, SubProgram, Transaction } from '../lib/supabase'
 import { deriveProgramTotals } from '../lib/deriveTotals'
 import { formatRupiah } from '../lib/data'
+import { isRestrictedForRole } from '../lib/access'
 
 interface Card {
   label: string
@@ -45,7 +46,7 @@ export default function FilterSummaryBar({
   if (programs.length === 0 || !status) return null
   // MAF: jangan pernah memunculkan uang Man Power (Operasional) di ringkasan
   // agregat apa pun — kecualikan dari seluruh perhitungan untuk role maf.
-  const vprograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  const vprograms = programs.filter(p => !isRestrictedForRole(p, role))
   if (vprograms.length === 0) return null
   // MAF: hide semua keuangan untuk Perencanaan — hanya tampil Jumlah Program
   if (role === 'maf' && status === 'Perencanaan') {
@@ -95,7 +96,7 @@ export default function FilterSummaryBar({
     : isOver
       ? `-${formatRupiah(netDiff)}`
       : 'Tepat Sesuai Pagu'
-  const effColor  = isUnder ? '#1B5E2B' : isOver ? '#660000' : '#6B7280'
+  const effColor  = isUnder ? '#1B5E2B' : isOver ? 'var(--color-danger)' : '#6B7280'
   // Sub: label + percentage below/above pagu
   const effSub    = isUnder
     ? `efisiensi · ${effPct}% di bawah pagu`
@@ -150,7 +151,7 @@ export default function FilterSummaryBar({
         label: 'Sisa Anggaran',
         value: formatRupiah(Math.abs(totalSisa)),
         sub: totalSisa < 0 ? 'melebihi pagu' : 'belum terserap',
-        accent: totalSisa < 0 ? '#660000' : '#D97706',
+        accent: totalSisa < 0 ? 'var(--color-danger)' : '#B45309',
         bg: totalSisa < 0 ? 'rgba(220,38,38,0.06)' : 'rgba(217,119,6,0.06)',
       },
       {
@@ -181,7 +182,7 @@ export default function FilterSummaryBar({
         label: 'Dana Tertahan',
         value: formatRupiah(totalSisa),
         sub: 'belum dapat dilanjutkan',
-        accent: '#D97706',
+        accent: '#B45309',
         bg: 'rgba(217,119,6,0.06)',
       },
       {
@@ -243,7 +244,12 @@ export default function FilterSummaryBar({
       }
     : {
         display: 'grid',
-        gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
+        // Fixed at the max card count (4, across all status tabs) rather than
+        // cards.length — otherwise each card's width jumps every time the
+        // active tab changes the card count (e.g. 2 cards at 50% each vs.
+        // 4 cards at 25% each). Fewer cards now just leave empty grid slots
+        // instead of resizing.
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap,
         // Desktop popup: frame with modal side padding + divider, like the compact bar.
         marginBottom: isPopupDesktop ? 0 : isMobile ? 10 : 12,

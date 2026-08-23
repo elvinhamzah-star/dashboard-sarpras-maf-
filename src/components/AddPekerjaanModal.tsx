@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
+import { useState, useEffect } from 'react'
 import { adminInsert } from '../lib/adminApi'
+import { fetchPrograms } from '../lib/supabase'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 
@@ -11,8 +12,20 @@ interface AddPekerjaanModalProps {
 
 const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
+/** Next unused "P-XXX" id, zero-padded to match the widest existing id. */
+function suggestNextId(existingIds: string[]): string {
+  const numbered = existingIds
+    .map(id => id.match(/^P-(\d+)$/))
+    .filter((m): m is RegExpMatchArray => m !== null)
+    .map(m => ({ num: parseInt(m[1], 10), width: m[1].length }))
+  if (numbered.length === 0) return 'P-001'
+  const maxWidth = Math.max(...numbered.map(n => n.width))
+  const nextNum = Math.max(...numbered.map(n => n.num)) + 1
+  return `P-${String(nextNum).padStart(maxWidth, '0')}`
+}
+
 export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModalProps) {
-  useEscapeKey(onClose)
+  const [existingIds, setExistingIds] = useState<Set<string>>(new Set())
   const [form, setForm] = useState({
     id: '',
     program: '',
@@ -31,11 +44,27 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Pre-fill with the next free "P-XXX" id and load existing ids for the
+  // duplicate check on save — the id is the primary key, so a collision
+  // would otherwise only surface as a raw DB error after Simpan is clicked.
+  useEffect(() => {
+    fetchPrograms().then(({ data }) => {
+      if (!data) return
+      const ids = new Set(data.map(p => p.id))
+      setExistingIds(ids)
+      setForm(f => f.id ? f : { ...f, id: suggestNextId(Array.from(ids)) })
+    })
+  }, [])
+
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
   const handleSave = async () => {
     if (!form.id.trim()) {
       setError('ID wajib diisi.')
+      return
+    }
+    if (existingIds.has(form.id.trim())) {
+      setError(`ID ${form.id.trim()} sudah dipakai program lain — pilih ID yang berbeda.`)
       return
     }
     if (!form.nama_pekerjaan.trim()) {
@@ -128,7 +157,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.08)', color: '#660000', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.08)', color: 'var(--color-danger)', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -141,7 +170,7 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
                 <Dropdown
                   value={form[f.key as keyof typeof form]}
                   onChange={v => update(f.key, v)}
-                  zIndex={1300}
+                  zIndex={Z_DROPDOWN_IN_MODAL}
                   options={f.options.map(o => ({ value: o, label: o }))}
                 />
               ) : (
@@ -149,8 +178,13 @@ export default function AddPekerjaanModal({ onClose, onAdded }: AddPekerjaanModa
                   type={f.type || 'text'}
                   value={form[f.key as keyof typeof form]}
                   onChange={e => update(f.key, e.target.value)}
-                  style={{ ...inputStyle, boxSizing: 'border-box' }}
+                  style={{ ...inputStyle, boxSizing: 'border-box', ...(f.key === 'id' && existingIds.has(form.id.trim()) ? { borderColor: 'var(--color-danger)' } : {}) }}
                 />
+              )}
+              {f.key === 'id' && existingIds.has(form.id.trim()) && (
+                <div style={{ fontSize: 11, color: 'var(--color-danger)', marginTop: 4 }}>
+                  ID ini sudah dipakai program lain.
+                </div>
               )}
             </div>
           ))}

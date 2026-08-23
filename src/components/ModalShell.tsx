@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { forcePageRepaint } from '../lib/forceRepaint'
+import { useEscapeKey } from '../lib/useEscapeKey'
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Shared close trigger for children rendered inside a ModalShell.
@@ -34,7 +39,7 @@ export default function ModalShell({
   contentScroll = true,
 }: ModalShellProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const [dragY, setDragY] = useState(0)
   const touchStartY = useRef<number | null>(null)
   const touchStartX = useRef<number | null>(null)
@@ -101,6 +106,49 @@ export default function ModalShell({
     setClosing(true)
     closeTimer.current = window.setTimeout(onClose, EXIT_MS)
   }, [onClose])
+
+  // Centralized so every modal gets Escape-to-close for free — individual
+  // modals used to each call useEscapeKey(onClose) themselves (inconsistently:
+  // some didn't, e.g. Beranda.tsx's showProgressModal/showDetail), and calling
+  // raw onClose from inside a child bypassed this shell's exit animation.
+  useEscapeKey(close)
+
+  // Focus management (WAI-ARIA dialog pattern): move focus into the panel on
+  // open, trap Tab/Shift+Tab so it can't leave the dialog while open, and
+  // restore focus to whatever triggered the modal once it closes.
+  const previouslyFocused = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    previouslyFocused.current = document.activeElement as HTMLElement | null
+    const panel = panelRef.current
+    const firstFocusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+    ;(firstFocusable ?? panel)?.focus({ preventScroll: true })
+    return () => {
+      previouslyFocused.current?.focus?.({ preventScroll: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const handleTabTrap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+        .filter(el => el.offsetParent !== null)
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleTabTrap)
+    return () => document.removeEventListener('keydown', handleTabTrap)
+  }, [])
 
   // Drag-handle touch handlers (always fully captured, touchAction:none on handle)
   const onTouchStart = (e: React.TouchEvent) => {
@@ -186,6 +234,9 @@ export default function ModalShell({
     >
       <div
         ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         onTouchStart={isMobile && contentScroll ? onPanelTouchStart : undefined}
         onTouchMove={isMobile && contentScroll ? onPanelTouchMove : undefined}
         onTouchEnd={isMobile && contentScroll ? onTouchEnd : undefined}

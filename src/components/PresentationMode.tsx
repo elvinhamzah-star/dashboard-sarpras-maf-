@@ -10,6 +10,7 @@
  */
 
 import { useEffect } from 'react'
+import { Z_ALERT_OVERLAY, Z_PRESENTATION_CONTROLS } from '../lib/zIndex'
 
 interface Props {
   onClose: () => void
@@ -45,7 +46,7 @@ export default function PresentationMode({ onClose }: Props) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: Z_ALERT_OVERLAY,
         background: '#000',
         display: 'flex',
         alignItems: 'center',
@@ -83,7 +84,7 @@ export default function PresentationMode({ onClose }: Props) {
           WebkitBackdropFilter: 'blur(6px)',
           letterSpacing: '-0.01em',
           transition: 'all 0.15s',
-          zIndex: 10000,
+          zIndex: Z_PRESENTATION_CONTROLS,
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.16)'

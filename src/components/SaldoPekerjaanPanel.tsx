@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, invalidateCache, Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import EditDanaMasukModal from './EditDanaMasukModal'
 
 interface Row {
@@ -32,7 +33,7 @@ const tdStyle: React.CSSProperties = {
 
 export default function SaldoPekerjaanPanel() {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const [rows, setRows] = useState<Row[]>([])
   const [unmatchedKeluar, setUnmatchedKeluar] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -89,7 +90,7 @@ export default function SaldoPekerjaanPanel() {
   const talanganRows = rows.filter(r => r.saldo < 0)
   const totalTalangan = talanganRows.reduce((s, r) => s + Math.abs(r.saldo), 0)
 
-  const saldoColor = saldoKas >= 0 ? '#1B5E2B' : '#660000'
+  const saldoColor = saldoKas >= 0 ? '#1B5E2B' : 'var(--color-danger)'
 
   return (
     <div>
@@ -104,7 +105,7 @@ export default function SaldoPekerjaanPanel() {
         </div>
         {totalTalangan > 0 && (
           <div style={{ flex: 1, minWidth: 200, background: 'var(--card)', border: '1px solid var(--border)', borderTop: '2px solid rgba(217,119,6,0.5)', borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#D97706', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Talangan</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#B45309', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Talangan</div>
             <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalTalangan)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{talanganRows.length} Pekerjaan</div>
           </div>
@@ -184,7 +185,7 @@ export default function SaldoPekerjaanPanel() {
                     )}
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: r.sisaPengajuan <= 0 ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-                    {r.sisaPengajuan > 0 ? formatRupiah(r.sisaPengajuan) : (r.sisaPengajuan === 0 ? '—' : <span style={{ color: '#660000' }}>Over RAB</span>)}
+                    {r.sisaPengajuan > 0 ? formatRupiah(r.sisaPengajuan) : (r.sisaPengajuan === 0 ? '—' : <span style={{ color: 'var(--color-danger)' }}>Over RAB</span>)}
                   </td>
                 </tr>
               )

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { verifyPin, setAdminPin } from '../lib/adminApi'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import ModalShell from './ModalShell'
 
 interface PinModalProps {
@@ -9,7 +9,6 @@ interface PinModalProps {
 }
 
 export default function PinModal({ onSuccess, onClose }: PinModalProps) {
-  useEscapeKey(onClose)
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)
@@ -17,7 +16,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
 
   // Auto-focus only on desktop to prevent iOS viewport zoom
   useEffect(() => {
-    if (!window.matchMedia('(max-width: 768px)').matches) {
+    if (!window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches) {
       inputRef.current?.focus()
     }
   }, [])
@@ -88,7 +87,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
           placeholder="• • • •"
           style={{
             width: '100%',
-            border: `1px solid ${error ? '#660000' : 'var(--border)'}`,
+            border: `1px solid ${error ? 'var(--color-danger)' : 'var(--border)'}`,
             borderRadius: 10,
             padding: '14px',
             textAlign: 'center',
@@ -106,7 +105,7 @@ export default function PinModal({ onSuccess, onClose }: PinModalProps) {
         />
 
         {error && (
-          <div style={{ color: '#660000', fontSize: 12, marginBottom: 8 }}>{error}</div>
+          <div style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 8 }}>{error}</div>
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>

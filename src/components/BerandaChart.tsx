@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { Transaction, ProgramSnapshot, Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
 interface BerandaChartProps {
   transactions: Transaction[]
@@ -21,7 +22,7 @@ const BAR_GAP = 4
 
 // Chart color palette — picked from existing dashboard elements
 const C_MASUK    = '#1B5E2B'  // green — konsisten dengan badge Masuk di Keuangan
-const C_KELUAR   = '#660000'  // dark red — konsisten dengan badge Keluar
+const C_KELUAR   = 'var(--color-neutral-dark)'  // dark red — konsisten dengan badge Keluar
 const C_PROGRESS = '#1A6FE8'  // blue — seragam dengan aksen utama dashboard
 
 // Left Y-axis: compact Rupiah format (e.g. 500Rb, 1Jt, 1.5M)
@@ -106,7 +107,7 @@ function calcMonthProgress(programs: Program[], yearMonth: string): number | nul
 
 export default function BerandaChart({ transactions, snapshots, programs, bare = false, progressOnly = false }: BerandaChartProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   // For progressOnly: measure actual container width so all months fit exactly

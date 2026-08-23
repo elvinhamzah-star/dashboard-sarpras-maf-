@@ -12,6 +12,8 @@ import { fetchPrograms } from '../lib/supabase'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { isRestrictedForRole } from '../lib/access'
 import { katFromJenis, rincianMode, RincianMode } from './HasilFormModal'
 
 type KatFilter = 'semua' | HasilKategori
@@ -25,7 +27,7 @@ const KAT_LABELS: Record<HasilKategori, string> = {
 const KAT_COLORS: Record<HasilKategori, string> = {
   fisik:  '#1A6FE8',
   barang: '#1B5E2B',
-  jasa:   '#D97706',
+  jasa:   '#B45309',
 }
 
 const STATUS_CHIP: Record<string, { bg: string; fg: string }> = {
@@ -105,9 +107,9 @@ interface ProgramRow {
   totalBiaya: number
 }
 
-export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boolean; role?: 'pbb' | 'maf' | null }) {
+export default function LaporanAset({ role }: { role?: 'pbb' | 'maf' | null }) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
 
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
@@ -122,7 +124,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
 
   // Split: Selesai dengan data vs belum diisi (Man Power disembunyikan untuk MAF)
   const selesai = programs.filter(p =>
-    p.status === 'Selesai' && (role !== 'maf' || p.jenis_pekerjaan !== 'Operasional')
+    p.status === 'Selesai' && !isRestrictedForRole(p, role)
   )
   const withData  = selesai.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
   const noData    = selesai.filter(p => (p.hasil_rincian?.length ?? 0) === 0)
@@ -321,8 +323,8 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
       <div id="laporan-aset-print" style={{ padding: ps, width: '100%', boxSizing: 'border-box', animation: 'pageSlideIn 0.2s ease' }}>
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        {/* Desktop: judul + tombol sejajar. Mobile: judul disembunyikan, tombol hanya untuk admin */}
-        {(isAdmin || !isMobile) && (
+        {/* Desktop: judul + tombol sejajar. Mobile: judul disembunyikan, tombol tetap
+            tampil — export cuma soal siapa boleh lihat laporan ini, bukan soal device. */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isMobile ? 'flex-end' : 'space-between', marginBottom: isMobile ? 14 : 24, gap: 12 }}>
           {!isMobile && (
             <div>
@@ -359,7 +361,6 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
             </button>
           </div>
         </div>
-        )}
 
         {/* ── Summary cards ────────────────────────────────────────────────── */}
         {isMobile ? (
@@ -444,7 +445,7 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
                   </span>
                 </div>
                 {/* Label */}
-                <span style={{ fontSize: isMobile ? 8.5 : 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1 }}>
+                <span style={{ fontSize: isMobile ? 9 : 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1 }}>
                   {label}
                 </span>
               </button>
@@ -471,11 +472,11 @@ export default function LaporanAset({ isAdmin = false, role }: { isAdmin?: boole
 
                     {/* Card header: nama (kiri) + badge status (kanan atas) */}
                     <div style={{ ...groupHeaderStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                      <span style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span title={p.nama_pekerjaan} style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.nama_pekerjaan}
                       </span>
                       {katLabel && (
-                        <span style={{ fontSize: isMobile ? 8 : 9, fontWeight: 600, color: '#5B8FD6', background: 'rgba(91,143,214,0.1)', border: '1px solid rgba(91,143,214,0.2)', borderRadius: 20, padding: isMobile ? '1.5px 6px' : '2px 7px', flexShrink: 0, whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: '#5B8FD6', background: 'rgba(91,143,214,0.1)', border: '1px solid rgba(91,143,214,0.2)', borderRadius: 20, padding: isMobile ? '1.5px 6px' : '2px 7px', flexShrink: 0, whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
                           {katLabel}
                         </span>
                       )}

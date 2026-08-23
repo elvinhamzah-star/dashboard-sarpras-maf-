@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { SubProgram } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 
@@ -13,7 +13,6 @@ interface UpdateSubPekerjaanModalProps {
 }
 
 export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess }: UpdateSubPekerjaanModalProps) {
-  useEscapeKey(onClose)
   const [progress, setProgress] = useState(subProgram.progress_percent || 0)
   const [anggaran, setAnggaran] = useState(subProgram.total_anggaran || 0)
   const [realisasi, setRealisasi] = useState(subProgram.realisasi_terkini || 0)
@@ -62,7 +61,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.08)', color: '#660000', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.08)', color: 'var(--color-danger)', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -159,7 +158,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
             Status
           </label>
-          <Dropdown value={status} onChange={setStatus} zIndex={1300}
+          <Dropdown value={status} onChange={setStatus} zIndex={Z_DROPDOWN_IN_MODAL}
             options={['Perencanaan', 'On Going', 'Selesai', 'On Hold'].map(s => ({ value: s, label: s }))} />
 
         </div>

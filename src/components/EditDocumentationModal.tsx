@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { Documentation, Program } from '../lib/supabase'
 import { adminUpdate } from '../lib/adminApi'
 import { isValidDriveLink, titikFieldConfig } from '../lib/data'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -37,7 +37,6 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function EditDocumentationModal({ doc, programs, onClose, onSuccess }: EditDocumentationModalProps) {
-  useEscapeKey(onClose)
   const titikCfg = titikFieldConfig(programs.find(p => p.id === doc.program_id)?.jenis_pekerjaan)
   const [fase, setFase] = useState(doc.fase || 'Kondisi Awal')
   const [tipeFile, setTipeFile] = useState<'foto' | 'video'>(doc.tipe_file || 'foto')
@@ -114,13 +113,13 @@ export default function EditDocumentationModal({ doc, programs, onClose, onSucce
             <Dropdown
               value={fase}
               onChange={setFase}
-              zIndex={1300}
+              zIndex={Z_DROPDOWN_IN_MODAL}
               options={['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => ({ value: f, label: f }))}
             />
           </div>
           <div>
             <label style={labelStyle}>Tanggal</label>
-            <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
+            <DatePicker value={tanggal} onChange={setTanggal} zIndex={Z_DROPDOWN_IN_MODAL} />
           </div>
         </div>
 

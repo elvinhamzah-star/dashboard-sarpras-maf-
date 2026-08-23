@@ -3,9 +3,13 @@ import { fetchDocumentation, Documentation, fetchPrograms, Program, fetchBeforeA
 import { adminDelete } from '../lib/adminApi'
 import { formatTanggal, getDriveThumbnailUrl, getDriveViewUrl, getDriveEmbedUrl, extractDriveFileId, STATUS_COLORS } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { useBackHandler, useTopBarTitle } from '../lib/backNav'
+import { isRestrictedForRole } from '../lib/access'
 import { forcePageRepaint } from '../lib/forceRepaint'
 import { useRepaintOnClose } from '../lib/useRepaintOnClose'
+import { Z_MODAL_POPUP } from '../lib/zIndex'
+import { acquireThumbSlot } from '../lib/thumbQueue'
 import AddDocumentationModal from './AddDocumentationModal'
 import EditDocumentationModal from './EditDocumentationModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
@@ -16,13 +20,14 @@ const FASE_BA = '__ba__'
 
 interface GaleriProps {
   isAdmin?: boolean
+  role?: 'pbb' | 'maf' | null
   initialProgramId?: string | null
   /** When set, "Kembali ke Daftar" exits to the caller (e.g. Dokumen) instead of Galeri's own program list. */
   onExit?: () => void
 }
 
 const FASE_INFO: Record<string, { color: string; bg: string }> = {
-  'Kondisi Awal':     { color: '#660000', bg: 'rgba(102,0,0,0.1)' },
+  'Kondisi Awal':     { color: 'var(--color-neutral-dark)', bg: 'rgba(51,65,85,0.1)' },
   'Proses Pekerjaan': { color: 'var(--blue)', bg: 'rgba(26,111,232,0.1)' },
   'Kondisi Akhir':    { color: '#1B5E2B', bg: 'rgba(27,94,43,0.1)' },
   'Dokumentasi':      { color: 'var(--text-secondary)', bg: 'rgba(0,0,0,0.06)' },
@@ -51,32 +56,53 @@ function ThumbImg({ src, alt, style, onError }: {
 }) {
   const imgRef = useRef<HTMLImageElement>(null)
   const settledRef = useRef(false)
+  const releaseRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     settledRef.current = false
     const img = imgRef.current
     if (!img) return
 
+    let cancelled = false
     let timer: ReturnType<typeof setTimeout> | null = null
+
+    const release = () => {
+      releaseRef.current?.()
+      releaseRef.current = null
+    }
+
     const fail = () => {
       if (settledRef.current) return
       settledRef.current = true
+      release()
       const sp = img.previousElementSibling as HTMLElement | null
       if (sp) sp.style.display = 'none'
       if (onError) onError({ target: img } as unknown as React.SyntheticEvent<HTMLImageElement>)
     }
 
-    // Only start the countdown once the thumbnail is actually near the viewport —
-    // otherwise a legitimately lazy (loading="lazy", still off-screen) image would
-    // get falsely marked as failed before the browser ever requests it.
+    // Only request a load slot once the thumbnail is actually near the viewport —
+    // otherwise every offscreen image on the page would queue up for a slot at once.
+    const startLoad = () => {
+      acquireThumbSlot().then(rel => {
+        if (cancelled) { rel(); return }
+        releaseRef.current = rel
+        img.src = src
+        timer = setTimeout(fail, THUMB_TIMEOUT_MS)
+      })
+    }
     const io = new IntersectionObserver(entries => {
-      if (entries[0]?.isIntersecting && !timer) timer = setTimeout(fail, THUMB_TIMEOUT_MS)
+      if (entries[0]?.isIntersecting) {
+        io.disconnect()
+        startLoad()
+      }
     }, { rootMargin: '200px' })
     io.observe(img)
 
     return () => {
+      cancelled = true
       io.disconnect()
       if (timer) clearTimeout(timer)
+      release()
     }
   }, [src])
 
@@ -87,24 +113,32 @@ function ThumbImg({ src, alt, style, onError }: {
       </div>
       <img
         ref={imgRef}
-        src={src} alt={alt} loading="lazy" decoding="async"
+        alt={alt} decoding="async"
         style={{ ...style, opacity: 0, transition: [style.transition, 'opacity 0.25s ease'].filter(Boolean).join(', ') }}
         onLoad={e => {
           settledRef.current = true
+          releaseRef.current?.()
+          releaseRef.current = null
           ;(e.target as HTMLImageElement).style.opacity = '1'
           const sp = (e.target as HTMLImageElement).previousElementSibling as HTMLElement | null
           if (sp) sp.style.display = 'none'
         }}
         onError={e => {
-          // A handful of thumbnails fail only because of the connection-pool burst
-          // when a folder requests many distinct file IDs at once — the same file
-          // loads fine in isolation. One retry after a short delay absorbs that
-          // without adding a real delay for genuinely broken/inaccessible files
-          // (which fail again immediately on retry).
+          // Most thumbnail failures are Google throttling a burst of distinct file
+          // IDs, not a genuinely broken file — the same file loads fine in isolation.
+          // One retry (re-queued through the same slot limiter, so it doesn't just
+          // recreate the burst) absorbs that without adding real delay for files
+          // that are actually broken/inaccessible, which fail again on retry too.
           const img = e.target as HTMLImageElement
+          releaseRef.current?.()
+          releaseRef.current = null
           if (img.dataset.retried !== '1') {
             img.dataset.retried = '1'
-            setTimeout(() => { img.src = src }, 800)
+            acquireThumbSlot().then(rel => {
+              if (settledRef.current) { rel(); return }
+              releaseRef.current = rel
+              setTimeout(() => { img.src = src }, 400)
+            })
             return
           }
           settledRef.current = true
@@ -117,9 +151,9 @@ function ThumbImg({ src, alt, style, onError }: {
   )
 }
 
-export default function Galeri({ isAdmin = false, initialProgramId, onExit }: GaleriProps) {
+export default function Galeri({ isAdmin = false, role, initialProgramId, onExit }: GaleriProps) {
   const width = useWindowWidth()
-  const isMobile = width < 900
+  const isMobile = width < MOBILE_BREAKPOINT
 
   const [docs, setDocs] = useState<Documentation[]>([])
   const [programs, setPrograms] = useState<Program[]>([])
@@ -229,6 +263,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
   const filteredDocs = docs.filter(doc => {
     const prog = programs.find(p => p.id === doc.program_id)
     if (prog?.status === 'Perencanaan') return false
+    if (prog && isRestrictedForRole(prog, role)) return false
     if (filterProgram !== 'Semua' && doc.program_id !== filterProgram) return false
     return true
   })
@@ -317,12 +352,16 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
     ? 'Pilih Program'
     : programs.find(p => p.id === filterProgram)?.nama_pekerjaan || 'Pilih Program'
 
-  const filteredProgramList = programs
+  // MAF must never see Man Power / Operasional documentation — exclude before
+  // any other filtering, same pattern as visiblePrograms in Beranda.tsx.
+  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
+
+  const filteredProgramList = visiblePrograms
     .filter(p => p.status !== 'Perencanaan' && docs.some(d => d.program_id === p.id))
     .filter(p => p.nama_pekerjaan.toLowerCase().includes(programSearch.toLowerCase()))
 
   // All programs that have docs (for Level 1 grid)
-  const mobilePrograms = programs
+  const mobilePrograms = visiblePrograms
     .filter(p => p.status !== 'Perencanaan' && docs.some(d => d.program_id === p.id))
     .filter(p => filterProgram === 'Semua' || p.id === filterProgram)
     .sort((a, b) => {
@@ -506,7 +545,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
 
         {/* Desktop: fixed dropdown */}
         {showProgramDropdown && !isMobile && (
-          <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 200, backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden' }}>
+          <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: Z_MODAL_POPUP, backgroundColor: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden' }}>
             <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ position: 'relative' }}>
                 <svg width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
@@ -522,7 +561,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                 Semua Program
               </button>
               {filteredProgramList.map(p => (
-                <button key={p.id} type="button" onClick={() => { setFilterProgram(p.id); closePicker() }}
+                <button key={p.id} type="button" title={p.nama_pekerjaan} onClick={() => { setFilterProgram(p.id); closePicker() }}
                   style={{ width: '100%', padding: '10px 14px', border: 'none', backgroundColor: filterProgram === p.id ? 'rgba(26,111,232,0.06)' : 'transparent', color: filterProgram === p.id ? 'var(--blue)' : 'var(--text-primary)', fontSize: 13, fontWeight: filterProgram === p.id ? 600 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.nama_pekerjaan}
                 </button>
@@ -540,7 +579,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
 
       {/* Mobile: bottom-sheet program picker */}
       {showProgramDropdown && isMobile && (
-        <ModalShell onClose={closePicker} zIndex={200}>
+        <ModalShell onClose={closePicker} zIndex={Z_MODAL_POPUP}>
           <div style={{ padding: '4px 16px 36px' }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 14 }}>
               Pilih Program
@@ -881,7 +920,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     const chip = (
-                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 9 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
                         <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: dotColor }} />
                         {kind === 'before' ? 'Sebelum' : 'Sesudah'}
                       </div>
@@ -903,13 +942,13 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                               />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
-                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
+                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, paddingBottom: 32, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
                               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                               <span style={{ fontSize: 11.5, fontWeight: 500 }}>Gagal memuat</span>
                             </div>
                           </>
                         ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, paddingBottom: 32, color: 'var(--text-muted)' }}>
                             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             <span style={{ fontSize: 11.5, fontWeight: 500 }}>Belum ada foto</span>
                           </div>
@@ -919,7 +958,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', width: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
@@ -1008,7 +1047,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     const dotColor = kind === 'before' ? '#ff5a5a' : '#34d399'
                     const t = d ? getDriveThumbnailUrl(d.link_foto, 'w800') : null
                     const chip = (
-                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 8.5 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
+                      <div style={{ position: 'absolute', left: 8, bottom: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 5, fontSize: isMobile ? 9 : 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#fff', background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', padding: isMobile ? '3px 7px' : '4px 10px', borderRadius: 99 }}>
                         <span style={{ width: isMobile ? 5 : 6, height: isMobile ? 5 : 6, borderRadius: '50%', background: dotColor }} />
                         {kind === 'before' ? 'Sebelum' : 'Sesudah'}
                       </div>
@@ -1030,13 +1069,13 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                               />
                             </div>
                             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '44%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)', pointerEvents: 'none' }} />
-                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
+                            <div className="ba-fallback" style={{ display: 'none', position: 'absolute', inset: 0, paddingBottom: 32, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', background: 'var(--surface-raised)' }}>
                               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                               <span style={{ fontSize: 11.5, fontWeight: 500 }}>Gagal memuat</span>
                             </div>
                           </>
                         ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)' }}>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, paddingBottom: 32, color: 'var(--text-muted)' }}>
                             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             <span style={{ fontSize: 11.5, fontWeight: 500 }}>Belum ada foto</span>
                           </div>
@@ -1046,7 +1085,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     )
                   }
                   return (
-                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', maxWidth: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
+                    <div key={pair.id} style={{ background: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', width: isMobile ? undefined : '90%', margin: isMobile ? undefined : '0 auto' }}>
                       {pair.label && (
                         <div style={{ padding: isMobile ? '11px 15px 9px' : '12px 16px 10px', fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                           {pair.label}
@@ -1104,7 +1143,7 @@ export default function Galeri({ isAdmin = false, initialProgramId, onExit }: Ga
                     </div>
                     {/* Info */}
                     <div style={{ padding: isMobile ? '10px 12px' : '12px 14px' }}>
-                      <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      <div title={prog.nama_pekerjaan} style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: 5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                         {prog.nama_pekerjaan}
                       </div>
                       {titikCount > 1 && (

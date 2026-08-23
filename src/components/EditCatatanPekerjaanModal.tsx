@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import BulletInput from './BulletInput'
 import ModalShell from './ModalShell'
@@ -12,7 +11,6 @@ interface EditCatatanPekerjaanModalProps {
 }
 
 export default function EditCatatanPekerjaanModal({ programId, currentNotes, onClose, onSuccess }: EditCatatanPekerjaanModalProps) {
-  useEscapeKey(onClose)
   const toItems = (text: string) => text ? text.split('\n').filter(l => l.trim()) : []
   const [items, setItems] = useState<string[]>(toItems(currentNotes))
   const [saving, setSaving] = useState(false)
@@ -43,7 +41,7 @@ export default function EditCatatanPekerjaanModal({ programId, currentNotes, onC
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: '#660000', fontSize: 12 }}>
+          <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: 'var(--color-danger)', fontSize: 12 }}>
             {error}
           </div>
         )}

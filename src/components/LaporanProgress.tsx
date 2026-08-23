@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchSnapshots, fetchTransactions, Program, ProgramSnapshot, Transaction } from '../lib/supabase'
 import { STATUS_COLORS, formatRupiah, formatRupiahShort, monthLabelFromYM } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import RiwayatLaporan from './RiwayatLaporan'
 
 type Mode = 'bulanan' | 'mingguan'
@@ -119,7 +120,7 @@ const sectionHeadStyle: React.CSSProperties = {
 
 export default function LaporanProgress() {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
 
   const [programs, setPrograms] = useState<Program[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
@@ -293,7 +294,7 @@ export default function LaporanProgress() {
             </div>
             <div style={cardStyle}>
               <div style={summaryLabelStyle}>Net {mode === 'bulanan' ? 'Bulan Ini' : 'Minggu Ini'}</div>
-              <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: net >= 0 ? 'var(--blue)' : '#660000', marginTop: 4 }}>
+              <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: net >= 0 ? 'var(--blue)' : 'var(--color-danger)', marginTop: 4 }}>
                 {net >= 0 ? '+' : ''}{formatRupiahShort(net)}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{net >= 0 ? 'masuk > keluar' : 'keluar > masuk'}</div>

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { Program } from '../lib/supabase'
 import { adminInsert } from '../lib/adminApi'
 import { isValidDriveLink, titikFieldConfig } from '../lib/data'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -57,7 +57,6 @@ function newRow(): LinkRow {
 }
 
 export default function AddDocumentationModal({ programs, onClose, onSuccess, initialProgramId, initialTitik, lockProgram }: AddDocumentationModalProps) {
-  useEscapeKey(onClose)
   const [programId, setProgramId] = useState(initialProgramId ?? '')
   const [fase, setFase] = useState('Kondisi Awal')
   const [titik, setTitik] = useState(initialTitik ?? '')
@@ -163,7 +162,8 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
     setSaving(true)
     setSaveProgress({ done: 0, total: validRows.length })
 
-    let failed = 0
+    const validRowIds = new Set(validRows.map(r => r.id))
+    const failedIds = new Set<string>()
     for (let i = 0; i < validRows.length; i++) {
       const row = validRows[i]
       const { error: err } = await adminInsert('documentation', {
@@ -177,15 +177,19 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
         caption: row.caption.trim() || null,
         tanggal,
       })
-      if (err) failed++
+      if (err) failedIds.add(row.id)
       setSaveProgress({ done: i + 1, total: validRows.length })
     }
 
     setSaving(false)
     setSaveProgress(null)
 
-    if (failed > 0) {
-      setError(`${failed} dari ${validRows.length} item gagal disimpan. Coba lagi.`)
+    if (failedIds.size > 0) {
+      // Strip rows that already saved successfully so a retry only resends
+      // the ones that failed — otherwise clicking Simpan again would
+      // re-insert the successful rows too, duplicating those photo entries.
+      setRows(prev => prev.filter(r => !validRowIds.has(r.id) || failedIds.has(r.id)))
+      setError(`${failedIds.size} dari ${validRows.length} item gagal disimpan. Baris yang sudah berhasil sudah dihapus dari form — klik Simpan lagi untuk mencoba sisanya.`)
       return
     }
 
@@ -254,7 +258,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
             {dropdownOpen && !lockProgram && createPortal(
               <div ref={portalRef} style={{
                 position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width,
-                zIndex: 500, backgroundColor: 'var(--card)', borderRadius: 12,
+                zIndex: Z_DROPDOWN_IN_MODAL, backgroundColor: 'var(--card)', borderRadius: 12,
                 border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(13,24,41,0.14)', overflow: 'hidden',
               }}>
                 <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -296,7 +300,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
                       onMouseLeave={e => { if (p.id !== programId) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
                     >
                       {p.id === programId && <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>}
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginLeft: p.id === programId ? 0 : 21 }}>
+                      <span title={p.nama_pekerjaan} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginLeft: p.id === programId ? 0 : 21 }}>
                         {p.nama_pekerjaan}
                       </span>
                     </button>
@@ -315,13 +319,13 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
             <Dropdown
               value={fase}
               onChange={setFase}
-              zIndex={1300}
+              zIndex={Z_DROPDOWN_IN_MODAL}
               options={['Kondisi Awal', 'Proses Pekerjaan', 'Kondisi Akhir', 'Dokumentasi'].map(f => ({ value: f, label: f }))}
             />
           </div>
           <div>
             <label style={labelStyle}>Tanggal</label>
-            <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
+            <DatePicker value={tanggal} onChange={setTanggal} zIndex={Z_DROPDOWN_IN_MODAL} />
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>
@@ -447,7 +451,7 @@ export default function AddDocumentationModal({ programs, onClose, onSuccess, in
                       if (rows.length > 1) {
                         const btn = e.currentTarget as HTMLButtonElement
                         btn.style.backgroundColor = 'rgba(239,68,68,0.06)'
-                        btn.style.color = '#660000'
+                        btn.style.color = 'var(--color-danger)'
                         btn.style.borderColor = 'rgba(220,38,38,0.2)'
                       }
                     }}

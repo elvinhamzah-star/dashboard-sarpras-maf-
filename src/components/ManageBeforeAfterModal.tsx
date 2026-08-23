@@ -142,7 +142,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
     const id = slot === 'before' ? beforeId : afterId
     const d = docById(id)
     const t = thumb(d)
-    const accent = slot === 'before' ? '#660000' : '#1B5E2B'
+    const accent = slot === 'before' ? 'var(--color-neutral-dark)' : '#1B5E2B'
     return (
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: accent, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -271,7 +271,7 @@ export default function ManageBeforeAfterModal({ programId, programName, docs, o
                     onClick={() => handleDelete(p.id)}
                     title="Hapus pasangan"
                     aria-label="Hapus pasangan"
-                    style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(102,0,0,0.1)', color: '#660000', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
+                    style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(102,0,0,0.1)', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
                   >
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                   </button>

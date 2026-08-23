@@ -100,7 +100,7 @@ export default function MobileAccountMenu({
       <span style={{ display: 'flex', flexShrink: 0, color: opts?.danger ? '#dc2626' : 'var(--text-muted)' }}>{icon}</span>
       {label}
       {opts?.badge && (
-        <span style={{ marginLeft: 'auto', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--blue)', backgroundColor: 'var(--blue-light)', padding: '2px 7px', borderRadius: 99 }}>
+        <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--blue)', backgroundColor: 'var(--blue-light)', padding: '2px 7px', borderRadius: 99 }}>
           {opts.badge}
         </span>
       )}

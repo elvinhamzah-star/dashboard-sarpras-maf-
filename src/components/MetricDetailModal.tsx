@@ -1,8 +1,12 @@
 import { useEffect } from 'react'
 import { Program } from '../lib/supabase'
-import { formatRupiah } from '../lib/data'
+import { STATUS_COLORS, formatRupiah } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { useEscapeKey } from '../lib/useEscapeKey'
+import { Z_MODAL_DEEP } from '../lib/zIndex'
 import ModalShell from './ModalShell'
+import ModalHeader from './ModalHeader'
 
 export type MetricModalType = 'anggaran' | 'realisasi' | 'sisa' | 'penyerapan'
 
@@ -13,13 +17,10 @@ interface Props {
   totalRealisasi: number
   onClose: () => void
   inline?: boolean
+  /** Row click → open that program's detail. Omit to keep rows read-only. */
+  onProgramClick?: (id: string) => void
 }
 
-const GROUP_COLORS: Record<string, string> = {
-  'Selesai':  '#1B5E2B',
-  'On Going': '#0A7BC8',
-  'On Hold':  '#D97706',
-}
 const GROUP_LABELS: Record<string, string> = {
   'Selesai':  'Selesai',
   'On Going': 'Berjalan',
@@ -30,7 +31,7 @@ const GROUP_LABELS: Record<string, string> = {
 const ACCENT: Record<string, string> = {
   anggaran:   '#1A6FE8',
   realisasi:  '#1B5E2B',
-  sisa:       '#D97706',
+  sisa:       '#B45309',
   penyerapan: '#1A6FE8',
 }
 
@@ -81,30 +82,47 @@ const ICONS: Record<string, React.ReactNode> = {
   penyerapan: <IconPenyerapan />,
 }
 
-export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose, inline }: Props) {
+export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose, inline, onProgramClick }: Props) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const ps = isMobile ? 16 : 24
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
   const withRealisasi = programs.filter(p => (p.realisasi_terkini || 0) > 0)
   const accent = ACCENT[type]
 
+  // When rendered via ModalShell (inline=false), Escape is handled centrally
+  // there. `inline` mode has no ModalShell wrapper, so it needs its own
+  // handling — this hook is a no-op in the ModalShell case.
+  useEscapeKey(() => { if (inline) onClose() })
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
     if (!inline) document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKey)
       if (!inline) document.body.style.overflow = ''
     }
-  }, [onClose, inline])
+  }, [inline])
 
   const rowSt = (isLast: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14,
     padding: `${isMobile ? 14 : 16}px ${ps}px`,
     borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
+    cursor: onProgramClick ? 'pointer' : 'default',
+    transition: 'background-color 0.15s',
   })
+
+  // Row click/keyboard handling — spread onto each row <div> so clicking (or
+  // Enter/Space when focused) opens that program's detail, matching the same
+  // rows in BerandaWeekOverWeek which were already clickable.
+  const rowInteraction = (id: string) => onProgramClick ? {
+    role: 'button' as const,
+    tabIndex: 0,
+    'aria-label': `Lihat detail ${programs.find(p => p.id === id)?.nama_pekerjaan ?? id}`,
+    onClick: () => onProgramClick(id),
+    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProgramClick(id) } },
+    onMouseEnter: (e: React.MouseEvent) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--surface-min)' },
+    onMouseLeave: (e: React.MouseEvent) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent' },
+  } : {}
 
   const rankSt: React.CSSProperties = {
     fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
@@ -139,7 +157,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       sorted.forEach((p, i) => {
         const pct = totalAnggaran > 0 ? ((p.total_anggaran || 0) / totalAnggaran * 100).toFixed(1) : '0'
         els.push(
-          <div key={p.id} style={rowSt(i === sorted.length - 1)}>
+          <div key={p.id} style={rowSt(i === sorted.length - 1)} {...rowInteraction(p.id)}>
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{p.nama_pekerjaan}</span>
             {valBox(
@@ -162,14 +180,14 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
           .filter(p => p.status === status && (p.realisasi_terkini || 0) > 0)
           .sort((a, b) => (b.realisasi_terkini || 0) - (a.realisasi_terkini || 0))
         if (!gp.length) return
-        const color = GROUP_COLORS[status]
+        const color = STATUS_COLORS[status]
         els.push(groupHeader(`${GROUP_LABELS[status]} ${gp.length} Pekerjaan`, color, hasGroup))
         hasGroup = true
         gp.forEach((p, i) => {
           const r = rank++
           const pct = p.total_anggaran ? ((p.realisasi_terkini || 0) / p.total_anggaran * 100).toFixed(1) : '0'
           els.push(
-            <div key={p.id} style={rowSt(i === gp.length - 1)}>
+            <div key={p.id} style={rowSt(i === gp.length - 1)} {...rowInteraction(p.id)}>
               <span style={rankSt}>{r}</span>
               <span style={nameSt}>{p.nama_pekerjaan}</span>
               {valBox(
@@ -190,7 +208,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       const els: JSX.Element[] = []
       withSisa.forEach(({ prog, sisa }, i) => {
         els.push(
-          <div key={prog.id} style={rowSt(i === withSisa.length - 1)}>
+          <div key={prog.id} style={rowSt(i === withSisa.length - 1)} {...rowInteraction(prog.id)}>
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{prog.nama_pekerjaan}</span>
             {valBox(
@@ -216,7 +234,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         els.push(groupHeader(`Sudah Terealisasi ${withReal.length} Pekerjaan dari ${programs.length}`, accent, false))
         withReal.forEach(({ prog, pct }, i) => {
           els.push(
-            <div key={prog.id} style={rowSt(i === withReal.length - 1 && noReal.length === 0)}>
+            <div key={prog.id} style={rowSt(i === withReal.length - 1 && noReal.length === 0)} {...rowInteraction(prog.id)}>
               <span style={rankSt}>{i + 1}</span>
               <span style={nameSt}>{prog.nama_pekerjaan}</span>
               {valBox(
@@ -232,7 +250,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         els.push(groupHeader(`Belum Terealisasi ${noReal.length} Pekerjaan`, 'var(--text-muted)', withReal.length > 0))
         noReal.forEach(({ prog }, i) => {
           els.push(
-            <div key={prog.id} style={rowSt(i === noReal.length - 1)}>
+            <div key={prog.id} style={rowSt(i === noReal.length - 1)} {...rowInteraction(prog.id)}>
               <span style={rankSt}>{withReal.length + i + 1}</span>
               <span style={{ ...nameSt, color: 'var(--text-muted)' }}>{prog.nama_pekerjaan}</span>
               {valBox(
@@ -268,8 +286,6 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     type === 'sisa'       ? `${programs.length} program` :
     `${withRealisasi.length} program aktif`
 
-  const iconSize = isMobile ? 40 : 44
-
   // ── Inline panel (desktop) ──
   if (inline) {
     return (
@@ -282,29 +298,16 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
         marginBottom: 20,
         animation: 'fadeSlideDown 0.18s ease',
       }}>
-        {/* Header */}
-        <div style={{ padding: '12px 24px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-            <button
-              onClick={onClose}
-              style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}
-            >
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent, flexShrink: 0 }}>
-              {ICONS[type]}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{LABEL[type]}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{headerSub}</div>
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>
-            </div>
-          </div>
-        </div>
+        <ModalHeader
+          title={LABEL[type]}
+          subtitle={headerSub}
+          onClose={onClose}
+          icon={ICONS[type]}
+          iconBg={`${accent}15`}
+          iconColor={accent}
+          right={<div style={{ fontSize: 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>}
+          padding="12px 24px 14px"
+        />
         {/* List */}
         <div style={{ maxHeight: 340, overflowY: 'auto' }}>
           {programs.length === 0
@@ -327,8 +330,7 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     <ModalShell
       onClose={onClose}
       maxWidth={960}
-      zIndex={1000}
-      backdropColor="rgba(0,0,0,0.4)"
+      zIndex={Z_MODAL_DEEP}
       contentScroll={false}
     >
       {close => (
@@ -338,38 +340,17 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       // rows vanish); Blink tolerates it, so it only breaks on iPhone.
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: isMobile ? '88vh' : '82vh' }}>
 
-        {/* Header */}
-        <div style={{ padding: isMobile ? `10px ${ps}px 14px` : `14px ${ps}px 16px`, borderBottom: '1px solid var(--border-subtle)', flexShrink: 0, userSelect: 'none' }}>
-          {/* Close button — baris sendiri di atas */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: isMobile ? 8 : 10 }}>
-            <button
-              onClick={close}
-              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
-            >
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          {/* Content row: icon + label/sub | total sejajar kolom kanan list */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: iconSize, height: iconSize, borderRadius: 10,
-              backgroundColor: `${accent}15`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: accent, flexShrink: 0,
-            }}>
-              {ICONS[type]}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: isMobile ? 11 : 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-                {LABEL[type]}
-              </div>
-              <div style={{ fontSize: isMobile ? 10 : 11, color: 'var(--text-muted)', marginTop: 2 }}>{headerSub}</div>
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>
-            </div>
-          </div>
-        </div>
+        <ModalHeader
+          title={LABEL[type]}
+          subtitle={headerSub}
+          onClose={close}
+          icon={ICONS[type]}
+          iconBg={`${accent}15`}
+          iconColor={accent}
+          right={<div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: accent, letterSpacing: '-0.01em' }}>{headerTotal}</div>}
+          isMobile={isMobile}
+          padding={isMobile ? `10px ${ps}px 14px` : `14px ${ps}px 16px`}
+        />
 
         {/* List — minHeight:0 is required or WebKit/Safari collapses this
             flex:1 child to 0 height (min-height:auto ≠ 0 with overflow:auto),

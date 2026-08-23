@@ -23,6 +23,8 @@ const PresentationMode = lazy(() => import('./components/PresentationMode'))
 import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
+import { MOBILE_BREAKPOINT } from './lib/breakpoint'
+import { useEdgeSwipeBack } from './lib/useEdgeSwipeBack'
 import { downloadBackup } from './lib/backup'
 import MaintenanceScreen from './components/MaintenanceScreen'
 
@@ -60,8 +62,6 @@ function DashboardApp() {
   // operasi simpan/hapus tetap ditolak server kalau PIN aslinya belum diverifikasi
   // (adminPin di adminApi.ts tetap null sampai PinModal benar-benar sukses).
   const [isAdmin, setIsAdmin] = useState(() => import.meta.env.DEV)
-  const edgeSwipeStartX = useRef<number | null>(null)
-  const edgeSwipeStartY = useRef<number | null>(null)
   const [showPinModal, setShowPinModal] = useState(false)
   const [showChangePinModal, setShowChangePinModal] = useState(false)
   const [backingUp, setBackingUp] = useState(false)
@@ -78,7 +78,7 @@ function DashboardApp() {
   // User bisa membukanya lewat tombol toggle.
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+    typeof window !== 'undefined' ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches : false
   )
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalKey, setAddModalKey] = useState(0)
@@ -86,8 +86,6 @@ function DashboardApp() {
   // null = belum dicek, true = maintenance aktif, false = normal
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null)
   const [togglingMaintenance, setTogglingMaintenance] = useState(false)
-  // Shared month filter ('YYYY-MM' or null for all). Used across pages.
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   // Pekerjaan filter state — persisted across detail navigation
   const [pekerjaanFilter, setPekerjaanFilter] = useState('')
   const [galeriProgramId, setGaleriProgramId] = useState<string | null>(null)
@@ -104,6 +102,32 @@ function DashboardApp() {
   const registerBack = useCallback((h: BackHandler) => setChildBack(() => h), [])
   const [childTitle, setChildTitle] = useState<string | null>(null)
   const registerTitle = useCallback((t: string | null) => setChildTitle(t), [])
+
+  // Left-edge swipe-right → back, same as iPhone.
+  const handleEdgeSwipeBack = () => {
+    if (currentPage === 'pekerjaan' && selectedProgramId) {
+      // Detail → daftar pekerjaan
+      setSelectedProgramId(null)
+    } else if (currentPage === 'galeri') {
+      // Galeri → pekerjaan detail, atau beranda
+      if (galeriReturnProgramId) {
+        const pid = galeriReturnProgramId
+        setGaleriReturnProgramId(null)
+        setGaleriProgramId(null)
+        setSelectedProgramId(pid)
+        setCurrentPage('pekerjaan')
+      } else {
+        setGaleriProgramId(null)
+        setCurrentPage('beranda')
+      }
+    } else if (currentPage !== 'beranda') {
+      // Semua halaman lain → beranda
+      setCurrentPage('beranda')
+      setSelectedProgramId(null)
+      if (isMobile) setSidebarOpen(false)
+    }
+  }
+  const edgeSwipeBack = useEdgeSwipeBack(handleEdgeSwipeBack)
 
   // Warm the data cache on mount for sessions restored from sessionStorage
   // (e.g. a page reload). Fresh logins warm it via the onLogin callback instead,
@@ -129,7 +153,7 @@ function DashboardApp() {
 
   // Responsive: collapse to off-canvas drawer on small screens
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)')
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
     const update = () => {
       setIsMobile(mq.matches)
       if (mq.matches) setSidebarOpen(false) // mobile: paksa tertutup; desktop: biarkan pilihan user
@@ -149,8 +173,12 @@ function DashboardApp() {
     if (isMobile) setSidebarOpen(false)
   }
 
+  // Restricted-program access is gated upstream (Pekerjaan.tsx/Beranda.tsx check
+  // isRestrictedForRole before ever calling this) and backstopped inside
+  // PekerjaanDetail.tsx itself (renders "Akses Dibatasi" for any entry path) —
+  // no need to re-check by id here, which used to hardcode 'P-024' and would
+  // silently no-op for any other Operasional program reached a different way.
   const handleSelectProgram = (id: string) => {
-    if (role === 'maf' && id === 'P-024') return
     setPekerjaanFromBeranda(false)
     setSelectedProgramId(id)
   }
@@ -301,11 +329,12 @@ function DashboardApp() {
           />
         )
       case 'keuangan':
-        return <Keuangan isAdmin={isAdmin} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} role={role} />
+        return <Keuangan isAdmin={isAdmin} role={role} />
       case 'galeri':
         return (
           <Galeri
             isAdmin={isAdmin}
+            role={role}
             initialProgramId={galeriProgramId}
             onExit={
               galeriReturnProgramId
@@ -323,7 +352,7 @@ function DashboardApp() {
       case 'riwayat':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <LaporanProgress />
       case 'laporan-aset':
-        return <LaporanAset isAdmin={isAdmin} role={role} />
+        return <LaporanAset role={role} />
       case 'inventaris':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <InventarisBarang />
       default:
@@ -360,7 +389,7 @@ function DashboardApp() {
           setRole(resolvedRole)
           // Ensure sidebar is closed on mobile — viewport meta reset during login
           // can briefly trigger the mq listener and open the sidebar
-          if (window.matchMedia('(max-width: 768px)').matches) setSidebarOpen(false)
+          if (window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches) setSidebarOpen(false)
           setIsLoggedIn(true)
           // Pre-warm data cache in background — by the time user navigates to
           // any page, data is already cached and the page renders instantly.
@@ -487,43 +516,7 @@ function DashboardApp() {
         {/* Page content */}
         <div
           style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}
-          onTouchStart={e => {
-            if (e.touches[0].clientX < 44) {
-              edgeSwipeStartX.current = e.touches[0].clientX
-              edgeSwipeStartY.current = e.touches[0].clientY
-            }
-          }}
-          onTouchEnd={e => {
-            if (edgeSwipeStartX.current === null) return
-            const dx = e.changedTouches[0].clientX - edgeSwipeStartX.current
-            const dy = Math.abs(e.changedTouches[0].clientY - (edgeSwipeStartY.current || 0))
-            if (dx > 55 && dy < 90) {
-              // Swipe left→right from left edge = back, same as iPhone
-              if (currentPage === 'pekerjaan' && selectedProgramId) {
-                // Detail → daftar pekerjaan
-                setSelectedProgramId(null)
-              } else if (currentPage === 'galeri') {
-                // Galeri → pekerjaan detail, atau beranda
-                if (galeriReturnProgramId) {
-                  const pid = galeriReturnProgramId
-                  setGaleriReturnProgramId(null)
-                  setGaleriProgramId(null)
-                  setSelectedProgramId(pid)
-                  setCurrentPage('pekerjaan')
-                } else {
-                  setGaleriProgramId(null)
-                  setCurrentPage('beranda')
-                }
-              } else if (currentPage !== 'beranda') {
-                // Semua halaman lain → beranda
-                setCurrentPage('beranda')
-                setSelectedProgramId(null)
-                if (isMobile) setSidebarOpen(false)
-              }
-            }
-            edgeSwipeStartX.current = null
-            edgeSwipeStartY.current = null
-          }}
+          {...edgeSwipeBack}
         >
           <div
             key={currentPage + (selectedProgramId || '')}
@@ -554,7 +547,7 @@ function DashboardApp() {
         </div>
 
         {/* Mobile bottom navigation */}
-        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} role={role} />}
+        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
       </div>
 
 

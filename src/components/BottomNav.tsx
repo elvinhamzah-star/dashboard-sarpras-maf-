@@ -67,7 +67,6 @@ const TABS_SARPRAS: Tab[] = [
 interface BottomNavProps {
   currentPage: string
   onNavigate: (page: string) => void
-  role?: 'pbb' | 'maf' | null
 }
 
 export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {

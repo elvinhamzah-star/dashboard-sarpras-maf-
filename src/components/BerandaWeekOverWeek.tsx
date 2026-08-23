@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Program, ProgramSnapshot, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, formatRupiah, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { isRestrictedForRole } from '../lib/access'
 
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
@@ -72,7 +74,14 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
   const width = useWindowWidth()
   const isNarrow = width < 1100
   // Program name in the list: bump up on desktop; mobile (<768, matches App) stays 11.5.
-  const nameSize = width < 768 ? 11.5 : 13.5
+  const nameSize = width < MOBILE_BREAKPOINT ? 11.5 : 13.5
+  // Rencana/Catatan bullet lists are capped per-row so one program with many
+  // notes doesn't blow out that row's height and break scan rhythm down the
+  // list — expand on demand instead. Keyed by program id; a program only
+  // ever shows one of the two lists at a time (branch is per-tab), so one
+  // shared set covers both.
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+  const NOTES_CAP = 3
 
   const now = Date.now()
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000
@@ -110,9 +119,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
 
   // MAF tidak boleh melihat pekerjaan Man Power (Operasional) — sembunyikan
   // dari hitungan status maupun daftar per tab, konsisten dgn WoW & LaporanAset.
-  const visiblePrograms = isMaf
-    ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional')
-    : programs
+  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
 
   const countByStatus: Record<string, number> = {}
   visiblePrograms.forEach(p => {
@@ -136,7 +143,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       ? '#1B5E2B'
       : freshnessDays <= 3
         ? '#D97706'
-        : '#660000'
+        : 'var(--color-danger)'
 
   return (
     <>
@@ -181,7 +188,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 {progressLapangan}%
               </div>
             </div>
-            <div style={{ fontSize: isNarrow ? 8.5 : 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
+            <div style={{ fontSize: isNarrow ? 9 : 9.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
               Progress Pekerjaan
             </div>
             <div style={{ fontSize: isNarrow ? 9 : 10, color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -239,7 +246,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 </div>
               </div>
               {/* Label status */}
-              <div style={{ fontSize: isNarrow ? 8.5 : 10, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
+              <div style={{ fontSize: isNarrow ? 9 : 10, fontWeight: 700, color: isActive ? color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: isNarrow ? 1 : 2 }}>
                 {tab}
               </div>
               {/* Sub */}
@@ -275,13 +282,20 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             return (
               <div
                 key={p.id}
+                role={onProgramClick ? 'button' : undefined}
+                tabIndex={onProgramClick ? 0 : undefined}
+                aria-label={onProgramClick ? `Lihat detail ${p.nama_pekerjaan}` : undefined}
                 onClick={() => onProgramClick?.(p.id)}
+                onKeyDown={onProgramClick ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProgramClick(p.id) } }) : undefined}
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(27,94,43,0.07)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
+                  // Permanent (not hover-only) accent so the row reads as tappable
+                  // at rest on mobile too, where hover never fires.
+                  ...(onProgramClick ? { borderLeft: '3px solid #1B5E2B55' } : {}),
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -289,7 +303,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
+                    <div title={p.nama_pekerjaan} style={{
                       fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
@@ -323,7 +337,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     {isOver && (
                       <span style={{
                         fontSize: 9.5, fontWeight: 600, flexShrink: 0,
-                        color: '#660000',
+                        color: 'var(--color-danger)',
                         backgroundColor: 'rgba(220,38,38,0.08)',
                         padding: '2px 7px', borderRadius: 99,
                       }}>
@@ -342,13 +356,18 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             return (
               <div
                 key={p.id}
+                role={onProgramClick ? 'button' : undefined}
+                tabIndex={onProgramClick ? 0 : undefined}
+                aria-label={onProgramClick ? `Lihat detail ${p.nama_pekerjaan}` : undefined}
                 onClick={() => onProgramClick?.(p.id)}
+                onKeyDown={onProgramClick ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProgramClick(p.id) } }) : undefined}
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = hoverColor }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
+                  ...(onProgramClick ? { borderLeft: '3px solid rgba(51,65,85,0.45)' } : {}),
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -356,7 +375,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
+                    <div title={p.nama_pekerjaan} style={{
                       fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
@@ -370,18 +389,27 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                 {rencana.length > 0 && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-                      <svg width="10" height="10" fill="none" stroke="#660000" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <svg width="10" height="10" fill="none" stroke="var(--color-neutral-dark)" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                       </svg>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rencana</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rencana</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 4 }}>
-                      {rencana.map((item, idx) => (
+                      {(expandedNotes.has(p.id) ? rencana : rencana.slice(0, NOTES_CAP)).map((item, idx) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                           <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
                           <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item}</span>
                         </div>
                       ))}
+                      {!expandedNotes.has(p.id) && rencana.length > NOTES_CAP && (
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); setExpandedNotes(prev => new Set(prev).add(p.id)) }}
+                          style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: '1px 0 0 12px', color: 'var(--color-neutral-dark)', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}
+                        >
+                          +{rencana.length - NOTES_CAP} lainnya
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -399,13 +427,18 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
             return (
               <div
                 key={p.id}
+                role={onProgramClick ? 'button' : undefined}
+                tabIndex={onProgramClick ? 0 : undefined}
+                aria-label={onProgramClick ? `Lihat detail ${p.nama_pekerjaan}` : undefined}
                 onClick={() => onProgramClick?.(p.id)}
+                onKeyDown={onProgramClick ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProgramClick(p.id) } }) : undefined}
                 onMouseEnter={e => { if (onProgramClick) (e.currentTarget as HTMLDivElement).style.backgroundColor = `${color}0D` }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--card)' }}
                 style={{
                   padding: spacious ? '14px 16px' : '10px 12px',
                   borderRadius: 10,
                   border: '1.5px solid var(--border-subtle)',
+                  ...(onProgramClick ? { borderLeft: `3px solid ${color}55` } : {}),
                   backgroundColor: 'var(--card)',
                   cursor: onProgramClick ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
@@ -415,7 +448,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* nama + progress badge */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <div style={{
+                      <div title={p.nama_pekerjaan} style={{
                         fontSize: nameSize, fontWeight: 600, color: 'var(--text-primary)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
                       }}>
@@ -435,14 +468,31 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     )}
                     {p.isu_utama && (
                       <div style={{ marginTop: 16 }}>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Catatan</span>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, paddingLeft: 4 }}>
-                          {p.isu_utama.split('\n').filter(l => l.trim()).map((line, idx) => (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                              <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
-                              <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{line}</span>
-                            </div>
-                          ))}
+                          {(() => {
+                            const lines = p.isu_utama.split('\n').filter(l => l.trim())
+                            const shown = expandedNotes.has(p.id) ? lines : lines.slice(0, NOTES_CAP)
+                            return (
+                              <>
+                                {shown.map((line, idx) => (
+                                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 1, flexShrink: 0 }}>•</span>
+                                    <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{line}</span>
+                                  </div>
+                                ))}
+                                {!expandedNotes.has(p.id) && lines.length > NOTES_CAP && (
+                                  <button
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); setExpandedNotes(prev => new Set(prev).add(p.id)) }}
+                                    style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: '1px 0 0 12px', color: 'var(--color-neutral-dark)', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}
+                                  >
+                                    +{lines.length - NOTES_CAP} lainnya
+                                  </button>
+                                )}
+                              </>
+                            )
+                          })()}
                         </div>
                       </div>
                     )}
@@ -456,7 +506,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                     </div>
                     <span style={{
                       fontSize: 9.5, fontWeight: 600,
-                      color: isOver ? '#660000' : color,
+                      color: isOver ? 'var(--color-danger)' : color,
                       backgroundColor: isOver ? 'rgba(220,38,38,0.08)' : `${color}1A`,
                       padding: '2px 7px', borderRadius: 99,
                       display: 'inline-block', marginTop: 6,

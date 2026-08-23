@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { fetchTransactions, fetchAppConfig, Transaction, invalidateCache } from '../lib/supabase'
-import { forcePageRepaint } from '../lib/forceRepaint'
+import { useRepaintOnClose } from '../lib/useRepaintOnClose'
 import { formatRupiah, formatTanggal, TRANSACTION_COLORS, getFileEmbedUrl } from '../lib/data'
 import { adminUpsertConfig } from '../lib/adminApi'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { Z_MODAL_DEEPER } from '../lib/zIndex'
 import AddTransactionModal from './AddTransactionModal'
 import EditTransactionModal from './EditTransactionModal'
 import PdfViewerModal from './PdfViewerModal'
@@ -14,8 +16,6 @@ import Dropdown from './ui/Dropdown'
 
 interface KeuanganProps {
   isAdmin?: boolean
-  selectedMonth?: string | null
-  onMonthChange?: (ym: string | null) => void
   role?: 'pbb' | 'maf' | null
 }
 
@@ -27,7 +27,7 @@ const MONTH_ABBR: Record<string, string> = {
 
 export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Masuk')
@@ -47,12 +47,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
 
   // When either info popup closes, force a repaint so the card hover behind it
   // doesn't freeze (same stale-compositor-tile issue ModalShell guards against).
-  const prevPopupOpen = useRef(false)
-  useEffect(() => {
-    const open = showDeploymentPopup || showSaldoPopup
-    if (prevPopupOpen.current && !open) forcePageRepaint()
-    prevPopupOpen.current = open
-  }, [showDeploymentPopup, showSaldoPopup])
+  useRepaintOnClose(showDeploymentPopup || showSaldoPopup)
 
   useEffect(() => {
     const load = async () => {
@@ -155,8 +150,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
 
   const filterCards = [
     { jenis: 'Masuk', label: 'Dana Masuk', value: totalMasuk, count: masukList.length, color: '#1B5E2B', bgActive: 'rgba(27,94,43,0.09)' },
-    { jenis: 'Keluar', label: 'Dana Keluar', value: totalKeluar, count: keluarList.length, color: '#660000', bgActive: 'rgba(102,0,0,0.09)' },
-    { jenis: 'Keluar PBB', label: 'Dana Keluar PBB', value: totalKeluarPBB, count: keluarPBBList.length, color: '#D97706', bgActive: 'rgba(217,119,6,0.09)' },
+    { jenis: 'Keluar', label: 'Dana Keluar', value: totalKeluar, count: keluarList.length, color: 'var(--color-neutral-dark)', bgActive: 'rgba(51,65,85,0.09)' },
+    { jenis: 'Keluar PBB', label: 'Dana Keluar PBB', value: totalKeluarPBB, count: keluarPBBList.length, color: '#B45309', bgActive: 'rgba(217,119,6,0.09)' },
   ]
 
   return (
@@ -282,7 +277,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
             borderRadius: isMobile ? 12 : 14,
             padding: isMobile ? '14px 13px' : '20px 22px',
             border: '1px solid var(--border)',
-            borderTop: `3px solid ${saldoKas >= 0 ? '#1B5E2B' : '#660000'}`,
+            borderTop: `3px solid ${saldoKas >= 0 ? '#1B5E2B' : 'var(--color-danger)'}`,
             cursor: 'pointer',
             transition: 'box-shadow 0.18s ease, transform 0.18s ease',
           }}
@@ -349,7 +344,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 700, color: isActive ? card.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: isMobile ? '0.02em' : '0.05em', marginBottom: isMobile ? 4 : 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isMobile ? card.label.replace('Dana ', '') : card.label}
               </div>
               <div style={{ fontSize: isMobile ? 12 : 19, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -421,7 +416,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: '#660000', flexShrink: 0 }} />
+                    <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: 'var(--color-neutral-dark)', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, fontWeight: 600 }}>
                       {hovered && hovered.keluar > 0 ? formatRupiah(hovered.keluar) : '—'}
                     </span>
@@ -454,7 +449,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         <div style={{
                           width: BAR_W,
                           height: keluarPct > 0 ? `${keluarPct}%` : 3,
-                          backgroundColor: keluarPct > 0 ? '#660000' : 'var(--border-subtle)',
+                          backgroundColor: keluarPct > 0 ? 'var(--color-neutral-dark)' : 'var(--border-subtle)',
                           borderRadius: '3px 3px 0 0',
                           opacity: isHov ? 1 : keluarPct > 0 ? 0.72 : 0.4,
                           transition: 'opacity 0.15s ease',
@@ -488,7 +483,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#660000', flexShrink: 0 }} />
+                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: 'var(--color-neutral-dark)', flexShrink: 0 }} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>Keluar</span>
                 </div>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 16 }}>Pengeluaran program</span>
@@ -540,7 +535,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </button>
 
               {filterJenis !== 'Semua' && (() => {
-                const color = filterJenis === 'Masuk' ? '#1B5E2B' : filterJenis === 'Keluar PBB' ? '#D97706' : '#660000'
+                const color = filterJenis === 'Masuk' ? '#1B5E2B' : filterJenis === 'Keluar PBB' ? '#B45309' : 'var(--color-neutral-dark)'
                 return (
                   <button
                     onClick={() => { setFilterJenis('Semua'); setPage(1) }}
@@ -578,7 +573,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               {paged.map(t => {
                 const isMasukTx = t.jenis_transaksi === 'Masuk'
                 const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
-                const nominalColor = isMasukTx ? '#1B5E2B' : isKeluarPBBTx ? '#D97706' : '#660000'
+                const nominalColor = isMasukTx ? '#1B5E2B' : isKeluarPBBTx ? '#B45309' : 'var(--color-neutral-dark)'
                 const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: '#fff' }
                 return (
                   <div
@@ -596,7 +591,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
-                        <div style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                        <div title={t.nama_pekerjaan || undefined} style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                           {t.nama_pekerjaan || '-'}
                         </div>
                         {t.deskripsi && (
@@ -760,7 +755,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       {showDeploymentPopup && createPortal(
         <div
           onClick={() => setShowDeploymentPopup(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: Z_MODAL_DEEPER, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
         >
           <div
             onClick={e => e.stopPropagation()}
@@ -780,7 +775,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ padding: '12px 14px', backgroundColor: 'rgba(217,119,6,0.06)', borderRadius: 10, border: '1px solid rgba(217,119,6,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Keluar PBB</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dana Keluar PBB</div>
                   <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{keluarPBBList.length} transaksi</div>
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(totalKeluarPBB)}</div>
@@ -796,7 +791,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                   <span><strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> — dana yang diterima dan dicatat langsung dalam kas Sarpras</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  <span style={{ color: '#D97706', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span style={{ color: '#B45309', fontWeight: 700, flexShrink: 0 }}>•</span>
                   <span><strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Keluar PBB</strong> — dana yang langsung disalurkan ke program tanpa melewati kas Sarpras</span>
                 </div>
               </div>
@@ -816,7 +811,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       {showSaldoPopup && createPortal(
         <div
           onClick={() => setShowSaldoPopup(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: Z_MODAL_DEEPER, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
         >
           <div
             onClick={e => e.stopPropagation()}
@@ -836,14 +831,14 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
               </div>
               <div style={{ padding: '12px 14px', backgroundColor: 'rgba(102,0,0,0.05)', borderRadius: 10, border: '1px solid rgba(102,0,0,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#660000', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Keluar Program</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Keluar Program</div>
                   <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{keluarList.length} transaksi</div>
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>−{formatRupiah(totalKeluar)}</div>
               </div>
               <div style={{ padding: '12px 14px', backgroundColor: saldoKas >= 0 ? 'rgba(27,94,43,0.06)' : 'rgba(102,0,0,0.05)', borderRadius: 10, border: `1px solid ${saldoKas >= 0 ? 'rgba(27,94,43,0.2)' : 'rgba(102,0,0,0.15)'}` }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 5 }}>Saldo Kas</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : '#660000', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: saldoKas >= 0 ? '#1B5E2B' : 'var(--color-danger)', fontVariantNumeric: 'tabular-nums' }}>{formatRupiah(saldoKas)}</div>
               </div>
             </div>
             <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
@@ -856,7 +851,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                   <span>Seluruh <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Dana Masuk</strong> yang telah diterima ke kas Sarpras</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  <span style={{ color: '#660000', fontWeight: 700, flexShrink: 0 }}>•</span>
+                  <span style={{ color: 'var(--color-neutral-dark)', fontWeight: 700, flexShrink: 0 }}>•</span>
                   <span>Dikurangi seluruh <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>pengeluaran program</strong> yang telah dicairkan</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>

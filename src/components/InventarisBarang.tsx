@@ -7,6 +7,7 @@ import {
 import { adminInsert, adminUpdate, adminDelete } from '../lib/adminApi'
 import { KONDISI_COLORS, KONDISI_BG, getDriveThumbnailUrl } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import Dropdown from './ui/Dropdown'
 import AddInventarisItemModal from './AddInventarisItemModal'
 
@@ -37,7 +38,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function InventarisBarang() {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
 
   const [items, setItems] = useState<InventarisItem[]>([])
   const [units, setUnits] = useState<InventarisUnit[]>([])
@@ -147,16 +148,16 @@ export default function InventarisBarang() {
               padding: '14px 16px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <span style={{ display: 'flex', flexShrink: 0, color: '#D97706' }}>
+            <span style={{ display: 'flex', flexShrink: 0, color: '#B45309' }}>
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </span>
-            <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: '#D97706' }}>
+            <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: '#B45309' }}>
               {overdue.length} barang belum diperiksa lebih dari {REMINDER_DAYS} hari
             </span>
-            <svg width="13" height="13" fill="none" stroke="#D97706" strokeWidth="2.4" viewBox="0 0 24 24"
+            <svg width="13" height="13" fill="none" stroke="#B45309" strokeWidth="2.4" viewBox="0 0 24 24"
               style={{ transform: showReminderList ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
               <polyline points="6 9 12 15 18 9" />
             </svg>
@@ -176,7 +177,7 @@ export default function InventarisBarang() {
                   <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
                     {item.nama_barang} <span style={{ color: 'var(--text-muted)' }}>({item.kode})</span>
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#D97706', flexShrink: 0 }}>{days} hari</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#B45309', flexShrink: 0 }}>{days} hari</span>
                 </button>
               ))}
             </div>
@@ -273,6 +274,10 @@ function ItemDetailView({
   const [deletingItem, setDeletingItem] = useState(false)
   const [bulkKondisi, setBulkKondisi] = useState<KondisiUnit>(units[0]?.kondisi ?? 'Baik')
   const [bulkSaving, setBulkSaving] = useState(false)
+  // Set only after a partial failure — narrows the next attempt to just the
+  // units that failed, instead of re-writing (harmless but wasteful) or
+  // masking which ones actually need attention.
+  const [bulkFailedIds, setBulkFailedIds] = useState<Set<string> | null>(null)
   const [confirmingChecked, setConfirmingChecked] = useState(false)
   const checkedDays = daysSince(item.last_checked_at)
 
@@ -322,12 +327,18 @@ function ItemDetailView({
   const bulkUpdate = async () => {
     setBulkSaving(true)
     setError('')
+    const targets = bulkFailedIds ? units.filter(u => bulkFailedIds.has(u.id)) : units
     const results = await Promise.all(
-      units.map(u => adminUpdate('inventaris_units', { kondisi: bulkKondisi }, u.id))
+      targets.map(u => adminUpdate('inventaris_units', { kondisi: bulkKondisi }, u.id).then(r => ({ id: u.id, error: r.error })))
     )
     setBulkSaving(false)
-    const failed = results.find(r => r.error)
-    if (failed) { setError('Gagal update sebagian unit: ' + failed.error!.message); return }
+    const failed = results.filter(r => r.error)
+    if (failed.length > 0) {
+      setBulkFailedIds(new Set(failed.map(f => f.id)))
+      setError(`Gagal update ${failed.length} dari ${targets.length} unit. Klik "Coba Lagi" untuk mengulang yang gagal saja.`)
+      return
+    }
+    setBulkFailedIds(null)
     await onChange()
   }
 
@@ -366,7 +377,7 @@ function ItemDetailView({
       </button>
 
       {error && (
-        <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: '#660000', fontSize: 12 }}>
+        <div style={{ marginBottom: 16, padding: 10, borderRadius: 8, backgroundColor: 'rgba(102,0,0,0.1)', color: 'var(--color-danger)', fontSize: 12 }}>
           {error}
         </div>
       )}
@@ -438,7 +449,7 @@ function ItemDetailView({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pengecekan Terakhir</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: checkedDays >= REMINDER_DAYS ? '#D97706' : 'var(--text-primary)' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: checkedDays >= REMINDER_DAYS ? '#B45309' : 'var(--text-primary)' }}>
                 {checkedDays} hari lalu
               </span>
               <button onClick={confirmPengecekan} disabled={confirmingChecked}
@@ -460,11 +471,11 @@ function ItemDetailView({
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ flex: 1, minWidth: 130 }}>
               <label style={labelStyle}>Kondisi</label>
-              <Dropdown value={bulkKondisi} options={KONDISI_OPTIONS} onChange={v => setBulkKondisi(v as KondisiUnit)} fontSize={13} />
+              <Dropdown value={bulkKondisi} options={KONDISI_OPTIONS} onChange={v => { setBulkKondisi(v as KondisiUnit); setBulkFailedIds(null) }} fontSize={13} />
             </div>
             <button onClick={bulkUpdate} disabled={bulkSaving}
-              style={{ padding: '9px 16px', borderRadius: 9, border: 'none', backgroundColor: 'var(--blue)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: bulkSaving ? 0.7 : 1, whiteSpace: 'nowrap' }}>
-              {bulkSaving ? 'Menerapkan...' : `Terapkan ke ${units.length} Unit`}
+              style={{ padding: '9px 16px', borderRadius: 9, border: 'none', backgroundColor: bulkFailedIds ? 'var(--color-danger)' : 'var(--blue)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: bulkSaving ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+              {bulkSaving ? 'Menerapkan...' : bulkFailedIds ? `Coba Lagi (${bulkFailedIds.size} Unit)` : `Terapkan ke ${units.length} Unit`}
             </button>
           </div>
         </div>

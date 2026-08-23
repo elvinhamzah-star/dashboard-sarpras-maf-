@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useEscapeKey } from '../lib/useEscapeKey'
 import { adminUpdate } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
 import { Transaction } from '../lib/supabase'
+import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
@@ -36,7 +36,6 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function EditTransactionModal({ transaction, onClose, onSuccess }: EditTransactionModalProps) {
-  useEscapeKey(onClose)
   const [tanggal, setTanggal] = useState(transaction.tanggal ?? '')
   const [pekerjaan, setPekerjaan] = useState(transaction.nama_pekerjaan ?? '')
   const [keterangan, setKeterangan] = useState(transaction.deskripsi ?? '')
@@ -98,7 +97,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
         {/* Tanggal */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Tanggal</label>
-          <DatePicker value={tanggal} onChange={setTanggal} zIndex={1300} />
+          <DatePicker value={tanggal} onChange={setTanggal} zIndex={Z_DROPDOWN_IN_MODAL} />
         </div>
 
         {/* Nama Pekerjaan */}
@@ -179,7 +178,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
             <Dropdown
               value={sumber}
               onChange={setSumber}
-              zIndex={1300}
+              zIndex={Z_DROPDOWN_IN_MODAL}
               options={[
                 { value: 'PBB', label: 'PBB' },
                 { value: 'Hamzah', label: 'Hamzah' },

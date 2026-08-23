@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
-import { formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
+import { STATUS_COLORS, STATUS_BG, formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
+import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { isRestrictedForRole } from '../lib/access'
+import { Z_MODAL_POPUP } from '../lib/zIndex'
 import BerandaAlerts from './BerandaAlerts'
 import BerandaWeekOverWeek from './BerandaWeekOverWeek'
 import BerandaChart from './BerandaChart'
 import MetricDetailModal, { MetricModalType } from './MetricDetailModal'
 import PekerjaanDetail from './PekerjaanDetail'
 import ModalShell from './ModalShell'
+import ModalHeader from './ModalHeader'
+import AksesDibatasiModal from './AksesDibatasiModal'
 import FilterSummaryBar from './FilterSummaryBar'
 
 interface BerandaProps {
@@ -91,6 +96,13 @@ const PekerjaanIcon = ({ type }: { type: string }) => {
   return icons[type] || null
 }
 
+// Activates on Enter/Space, matching native <button> behavior — for the
+// div-as-button cards below that can't be real <button> elements (they need
+// layout the button element fights, e.g. block-level grid children).
+const onActivateKey = (fn: () => void) => (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn() }
+}
+
 const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: boolean; children: ReactNode }) => (
   <div
     style={{
@@ -122,7 +134,7 @@ const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: 
 
 export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed, onOpenDetail, initialStatusTab, onInitialStatusConsumed }: BerandaProps) {
   const width = useWindowWidth()
-  const isMobile = width < 600
+  const isMobile = width < MOBILE_BREAKPOINT
   const [programs, setPrograms] = useState<Program[]>([])
   const [rawTransactions, setRawTransactions] = useState<Transaction[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
@@ -268,7 +280,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     const n = (t.nama_pekerjaan || '').toLowerCase()
     return n.includes('man power') || n.includes('honor')
   }
-  const visiblePrograms = role === 'maf' ? programs.filter(p => p.jenis_pekerjaan !== 'Operasional') : programs
+  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
   const visibleTransactions = role === 'maf' ? rawTransactions.filter(t => !isManPowerTx(t)) : rawTransactions
 
   const displayPrograms = visiblePrograms
@@ -316,7 +328,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(27,94,43,0.08)',
       iconColor: 'rgba(27,94,43,0.65)',
       valueColor: 'var(--text-primary)',
-      trend: `${penyerapan}% Terserap`,
+      // Was "${penyerapan}% Terserap" — duplicated the dedicated Penyerapan
+      // card below verbatim. Shows program count with realized spend instead.
+      trend: `${displayPrograms.filter(p => (p.realisasi_terkini || 0) > 0).length} Pekerjaan Terealisasi`,
       accentColor: '#1B5E2B',
     },
     {
@@ -327,7 +341,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconColor: 'rgba(217,119,6,0.65)',
       valueColor: 'var(--text-primary)',
       trend: 'Belum Digunakan',
-      accentColor: '#D97706',
+      // #B45309 (not the lighter #D97706 used elsewhere for tinted
+      // backgrounds/borders) — this becomes the card's text color on hover,
+      // and #D97706 as text on white fails WCAG AA contrast (3.02:1 < 4.5:1).
+      accentColor: '#B45309',
     },
     {
       label: 'Penyerapan',
@@ -365,7 +382,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(27,94,43,0.08)',
       iconColor: 'rgba(27,94,43,0.65)',
       iconType: 'Selesai',
-      accentColor: '#1B5E2B',
+      accentColor: STATUS_COLORS['Selesai'],
       onClick: () => { setPekerjaanTab('Selesai'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
@@ -378,7 +395,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(26,111,232,0.08)',
       iconColor: 'rgba(26,111,232,0.6)',
       iconType: 'On Going',
-      accentColor: '#1A6FE8',
+      accentColor: STATUS_COLORS['On Going'],
       onClick: () => { setPekerjaanTab('On Going'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
@@ -391,7 +408,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(217,119,6,0.08)',
       iconColor: 'rgba(217,119,6,0.65)',
       iconType: 'On Hold',
-      accentColor: '#D97706',
+      accentColor: STATUS_COLORS['On Hold'],
       onClick: () => { setPekerjaanTab('On Hold'); setPopupDetailId(null); setShowDetail(true) },
     },
     {
@@ -401,31 +418,73 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       color: 'var(--text-primary)',
       barColor: 'var(--blue)',
       trackColor: 'rgba(0,0,0,0.06)',
-      iconBg: 'rgba(102,0,0,0.08)',
-      iconColor: 'rgba(102,0,0,0.55)',
+      iconBg: 'rgba(51,65,85,0.08)',
+      iconColor: 'rgba(51,65,85,0.7)',
       iconType: 'Perencanaan',
-      accentColor: '#660000',
+      accentColor: STATUS_COLORS['Perencanaan'],
       onClick: () => { setPekerjaanTab('Perencanaan'); setPopupDetailId(null); setShowDetail(true) },
     },
   ]
 
   if (loading) {
+    // Mirrors the loaded layout's actual sections/grid/padding (not a generic
+    // 4-card guess) so there's no big layout jump once data arrives — the
+    // real SectionPanel + real header are reused as-is since their size
+    // doesn't depend on data; only the numeric content inside is placeholder.
+    const skelCard = (key: number) => (
+      <div key={key} style={{ backgroundColor: 'var(--surface-raised)', borderRadius: 12, padding: isMobile ? '12px 13px' : '18px 20px', border: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 9 }}>
+            <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: 'var(--surface-subtle)' }} />
+            <div style={{ width: 40, height: isMobile ? 9.5 : 11, borderRadius: 4, backgroundColor: 'var(--surface-subtle)' }} />
+          </div>
+          <div style={{ width: '65%', height: isMobile ? 15 : 20, borderRadius: 5, backgroundColor: 'var(--surface-subtle)' }} />
+          <div style={{ width: '45%', height: isMobile ? 10 : 11, borderRadius: 4, backgroundColor: 'var(--surface-subtle)' }} />
+        </div>
+      </div>
+    )
     return (
-      <div style={{ padding: '28px 28px 40px' }}>
-        {/* Skeleton header */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ width: 240, height: 24, borderRadius: 8, backgroundColor: 'var(--border-subtle)', marginBottom: 8 }} />
-          <div style={{ width: 120, height: 14, borderRadius: 6, backgroundColor: 'var(--surface-hover)' }} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} style={{ backgroundColor: 'var(--card)', borderRadius: 14, padding: 20, height: 110, border: '1px solid var(--border-subtle)' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: 'var(--surface-subtle)', marginBottom: 14 }} />
-              <div style={{ width: '60%', height: 11, borderRadius: 5, backgroundColor: 'var(--surface-subtle)', marginBottom: 8 }} />
-              <div style={{ width: '80%', height: 20, borderRadius: 6, backgroundColor: 'var(--surface-subtle)' }} />
+      <div style={{ padding: isMobile ? '16px 14px 48px' : '28px 28px 48px' }}>
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+                Dashboard Sarpras MAF
+              </h1>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+                Ringkasan anggaran, realisasi &amp; progres pekerjaan
+              </p>
             </div>
-          ))}
-        </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400, flexShrink: 0, whiteSpace: 'nowrap', marginTop: 4 }}>
+              {getTodayFormatted()}
+            </span>
+          </div>
+        )}
+
+        <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
+            {[0, 1, 2, 3].map(skelCard)}
+          </div>
+        </SectionPanel>
+
+        <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
+          <div style={{ backgroundColor: 'var(--surface-raised)', borderRadius: 12, padding: isMobile ? '14px 16px' : '18px 24px', border: '1px solid var(--border-subtle)', marginBottom: isMobile ? 10 : 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+                <div style={{ width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, backgroundColor: 'var(--surface-subtle)' }} />
+                <div style={{ width: 36, height: isMobile ? 17 : 22, borderRadius: 5, backgroundColor: 'var(--surface-subtle)' }} />
+              </div>
+              <div style={{ flex: 1, height: isMobile ? 7 : 9, borderRadius: 99, backgroundColor: 'var(--surface-subtle)' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
+            {[0, 1, 2, 3].map(skelCard)}
+          </div>
+        </SectionPanel>
+
+        <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+          <div style={{ height: isMobile ? 180 : 240, borderRadius: 10, backgroundColor: 'var(--surface-subtle)' }} />
+        </SectionPanel>
       </div>
     )
   }
@@ -477,11 +536,19 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           <div
             key={card.label}
             className="metric-summary-card"
+            role="button"
+            tabIndex={0}
+            aria-label={`Lihat detail ${card.label}`}
             onClick={() => {
               hoveredSummaryIdxRef.current = null
               setHoveredSummaryIdx(null)
               setActiveModal(card.iconType as MetricModalType)
             }}
+            onKeyDown={onActivateKey(() => {
+              hoveredSummaryIdxRef.current = null
+              setHoveredSummaryIdx(null)
+              setActiveModal(card.iconType as MetricModalType)
+            })}
             style={{
               backgroundColor: hoveredSummaryIdx === idx ? card.accentColor + '0D' : 'var(--surface-raised)',
               borderRadius: 12,
@@ -514,10 +581,13 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {<SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
       {(() => {
         const card = pekerjaanCards[0]
-        const activeByTab = showDetail && pekerjaanTab === card.label
         return (
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="Lihat detail progress pekerjaan"
             onClick={() => setShowProgressModal(true)}
+            onKeyDown={onActivateKey(() => setShowProgressModal(true))}
             style={{
               backgroundColor: 'var(--surface-raised)',
               borderRadius: 12,
@@ -552,7 +622,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   }} />
                 </div>
               </div>
-              <div style={{ fontSize: isMobile ? 8.5 : 9.5, color: 'var(--text-muted)', marginTop: 6 }}>
+              <div style={{ fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)', marginTop: 6 }}>
                 Dari Total {visiblePrograms.length} Pekerjaan
               </div>
             </div>
@@ -568,7 +638,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           return (
             <div
               key={card.label}
+              role="button"
+              tabIndex={0}
+              aria-label={`Lihat daftar pekerjaan ${card.label}`}
               onClick={card.onClick}
+              onKeyDown={onActivateKey(card.onClick)}
               style={{
                 backgroundColor: isHovered ? card.accentColor + '0D' : activeByTab ? 'rgba(0,0,0,0.03)' : 'var(--surface-raised)',
                 borderRadius: 12,
@@ -608,38 +682,35 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         <ModalShell
           onClose={() => setShowProgressModal(false)}
           maxWidth={960}
-          zIndex={300}
-          backdropColor="rgba(10,22,40,0.5)"
+          zIndex={Z_MODAL_POPUP}
         >
-          {/* Header */}
-          <div style={{ padding: isMobile ? '4px 16px 12px' : '18px 20px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <div>
-              <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Progres Pekerjaan</div>
-              <div style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                {progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{progressLapangan}%</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowProgressModal(false)}
-              style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
-            >
-              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+          <ModalHeader
+            title="Progres Pekerjaan"
+            subtitle={<>{progressPrograms.length} pekerjaan · progres rata-rata <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{progressLapangan}%</span></>}
+            onClose={() => setShowProgressModal(false)}
+            isMobile={isMobile}
+            padding={isMobile ? '4px 16px 12px' : '18px 20px 14px'}
+          />
           {/* List program */}
           <div style={{ padding: isMobile ? '12px 14px 22px' : '14px 18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
               const pct = getEffectiveProgress(p)
               const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
-              const statusColors: Record<string, string> = { 'On Going': '#1A6FE8', 'On Hold': '#D97706', 'Selesai': '#1B5E2B', 'Perencanaan': '#660000' }
-              const statusBg: Record<string, string> = { 'On Going': 'rgba(26,111,232,0.1)', 'On Hold': 'rgba(217,119,6,0.1)', 'Selesai': 'rgba(27,94,43,0.1)', 'Perencanaan': 'rgba(102,0,0,0.1)' }
-              const color = statusColors[p.status] || 'var(--blue)'
+              const color = STATUS_COLORS[p.status] || 'var(--blue)'
               return (
-                <div key={p.id} style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 12, padding: isMobile ? '13px 14px' : '14px 16px', border: '1px solid var(--border-subtle)' }}>
+                <div
+                  key={p.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Lihat detail ${p.nama_pekerjaan}`}
+                  onClick={() => { setShowProgressModal(false); setDetailProgramId(p.id) }}
+                  onKeyDown={onActivateKey(() => { setShowProgressModal(false); setDetailProgramId(p.id) })}
+                  style={{ backgroundColor: 'var(--surface-subtle)', borderRadius: 12, padding: isMobile ? '13px 14px' : '14px 16px', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>{p.id}</span>
                     <span style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600, color: 'var(--text-primary)', flex: 1, lineHeight: 1.3 }}>{p.nama_pekerjaan}</span>
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: color, backgroundColor: statusBg[p.status], padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>{p.status}</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: color, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>{p.status}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ flex: 1, height: 5, borderRadius: 99, backgroundColor: 'var(--border-subtle)', overflow: 'hidden' }}>
@@ -662,9 +733,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         <ModalShell
           onClose={() => { setShowDetail(false); setPopupDetailId(null) }}
           maxWidth={isMobile ? 600 : 1000}
-          zIndex={250}
+          zIndex={Z_MODAL_POPUP}
           contentScroll={false}
-          backdropColor="rgba(10,22,40,0.68)"
         >
           {close => {
             const tabCounts: Record<string, number> = {
@@ -709,7 +779,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       <button
                         onClick={() => { setShowDetail(false); setPopupDetailId(null) }}
                         style={{
-                          marginLeft: 'auto', width: 30, height: 30, borderRadius: 7,
+                          marginLeft: 'auto', width: 40, height: 40, borderRadius: 10,
                           border: '1px solid var(--border)', backgroundColor: 'var(--card)',
                           color: 'var(--text-muted)', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -724,6 +794,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       <PekerjaanDetail
                         programId={popupDetailId}
                         isAdmin={isAdmin}
+                        role={role}
                         embedded
                         onBack={() => setPopupDetailId(null)}
                         onNavigate={onNavigate ? (page, pid, cat) => {
@@ -738,37 +809,13 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   /* ── View 1: Program List with filter tabs ── */
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                     {/* Header */}
-                    <div style={{
-                      padding: isMobile ? '18px 16px 16px' : '22px 28px 18px',
-                      flexShrink: 0,
-                      borderBottom: '1px solid var(--border-subtle)',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                              {tabTitles[pekerjaanTab]}
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                            {tabCounts[pekerjaanTab]} pekerjaan
-                          </div>
-                        </div>
-                        <button
-                          onClick={close}
-                          style={{
-                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                            border: '1px solid var(--border)', backgroundColor: 'var(--card)',
-                            color: 'var(--text-muted)', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                        >
-                          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
+                    <ModalHeader
+                      title={tabTitles[pekerjaanTab]}
+                      subtitle={`${tabCounts[pekerjaanTab]} pekerjaan`}
+                      onClose={close}
+                      isMobile={isMobile}
+                      padding={isMobile ? '18px 16px 16px' : '22px 28px 18px'}
+                    />
                     {/* Summary bar — non-scrollable, always visible at top */}
                     <FilterSummaryBar
                       status={pekerjaanTab}
@@ -795,7 +842,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         onExternalTabChange={setPekerjaanTab}
                         onProgramClick={id => {
                           const prog = programs.find(p => p.id === id)
-                          if (role === 'maf' && prog?.jenis_pekerjaan === 'Operasional') {
+                          if (prog && isRestrictedForRole(prog, role)) {
                             setShowBlockedModal(true)
                             return
                           }
@@ -819,6 +866,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           totalAnggaran={totalAnggaran}
           totalRealisasi={totalRealisasi}
           onClose={() => setActiveModal(null)}
+          onProgramClick={id => { setActiveModal(null); setDetailProgramId(id) }}
         />
       )}
 
@@ -826,9 +874,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
         <ModalShell
           onClose={() => setDetailProgramId(null)}
           maxWidth={820}
-          zIndex={200}
+          zIndex={Z_MODAL_POPUP}
           panelColor="var(--bg)"
-          backdropColor="rgba(10,22,40,0.6)"
         >
           {close => (
             <div style={{ position: 'relative' }}>
@@ -837,7 +884,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                   onClick={close}
                   style={{
                     position: 'absolute', top: 14, right: 14, zIndex: 10,
-                    width: 32, height: 32, borderRadius: 8,
+                    width: 40, height: 40, borderRadius: 10,
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--card)',
                     color: 'var(--text-muted)',
@@ -853,6 +900,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               <PekerjaanDetail
                 programId={detailProgramId}
                 isAdmin={isAdmin}
+                role={role}
                 embedded
                 onBack={close}
                 onNavigate={onNavigate ? (page, pid, cat) => {
@@ -866,32 +914,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       )}
 
       {/* Modal: Akses Dibatasi (MAF user klik Man Power) */}
-      {showBlockedModal && (
-        <div
-          onClick={() => setShowBlockedModal(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10,22,40,0.5)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ backgroundColor: 'var(--card)', borderRadius: 16, padding: '32px 28px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(10,22,40,0.2)' }}
-          >
-            <div style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'rgba(102,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="24" height="24" fill="none" stroke="#660000" strokeWidth="1.75" viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Akses Dibatasi</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 24 }}>Butuh akses admin untuk melihat data ini.</div>
-            <button
-              onClick={() => setShowBlockedModal(false)}
-              style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Oke
-            </button>
-          </div>
-        </div>
-      )}
+      {showBlockedModal && <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />}
     </div>
   )
 }
