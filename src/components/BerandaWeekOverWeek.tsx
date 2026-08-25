@@ -27,6 +27,7 @@ interface Props {
   /** Spacious mode: lebih banyak padding & gap untuk tampilan dalam popup lebar */
   spacious?: boolean
   role?: 'pbb' | 'maf' | null
+  isAdmin?: boolean
 }
 
 const TABS = ['On Going', 'On Hold', 'Selesai', 'Perencanaan']
@@ -63,7 +64,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role }: Props) {
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role, isAdmin }: Props) {
   const isMaf = role === 'maf'
   const [internalTab, setInternalTab] = useState(isMaf ? 'Selesai' : 'On Going')
   const activeTab = externalTab ?? internalTab
@@ -117,9 +118,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       wowMap[p.id] = { delta: current - prev, prev }
     })
 
-  // MAF tidak boleh melihat pekerjaan Man Power (Operasional) — sembunyikan
-  // dari hitungan status maupun daftar per tab, konsisten dgn WoW & LaporanAset.
-  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
+  // Man Power tampil di list untuk semua user — click diblokir via onProgramClick.
+  const visiblePrograms = programs
 
   const countByStatus: Record<string, number> = {}
   visiblePrograms.forEach(p => {

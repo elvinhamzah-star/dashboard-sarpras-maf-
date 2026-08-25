@@ -22,7 +22,7 @@ export default function AksesDibatasiModal({ onClose }: Props) {
           </svg>
         </div>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
-          Akses Dibatasi
+          Butuh Akses Admin
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 24 }}>
           Butuh akses admin untuk melihat data ini.

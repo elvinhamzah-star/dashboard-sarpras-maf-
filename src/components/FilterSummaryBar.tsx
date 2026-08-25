@@ -32,6 +32,7 @@ interface Props {
   compact?: boolean
   isMobile?: boolean
   role?: 'pbb' | 'maf' | null
+  isAdmin?: boolean
 }
 
 export default function FilterSummaryBar({
@@ -42,11 +43,11 @@ export default function FilterSummaryBar({
   compact = false,
   isMobile = false,
   role,
+  isAdmin,
 }: Props) {
   if (programs.length === 0 || !status) return null
-  // MAF: jangan pernah memunculkan uang Man Power (Operasional) di ringkasan
-  // agregat apa pun — kecualikan dari seluruh perhitungan untuk role maf.
-  const vprograms = programs.filter(p => !isRestrictedForRole(p, role))
+  // Non-admin users never see Man Power (Operasional) in aggregate summaries.
+  const vprograms = programs.filter(p => !isRestrictedForRole(p, role, isAdmin))
   if (vprograms.length === 0) return null
   // MAF: hide semua keuangan untuk Perencanaan — hanya tampil Jumlah Program
   if (role === 'maf' && status === 'Perencanaan') {

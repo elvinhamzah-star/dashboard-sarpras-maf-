@@ -352,7 +352,7 @@ function DashboardApp() {
       case 'riwayat':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <LaporanProgress />
       case 'laporan-aset':
-        return <LaporanAset role={role} />
+        return <LaporanAset role={role} isAdmin={isAdmin} />
       case 'inventaris':
         return (role === 'maf' || !isAdmin) ? <Beranda isAdmin={isAdmin} role={role} /> : <InventarisBarang />
       default:

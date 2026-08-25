@@ -72,7 +72,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   }, [])
 
   const handleCardClick = (p: Program) => {
-    if (isRestrictedForRole(p, role)) {
+    if (isRestrictedForRole(p, role, isAdmin)) {
       setShowBlockedModal(true)
       return
     }
@@ -236,7 +236,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
             const d = getDerived(p)
             const pct = d.progress_percent
             const color = STATUS_COLORS[p.status] || 'var(--blue)'
-            const isLocked = isRestrictedForRole(p, role)
+            const isLocked = isRestrictedForRole(p, role, isAdmin)
             const vendor = getVendorDisplay(p)
             const showBar = p.status === 'On Going' || p.status === 'On Hold'
             return (
@@ -245,7 +245,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                 className={isLocked ? undefined : 'pekerjaan-row'}
                 role="button"
                 tabIndex={0}
-                aria-label={isLocked ? `${p.nama_pekerjaan} — akses dibatasi` : `Lihat detail ${p.nama_pekerjaan}`}
+                aria-label={isLocked ? `${p.nama_pekerjaan} — butuh akses admin` : `Lihat detail ${p.nama_pekerjaan}`}
                 onClick={() => handleCardClick(p)}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(p) }

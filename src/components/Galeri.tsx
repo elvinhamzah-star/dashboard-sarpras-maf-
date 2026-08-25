@@ -263,7 +263,7 @@ export default function Galeri({ isAdmin = false, role, initialProgramId, onExit
   const filteredDocs = docs.filter(doc => {
     const prog = programs.find(p => p.id === doc.program_id)
     if (prog?.status === 'Perencanaan') return false
-    if (prog && isRestrictedForRole(prog, role)) return false
+    if (prog && isRestrictedForRole(prog, role, isAdmin)) return false
     if (filterProgram !== 'Semua' && doc.program_id !== filterProgram) return false
     return true
   })
@@ -354,7 +354,7 @@ export default function Galeri({ isAdmin = false, role, initialProgramId, onExit
 
   // MAF must never see Man Power / Operasional documentation — exclude before
   // any other filtering, same pattern as visiblePrograms in Beranda.tsx.
-  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
+  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role, isAdmin))
 
   const filteredProgramList = visiblePrograms
     .filter(p => p.status !== 'Perencanaan' && docs.some(d => d.program_id === p.id))

@@ -12,6 +12,7 @@ import EditTransactionModal from './EditTransactionModal'
 import PdfViewerModal from './PdfViewerModal'
 import SaldoPekerjaanPanel from './SaldoPekerjaanPanel'
 import PengeluaranPerPekerjaanModal from './PengeluaranPerPekerjaanModal'
+import AksesDibatasiModal from './AksesDibatasiModal'
 import Dropdown from './ui/Dropdown'
 
 interface KeuanganProps {
@@ -37,6 +38,7 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [viewingBukti, setViewingBukti] = useState<{ url: string; name: string } | null>(null)
+  const [showBuktiAdminRequired, setShowBuktiAdminRequired] = useState(false)
   const [showRiwayat, setShowRiwayat] = useState(true)
   const [togglingRiwayat, setTogglingRiwayat] = useState(false)
   const [hoveredChartIdx, setHoveredChartIdx] = useState<number | null>(null)
@@ -76,8 +78,8 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
     return n.includes('man power') || n.includes('honor')
   }
 
-  // MAF must never see Man Power / Operasional finances in any total.
-  const visibleTx = role === 'maf' ? transactions.filter(t => !isManPowerTx(t)) : transactions
+  // All transactions visible to all users — Man Power Bukti button is gated per row.
+  const visibleTx = transactions
 
   const masukList = visibleTx.filter(t => t.jenis_transaksi === 'Masuk')
   const keluarList = visibleTx.filter(t => t.jenis_transaksi === 'Keluar')
@@ -617,6 +619,10 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
                         {t.link_bukti && (
                           <button
                             onClick={() => {
+                              if (isManPowerTx(t) && !isAdmin) {
+                                setShowBuktiAdminRequired(true)
+                                return
+                              }
                               const rawUrl = t.link_bukti!
                               const url = getFileEmbedUrl(rawUrl) ?? rawUrl
                               const name = t.nama_pekerjaan || 'Bukti Transaksi'
@@ -738,6 +744,10 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
           name={viewingBukti.name}
           onClose={() => setViewingBukti(null)}
         />
+      )}
+
+      {showBuktiAdminRequired && (
+        <AksesDibatasiModal onClose={() => setShowBuktiAdminRequired(false)} />
       )}
 
       {showPengeluaranModal && (

@@ -107,7 +107,7 @@ interface ProgramRow {
   totalBiaya: number
 }
 
-export default function LaporanAset({ role }: { role?: 'pbb' | 'maf' | null }) {
+export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | null; isAdmin?: boolean }) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
 
@@ -124,7 +124,7 @@ export default function LaporanAset({ role }: { role?: 'pbb' | 'maf' | null }) {
 
   // Split: Selesai dengan data vs belum diisi (Man Power disembunyikan untuk MAF)
   const selesai = programs.filter(p =>
-    p.status === 'Selesai' && !isRestrictedForRole(p, role)
+    p.status === 'Selesai' && !isRestrictedForRole(p, role, isAdmin)
   )
   const withData  = selesai.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
   const noData    = selesai.filter(p => (p.hasil_rincian?.length ?? 0) === 0)

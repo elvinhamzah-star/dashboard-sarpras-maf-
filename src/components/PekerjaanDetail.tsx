@@ -303,7 +303,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   // detail, regardless of which caller/entry path got us here. Callers already
   // check isRestrictedForRole before navigating, but this is the last line of
   // defense so a future navigation path can't silently skip the restriction.
-  if (isRestrictedForRole(program, role)) {
+  if (isRestrictedForRole(program, role, isAdmin)) {
     return (
       <div style={{ padding: 24 }}>
         {!embedded && (
@@ -326,7 +326,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
             </svg>
           </div>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
-            Akses Dibatasi
+            Butuh Akses Admin
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
             Butuh akses admin untuk melihat data ini.

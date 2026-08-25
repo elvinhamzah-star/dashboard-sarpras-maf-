@@ -280,8 +280,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
     const n = (t.nama_pekerjaan || '').toLowerCase()
     return n.includes('man power') || n.includes('honor')
   }
-  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role))
-  const visibleTransactions = role === 'maf' ? rawTransactions.filter(t => !isManPowerTx(t)) : rawTransactions
+  const visiblePrograms = programs.filter(p => !isRestrictedForRole(p, role, isAdmin))
+  const visibleTransactions = !isAdmin ? rawTransactions.filter(t => !isManPowerTx(t)) : rawTransactions
 
   const displayPrograms = visiblePrograms
 
@@ -824,12 +824,13 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       transactions={visibleTransactions}
                       compact
                       isMobile={isMobile}
+                      isAdmin={isAdmin}
                     />
 
                     {/* Scrollable program list */}
                     <div style={{ overflowY: 'auto', flex: 1, overscrollBehavior: 'contain' }}>
                       <BerandaWeekOverWeek
-                        programs={displayPrograms}
+                        programs={programs}
                         snapshots={snapshots}
                         subPrograms={subPrograms}
                         rencanaMap={rencanaMap}
@@ -840,9 +841,10 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         spacious
                         externalTab={pekerjaanTab}
                         onExternalTabChange={setPekerjaanTab}
+                        isAdmin={isAdmin}
                         onProgramClick={id => {
                           const prog = programs.find(p => p.id === id)
-                          if (prog && isRestrictedForRole(prog, role)) {
+                          if (prog && isRestrictedForRole(prog, role, isAdmin)) {
                             setShowBlockedModal(true)
                             return
                           }
