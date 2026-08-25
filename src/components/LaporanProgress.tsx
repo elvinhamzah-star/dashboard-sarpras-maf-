@@ -38,10 +38,16 @@ interface Activity {
   progressStart: number|null; progressEnd: number|null; progressDelta: number; realisasiAtEnd: number|null
 }
 
-function computeActivity(program: Program, snaps: ProgramSnapshot[], start: string, end: string): Activity|null {
+function computeActivity(program: Program, snaps: ProgramSnapshot[], start: string, end: string): Activity {
   const own = snaps.filter(s=>s.program_id===program.id).sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date))
   const inPeriod = own.filter(s=>s.snapshot_date>=start&&s.snapshot_date<=end)
-  if (inPeriod.length===0) return null
+  // No snapshot in period — use current program state, no delta
+  if (inPeriod.length===0) return {
+    program, statusAtEnd: program.status,
+    becameSelesai: false,
+    progressStart: null, progressEnd: program.progress_percent??null,
+    progressDelta: 0, realisasiAtEnd: program.realisasi_terkini??null,
+  }
   const before = own.filter(s=>s.snapshot_date<start)
   const last = inPeriod[inPeriod.length-1]
   const baseline = before.length>0?before[before.length-1]:inPeriod[0]
@@ -149,7 +155,7 @@ export default function LaporanProgress() {
   const danaKeluar  = txsInPeriod.filter(t=>t.jenis_transaksi!=='Masuk').reduce((s,t)=>s+(t.nominal||0),0)
   const net         = danaMasuk - danaKeluar
 
-  const activities  = programs.map(p=>computeActivity(p,snapshots,rangeStart,rangeEnd)).filter((a):a is Activity=>a!==null)
+  const activities  = programs.map(p=>computeActivity(p,snapshots,rangeStart,rangeEnd))
   const selesaiList = activities.filter(a=>a.becameSelesai)
   const bergerakList= activities.filter(a=>!a.becameSelesai)
 
@@ -209,11 +215,11 @@ export default function LaporanProgress() {
           <div style={secHead}>Gambaran Keseluruhan</div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
 
-            {/* Penyerapan */}
+            {/* Total Realisasi */}
             <div style={{ ...card, position:'relative', overflow:'hidden' }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Total Penyerapan</div>
-              <div style={{ fontSize:isMobile?20:24, fontWeight:800, color:'var(--blue)', marginTop:4, letterSpacing:'-0.03em' }}>{penyerapanPct}%</div>
-              <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:2 }}>{formatRupiahShort(totalRealisasi)} dari {formatRupiahShort(totalAnggaran)}</div>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Total Realisasi</div>
+              <div style={{ fontSize:isMobile?18:21, fontWeight:800, color:'var(--blue)', marginTop:4, letterSpacing:'-0.02em' }}>{formatRupiahShort(totalRealisasi)}</div>
+              <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:2 }}>{penyerapanPct}% dari {formatRupiahShort(totalAnggaran)}</div>
               {/* progress bar */}
               <div style={{ position:'absolute', bottom:0, left:0, right:0, height:3, backgroundColor:'var(--border-subtle)' }}>
                 <div style={{ height:'100%', width:`${Math.min(penyerapanPct,100)}%`, backgroundColor:'var(--blue)', transition:'width 0.5s ease' }}/>
