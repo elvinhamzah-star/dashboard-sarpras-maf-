@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { verifyPin, setAdminPin } from '../lib/adminApi'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
+import { Z_ALERT_OVERLAY } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 
 interface Props {
@@ -39,7 +40,7 @@ export default function ManPowerGateModal({ onClose, onUnlock }: Props) {
   const canSubmit = pin.length === 4 && !checking
 
   return (
-    <ModalShell onClose={onClose} maxWidth={380}>
+    <ModalShell onClose={onClose} maxWidth={380} zIndex={Z_ALERT_OVERLAY}>
       {close => (
         <div style={{ padding: '32px 28px 36px', textAlign: 'center' }}>
           {/* Icon */}
