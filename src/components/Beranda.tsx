@@ -285,8 +285,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
   const displayPrograms = visiblePrograms
 
-  const totalAnggaran = visiblePrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const totalRealisasi = visibleTransactions
+  const totalAnggaran = programs.reduce((s, p) => s + (p.total_anggaran || 0), 0)
+  const totalRealisasi = rawTransactions
     .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
     .reduce((s, t) => s + (t.nominal || 0), 0)
   const totalSisa = totalAnggaran - totalRealisasi
@@ -318,7 +318,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       iconBg: 'rgba(26,111,232,0.08)',
       iconColor: 'rgba(26,111,232,0.6)',
       valueColor: 'var(--text-primary)',
-      trend: `${displayPrograms.length} Pekerjaan`,
+      trend: `${programs.length} Pekerjaan`,
       accentColor: '#1A6FE8',
     },
     {
@@ -330,7 +330,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       valueColor: 'var(--text-primary)',
       // Was "${penyerapan}% Terserap" — duplicated the dedicated Penyerapan
       // card below verbatim. Shows program count with realized spend instead.
-      trend: `${displayPrograms.filter(p => (p.realisasi_terkini || 0) > 0).length} Pekerjaan Terealisasi`,
+      trend: `${programs.filter(p => (p.realisasi_terkini || 0) > 0).length} Pekerjaan Terealisasi`,
       accentColor: '#1B5E2B',
     },
     {
@@ -623,7 +623,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                 </div>
               </div>
               <div style={{ fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)', marginTop: 6 }}>
-                Dari Total {visiblePrograms.length} Pekerjaan
+                Dari Total {programs.length} Pekerjaan
               </div>
             </div>
           </div>
