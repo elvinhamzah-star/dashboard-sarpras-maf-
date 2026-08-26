@@ -13,11 +13,13 @@ import PekerjaanDetail from './PekerjaanDetail'
 import ModalShell from './ModalShell'
 import ModalHeader from './ModalHeader'
 import AksesDibatasiModal from './AksesDibatasiModal'
+import ManPowerGateModal from './ManPowerGateModal'
 import FilterSummaryBar from './FilterSummaryBar'
 
 interface BerandaProps {
   isAdmin: boolean
   role: 'pbb' | 'maf' | null
+  onAdminUnlock?: () => void
   onNavigate?: (page: string, programId?: string, category?: string) => void
   initialDetailId?: string | null
   onInitialDetailConsumed?: () => void
@@ -132,7 +134,7 @@ const SectionPanel = ({ label, isMobile, children }: { label: string; isMobile: 
   </div>
 )
 
-export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed, onOpenDetail, initialStatusTab, onInitialStatusConsumed }: BerandaProps) {
+export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, onInitialDetailConsumed, onOpenDetail, initialStatusTab, onInitialStatusConsumed, onAdminUnlock }: BerandaProps) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
   const [programs, setPrograms] = useState<Program[]>([])
@@ -916,7 +918,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       )}
 
       {/* Modal: Akses Dibatasi (MAF user klik Man Power) */}
-      {showBlockedModal && <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />}
+      {showBlockedModal && (
+        onAdminUnlock
+          ? <ManPowerGateModal onClose={() => setShowBlockedModal(false)} onUnlock={onAdminUnlock} />
+          : <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />
+      )}
     </div>
   )
 }

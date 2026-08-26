@@ -7,6 +7,7 @@ import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { isRestrictedForRole } from '../lib/access'
 import FilterSummaryBar from './FilterSummaryBar'
 import AksesDibatasiModal from './AksesDibatasiModal'
+import ManPowerGateModal from './ManPowerGateModal'
 
 interface PekerjaanProps {
   isAdmin: boolean
@@ -15,6 +16,7 @@ interface PekerjaanProps {
   onFilterChange?: (status: string) => void
   onSelectProgram: (id: string) => void
   onAddPekerjaan: () => void
+  onAdminUnlock?: () => void
 }
 
 const STATUS_TABS = ['Selesai', 'On Going', 'On Hold', 'Perencanaan']
@@ -43,7 +45,7 @@ const TAB_ICONS: Record<string, JSX.Element> = {
   ),
 }
 
-export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusProp = '', onFilterChange, onSelectProgram, onAddPekerjaan }: PekerjaanProps) {
+export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusProp = '', onFilterChange, onSelectProgram, onAddPekerjaan, onAdminUnlock }: PekerjaanProps) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
   const isNarrow = width < 1100
@@ -324,7 +326,11 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       )}
 
       {/* Modal: Akses Dibatasi */}
-      {showBlockedModal && <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />}
+      {showBlockedModal && (
+        onAdminUnlock
+          ? <ManPowerGateModal onClose={() => setShowBlockedModal(false)} onUnlock={onAdminUnlock} />
+          : <AksesDibatasiModal onClose={() => setShowBlockedModal(false)} />
+      )}
     </div>
   )
 }

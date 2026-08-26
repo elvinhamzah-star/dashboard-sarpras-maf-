@@ -13,11 +13,13 @@ import PdfViewerModal from './PdfViewerModal'
 import SaldoPekerjaanPanel from './SaldoPekerjaanPanel'
 import PengeluaranPerPekerjaanModal from './PengeluaranPerPekerjaanModal'
 import AksesDibatasiModal from './AksesDibatasiModal'
+import ManPowerGateModal from './ManPowerGateModal'
 import Dropdown from './ui/Dropdown'
 
 interface KeuanganProps {
   isAdmin?: boolean
   role?: 'pbb' | 'maf' | null
+  onAdminUnlock?: () => void
 }
 
 const MONTH_ABBR: Record<string, string> = {
@@ -26,7 +28,7 @@ const MONTH_ABBR: Record<string, string> = {
   September: 'Sep', Oktober: 'Okt', November: 'Nov', Desember: 'Des',
 }
 
-export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
+export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: KeuanganProps) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -747,7 +749,9 @@ export default function Keuangan({ isAdmin = false, role }: KeuanganProps) {
       )}
 
       {showBuktiAdminRequired && (
-        <AksesDibatasiModal onClose={() => setShowBuktiAdminRequired(false)} />
+        onAdminUnlock
+          ? <ManPowerGateModal onClose={() => setShowBuktiAdminRequired(false)} onUnlock={onAdminUnlock} />
+          : <AksesDibatasiModal onClose={() => setShowBuktiAdminRequired(false)} />
       )}
 
       {showPengeluaranModal && (

@@ -301,6 +301,7 @@ function DashboardApp() {
         return <Beranda
           isAdmin={isAdmin}
           role={role}
+          onAdminUnlock={() => setIsAdmin(true)}
           initialDetailId={berandaReturnDetailId}
           onInitialDetailConsumed={() => setBerandaReturnDetailId(null)}
           initialStatusTab={berandaReturnTab}
@@ -326,10 +327,11 @@ function DashboardApp() {
             onFilterChange={setPekerjaanFilter}
             onSelectProgram={handleSelectProgram}
             onAddPekerjaan={handleAddPekerjaan}
+            onAdminUnlock={() => setIsAdmin(true)}
           />
         )
       case 'keuangan':
-        return <Keuangan isAdmin={isAdmin} role={role} />
+        return <Keuangan isAdmin={isAdmin} role={role} onAdminUnlock={() => setIsAdmin(true)} />
       case 'galeri':
         return (
           <Galeri
