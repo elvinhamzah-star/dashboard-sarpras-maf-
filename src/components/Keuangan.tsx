@@ -605,7 +605,16 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
                         )}
                       </div>
                       <div style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                        {isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}
+                        {isManPowerTx(t) && !isAdmin ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600 }}>
+                            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                            </svg>
+                            Admin Only
+                          </span>
+                        ) : (
+                          <>{isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}</>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
