@@ -357,6 +357,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
   ) : null
   return (
     <div
+      className="app-sidebar"
       style={{
         width: isMobile ? 270 : isOpen ? 248 : 68,
         // 100dvh (dynamic viewport height), not 100vh: on mobile/tablet

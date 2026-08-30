@@ -206,6 +206,11 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  /* Sidebar toggle tetap animasi meski reduced-motion aktif — struktural
+     (layout shift), bukan dekoratif, jadi dikecualikan dari override di atas. */
+  .app-sidebar, .app-main {
+    transition-duration: 0.34s !important;
+  }
 }
 
 /* Swipe hint fade in/out */

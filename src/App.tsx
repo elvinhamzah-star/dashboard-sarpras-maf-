@@ -400,6 +400,7 @@ function DashboardApp() {
 
       {/* Main content */}
       <div
+        className="app-main"
         style={{
           marginLeft: sidebarWidth,
           flex: 1,
