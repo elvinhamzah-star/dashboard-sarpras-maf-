@@ -44,9 +44,14 @@ export function deriveProgramTotals(
   }
 
   const total_anggaran = subs.reduce((s, x) => s + (Number(x.total_anggaran) || 0), 0)
-  const subsRealisasi = subs.reduce((s, x) => s + (Number(x.realisasi_terkini) || 0), 0)
+  // Realisasi tetap dari transaksi (arus kas) — sama seperti program tanpa
+  // sub-pekerjaan. realisasi_terkini per sub-pekerjaan (gedung) diisi manual
+  // buat breakdown per-gedung, tapi seringkali telat/gak lengkap dibanding
+  // uang yang sudah benar-benar keluar — jadi bukan acuan buat total.
   const realisasiFromSubs = subs.some(x => (Number(x.realisasi_terkini) || 0) > 0)
-  const realisasi_terkini = realisasiFromSubs ? subsRealisasi : (program.realisasi_terkini || 0)
+  const realisasi_terkini = transactions
+    ? sumRealisasiFromTransactions(program.nama_pekerjaan, transactions)
+    : (program.realisasi_terkini || 0)
 
   const weightBase = subs.reduce((s, x) => s + (Number(x.total_anggaran) || 0), 0)
   let progress_percent: number
