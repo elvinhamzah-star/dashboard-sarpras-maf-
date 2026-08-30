@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { BackNavContext, TopBarTitleContext, type BackHandler } from './lib/backNav'
 import Sidebar from './components/Sidebar'
 import BottomNav from './components/BottomNav'
@@ -225,47 +225,6 @@ function DashboardApp() {
 
   const sidebarWidth = isMobile ? 0 : sidebarOpen ? 248 : 68
 
-  // FLIP animation for the main content when the sidebar toggles.
-  //
-  // Animating `margin-left` reflows the entire (heavy, unmemoized) content tree
-  // on every frame → visible judder. Instead we snap the margin to its final
-  // value in a single reflow, then GPU-slide the content into place with a
-  // `transform: translateX` that never touches layout. The sidebar keeps its
-  // own width transition on the identical easing/duration, so both move as one.
-  const mainRef = useRef<HTMLDivElement>(null)
-  const prevSidebarWidth = useRef(sidebarWidth)
-
-  useLayoutEffect(() => {
-    const el = mainRef.current
-    const prev = prevSidebarWidth.current
-    prevSidebarWidth.current = sidebarWidth
-    if (!el || prev === sidebarWidth) return
-
-    // margin already snapped to the new (final) value in this same paint.
-    // Compensate by translating back to where the content visually was…
-    const delta = prev - sidebarWidth
-    el.style.transition = 'none'
-    el.style.transform = `translateX(${delta}px)`
-    el.style.willChange = 'transform'
-    // force a single reflow so the browser commits the start position
-    void el.offsetWidth
-    // …then release to 0 on the next frame — a pure compositor slide.
-    const raf = requestAnimationFrame(() => {
-      el.style.transition = 'transform 0.34s cubic-bezier(0.32,0.72,0,1)'
-      el.style.transform = 'translateX(0)'
-    })
-    const onEnd = () => {
-      el.style.transition = ''
-      el.style.transform = ''
-      el.style.willChange = ''
-    }
-    el.addEventListener('transitionend', onEnd, { once: true })
-    return () => {
-      cancelAnimationFrame(raf)
-      el.removeEventListener('transitionend', onEnd)
-    }
-  }, [sidebarWidth])
-
   // The mobile top bar swaps its hamburger (☰) for a back arrow (←) whenever a
   // drill-down view is open. The Pekerjaan detail is owned by App directly;
   // every other page (Galeri, Dokumen, …) registers its own back handler via
@@ -441,7 +400,6 @@ function DashboardApp() {
 
       {/* Main content */}
       <div
-        ref={mainRef}
         style={{
           marginLeft: sidebarWidth,
           flex: 1,
@@ -449,6 +407,7 @@ function DashboardApp() {
           height: '100dvh',
           display: 'flex',
           flexDirection: 'column',
+          transition: 'margin-left 0.34s cubic-bezier(0.32,0.72,0,1)',
         }}
       >
         {/* Mobile top bar */}
