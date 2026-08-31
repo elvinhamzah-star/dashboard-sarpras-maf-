@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchPrograms, fetchTransactions, invalidateCache, Program } from '../lib/supabase'
-import { formatRupiah } from '../lib/data'
+import { formatRupiah, STATUS_COLORS, STATUS_BG } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import EditDanaMasukModal from './EditDanaMasukModal'
@@ -113,6 +113,7 @@ export default function SaldoPekerjaanPanel() {
       </div>
 
       {/* Tabel */}
+      <style>{`.saldo-row:hover td { background-color: var(--surface-2); }`}</style>
       <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--border)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: isMobile ? 11 : 12 }}>
           <thead>
@@ -131,12 +132,16 @@ export default function SaldoPekerjaanPanel() {
               return (
                 <tr
                   key={r.program.id}
+                  className="saldo-row"
                   style={{ backgroundColor: isTalangan ? 'rgba(217,119,6,0.1)' : 'transparent' }}
                 >
                   <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>{i + 1}</td>
                   <td style={tdStyle}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{r.program.nama_pekerjaan}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.program.status}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: 4 }}>{r.program.nama_pekerjaan}</div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 9px', borderRadius: 20, fontSize: 10.5, fontWeight: 600, backgroundColor: STATUS_BG[r.program.status] || 'var(--surface-2)', color: STATUS_COLORS[r.program.status] || 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor', flexShrink: 0 }} />
+                      {r.program.status}
+                    </span>
                   </td>
 
                   {/* Dana Masuk — teks biasa (bukan angka utama), buka modal buat edit */}

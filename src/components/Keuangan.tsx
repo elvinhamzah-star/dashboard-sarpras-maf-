@@ -619,7 +619,8 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10.5, fontWeight: 700, backgroundColor: badgeColor.bg, color: '#fff', whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: 10.5, fontWeight: 600, backgroundColor: badgeColor.light, color: badgeColor.bg, whiteSpace: 'nowrap' }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor', flexShrink: 0 }} />
                           {t.jenis_transaksi}
                         </span>
                         <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
