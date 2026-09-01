@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { Transaction, ProgramSnapshot, Program } from '../lib/supabase'
-import { formatRupiah } from '../lib/data'
+import { formatRupiah, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
@@ -83,22 +83,30 @@ function interpolateProgress(prog: Program, yearMonth: string): number {
 }
 
 /**
- * Weighted-average progress per bulan — formula SAMA dengan angka di Beranda:
- *   - Exclude Perencanaan + Operasional
- *   - Weighted by total_anggaran
+ * Weighted-average progress per bulan.
+ *
+ * Bulan-bulan lampau (`live=false`): estimasi historis — progress tiap program
+ * di-interpolasi linear dari tanggal_mulai sampai HARI INI, jadi titik di masa
+ * lalu otomatis lebih rendah dari angka terkini. Exclude Perencanaan + Operasional.
+ *
+ * Bulan terakhir/berjalan (`live=true`): BUKAN interpolasi — pakai formula
+ * persis sama dengan kartu "Progress Pekerjaan" di Beranda (getEffectiveProgress,
+ * filter On Going/On Hold/Selesai, weighted by total_anggaran, termasuk
+ * Operasional) supaya angkanya match persis, bukan cuma mirip.
  */
-function calcMonthProgress(programs: Program[], yearMonth: string): number | null {
-  const relevant = programs.filter(p =>
-    p.status !== 'Perencanaan' &&
-    p.jenis_pekerjaan !== 'Operasional'
-  )
+function calcMonthProgress(programs: Program[], yearMonth: string, live = false): number | null {
+  const relevant = live
+    ? programs.filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
+    : programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')
   if (relevant.length === 0) return null
 
   const totalAnggaran = relevant.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   if (totalAnggaran === 0) return null
 
   const weightedSum = relevant.reduce((s, p) => {
-    const pct = p.tanggal_mulai ? interpolateProgress(p, yearMonth) : 0
+    const pct = live
+      ? getEffectiveProgress(p)
+      : (p.tanggal_mulai ? interpolateProgress(p, yearMonth) : 0)
     return s + pct * (p.total_anggaran || 0)
   }, 0)
 
@@ -144,8 +152,11 @@ export default function BerandaChart({ transactions, snapshots, programs, bare =
     keluar: byMonth[ym]?.keluar || 0,
   }))
 
-  // Progress per month — interpolated from program dates
-  const progressByMonth: (number | null)[] = months.map(m => calcMonthProgress(programs, m.ym))
+  // Progress per month — interpolated from program dates, kecuali bulan
+  // terakhir (paling baru) yang pakai angka live biar match kartu Beranda.
+  const progressByMonth: (number | null)[] = months.map((m, i) =>
+    calcMonthProgress(programs, m.ym, i === months.length - 1)
+  )
   const hasProgress = progressByMonth.some(p => p != null)
 
   const maxRp = Math.max(...months.flatMap(m => [m.masuk, m.keluar]), 1)
