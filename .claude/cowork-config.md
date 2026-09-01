@@ -13,7 +13,7 @@ TECH STACK (VERIFIED):
 - Backend: Supabase PostgreSQL (project: sgslsiyoompzuhuwzgyi, ap-southeast-1)
 - Deploy: Vercel (auto-deploy from main branch)
 - Repo: github.com/elvinhamzah-star/dashboard-sarpras-maf-
-- Local: /Users/mac/dashboard-sarpras-maf-v2
+- Local: /Users/mac/Claude Code Projects/dashboard-sarpras-maf-v2
 - Auth: sessionStorage + PIN via Supabase RPC (bcrypt)
 - Storage: Google Drive for foto dokumentasi
 
@@ -232,7 +232,7 @@ WORKFLOW 5: TROUBLESHOOT LOCAL DEV
   Steps:
     1. Check process: lsof -i :5173 (localhost:5173 in use?)
     2. Kill existing: pkill -f "vite" or pkill -f "node"
-    3. Restart: cd /Users/mac/dashboard-sarpras-maf-v2 && npm run dev
+    3. Restart: cd /Users/mac/Claude Code Projects/dashboard-sarpras-maf-v2 && npm run dev
     4. If build error: npx tsc --noEmit (read error messages carefully)
     5. Fix code + save (auto-reload should trigger)
     6. If persists: rm -rf node_modules && npm install
@@ -287,7 +287,7 @@ CONTEXT:
 - Project: React 18 + Vite + TypeScript (inline styles ONLY)
 - Backend: Supabase PostgreSQL + admin RPCs
 - Deploy: Vercel auto-deploy from main
-- Local: /Users/mac/dashboard-sarpras-maf-v2
+- Local: /Users/mac/Claude Code Projects/dashboard-sarpras-maf-v2
 - Phases: 0/1/4 done ✅ | 2/3/5/6 pending ⏳
 - Phase 4: Ready to re-enable (5 min task)
 
@@ -336,7 +336,7 @@ MEMORY PINS FOR CLAUDE CODE
 9. Vercel auto-deploys from main branch
 10. Google Drive stores foto dokumentasi links
 11. PIN auth via Supabase RPC (bcrypt), never hardcode
-12. Local dev: /Users/mac/dashboard-sarpras-maf-v2, npm run dev at localhost:5173
+12. Local dev: /Users/mac/Claude Code Projects/dashboard-sarpras-maf-v2, npm run dev at localhost:5173
 
 ==================================================
 TROUBLESHOOTING QUICK REFERENCE
