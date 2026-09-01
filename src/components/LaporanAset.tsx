@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import ExcelJS from 'exceljs'
 import { fetchPrograms } from '../lib/supabase'
 import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
-import { formatRupiah } from '../lib/data'
+import { formatRupiah, STATUS_COLORS, STATUS_BG } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { isRestrictedForRole } from '../lib/access'
@@ -122,12 +122,15 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
     })
   }, [])
 
-  // Split: Selesai dengan data vs belum diisi (Man Power disembunyikan untuk MAF)
-  const selesai = programs.filter(p =>
-    p.status === 'Selesai' && !isRestrictedForRole(p, role, isAdmin)
-  )
-  const withData  = selesai.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
-  const noData    = selesai.filter(p => (p.hasil_rincian?.length ?? 0) === 0)
+  // withData: SEMUA pekerjaan yang sudah punya hasil_rincian, apa pun statusnya —
+  // Detail Realisasi bisa mulai diisi sejak On Going ("Catat Realisasi"), tidak
+  // harus nunggu Selesai. Sebelumnya di sini di-gate ke status==='Selesai' saja,
+  // jadi pekerjaan On Going/On Hold yang datanya sudah lengkap malah gak pernah
+  // muncul di laporan. noData tetap khusus pekerjaan Selesai yang BELUM diisi —
+  // itu satu-satunya kondisi yang benar-benar butuh reminder "belum diisi".
+  const eligible = programs.filter(p => !isRestrictedForRole(p, role, isAdmin))
+  const withData  = eligible.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
+  const noData    = eligible.filter(p => p.status === 'Selesai' && (p.hasil_rincian?.length ?? 0) === 0)
 
   // Count per kategori
   const counts: Record<KatFilter, number> = {
@@ -475,11 +478,23 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
                       <span title={p.nama_pekerjaan} style={{ fontSize: isMobile ? 12.5 : 13.5, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.nama_pekerjaan}
                       </span>
-                      {katLabel && (
-                        <span style={{ fontSize: 9, fontWeight: 600, color: '#5B8FD6', background: 'rgba(91,143,214,0.1)', border: '1px solid rgba(91,143,214,0.2)', borderRadius: 20, padding: isMobile ? '1.5px 6px' : '2px 7px', flexShrink: 0, whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
-                          {katLabel}
-                        </span>
-                      )}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        {/* Status program — dulu semua entri di sini pasti Selesai jadi gak perlu
+                            ditandain; sekarang On Going/On Hold juga bisa muncul (asal sudah
+                            dicatat realisasinya), jadi statusnya perlu kelihatan biar gak dikira
+                            sudah tuntas semua. */}
+                        {p.status !== 'Selesai' && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9, fontWeight: 700, color: STATUS_COLORS[p.status] || 'var(--text-muted)', background: STATUS_BG[p.status] || 'var(--surface-2)', borderRadius: 20, padding: isMobile ? '1.5px 6px' : '2px 7px', whiteSpace: 'nowrap' }}>
+                            <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: 'currentColor', flexShrink: 0 }} />
+                            {p.status}
+                          </span>
+                        )}
+                        {katLabel && (
+                          <span style={{ fontSize: 9, fontWeight: 600, color: '#5B8FD6', background: 'rgba(91,143,214,0.1)', border: '1px solid rgba(91,143,214,0.2)', borderRadius: 20, padding: isMobile ? '1.5px 6px' : '2px 7px', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
+                            {katLabel}
+                          </span>
+                        )}
+                      </span>
                     </div>
 
                     {/* Rincian — table di desktop, card list di mobile */}
