@@ -28,6 +28,9 @@ const MONTH_ABBR: Record<string, string> = {
   September: 'Sep', Oktober: 'Okt', November: 'Nov', Desember: 'Des',
 }
 
+// Grid kolom desktop Riwayat Transaksi — konsep sama seperti DESKTOP_COLS di Pekerjaan.tsx.
+const KEUANGAN_DESKTOP_COLS = 'minmax(0,1fr) 110px 130px 150px 130px'
+
 export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: KeuanganProps) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
@@ -573,12 +576,76 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
           ) : filtered.length === 0 ? (
             <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Belum Ada Transaksi.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 6 }}>
+              {/* Desktop column header — sejajar sama grid tiap baris di bawah, konsep sama seperti halaman Pekerjaan */}
+              {!isMobile && (
+                <div style={{ display: 'grid', gridTemplateColumns: KEUANGAN_DESKTOP_COLS, gap: 12, padding: '0 16px 6px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <span>Transaksi</span>
+                  <span>Tanggal</span>
+                  <span>Jenis</span>
+                  <span style={{ textAlign: 'right' }}>Nominal</span>
+                  <span style={{ textAlign: 'right' }}>Aksi</span>
+                </div>
+              )}
               {paged.map(t => {
                 const isMasukTx = t.jenis_transaksi === 'Masuk'
                 const isKeluarPBBTx = t.jenis_transaksi === 'Keluar PBB'
                 const nominalColor = isMasukTx ? '#1B5E2B' : isKeluarPBBTx ? '#B45309' : 'var(--color-neutral-dark)'
                 const badgeColor = TRANSACTION_COLORS[t.jenis_transaksi] || { bg: 'var(--text-muted)', text: '#fff' }
+                const icon = (
+                  <div style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: badgeColor.light, color: badgeColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {isMasukTx ? (
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <line x1="17" y1="7" x2="7" y2="17" /><polyline points="17 17 7 17 7 7" />
+                      </svg>
+                    )}
+                  </div>
+                )
+                const jenisBadge = (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: 10.5, fontWeight: 600, backgroundColor: badgeColor.light, color: badgeColor.bg, whiteSpace: 'nowrap' }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor', flexShrink: 0 }} />
+                    {t.jenis_transaksi}
+                  </span>
+                )
+                const nominalDisplay = isManPowerTx(t) && !isAdmin ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: 12.5, fontWeight: 600 }}>
+                    <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    Admin Only
+                  </span>
+                ) : (
+                  <>{isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}</>
+                )
+                const buktiBtn = t.link_bukti && (
+                  <button
+                    onClick={() => {
+                      if (isManPowerTx(t) && !isAdmin) {
+                        setShowBuktiAdminRequired(true)
+                        return
+                      }
+                      const rawUrl = t.link_bukti!
+                      const url = getFileEmbedUrl(rawUrl) ?? rawUrl
+                      const name = t.nama_pekerjaan || 'Bukti Transaksi'
+                      setViewingBukti({ url, name })
+                    }}
+                    style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Bukti
+                  </button>
+                )
+                const editBtn = isAdmin && (
+                  <button
+                    onClick={() => setEditingTransaction(t)}
+                    style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Edit
+                  </button>
+                )
                 return (
                   <div
                     key={t.id}
@@ -586,74 +653,75 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',
                       borderRadius: isMobile ? 12 : 13,
-                      padding: isMobile ? '12px 14px' : '14px 16px',
+                      padding: isMobile ? '12px 14px' : '10px 16px',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                       transition: 'box-shadow 0.15s',
                     }}
                     onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 14px rgba(0,0,0,0.08)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
-                        <div title={t.nama_pekerjaan || undefined} style={{ fontSize: isMobile ? 13 : 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
-                          {t.nama_pekerjaan || '-'}
-                        </div>
-                        {t.deskripsi && (
-                          <div style={{ fontSize: isMobile ? 11 : 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {t.deskripsi}
+                    {isMobile ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0, marginRight: 10 }}>
+                            {icon}
+                            <div style={{ minWidth: 0 }}>
+                              <div title={t.nama_pekerjaan || undefined} style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                                {t.nama_pekerjaan || '-'}
+                              </div>
+                              {t.deskripsi && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {t.deskripsi}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                        {isManPowerTx(t) && !isAdmin ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: isMobile ? 11.5 : 12.5, fontWeight: 600 }}>
-                            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                            </svg>
-                            Admin Only
-                          </span>
-                        ) : (
-                          <>{isMasukTx ? '+' : '-'}{formatRupiah(t.nominal || 0)}</>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 10.5, fontWeight: 700, backgroundColor: badgeColor.bg, color: '#fff', whiteSpace: 'nowrap' }}>
-                          {t.jenis_transaksi}
-                        </span>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                            {nominalDisplay}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {jenisBadge}
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                              {formatTanggal(t.tanggal)}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            {buktiBtn}
+                            {editBtn}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      /* Kolom sejajar dengan header di atas — konsep sama seperti halaman Pekerjaan */
+                      <div style={{ display: 'grid', gridTemplateColumns: KEUANGAN_DESKTOP_COLS, gap: 12, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                          {icon}
+                          <div style={{ minWidth: 0 }}>
+                            <div title={t.nama_pekerjaan || undefined} style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {t.nama_pekerjaan || '-'}
+                            </div>
+                            {t.deskripsi && (
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {t.deskripsi}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                           {formatTanggal(t.tanggal)}
-                        </span>
+                        </div>
+                        <div>{jenisBadge}</div>
+                        <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: nominalColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                          {nominalDisplay}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                          {buktiBtn}
+                          {editBtn}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {t.link_bukti && (
-                          <button
-                            onClick={() => {
-                              if (isManPowerTx(t) && !isAdmin) {
-                                setShowBuktiAdminRequired(true)
-                                return
-                              }
-                              const rawUrl = t.link_bukti!
-                              const url = getFileEmbedUrl(rawUrl) ?? rawUrl
-                              const name = t.nama_pekerjaan || 'Bukti Transaksi'
-                              setViewingBukti({ url, name })
-                            }}
-                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(26,111,232,0.2)', backgroundColor: 'rgba(26,111,232,0.06)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                          >
-                            Bukti
-                          </button>
-                        )}
-                        {isAdmin && (
-                          <button
-                            onClick={() => setEditingTransaction(t)}
-                            style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}

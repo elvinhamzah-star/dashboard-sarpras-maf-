@@ -21,6 +21,9 @@ interface PekerjaanProps {
 
 const STATUS_TABS = ['Selesai', 'On Going', 'On Hold', 'Perencanaan']
 
+// Grid kolom desktop — dipakai sama-sama oleh header dan tiap baris biar sejajar persis.
+const DESKTOP_COLS = 'minmax(0,1fr) 130px 130px 80px 110px'
+
 
 const TAB_ICONS: Record<string, JSX.Element> = {
   'On Going': (
@@ -43,6 +46,14 @@ const TAB_ICONS: Record<string, JSX.Element> = {
       <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" />
     </svg>
   ),
+}
+
+// Inisial 1-2 huruf dari nama pekerjaan, buat avatar bulat di tiap baris —
+// ambil huruf pertama dari 2 kata pertama (skip kata sambung pendek "dan"/"di"/dst).
+function getInitials(nama: string): string {
+  const words = (nama || '').split(/\s+/).filter(w => w.length > 2)
+  const pick = words.length >= 2 ? words.slice(0, 2) : (nama || '').split(/\s+/).slice(0, 2)
+  return pick.map(w => w[0]?.toUpperCase() || '').join('') || '—'
 }
 
 export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusProp = '', onFilterChange, onSelectProgram, onAddPekerjaan, onAdminUnlock }: PekerjaanProps) {
@@ -232,8 +243,18 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       ) : filtered.length === 0 ? (
         <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Tidak Ada Pekerjaan Ditemukan.</div>
       ) : (
-        /* ── CARD LIST: style selaras dengan BerandaWeekOverWeek ── */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 12 }}>
+        /* ── CARD LIST (mobile) / TABLE (desktop) ── */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 6 }}>
+          {/* Desktop column header — kolom sejajar sama persis dengan tiap baris di bawah */}
+          {!isMobile && (
+            <div style={{ display: 'grid', gridTemplateColumns: DESKTOP_COLS, gap: 12, padding: '0 16px 6px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span>Pekerjaan</span>
+              <span style={{ textAlign: 'right' }}>Anggaran</span>
+              <span style={{ textAlign: 'right' }}>Realisasi</span>
+              <span style={{ textAlign: 'right' }}>Progress</span>
+              <span style={{ textAlign: 'right' }}>Status</span>
+            </div>
+          )}
           {filtered.map((p) => {
             const d = getDerived(p)
             const pct = d.progress_percent
@@ -241,6 +262,18 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
             const isLocked = isRestrictedForRole(p, role, isAdmin)
             const vendor = getVendorDisplay(p)
             const showBar = p.status === 'On Going' || p.status === 'On Hold'
+            const lockIcon = <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            const statusBadge = (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: isMobile ? '2px 8px' : '3px 10px', borderRadius: 20, fontSize: isMobile ? 9.5 : 11, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, whiteSpace: 'nowrap' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor', flexShrink: 0 }} />
+                {p.status}
+              </span>
+            )
+            const avatar = (
+              <div style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                {getInitials(p.nama_pekerjaan)}
+              </div>
+            )
             return (
               <div
                 key={p.id}
@@ -256,7 +289,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                   ['--row-accent']: color,
                   ['--row-accent-bg']: `${color}08`,
                   ['--row-accent-shadow']: `${color}22`,
-                  padding: isMobile ? '13px 12px' : '16px 16px',
+                  padding: isMobile ? '13px 12px' : '12px 16px',
                   borderRadius: 10,
                   border: '1px solid var(--border-subtle)',
                   // Permanent (not hover-only) left accent — mobile has no hover to
@@ -269,43 +302,63 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                   transition: 'border-color 0.18s, background-color 0.18s, box-shadow 0.18s, transform 0.18s',
                 } as React.CSSProperties}
               >
-                {/* ── SHARED layout: ID sendiri di atas, lalu inner row [nama+vendor | pct%+badge] ── */}
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
-                  {p.id}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {/* Left: nama + vendor */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div title={p.nama_pekerjaan} style={{ fontSize: isMobile ? 12 : 13.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em', ...(isMobile ? {} : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }) }}>
-                      {p.nama_pekerjaan}
-                    </div>
-                    {!isMobile && vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{vendor}</div>}
-                  </div>
-                  {/* Right column: pct% (plain) di atas badge, sejajar dengan nama */}
-                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
-                    {showBar && (
-                      <span style={{ fontSize: isMobile ? 10 : 11, fontWeight: 700, color: isLocked ? '#C8D2E0' : color, fontVariantNumeric: 'tabular-nums' }}>
-                        Progres {pct}%
-                      </span>
-                    )}
-                    {p.status === 'Selesai' && !isLocked && (
-                      <>
-                        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
-                          {formatRupiah(d.realisasi_terkini)}
+                {isMobile ? (
+                  <>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 3, letterSpacing: '0.02em' }}>
+                      {p.id}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div title={p.nama_pekerjaan} style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+                          {p.nama_pekerjaan}
                         </div>
-                        {!isMobile && (
-                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
-                            dari {formatRupiah(d.total_anggaran)}
+                      </div>
+                      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+                        {showBar && (
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: isLocked ? '#C8D2E0' : color, fontVariantNumeric: 'tabular-nums' }}>
+                            Progres {pct}%
+                          </span>
+                        )}
+                        {p.status === 'Selesai' && !isLocked && (
+                          <div style={{ fontSize: 11, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+                            {formatRupiah(d.realisasi_terkini)}
                           </div>
                         )}
-                      </>
-                    )}
-                    {isLocked
-                      ? <svg width="12" height="12" fill="none" stroke="#C8D2E0" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                      : <span style={{ display: 'inline-block', padding: isMobile ? '2px 8px' : '3px 10px', borderRadius: 20, fontSize: isMobile ? 9.5 : 11, fontWeight: 700, backgroundColor: STATUS_BG[p.status] || 'var(--border-subtle)', color, whiteSpace: 'nowrap' }}>{p.status}</span>
-                    }
-                  </div>
-                </div>
+                        {isLocked ? lockIcon : statusBadge}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 4, letterSpacing: '0.02em' }}>
+                      {p.id}
+                    </span>
+                    {/* Kolom sejajar dengan header di atas — gak numpuk lagi di kanan */}
+                    <div style={{ display: 'grid', gridTemplateColumns: DESKTOP_COLS, gap: 12, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        {avatar}
+                        <div style={{ minWidth: 0 }}>
+                          <div title={p.nama_pekerjaan} style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.nama_pekerjaan}
+                          </div>
+                          {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vendor}</div>}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 500, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
+                        {isLocked ? '—' : formatRupiah(d.total_anggaran)}
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : (d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)'), fontVariantNumeric: 'tabular-nums' }}>
+                        {isLocked ? '—' : formatRupiah(d.realisasi_terkini)}
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : color, fontVariantNumeric: 'tabular-nums' }}>
+                        {isLocked ? '—' : `${pct}%`}
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        {isLocked ? lockIcon : statusBadge}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )
           })}
