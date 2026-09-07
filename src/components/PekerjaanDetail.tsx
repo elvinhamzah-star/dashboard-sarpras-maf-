@@ -28,7 +28,7 @@ import HasilFormModal from './HasilFormModal'
 import HasilRingkasan from './HasilRingkasan'
 import HasilRincianCard from './HasilRincianCard'
 import FilterSummaryBar from './FilterSummaryBar'
-import { deriveProgramTotals, deriveNilaiAset, withChecklistProgress, computeSubProgramEta } from '../lib/deriveTotals'
+import { deriveProgramTotals, deriveNilaiAset, withChecklistProgress, computeSubProgramEta, deriveHasilRincianFromChecklist } from '../lib/deriveTotals'
 import { isRestrictedForRole } from '../lib/access'
 import { Z_MODAL_DEEPER } from '../lib/zIndex'
 import { useEdgeSwipeBack } from '../lib/useEdgeSwipeBack'
@@ -342,7 +342,20 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     }
   }, [isAdmin, program?.status, program?.hasil_filled_at, hasilDismissed])
 
-  const hasRincian = (program?.hasil_rincian?.length ?? 0) > 0
+  // "Detail Realisasi" untuk pekerjaan yang punya checklist (sub_program_tasks)
+  // diturunkan langsung dari situ, bukan dari input manual hasil_rincian —
+  // supaya statusnya gak pernah nyimpang lagi dari checklist yang jadi acuan.
+  const checklistRincian = program
+    ? deriveHasilRincianFromChecklist(subPrograms.filter(s => s.program_id === program.id), subProgramTasks)
+    : []
+  // Sakan Asfahan sengaja gak dibikinin checklist/sub-pekerjaan sendiri (outscope
+  // dari tracking progress P-001, sudah diketahui atasan) — tapi nilainya tetap
+  // masuk vendor payment Periode 1 (Invoice 1 & 2), jadi tetap dihitung di sini
+  // supaya Total Realisasi cocok sama total yang benar-benar dibayar ke vendor.
+  if (program?.id === 'P-001' && checklistRincian.length > 0) {
+    checklistRincian.push({ nama: 'Sakan Asfahan', biaya: 8850550, satuan: 'gedung', ukuran: 1, status: 'Selesai' })
+  }
+  const hasRincian = checklistRincian.length > 0 || (program?.hasil_rincian?.length ?? 0) > 0
   const tabs: Tab[] = [
     'Ringkasan',
     ...(hasRincian || isAdmin ? ['Detail Realisasi' as Tab] : []),
@@ -774,7 +787,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Detail Realisasi</h3>
-              {isAdmin && (
+              {isAdmin && checklistRincian.length === 0 && (
                 <button
                   onClick={() => setShowHasilForm(true)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--card)', color: 'var(--blue)', border: '1px solid rgba(26,111,232,0.3)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -784,7 +797,9 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 </button>
               )}
             </div>
-            {(program.hasil_rincian?.length ?? 0) > 0 ? (
+            {checklistRincian.length > 0 ? (
+              <HasilRincianCard program={{ ...program, hasil_rincian: checklistRincian, hasil_nilai_aset: null }} isMobile={isMobile} defaultOpen />
+            ) : (program.hasil_rincian?.length ?? 0) > 0 ? (
               <HasilRincianCard program={program} isMobile={isMobile} defaultOpen />
             ) : (
               <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
@@ -1026,11 +1041,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             {sp.nama_gedung}
                           </div>
                         </div>
-                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                          <div
-                            onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
-                          >
+                        <div
+                          onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
+                          style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{
                               display: 'inline-block', padding: '1px 7px', borderRadius: 20,
                               fontSize: 10, fontWeight: 700,
@@ -1051,7 +1066,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </div>
                           {isAdmin && (
                             <button
-                              onClick={() => setEditingSubProgram(sp)}
+                              onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
                               style={{
                                 background: 'none', border: '1px solid var(--border)', borderRadius: 7,
                                 padding: '3px 10px', cursor: 'pointer', color: 'var(--text-secondary)',
@@ -1128,22 +1143,20 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     return (
                       <tr
                         key={sp.id}
-                        style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s' }}
+                        onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
+                        style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--surface-min)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                       >
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
                         <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                           {subProgramTasks.some(t => t.sub_program_id === sp.id) ? (
-                            <button
-                              onClick={() => toggleGedung(sp.id)}
-                              style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit' }}
-                            >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: 'var(--blue)', flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
                                 <polyline points="6 9 12 15 18 9" />
                               </svg>
                               {sp.nama_gedung}
-                            </button>
+                            </span>
                           ) : sp.nama_gedung}
                         </td>
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{sp.vendor || '-'}</td>
@@ -1192,7 +1205,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         {isAdmin && (
                           <td style={{ padding: '11px 14px', textAlign: 'right' }}>
                             <button
-                              onClick={() => setEditingSubProgram(sp)}
+                              onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
                               style={{
                                 background: 'none',
                                 border: '1px solid var(--border)',

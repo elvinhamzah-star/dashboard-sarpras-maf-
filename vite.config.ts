@@ -5,6 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    port: 5174,
+    strictPort: true,
+  },
   test: {
     include: ['src/**/*.test.ts'],
     environment: 'node',
