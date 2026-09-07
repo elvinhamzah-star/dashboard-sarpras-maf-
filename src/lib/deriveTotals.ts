@@ -1,5 +1,71 @@
-import { Program, SubProgram, Transaction } from './supabase'
+import { Program, SubProgram, SubProgramTask } from './supabase'
+import type { Transaction } from './supabase'
 import { getEffectiveProgress } from './data'
+
+const STATUS_WEIGHT: Record<string, number> = { 'Selesai': 1, 'On Progress': 0.5, 'Belum Mulai': 0 }
+
+/**
+ * Progress satu gedung dari checklist item-nya — rata-rata tertimbang nilai
+ * (Selesai=100%, On Progress=50%, Belum Mulai=0%). Return null kalau gedung
+ * ini belum punya checklist sama sekali, supaya caller tau harus fallback ke
+ * progress_percent manual yang lama.
+ */
+export function computeChecklistProgress(tasks: Pick<SubProgramTask, 'nilai' | 'status'>[]): number | null {
+  if (tasks.length === 0) return null
+  const total = tasks.reduce((s, t) => s + (t.nilai || 0), 0)
+  if (total <= 0) return null
+  const weighted = tasks.reduce((s, t) => s + (STATUS_WEIGHT[t.status] ?? 0) * (t.nilai || 0), 0)
+  return Math.round((weighted / total) * 100)
+}
+
+/**
+ * Timpa progress_percent tiap sub-pekerjaan yang sudah punya checklist dengan
+ * angka hasil hitung otomatis — supaya deriveProgramTotals (yang consume
+ * progress_percent ini buat rollup ke level program) ikut kebawa otomatis
+ * tanpa perlu diubah sama sekali.
+ */
+export function withChecklistProgress<T extends Pick<SubProgram, 'id' | 'progress_percent'>>(
+  subs: T[],
+  tasks: Pick<SubProgramTask, 'sub_program_id' | 'nilai' | 'status'>[],
+): T[] {
+  if (tasks.length === 0) return subs
+  const bySubId = new Map<string, typeof tasks>()
+  for (const t of tasks) {
+    const arr = bySubId.get(t.sub_program_id)
+    if (arr) arr.push(t)
+    else bySubId.set(t.sub_program_id, [t])
+  }
+  return subs.map(s => {
+    const subTasks = bySubId.get(s.id)
+    if (!subTasks) return s
+    const computed = computeChecklistProgress(subTasks)
+    return computed === null ? s : { ...s, progress_percent: computed }
+  })
+}
+
+/**
+ * Estimasi tanggal selesai (ETA) satu gedung — dari kecepatan realisasi nilai
+ * checklist sejak tanggal_mulai_aktual, diekstrapolasi ke sisa nilai yang
+ * belum kelar. Return null kalau belum ada tanggal mulai, belum ada progress
+ * sama sekali (pace 0 → gak bisa dihitung), atau sudah 100%.
+ */
+export function computeSubProgramEta(
+  tanggalMulaiAktual: string | null | undefined,
+  tasks: Pick<SubProgramTask, 'nilai' | 'status'>[],
+): Date | null {
+  if (!tanggalMulaiAktual || tasks.length === 0) return null
+  const total = tasks.reduce((s, t) => s + (t.nilai || 0), 0)
+  if (total <= 0) return null
+  const selesai = tasks.reduce((s, t) => s + (STATUS_WEIGHT[t.status] ?? 0) * (t.nilai || 0), 0)
+  const sisa = total - selesai
+  if (sisa <= 0) return null // sudah 100%, gak perlu ETA
+  const mulai = new Date(tanggalMulaiAktual)
+  const hariBerjalan = Math.max(1, Math.round((Date.now() - mulai.getTime()) / 86400000))
+  const kecepatanPerHari = selesai / hariBerjalan
+  if (kecepatanPerHari <= 0) return null
+  const hariLagi = Math.ceil(sisa / kecepatanPerHari)
+  return new Date(mulai.getTime() + (hariBerjalan + hariLagi) * 86400000)
+}
 
 export interface DerivedTotals {
   total_anggaran: number

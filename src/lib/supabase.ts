@@ -105,6 +105,22 @@ export interface SubProgram {
   sisa_anggaran: number
   status: string
   link_dokumentasi?: string
+  tanggal_mulai_aktual?: string | null
+  created_at: string
+}
+
+export type SubProgramTaskStatus = 'Belum Mulai' | 'On Progress' | 'Selesai'
+
+// Checklist item pekerjaan di dalam satu sub-pekerjaan (gedung) — mis. "Cat
+// dinding kusam" di Sakan Naisabur. `sumber` menandai asal data (RAB/Periode 1/
+// Periode 2/dst) supaya bisa ditelusur balik ke dokumen aslinya.
+export interface SubProgramTask {
+  id: number
+  sub_program_id: string
+  item: string
+  nilai: number
+  status: SubProgramTaskStatus
+  sumber: string | null
   created_at: string
 }
 
@@ -308,6 +324,14 @@ export async function fetchSubPrograms() {
 }
 export const fetchProgramSnapshots = (programId: string) =>
   supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
+
+export async function fetchSubProgramTasks() {
+  const cached = fromCache<SubProgramTask[]>('sub_program_tasks')
+  if (cached) return { data: cached, error: null }
+  const { data, error } = await supabase.from('sub_program_tasks').select('*').order('id', { ascending: true })
+  if (data) toCache('sub_program_tasks', data)
+  return { data, error }
+}
 
 export async function fetchWeeklyNotes() {
   const cached = fromCache<unknown[]>('weekly_notes')

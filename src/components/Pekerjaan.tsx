@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fetchPrograms, fetchSubPrograms, fetchTransactions, Program, SubProgram, Transaction } from '../lib/supabase'
+import { fetchPrograms, fetchSubPrograms, fetchSubProgramTasks, fetchTransactions, Program, SubProgram, Transaction } from '../lib/supabase'
 import { STATUS_COLORS, STATUS_BG, formatRupiah } from '../lib/data'
-import { deriveProgramTotals } from '../lib/deriveTotals'
+import { deriveProgramTotals, withChecklistProgress } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { isRestrictedForRole } from '../lib/access'
@@ -75,9 +75,9 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data }, { data: subData }, { data: txData }] = await Promise.all([fetchPrograms(), fetchSubPrograms(), fetchTransactions()])
+      const [{ data }, { data: subData }, { data: taskData }, { data: txData }] = await Promise.all([fetchPrograms(), fetchSubPrograms(), fetchSubProgramTasks(), fetchTransactions()])
       if (data) setPrograms(data)
-      if (subData) setSubPrograms(subData)
+      if (subData) setSubPrograms(taskData ? withChecklistProgress(subData, taskData) : subData)
       if (txData) setTransactions(txData)
       setLoading(false)
     }

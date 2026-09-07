@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchSubProgramTasks, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { withChecklistProgress, deriveProgramTotals } from '../lib/deriveTotals'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
@@ -181,11 +182,12 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }, { data: notesData }] = await Promise.all([
+      const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }, { data: taskData }, { data: notesData }] = await Promise.all([
         fetchPrograms(),
         fetchTransactions(),
         fetchSnapshots(),
         fetchSubPrograms(),
+        fetchSubProgramTasks(),
         fetchWeeklyNotes(),
       ])
       if (progData) setPrograms(progData)
@@ -205,7 +207,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       }
       if (txData) setRawTransactions(txData)
       if (snapData) setSnapshots(snapData)
-      if (subData) setSubPrograms(subData)
+      if (subData) setSubPrograms(taskData ? withChecklistProgress(subData, taskData) : subData)
       setLoading(false)
     }
     load()
@@ -294,11 +296,21 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0'
 
+  // Progress efektif satu program — kalau dia punya sub-pekerjaan (mis. P-001
+  // dengan checklist per gedung), rollup dari situ (deriveProgramTotals sudah
+  // fallback ke getEffectiveProgress kalau subs kosong). Program tanpa
+  // sub-pekerjaan tetap pakai progress_percent manual seperti biasa.
+  const getProgramProgress = (p: Program): number => {
+    const subs = subPrograms.filter(sp => sp.program_id === p.id)
+    if (subs.length === 0) return getEffectiveProgress(p)
+    return deriveProgramTotals(p, subs).progress_percent
+  }
+
   const progressPrograms = visiblePrograms
     .filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
   const progressLapangan = progressAnggaranTotal > 0
-    ? (progressPrograms.reduce((s, p) => s + getEffectiveProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
+    ? (progressPrograms.reduce((s, p) => s + getProgramProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
     : null
 
   const mostRecentUpdate = visiblePrograms.reduce((latest, p) => {
@@ -676,7 +688,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
 
       {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
       <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
-        <BerandaChart transactions={visibleTransactions} snapshots={snapshots} programs={visiblePrograms} bare />
+        <BerandaChart transactions={visibleTransactions} snapshots={snapshots} programs={visiblePrograms} subPrograms={subPrograms} bare />
       </SectionPanel>
 
       {/* ── POPUP: Progres Pekerjaan ── */}
@@ -695,8 +707,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           />
           {/* List program */}
           <div style={{ padding: isMobile ? '12px 14px 22px' : '14px 18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[...progressPrograms].sort((a, b) => getEffectiveProgress(b) - getEffectiveProgress(a)).map(p => {
-              const pct = getEffectiveProgress(p)
+            {[...progressPrograms].sort((a, b) => getProgramProgress(b) - getProgramProgress(a)).map(p => {
+              const pct = getProgramProgress(p)
               const bobotPct = progressAnggaranTotal > 0 ? Math.round((p.total_anggaran || 0) / progressAnggaranTotal * 100) : 0
               const color = STATUS_COLORS[p.status] || 'var(--blue)'
               return (

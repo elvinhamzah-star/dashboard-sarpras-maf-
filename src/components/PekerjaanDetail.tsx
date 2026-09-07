@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import {
   SubProgram,
+  SubProgramTask,
   Program,
   Transaction,
   ProgramDocument,
@@ -8,6 +9,7 @@ import {
   invalidateCache,
   fetchPrograms,
   fetchSubPrograms,
+  fetchSubProgramTasks,
   fetchProgramDocuments,
   fetchTransactions,
   fetchDocumentation,
@@ -26,7 +28,7 @@ import HasilFormModal from './HasilFormModal'
 import HasilRingkasan from './HasilRingkasan'
 import HasilRincianCard from './HasilRincianCard'
 import FilterSummaryBar from './FilterSummaryBar'
-import { deriveProgramTotals, deriveNilaiAset } from '../lib/deriveTotals'
+import { deriveProgramTotals, deriveNilaiAset, withChecklistProgress, computeSubProgramEta } from '../lib/deriveTotals'
 import { isRestrictedForRole } from '../lib/access'
 import { Z_MODAL_DEEPER } from '../lib/zIndex'
 import { useEdgeSwipeBack } from '../lib/useEdgeSwipeBack'
@@ -49,6 +51,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const isNarrow = width < 1100
   const [program, setProgram] = useState<Program | null>(null)
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
+  const [subProgramTasks, setSubProgramTasks] = useState<SubProgramTask[]>([])
+  const [expandedGedung, setExpandedGedung] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('Ringkasan')
   const [programDocs, setProgramDocs] = useState<ProgramDocument[]>([])
@@ -112,9 +116,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     // every open. When the cache is warm this resolves in a microtask — the page
     // renders instantly with no network buffering. Admin write paths call
     // invalidateCache(...) before load(), so post-save reloads still fetch fresh.
-    const [pRes, sRes, pdRes, tRes, docRes] = await Promise.all([
+    const [pRes, sRes, taskRes, pdRes, tRes, docRes] = await Promise.all([
       fetchPrograms(),
       fetchSubPrograms(),
+      fetchSubProgramTasks(),
       fetchProgramDocuments(),
       fetchTransactions(),
       fetchDocumentation(),
@@ -136,11 +141,17 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     } else {
       setProgram(null)
     }
+    const tasksForProgram = taskRes.data
+      ? (taskRes.data as SubProgramTask[]).filter(t =>
+          (sRes.data as SubProgram[] | null)?.some(s => s.id === t.sub_program_id && s.program_id === programId)
+        )
+      : []
+    setSubProgramTasks(tasksForProgram)
     if (sRes.data) {
       const STATUS_ORDER: Record<string, number> = { 'Selesai': 0, 'On Going': 1, 'On Hold': 2, 'Perencanaan': 3 }
+      const ownSubs = (sRes.data as SubProgram[]).filter(s => s.program_id === programId)
       setSubPrograms(
-        (sRes.data as SubProgram[])
-          .filter(s => s.program_id === programId)
+        withChecklistProgress(ownSubs, tasksForProgram)
           .sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
       )
     }
@@ -150,6 +161,84 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   }
 
   useEffect(() => { load() }, [programId])
+
+  const toggleGedung = (id: string) => {
+    setExpandedGedung(prev => prev === id ? null : id)
+  }
+
+  const TASK_STATUS_COLOR: Record<string, string> = { 'Selesai': '#1B5E2B', 'On Progress': '#B45309', 'Belum Mulai': 'var(--text-muted)' }
+  const TASK_STATUS_BG: Record<string, string> = { 'Selesai': 'rgba(27,94,43,0.1)', 'On Progress': 'rgba(180,83,9,0.1)', 'Belum Mulai': 'var(--surface-2)' }
+
+  // Checklist item + ETA per gedung — cuma render kalau gedung ini punya
+  // task tersimpan (gedung tanpa checklist tetap pakai progress manual lama).
+  // Klik pill status (admin only) buat siklus Belum Mulai -> On Progress ->
+  // Selesai -> Belum Mulai. Update optimis ke subProgramTasks + subPrograms
+  // (progress_percent dihitung ulang lewat withChecklistProgress) supaya
+  // progress gedung & rollup program ikut update tanpa reload halaman;
+  // rollback kalau RPC gagal.
+  const TASK_STATUS_ORDER: SubProgramTask['status'][] = ['Belum Mulai', 'On Progress', 'Selesai']
+  const cycleTaskStatus = async (task: SubProgramTask) => {
+    if (!isAdmin) return
+    const prevTasks = subProgramTasks
+    const prevSubs = subPrograms
+    const next = TASK_STATUS_ORDER[(TASK_STATUS_ORDER.indexOf(task.status) + 1) % TASK_STATUS_ORDER.length]
+    const updatedTasks = prevTasks.map(t => t.id === task.id ? { ...t, status: next } : t)
+    setSubProgramTasks(updatedTasks)
+    setSubPrograms(prev => withChecklistProgress(prev, updatedTasks))
+    const { error } = await adminUpdate('sub_program_tasks', { status: next }, task.id)
+    if (error) {
+      setSubProgramTasks(prevTasks)
+      setSubPrograms(prevSubs)
+      alert('Gagal update status checklist.')
+      return
+    }
+    invalidateCache('sub_program_tasks', 'sub_programs')
+  }
+
+  const renderChecklistPanel = (sp: SubProgram) => {
+    const tasks = subProgramTasks.filter(t => t.sub_program_id === sp.id)
+    if (tasks.length === 0) return null
+    const eta = computeSubProgramEta(sp.tanggal_mulai_aktual, tasks)
+    return (
+      <div style={{ padding: '12px 14px', backgroundColor: 'var(--surface-raised)', borderRadius: 10, marginTop: 8 }}>
+        {sp.tanggal_mulai_aktual && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 10, fontSize: 11.5, color: 'var(--text-secondary)' }}>
+            <span>Mulai: <strong style={{ color: 'var(--text-primary)' }}>{formatTanggal(sp.tanggal_mulai_aktual)}</strong></span>
+            {eta && (
+              <span>Estimasi selesai: <strong style={{ color: 'var(--blue)' }}>{formatTanggal(eta.toISOString().slice(0, 10))}</strong></span>
+            )}
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {tasks.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                <span
+                  onClick={isAdmin ? () => cycleTaskStatus(t) : undefined}
+                  title={isAdmin ? 'Klik untuk ubah status' : undefined}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0,
+                    padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                    backgroundColor: TASK_STATUS_BG[t.status], color: TASK_STATUS_COLOR[t.status],
+                    cursor: isAdmin ? 'pointer' : 'default',
+                  }}
+                >
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor' }} />
+                  {t.status}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.item}>
+                  {t.item}
+                </span>
+              </div>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {formatRupiah(t.nilai)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const handleAddDoc = async () => {
     if (!docForm || !docName.trim() || docSaving) return
@@ -937,19 +1026,41 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             {sp.nama_gedung}
                           </div>
                         </div>
-                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <span style={{
-                            display: 'inline-block', padding: '1px 7px', borderRadius: 20,
-                            fontSize: 10, fontWeight: 700,
-                            backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
-                            color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
-                          }}>
-                            {sp.status}
-                          </span>
-                          <span style={{ fontSize: 10, color: 'var(--border)' }}>|</span>
-                          <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
-                            Progres {sp.progress_percent || 0}%
-                          </span>
+                        <div style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                          <div
+                            onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
+                          >
+                            <span style={{
+                              display: 'inline-block', padding: '1px 7px', borderRadius: 20,
+                              fontSize: 10, fontWeight: 700,
+                              backgroundColor: STATUS_BG[sp.status] || 'var(--border-subtle)',
+                              color: STATUS_COLORS[sp.status] || 'var(--text-secondary)',
+                            }}>
+                              {sp.status}
+                            </span>
+                            <span style={{ fontSize: 10, color: 'var(--border)' }}>|</span>
+                            <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
+                              Progres {sp.progress_percent || 0}%
+                            </span>
+                            {subProgramTasks.some(t => t.sub_program_id === sp.id) && (
+                              <svg width="10" height="10" fill="none" stroke="var(--blue)" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            )}
+                          </div>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setEditingSubProgram(sp)}
+                              style={{
+                                background: 'none', border: '1px solid var(--border)', borderRadius: 7,
+                                padding: '3px 10px', cursor: 'pointer', color: 'var(--text-secondary)',
+                                fontSize: 11, fontWeight: 600, fontFamily: 'inherit', flexShrink: 0,
+                              }}
+                            >
+                              Edit
+                            </button>
+                          )}
                         </div>
                       </div>
                       {/* Kanan: anggaran / realisasi / sisa */}
@@ -981,18 +1092,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                       </div>
                       )}
                     </div>
-                    {isAdmin && (
-                      <button
-                        onClick={() => setEditingSubProgram(sp)}
-                        style={{
-                          background: 'none', border: '1px solid var(--border)', borderRadius: 7,
-                          padding: '5px 12px', cursor: 'pointer', color: 'var(--text-secondary)',
-                          fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                        }}
-                      >
-                        Edit
-                      </button>
-                    )}
+                    {expandedGedung === sp.id && renderChecklistPanel(sp)}
                   </div>
                 ))}
               </div>
@@ -1033,7 +1133,19 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                       >
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
-                        <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{sp.nama_gedung}</td>
+                        <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                          {subProgramTasks.some(t => t.sub_program_id === sp.id) ? (
+                            <button
+                              onClick={() => toggleGedung(sp.id)}
+                              style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit' }}
+                            >
+                              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: 'var(--blue)', flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                              {sp.nama_gedung}
+                            </button>
+                          ) : sp.nama_gedung}
+                        </td>
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{sp.vendor || '-'}</td>
                         <td style={{ padding: '11px 14px', minWidth: 120 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1107,6 +1219,15 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         )}
                       </tr>
                     )})}
+                    {subPrograms.map(sp => (
+                      expandedGedung === sp.id && subProgramTasks.some(t => t.sub_program_id === sp.id) ? (
+                        <tr key={`${sp.id}-checklist`}>
+                          <td colSpan={isAdmin ? 9 : 8} style={{ padding: '0 14px 14px' }}>
+                            {renderChecklistPanel(sp)}
+                          </td>
+                        </tr>
+                      ) : null
+                    ))}
                   </tbody>
                 </table>
               </div>
