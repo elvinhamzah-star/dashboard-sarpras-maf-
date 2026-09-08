@@ -166,6 +166,16 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     setExpandedGedung(prev => prev === id ? null : id)
   }
 
+  // Gedung sebelumnya (kalau ada, sering panjang) ketutup barengan gedung baru
+  // kebuka dalam satu update state — tinggi halaman berubah drastis tapi posisi
+  // scroll gak ikut menyesuaikan, jadi baris yang baru dibuka bisa geser ke luar
+  // viewport. Scroll manual ke barisnya begitu render kelar.
+  useEffect(() => {
+    if (!expandedGedung) return
+    const el = document.querySelector(`[data-gedung-id="${expandedGedung}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [expandedGedung])
+
   const TASK_STATUS_COLOR: Record<string, string> = { 'Selesai': '#1B5E2B', 'On Progress': '#B45309', 'Belum Mulai': 'var(--text-muted)' }
   const TASK_STATUS_BG: Record<string, string> = { 'Selesai': 'rgba(27,94,43,0.1)', 'On Progress': 'rgba(180,83,9,0.1)', 'Belum Mulai': 'var(--surface-2)' }
 
@@ -1022,7 +1032,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
             ) : isNarrow ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {subPrograms.map((sp, i) => (
-                  <div key={sp.id} style={{
+                  <div key={sp.id} data-gedung-id={sp.id} style={{
                     padding: '12px 14px',
                     border: '1px solid var(--border)',
                     borderRadius: 12,
@@ -1144,6 +1154,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     return (
                       <Fragment key={sp.id}>
                       <tr
+                        data-gedung-id={sp.id}
                         onClick={hasTasks ? () => toggleGedung(sp.id) : undefined}
                         style={{ borderBottom: (i < subPrograms.length - 1 && expandedGedung !== sp.id) ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: hasTasks ? 'pointer' : 'default' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--surface-min)' }}
