@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Fragment } from 'react'
 import {
   SubProgram,
   SubProgramTask,
@@ -1140,17 +1140,18 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                   <tbody>
                     {subPrograms.map((sp, i) => {
                     const showFinancial = role !== 'maf' || program.status !== 'Perencanaan'
+                    const hasTasks = subProgramTasks.some(t => t.sub_program_id === sp.id)
                     return (
+                      <Fragment key={sp.id}>
                       <tr
-                        key={sp.id}
-                        onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
-                        style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
+                        onClick={hasTasks ? () => toggleGedung(sp.id) : undefined}
+                        style={{ borderBottom: (i < subPrograms.length - 1 && expandedGedung !== sp.id) ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: hasTasks ? 'pointer' : 'default' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--surface-min)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                       >
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
                         <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                          {subProgramTasks.some(t => t.sub_program_id === sp.id) ? (
+                          {hasTasks ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: 'var(--blue)', flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
                                 <polyline points="6 9 12 15 18 9" />
@@ -1231,16 +1232,15 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </td>
                         )}
                       </tr>
-                    )})}
-                    {subPrograms.map(sp => (
-                      expandedGedung === sp.id && subProgramTasks.some(t => t.sub_program_id === sp.id) ? (
-                        <tr key={`${sp.id}-checklist`}>
+                      {expandedGedung === sp.id && hasTasks && (
+                        <tr style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none' }}>
                           <td colSpan={isAdmin ? 9 : 8} style={{ padding: '0 14px 14px' }}>
                             {renderChecklistPanel(sp)}
                           </td>
                         </tr>
-                      ) : null
-                    ))}
+                      )}
+                      </Fragment>
+                    )})}
                   </tbody>
                 </table>
               </div>
