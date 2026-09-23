@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, useRef, useCallback } from 'react'
 import { adminInsert, adminUploadBukti } from '../lib/adminApi'
 import { formatRupiah } from '../lib/data'
-import { supabase } from '../lib/supabase'
 import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
+import ProgramPicker from './ui/ProgramPicker'
 
 const ACCEPTED = 'application/pdf,image/png,image/jpeg'
 const MAX_MB = 10
@@ -19,8 +18,6 @@ async function uploadBukti(file: File): Promise<string> {
   if (error || !url) throw new Error(error || 'Gagal upload file')
   return url
 }
-
-interface Program { id: string; nama_pekerjaan: string }
 
 interface AddTransactionModalProps {
   onClose: () => void
@@ -50,9 +47,12 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AddTransactionModal({ onClose, onSuccess }: AddTransactionModalProps) {
-  const [programs, setPrograms] = useState<Program[]>([])
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
+  const [programId, setProgramId] = useState<string | null>(null)
   const [pekerjaan, setPekerjaan] = useState('')
+  // "Dana PBB" tidak terikat ke satu pekerjaan tertentu — satu-satunya jalur yang
+  // sengaja menyimpan program_id = null (lihat catatan produk di laporan tugas ini).
+  const [isDanaPBB, setIsDanaPBB] = useState(false)
   const [keterangan, setKeterangan] = useState('')
   const [jenis, setJenis] = useState('Masuk')
   const [nominal, setNominal] = useState('')
@@ -83,69 +83,8 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     if (file) handleFileChange(file)
   }, [])
 
-  // Dropdown state
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const portalRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    supabase.from('programs').select('id, nama_pekerjaan').order('nama_pekerjaan').then(({ data }) => {
-      if (data) setPrograms(data)
-    })
-  }, [])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!dropdownOpen) return
-    const handler = (e: MouseEvent) => {
-      const inTrigger = dropdownRef.current?.contains(e.target as Node)
-      const inPortal = portalRef.current?.contains(e.target as Node)
-      if (!inTrigger && !inPortal) { setDropdownOpen(false); setSearch('') }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [dropdownOpen])
-
-  // Focus search input when dropdown opens
-  useEffect(() => {
-    if (dropdownOpen) setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 50)
-  }, [dropdownOpen])
-
-  const openDropdown = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-      const DROPDOWN_HEIGHT = 290
-      const fitsBelow = rect.bottom + 6 + DROPDOWN_HEIGHT < viewportHeight
-      setDropdownPos({
-        top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - DROPDOWN_HEIGHT - 6),
-        left: rect.left,
-        width: rect.width,
-      })
-    }
-    setDropdownOpen(true)
-  }
-
-  const STATIC_OPTIONS = ['Dana PBB']
-  const filteredStatic = STATIC_OPTIONS.filter(n =>
-    n.toLowerCase().includes(search.toLowerCase())
-  )
-  const filteredPrograms = programs.filter(p =>
-    p.nama_pekerjaan.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const handleSelect = (name: string) => {
-    setPekerjaan(name)
-    setDropdownOpen(false)
-    setSearch('')
-  }
-
   const handleSave = async () => {
-    if (!tanggal || !pekerjaan.trim() || !keterangan.trim() || !nominal) {
+    if (!tanggal || (!isDanaPBB && !programId) || !keterangan.trim() || !nominal) {
       setError('Semua field harus diisi (kecuali Bukti)')
       return
     }
@@ -173,7 +112,8 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     setSaving(true)
     const { error: err } = await adminInsert('transactions', {
       tanggal,
-      nama_pekerjaan: pekerjaan,
+      nama_pekerjaan: isDanaPBB ? 'Dana PBB' : pekerjaan,
+      program_id: isDanaPBB ? null : programId,
       deskripsi: keterangan,
       jenis_transaksi: jenis,
       nominal: nominalNum,
@@ -212,186 +152,31 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           <DatePicker value={tanggal} onChange={setTanggal} zIndex={Z_DROPDOWN_IN_MODAL} />
         </div>
 
-        {/* Nama Pekerjaan — custom dropdown */}
+        {/* Nama Pekerjaan */}
         <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Nama Pekerjaan</label>
-          <div ref={dropdownRef}>
-            {/* Trigger */}
-            <button
-              ref={triggerRef}
-              type="button"
-              onClick={() => dropdownOpen ? (setDropdownOpen(false), setSearch('')) : openDropdown()}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 10,
-                border: `1px solid ${dropdownOpen ? 'var(--blue)' : 'var(--border)'}`,
-                backgroundColor: 'var(--card)',
-                fontSize: 13,
-                color: pekerjaan ? 'var(--text-primary)' : 'var(--text-muted)',
-                fontFamily: 'inherit',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 8,
-                textAlign: 'left',
-                outline: 'none',
-                boxShadow: dropdownOpen ? '0 0 0 3px rgba(26,111,232,0.12)' : 'none',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-              }}
-            >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {pekerjaan || 'Pilih pekerjaan...'}
-              </span>
-              <svg
-                width="14" height="14" fill="none" stroke="#9CAABB" strokeWidth="2.5" viewBox="0 0 24 24"
-                style={{ flexShrink: 0, transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-
-            {/* Dropdown panel — portaled to body to escape modal overflow clipping */}
-            {dropdownOpen && createPortal(
-              <div ref={portalRef} style={{
-                position: 'fixed',
-                top: dropdownPos.top,
-                left: dropdownPos.left,
-                width: dropdownPos.width,
-                zIndex: Z_DROPDOWN_IN_MODAL,
-                backgroundColor: 'var(--card)',
-                borderRadius: 12,
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 8px 32px rgba(13,24,41,0.14)',
-                overflow: 'hidden',
-              }}>
-                {/* Search */}
-                <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div style={{ position: 'relative' }}>
-                    <svg
-                      width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
-                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                    >
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                    <input
-                      ref={searchRef}
-                      type="text"
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      placeholder="Cari pekerjaan..."
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px 8px 30px',
-                        borderRadius: 8,
-                        border: '1px solid var(--border-subtle)',
-                        fontSize: 14,
-                        color: 'var(--text-primary)',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                        backgroundColor: 'var(--surface-raised)',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* List */}
-                <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                  {filteredStatic.length === 0 && filteredPrograms.length === 0 ? (
-                    <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>
-                      Tidak ada hasil
-                    </div>
-                  ) : (
-                    <>
-                      {filteredStatic.map(name => (
-                        <button
-                          key={name}
-                          type="button"
-                          onClick={() => handleSelect(name)}
-                          style={{
-                            width: '100%',
-                            padding: '10px 14px',
-                            border: 'none',
-                            borderBottom: '1px solid var(--surface-min)',
-                            backgroundColor: name === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                            color: name === pekerjaan ? 'var(--blue)' : 'var(--text-primary)',
-                            fontSize: 13,
-                            fontWeight: name === pekerjaan ? 600 : 500,
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}
-                          onMouseEnter={e => {
-                            if (name !== pekerjaan)
-                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
-                          }}
-                          onMouseLeave={e => {
-                            if (name !== pekerjaan)
-                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          {name === pekerjaan && (
-                            <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          )}
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {name}
-                          </span>
-                        </button>
-                      ))}
-                      {filteredPrograms.map((p, i) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => handleSelect(p.nama_pekerjaan)}
-                          style={{
-                            width: '100%',
-                            padding: '10px 14px',
-                            border: 'none',
-                            borderBottom: i < filteredPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none',
-                            backgroundColor: p.nama_pekerjaan === pekerjaan ? 'rgba(26,111,232,0.06)' : 'transparent',
-                            color: p.nama_pekerjaan === pekerjaan ? 'var(--blue)' : 'var(--text-primary)',
-                            fontSize: 13,
-                            fontWeight: p.nama_pekerjaan === pekerjaan ? 600 : 400,
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}
-                          onMouseEnter={e => {
-                            if (p.nama_pekerjaan !== pekerjaan)
-                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-min)'
-                          }}
-                          onMouseLeave={e => {
-                            if (p.nama_pekerjaan !== pekerjaan)
-                              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          {p.nama_pekerjaan === pekerjaan && (
-                            <svg width="13" height="13" fill="none" stroke="#1A6FE8" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          )}
-                          <span title={p.nama_pekerjaan} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {p.nama_pekerjaan}
-                          </span>
-                        </button>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>,
-              document.body
-            )}
-          </div>
+          {isDanaPBB ? (
+            <div>
+              <label style={labelStyle}>Pekerjaan</label>
+              <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: 'var(--text-muted)', backgroundColor: 'var(--surface-subtle)' }}>
+                Dana PBB (tidak terikat pekerjaan tertentu)
+              </div>
+            </div>
+          ) : (
+            <ProgramPicker
+              programId={programId}
+              onChangeProgram={(id, nama) => { setProgramId(id); setPekerjaan(nama) }}
+              zIndex={Z_DROPDOWN_IN_MODAL}
+            />
+          )}
+          {/* Dana PBB: satu-satunya transaksi yang boleh tanpa program_id — lihat catatan produk */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 8 }}>
+            <input
+              type="checkbox"
+              checked={isDanaPBB}
+              onChange={e => { setIsDanaPBB(e.target.checked); if (e.target.checked) { setProgramId(null); setPekerjaan('Dana PBB') } else { setPekerjaan('') } }}
+            />
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Dana PBB (bukan terikat pekerjaan tertentu)</span>
+          </label>
         </div>
 
         {/* Keterangan */}

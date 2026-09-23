@@ -6,6 +6,7 @@ import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
 import DatePicker from './ui/DatePicker'
+import ProgramPicker from './ui/ProgramPicker'
 
 interface EditTransactionModalProps {
   transaction: Transaction
@@ -37,6 +38,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function EditTransactionModal({ transaction, onClose, onSuccess }: EditTransactionModalProps) {
   const [tanggal, setTanggal] = useState(transaction.tanggal ?? '')
+  const [programId, setProgramId] = useState<string | null>(transaction.program_id)
   const [pekerjaan, setPekerjaan] = useState(transaction.nama_pekerjaan ?? '')
   const [keterangan, setKeterangan] = useState(transaction.deskripsi ?? '')
   const [jenis, setJenis] = useState(transaction.jenis_transaksi ?? 'Masuk')
@@ -62,6 +64,7 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
     const { error: err } = await adminUpdate('transactions', {
       tanggal,
       nama_pekerjaan: pekerjaan.trim(),
+      program_id: programId,
       deskripsi: keterangan.trim(),
       jenis_transaksi: jenis,
       nominal: nominalNum,
@@ -102,13 +105,10 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
 
         {/* Nama Pekerjaan */}
         <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Nama Pekerjaan</label>
-          <input
-            type="text"
-            value={pekerjaan}
-            onChange={e => setPekerjaan(e.target.value)}
-            placeholder="Nama pekerjaan..."
-            style={inputStyle}
+          <ProgramPicker
+            programId={programId}
+            onChangeProgram={(id, nama) => { setProgramId(id); setPekerjaan(nama) }}
+            zIndex={Z_DROPDOWN_IN_MODAL}
           />
         </div>
 
