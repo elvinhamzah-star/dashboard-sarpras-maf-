@@ -10,6 +10,7 @@ interface Props {
 }
 
 interface Group {
+  key: string
   nama: string
   total: number
   count: number
@@ -21,11 +22,18 @@ export default function PengeluaranPerPekerjaanModal({ transactions, onClose, on
 
   const groups: Group[] = (() => {
     const map = new Map<string, Group>()
+    // Kelompokkan lewat program_id (bukan string nama_pekerjaan mentah), biar
+    // pekerjaan yang pernah di-rename/typo tetap ke-merge jadi satu baris.
+    // Transaksi legacy tanpa program_id (belum di-backfill) fallback ke nama.
     transactions
       .filter(t => t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
+      .slice()
+      .sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime())
       .forEach(t => {
-        const key = t.nama_pekerjaan || '(Tanpa Nama Pekerjaan)'
-        if (!map.has(key)) map.set(key, { nama: key, total: 0, count: 0, items: [] })
+        const key = t.program_id || t.nama_pekerjaan || '(Tanpa Nama Pekerjaan)'
+        if (!map.has(key)) {
+          map.set(key, { key, nama: t.nama_pekerjaan || '(Tanpa Nama Pekerjaan)', total: 0, count: 0, items: [] })
+        }
         const g = map.get(key)!
         g.total += t.nominal || 0
         g.count += 1
@@ -55,11 +63,11 @@ export default function PengeluaranPerPekerjaanModal({ transactions, onClose, on
                 Belum ada pengeluaran tercatat.
               </div>
             ) : groups.map(g => {
-              const isOpen = expanded === g.nama
+              const isOpen = expanded === g.key
               return (
-                <div key={g.nama} style={{ border: '1px solid var(--border)', borderRadius: 10, marginTop: 8, overflow: 'hidden' }}>
+                <div key={g.key} style={{ border: '1px solid var(--border)', borderRadius: 10, marginTop: 8, overflow: 'hidden' }}>
                   <button
-                    onClick={() => setExpanded(isOpen ? null : g.nama)}
+                    onClick={() => setExpanded(isOpen ? null : g.key)}
                     style={{
                       width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '12px 14px', backgroundColor: isOpen ? 'var(--surface-2)' : 'var(--card)',

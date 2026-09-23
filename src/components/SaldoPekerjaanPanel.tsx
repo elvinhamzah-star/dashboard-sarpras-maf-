@@ -43,22 +43,22 @@ export default function SaldoPekerjaanPanel() {
     Promise.all([fetchPrograms(), fetchTransactions()]).then(([pRes, tRes]) => {
       if (!pRes.data || !tRes.data) { setLoading(false); return }
       const txs = tRes.data
-      const programNames = new Set(pRes.data.map(p => p.nama_pekerjaan))
 
+      // Dana Keluar kini dibaca langsung dari programs.realisasi_terkini — kolom
+      // itu sudah dijaga tetap benar oleh trigger DB (sync_program_realisasi) tiap
+      // transaksi berubah, jadi gak perlu dihitung ulang di client.
       const computed: Row[] = pRes.data.map(p => {
         const masuk = p.dana_masuk || 0
-        const keluar = txs
-          .filter(t => t.nama_pekerjaan === p.nama_pekerjaan && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
-          .reduce((s, t) => s + (t.nominal || 0), 0)
+        const keluar = p.realisasi_terkini || 0
         return { program: p, masuk, keluar, saldo: masuk - keluar, sisaPengajuan: (p.total_anggaran || 0) - masuk }
       })
 
       // Urutan sama seperti Halaman Pekerjaan (P-001 -> P-025), biar gak bikin bingung
       computed.sort((a, b) => a.program.id.localeCompare(b.program.id))
 
-      // Keluar yang tidak terkait pekerjaan spesifik (Man Power, dll)
+      // Keluar yang tidak terkait pekerjaan manapun (mis. Man Power, dana PBB lepas)
       const unmatched = txs
-        .filter(t => !programNames.has(t.nama_pekerjaan) && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
+        .filter(t => !t.program_id && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
         .reduce((s, t) => s + (t.nominal || 0), 0)
 
       setRows(computed)
