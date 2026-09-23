@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { Program } from '../lib/supabase'
+import { Program, SubProgram, Transaction } from '../lib/supabase'
 import { STATUS_COLORS, formatRupiah } from '../lib/data'
+import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { useEscapeKey } from '../lib/useEscapeKey'
@@ -19,6 +20,11 @@ interface Props {
   inline?: boolean
   /** Row click → open that program's detail. Omit to keep rows read-only. */
   onProgramClick?: (id: string) => void
+  /** Dipakai bareng `transactions` buat hitung anggaran/realisasi per program lewat
+   *  deriveProgramTotals, bukan kolom programs.total_anggaran/realisasi_terkini yang
+   *  bisa basi (mis. begitu sub-pekerjaan diubah atau ada transaksi baru). */
+  subPrograms?: SubProgram[]
+  transactions?: Transaction[]
 }
 
 const GROUP_LABELS: Record<string, string> = {
@@ -82,13 +88,20 @@ const ICONS: Record<string, React.ReactNode> = {
   penyerapan: <IconPenyerapan />,
 }
 
-export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose, inline, onProgramClick }: Props) {
+export default function MetricDetailModal({ type, programs, totalAnggaran, totalRealisasi, onClose, inline, onProgramClick, subPrograms, transactions }: Props) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
   const ps = isMobile ? 16 : 24
   const totalSisa = totalAnggaran - totalRealisasi
   const penyerapan = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
-  const withRealisasi = programs.filter(p => (p.realisasi_terkini || 0) > 0)
+  // Realisasi/anggaran per program lewat deriveProgramTotals (sama seperti Pekerjaan.tsx)
+  // supaya gak baca kolom programs.realisasi_terkini/total_anggaran yang bisa basi —
+  // dihitung sekali per program id, dipakai ulang di semua cabang renderRows().
+  const derivedById = new Map(
+    programs.map(p => [p.id, deriveProgramTotals(p, (subPrograms ?? []).filter(s => s.program_id === p.id), transactions)]),
+  )
+  const getDerived = (p: Program) => derivedById.get(p.id) ?? deriveProgramTotals(p, [], transactions)
+  const withRealisasi = programs.filter(p => getDerived(p).realisasi_terkini > 0)
   const accent = ACCENT[type]
 
   // When rendered via ModalShell (inline=false), Escape is handled centrally
@@ -152,16 +165,17 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
   const renderRows = () => {
     if (type === 'anggaran') {
-      const sorted = [...programs].sort((a, b) => (b.total_anggaran || 0) - (a.total_anggaran || 0))
+      const sorted = [...programs].sort((a, b) => getDerived(b).total_anggaran - getDerived(a).total_anggaran)
       const els: JSX.Element[] = []
       sorted.forEach((p, i) => {
-        const pct = totalAnggaran > 0 ? ((p.total_anggaran || 0) / totalAnggaran * 100).toFixed(1) : '0'
+        const anggaran = getDerived(p).total_anggaran
+        const pct = totalAnggaran > 0 ? (anggaran / totalAnggaran * 100).toFixed(1) : '0'
         els.push(
           <div key={p.id} style={rowSt(i === sorted.length - 1)} {...rowInteraction(p.id)}>
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{p.nama_pekerjaan}</span>
             {valBox(
-              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(p.total_anggaran || 0)}</span>,
+              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(anggaran)}</span>,
               `${pct}% dari total`
             )}
           </div>
@@ -177,21 +191,22 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
       const els: JSX.Element[] = []
       groups.forEach(status => {
         const gp = programs
-          .filter(p => p.status === status && (p.realisasi_terkini || 0) > 0)
-          .sort((a, b) => (b.realisasi_terkini || 0) - (a.realisasi_terkini || 0))
+          .filter(p => p.status === status && getDerived(p).realisasi_terkini > 0)
+          .sort((a, b) => getDerived(b).realisasi_terkini - getDerived(a).realisasi_terkini)
         if (!gp.length) return
         const color = STATUS_COLORS[status]
         els.push(groupHeader(`${GROUP_LABELS[status]} ${gp.length} Pekerjaan`, color, hasGroup))
         hasGroup = true
         gp.forEach((p, i) => {
           const r = rank++
-          const pct = p.total_anggaran ? ((p.realisasi_terkini || 0) / p.total_anggaran * 100).toFixed(1) : '0'
+          const d = getDerived(p)
+          const pct = d.total_anggaran ? (d.realisasi_terkini / d.total_anggaran * 100).toFixed(1) : '0'
           els.push(
             <div key={p.id} style={rowSt(i === gp.length - 1)} {...rowInteraction(p.id)}>
               <span style={rankSt}>{r}</span>
               <span style={nameSt}>{p.nama_pekerjaan}</span>
               {valBox(
-                <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(p.realisasi_terkini || 0)}</span>,
+                <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(d.realisasi_terkini)}</span>,
                 `${pct}% terserap`
               )}
             </div>
@@ -203,17 +218,17 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
     if (type === 'sisa') {
       const withSisa = [...programs]
-        .map(p => ({ prog: p, sisa: (p.total_anggaran || 0) - (p.realisasi_terkini || 0) }))
-        .sort((a, b) => b.sisa - a.sisa)
+        .map(p => ({ prog: p, derived: getDerived(p) }))
+        .sort((a, b) => b.derived.sisa_anggaran - a.derived.sisa_anggaran)
       const els: JSX.Element[] = []
-      withSisa.forEach(({ prog, sisa }, i) => {
+      withSisa.forEach(({ prog, derived }, i) => {
         els.push(
           <div key={prog.id} style={rowSt(i === withSisa.length - 1)} {...rowInteraction(prog.id)}>
             <span style={rankSt}>{i + 1}</span>
             <span style={nameSt}>{prog.nama_pekerjaan}</span>
             {valBox(
-              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(sisa)}</span>,
-              `dari ${formatRupiah(prog.total_anggaran || 0)}`
+              <span style={{ color: 'var(--text-primary)' }}>{formatRupiah(derived.sisa_anggaran)}</span>,
+              `dari ${formatRupiah(derived.total_anggaran)}`
             )}
           </div>
         )
@@ -222,24 +237,24 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
     }
 
     if (type === 'penyerapan') {
-      const mapped = [...programs].map(p => ({
-        prog: p,
-        pct: p.total_anggaran ? Math.round((p.realisasi_terkini || 0) / p.total_anggaran * 100) : 0,
-      }))
+      const mapped = [...programs].map(p => {
+        const d = getDerived(p)
+        return { prog: p, derived: d, pct: d.total_anggaran ? Math.round(d.realisasi_terkini / d.total_anggaran * 100) : 0 }
+      })
       const withReal = mapped.filter(x => x.pct > 0).sort((a, b) => b.pct - a.pct)
-      const noReal   = mapped.filter(x => x.pct === 0).sort((a, b) => (b.prog.total_anggaran || 0) - (a.prog.total_anggaran || 0))
+      const noReal   = mapped.filter(x => x.pct === 0).sort((a, b) => b.derived.total_anggaran - a.derived.total_anggaran)
       const els: JSX.Element[] = []
 
       if (withReal.length > 0) {
         els.push(groupHeader(`Sudah Terealisasi ${withReal.length} Pekerjaan dari ${programs.length}`, accent, false))
-        withReal.forEach(({ prog, pct }, i) => {
+        withReal.forEach(({ prog, derived, pct }, i) => {
           els.push(
             <div key={prog.id} style={rowSt(i === withReal.length - 1 && noReal.length === 0)} {...rowInteraction(prog.id)}>
               <span style={rankSt}>{i + 1}</span>
               <span style={nameSt}>{prog.nama_pekerjaan}</span>
               {valBox(
                 <span style={{ color: 'var(--text-primary)' }}>{pct}%</span>,
-                formatRupiah(prog.realisasi_terkini || 0)
+                formatRupiah(derived.realisasi_terkini)
               )}
             </div>
           )
@@ -248,14 +263,14 @@ export default function MetricDetailModal({ type, programs, totalAnggaran, total
 
       if (noReal.length > 0) {
         els.push(groupHeader(`Belum Terealisasi ${noReal.length} Pekerjaan`, 'var(--text-muted)', withReal.length > 0))
-        noReal.forEach(({ prog }, i) => {
+        noReal.forEach(({ prog, derived }, i) => {
           els.push(
             <div key={prog.id} style={rowSt(i === noReal.length - 1)} {...rowInteraction(prog.id)}>
               <span style={rankSt}>{withReal.length + i + 1}</span>
               <span style={{ ...nameSt, color: 'var(--text-muted)' }}>{prog.nama_pekerjaan}</span>
               {valBox(
                 <span style={{ color: 'var(--text-muted)' }}>0%</span>,
-                formatRupiah(prog.total_anggaran || 0)
+                formatRupiah(derived.total_anggaran)
               )}
             </div>
           )

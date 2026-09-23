@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Program, ProgramSnapshot, SubProgram } from '../lib/supabase'
-import { STATUS_COLORS, formatRupiah, getEffectiveProgress } from '../lib/data'
+import { Program, ProgramSnapshot, SubProgram, Transaction } from '../lib/supabase'
+import { STATUS_COLORS, formatRupiah } from '../lib/data'
+import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { isRestrictedForRole } from '../lib/access'
@@ -16,6 +17,10 @@ interface Props {
   programs: Program[]
   snapshots: ProgramSnapshot[]
   subPrograms: SubProgram[]
+  /** Dipakai bareng subPrograms buat hitung anggaran/realisasi per program lewat
+   *  deriveProgramTotals, bukan kolom programs.total_anggaran/realisasi_terkini/
+   *  sisa_anggaran yang bisa basi. */
+  transactions: Transaction[]
   rencanaMap: Record<string, string[]>
   progressLapangan: string | null
   freshnessDays: number | null
@@ -56,6 +61,14 @@ const TAB_ICONS: Record<string, JSX.Element> = {
   ),
 }
 
+// Anggaran/realisasi/sisa satu program lewat deriveProgramTotals (sama pola
+// dengan Pekerjaan.tsx) — bukan baca programs.total_anggaran/realisasi_terkini/
+// sisa_anggaran langsung, yang bisa basi begitu sub-pekerjaan diubah atau ada
+// transaksi baru.
+function getDerivedTotals(program: Program, subPrograms: SubProgram[], transactions: Transaction[]) {
+  return deriveProgramTotals(program, subPrograms.filter(s => s.program_id === program.id), transactions)
+}
+
 function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   const subs = subPrograms.filter(s => s.program_id === program.id)
   if (subs.length === 0) return program.vendor || ''
@@ -64,7 +77,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
   return uniqueVendors.join(' · ')
 }
 
-export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role, isAdmin }: Props) {
+export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, transactions, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role, isAdmin }: Props) {
   const isMaf = role === 'maf'
   const [internalTab, setInternalTab] = useState(isMaf ? 'Selesai' : 'On Going')
   const activeTab = externalTab ?? internalTab
@@ -136,6 +149,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
       }
       return 0
     })
+
+  const getDerived = (p: Program) => getDerivedTotals(p, subPrograms, transactions)
 
   const freshnessColor = freshnessDays === null
     ? 'var(--text-muted)'
@@ -276,7 +291,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
           </div>
         ) : activeTab === 'Selesai' ? (
           filteredPrograms.map((p) => {
-            const sisa = p.sisa_anggaran ?? (p.total_anggaran ?? 0) - (p.realisasi_terkini ?? 0)
+            const d = getDerived(p)
+            const sisa = d.sisa_anggaran
             const isEfficient = sisa > 0
             const isOver = sisa < 0
             return (
@@ -315,10 +331,10 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatRupiah(p.realisasi_terkini ?? 0)}
+                      {formatRupiah(d.realisasi_terkini)}
                     </div>
                     <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
-                      dari {formatRupiah(p.total_anggaran ?? 0)}
+                      dari {formatRupiah(d.total_anggaran)}
                     </div>
                   </div>
                 </div>
@@ -419,10 +435,11 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
         ) : (
           filteredPrograms.map((p) => {
             const color = STATUS_COLORS[p.status] || '#1A6FE8'
-            const effectivePct = getEffectiveProgress(p)
-            const realisasi = p.realisasi_terkini ?? 0
-            const anggaran = p.total_anggaran ?? 0
-            const sisa = p.sisa_anggaran ?? (anggaran - realisasi)
+            const d = getDerived(p)
+            const effectivePct = d.progress_percent
+            const realisasi = d.realisasi_terkini
+            const anggaran = d.total_anggaran
+            const sisa = d.sisa_anggaran
             const isOver = sisa < 0
             return (
               <div

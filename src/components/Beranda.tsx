@@ -847,6 +847,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                         programs={programs}
                         snapshots={snapshots}
                         subPrograms={subPrograms}
+                        transactions={rawTransactions}
                         rencanaMap={rencanaMap}
                         progressLapangan={progressLapangan}
                         freshnessDays={freshnessDays}
@@ -881,6 +882,8 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           programs={displayPrograms}
           totalAnggaran={totalAnggaran}
           totalRealisasi={totalRealisasi}
+          subPrograms={subPrograms}
+          transactions={rawTransactions}
           onClose={() => setActiveModal(null)}
           onProgramClick={id => { setActiveModal(null); setDetailProgramId(id) }}
         />

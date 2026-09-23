@@ -68,6 +68,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   // harus mencakup semua transaksi Keluar, bukan cuma yang ada buktinya.
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
+  const [deletingSubProgramIds, setDeletingSubProgramIds] = useState<Set<string>>(new Set())
   const [addingSubProgram, setAddingSubProgram] = useState(false)
   const [buktiExpanded, setBuktiExpanded] = useState(false)
   // Inline document management (replaces the removed Dokumen page).
@@ -274,6 +275,33 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     setProgramDocs(prev => prev.filter(d => d.id !== doc.id))
     invalidateCache()
     setDeletingDocIds(prev => { const s = new Set(prev); s.delete(doc.id); return s })
+  }
+
+  const handleDeleteSubProgram = async (sp: SubProgram) => {
+    if (!confirm(`Hapus sub pekerjaan "${sp.nama_gedung}"? Tindakan ini tidak bisa dibatalkan.`)) return
+    setDeletingSubProgramIds(prev => new Set(prev).add(sp.id))
+    await adminDelete('sub_programs', sp.id)
+    setSubPrograms(prev => prev.filter(s => s.id !== sp.id))
+    invalidateCache()
+    setDeletingSubProgramIds(prev => { const s = new Set(prev); s.delete(sp.id); return s })
+  }
+
+  // Admin-only trash button appended to a sub_programs (gedung) row — mirrors
+  // renderDocDelete below (same confirm/optimistic-remove/invalidateCache pattern).
+  const renderSubProgramDelete = (sp: SubProgram, size: number) => {
+    if (!isAdmin) return null
+    const deleting = deletingSubProgramIds.has(sp.id)
+    return (
+      <button
+        onClick={e => { e.stopPropagation(); handleDeleteSubProgram(sp) }}
+        disabled={deleting}
+        aria-label="Hapus sub pekerjaan"
+        title="Hapus"
+        style={{ border: '1px solid rgba(224,62,62,0.25)', backgroundColor: 'rgba(224,62,62,0.08)', color: '#E03E3E', width: size, height: size, borderRadius: 7, cursor: deleting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: deleting ? 0.5 : 1, fontFamily: 'inherit', padding: 0 }}
+      >
+        <svg width={size >= 30 ? 14 : 12} height={size >= 30 ? 14 : 12} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    )
   }
 
   // Admin-only trash button appended to a program_documents row.
@@ -713,7 +741,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 </div>
               </div>
             )}
-            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} role={role} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
+            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} role={role} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} subPrograms={subPrograms} transactions={allTransactions} />
             <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
@@ -1075,16 +1103,19 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             )}
                           </div>
                           {isAdmin && (
-                            <button
-                              onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
-                              style={{
-                                background: 'none', border: '1px solid var(--border)', borderRadius: 7,
-                                padding: '3px 10px', cursor: 'pointer', color: 'var(--text-secondary)',
-                                fontSize: 11, fontWeight: 600, fontFamily: 'inherit', flexShrink: 0,
-                              }}
-                            >
-                              Edit
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                              <button
+                                onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
+                                style={{
+                                  background: 'none', border: '1px solid var(--border)', borderRadius: 7,
+                                  padding: '3px 10px', cursor: 'pointer', color: 'var(--text-secondary)',
+                                  fontSize: 11, fontWeight: 600, fontFamily: 'inherit', flexShrink: 0,
+                                }}
+                              >
+                                Edit
+                              </button>
+                              {renderSubProgramDelete(sp, 24)}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1216,30 +1247,33 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         </td>
                         {isAdmin && (
                           <td style={{ padding: '11px 14px', textAlign: 'right' }}>
-                            <button
-                              onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
-                              style={{
-                                background: 'none',
-                                border: '1px solid var(--border)',
-                                borderRadius: 7,
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                                color: 'var(--text-secondary)',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                transition: 'all 0.12s',
-                              }}
-                              onMouseEnter={e => {
-                                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'
-                                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)'
-                              }}
-                              onMouseLeave={e => {
-                                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'
-                                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
-                              }}
-                            >
-                              Edit
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                              <button
+                                onClick={e => { e.stopPropagation(); setEditingSubProgram(sp) }}
+                                style={{
+                                  background: 'none',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: 7,
+                                  padding: '5px 10px',
+                                  cursor: 'pointer',
+                                  color: 'var(--text-secondary)',
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  transition: 'all 0.12s',
+                                }}
+                                onMouseEnter={e => {
+                                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)'
+                                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--blue)'
+                                }}
+                                onMouseLeave={e => {
+                                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'
+                                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'
+                                }}
+                              >
+                                Edit
+                              </button>
+                              {renderSubProgramDelete(sp, 30)}
+                            </div>
                           </td>
                         )}
                       </tr>

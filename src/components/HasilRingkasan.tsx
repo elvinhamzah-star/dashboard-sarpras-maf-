@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   Program,
+  SubProgram,
+  Transaction,
   Documentation,
   BeforeAfterPair,
   HasilKategori,
@@ -9,6 +11,7 @@ import {
   invalidateCache,
 } from '../lib/supabase'
 import { formatRupiah, getDriveThumbnailUrl } from '../lib/data'
+import { deriveProgramTotals } from '../lib/deriveTotals'
 import { katFromJenis } from './HasilFormModal'
 import ManageBeforeAfterModal from './ManageBeforeAfterModal'
 
@@ -18,6 +21,11 @@ interface Props {
   isAdmin?: boolean
   role?: 'pbb' | 'maf' | null
   onNavigateGaleri?: () => void
+  /** Dipakai bareng transactions buat hitung anggaran/realisasi lewat
+   *  deriveProgramTotals, bukan kolom program.total_anggaran/realisasi_terkini
+   *  yang bisa basi. */
+  subPrograms?: SubProgram[]
+  transactions?: Transaction[]
 }
 
 const NILAI_LABEL: Record<HasilKategori, { label: string; sub: string }> = {
@@ -26,7 +34,7 @@ const NILAI_LABEL: Record<HasilKategori, { label: string; sub: string }> = {
   jasa: { label: 'Total Realisasi', sub: 'total realisasi operasional' },
 }
 
-export default function HasilRingkasan({ program, isMobile, isAdmin, role, onNavigateGaleri }: Props) {
+export default function HasilRingkasan({ program, isMobile, isAdmin, role, onNavigateGaleri, subPrograms, transactions }: Props) {
   const [pairs, setPairs] = useState<BeforeAfterPair[]>([])
   const [docs, setDocs] = useState<Documentation[]>([])
   const [showManageBA, setShowManageBA] = useState(false)
@@ -51,9 +59,17 @@ export default function HasilRingkasan({ program, isMobile, isAdmin, role, onNav
 
   const kat: HasilKategori = program.hasil_kategori || katFromJenis(program.jenis_pekerjaan)
   const nilaiCfg = NILAI_LABEL[kat]
-  const nilaiAset = program.hasil_nilai_aset ?? program.realisasi_terkini ?? 0
-  const anggaran = program.total_anggaran ?? 0
-  const realisasi = program.realisasi_terkini ?? 0
+  // Anggaran/realisasi lewat deriveProgramTotals (sama pola dengan Pekerjaan.tsx)
+  // — bukan baca program.total_anggaran/realisasi_terkini langsung, yang bisa
+  // basi begitu sub-pekerjaan diubah atau ada transaksi baru.
+  const derived = deriveProgramTotals(
+    program,
+    (subPrograms ?? []).filter(s => s.program_id === program.id),
+    transactions,
+  )
+  const nilaiAset = program.hasil_nilai_aset ?? derived.realisasi_terkini
+  const anggaran = derived.total_anggaran
+  const realisasi = derived.realisasi_terkini
   const efisiensi = anggaran - realisasi
   const efisiensiPct = anggaran > 0 ? (efisiensi / anggaran) * 100 : 0
   const isHemat = efisiensi > 0

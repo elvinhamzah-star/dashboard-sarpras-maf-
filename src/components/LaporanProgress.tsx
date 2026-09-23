@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchPrograms, fetchSnapshots, fetchTransactions, Program, ProgramSnapshot, Transaction } from '../lib/supabase'
+import { fetchPrograms, fetchSnapshots, fetchTransactions, fetchSubPrograms, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { STATUS_COLORS, formatRupiah, formatRupiahShort, monthLabelFromYM } from '../lib/data'
+import { deriveProgramTotals } from '../lib/deriveTotals'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import RiwayatLaporan from './RiwayatLaporan'
@@ -38,15 +39,17 @@ interface Activity {
   progressStart: number|null; progressEnd: number|null; progressDelta: number; realisasiAtEnd: number|null
 }
 
-function computeActivity(program: Program, snaps: ProgramSnapshot[], start: string, end: string): Activity {
+function computeActivity(program: Program, snaps: ProgramSnapshot[], start: string, end: string, currentRealisasi: number): Activity {
   const own = snaps.filter(s=>s.program_id===program.id).sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date))
   const inPeriod = own.filter(s=>s.snapshot_date>=start&&s.snapshot_date<=end)
-  // No snapshot in period — use current program state, no delta
+  // No snapshot in period — use current program state, no delta. `currentRealisasi`
+  // comes from deriveProgramTotals (caller), bukan program.realisasi_terkini mentah
+  // yang bisa basi.
   if (inPeriod.length===0) return {
     program, statusAtEnd: program.status,
     becameSelesai: false,
     progressStart: null, progressEnd: program.progress_percent??null,
-    progressDelta: 0, realisasiAtEnd: program.realisasi_terkini??null,
+    progressDelta: 0, realisasiAtEnd: currentRealisasi,
   }
   const before = own.filter(s=>s.snapshot_date<start)
   const last = inPeriod[inPeriod.length-1]
@@ -71,6 +74,7 @@ export default function LaporanProgress() {
   const [programs, setPrograms] = useState<Program[]>([])
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<Mode>('bulanan')
   const [monthKey, setMonthKey] = useState(currentMonthKey())
@@ -84,10 +88,14 @@ export default function LaporanProgress() {
   const [inputs, setInputs] = useState<Record<CatatanKey,string>>({ pencapaian:'', kendala:'', rencana:'', pertanyaan:'' })
 
   useEffect(() => {
-    Promise.all([fetchPrograms(), fetchSnapshots(), fetchTransactions()]).then(([pRes,sRes,tRes]) => {
+    // LaporanProgress dimount langsung (App.tsx), tanpa parent yang sudah punya
+    // subPrograms — beda dari Beranda/PekerjaanDetail, jadi fetch sendiri di sini
+    // supaya anggaran/realisasi per program bisa dihitung lewat deriveProgramTotals.
+    Promise.all([fetchPrograms(), fetchSnapshots(), fetchTransactions(), fetchSubPrograms()]).then(([pRes,sRes,tRes,subRes]) => {
       setPrograms((pRes.data??[]).filter(p=>p.id!==EXCLUDED_PROGRAM_ID) as Program[])
       setSnapshots((sRes.data??[]) as ProgramSnapshot[])
       setTransactions(tRes.data??[])
+      setSubPrograms((subRes.data??[]) as SubProgram[])
       setLoading(false)
     })
   }, [])
@@ -135,9 +143,15 @@ export default function LaporanProgress() {
     setActiveTab(null)
   }
 
+  // Anggaran/realisasi/sisa satu program lewat deriveProgramTotals (sama pola
+  // dengan Pekerjaan.tsx) — bukan baca programs.total_anggaran/realisasi_terkini
+  // langsung, yang bisa basi begitu sub-pekerjaan diubah atau ada transaksi baru.
+  const getDerived = (p: Program) =>
+    deriveProgramTotals(p, subPrograms.filter(sp=>sp.program_id===p.id), transactions)
+
   // ── Snapshot Global ─────────────────────────────────────────────────────────
-  const totalAnggaran    = programs.reduce((s,p)=>s+(p.total_anggaran||0),0)
-  const totalRealisasi   = programs.reduce((s,p)=>s+(p.realisasi_terkini||0),0)
+  const totalAnggaran    = programs.reduce((s,p)=>s+getDerived(p).total_anggaran,0)
+  const totalRealisasi   = programs.reduce((s,p)=>s+getDerived(p).realisasi_terkini,0)
   const penyerapanPct    = totalAnggaran>0 ? Math.round(totalRealisasi/totalAnggaran*100) : 0
   const nilaiTersisa     = totalAnggaran - totalRealisasi
   const selesaiCount     = programs.filter(p=>p.status==='Selesai').length
@@ -146,7 +160,7 @@ export default function LaporanProgress() {
   // ── Perlu Perhatian ─────────────────────────────────────────────────────────
   const perluPerhatian = programs.filter(p =>
     p.status==='On Hold' ||
-    (p.status==='On Going' && (p.realisasi_terkini||0)===0)
+    (p.status==='On Going' && getDerived(p).realisasi_terkini===0)
   )
 
   // ── Period activity ─────────────────────────────────────────────────────────
@@ -155,7 +169,7 @@ export default function LaporanProgress() {
   const danaKeluar  = txsInPeriod.filter(t=>t.jenis_transaksi!=='Masuk').reduce((s,t)=>s+(t.nominal||0),0)
   const net         = danaMasuk - danaKeluar
 
-  const activities  = programs.map(p=>computeActivity(p,snapshots,rangeStart,rangeEnd))
+  const activities  = programs.map(p=>computeActivity(p,snapshots,rangeStart,rangeEnd,getDerived(p).realisasi_terkini))
   const selesaiList = activities.filter(a=>a.becameSelesai)
   const bergerakList= activities.filter(a=>!a.becameSelesai)
 
@@ -263,7 +277,7 @@ export default function LaporanProgress() {
                   <div key={p.id} style={{ display:'flex', alignItems:'center', gap:12, padding:isMobile?'10px 12px':'11px 16px', borderBottom: i<perluPerhatian.length-1?'1px solid var(--border-subtle)':'none', borderLeft:`3px solid ${accentColor}` }}>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontSize:isMobile?12.5:13, fontWeight:600, color:'var(--text-primary)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.nama_pekerjaan}</div>
-                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{formatRupiah(p.realisasi_terkini||0)} terserap</div>
+                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{formatRupiah(getDerived(p).realisasi_terkini)} terserap</div>
                     </div>
                     <div style={{ fontSize:11, fontWeight:700, color:accentColor, backgroundColor:`${accentColor}15`, padding:'3px 9px', borderRadius:6, whiteSpace:'nowrap', flexShrink:0 }}>{reason}</div>
                   </div>
