@@ -130,6 +130,7 @@ export interface Transaction {
   jenis_transaksi: string
   nominal: number
   nama_pekerjaan: string
+  program_id: string | null
   deskripsi: string
   sumber?: string | null
   link_bukti?: string | null
