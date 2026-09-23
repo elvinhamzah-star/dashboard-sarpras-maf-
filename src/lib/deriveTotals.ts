@@ -135,26 +135,36 @@ export interface DerivedTotals {
 
 /**
  * Realisasi = single source of truth adalah transaksi Keluar/Keluar PBB yang
- * nama_pekerjaan-nya cocok persis dengan program. Dihitung ulang tiap render
- * (bukan snapshot di kolom programs.realisasi_terkini) supaya kalau admin
- * mengedit nama_pekerjaan transaksi (mis. betulkan salah ketik), realisasi
- * otomatis re-sync tanpa perlu rekonsiliasi manual.
+ * tersambung ke program ini. Dicocokkan lewat program_id kalau transaksinya
+ * sudah punya (jalur utama sejak FK program_id ditambahkan), fallback ke
+ * exact nama_pekerjaan match cuma buat transaksi legacy yang belum sempat
+ * di-backfill. Dihitung ulang tiap render (bukan snapshot di kolom
+ * programs.realisasi_terkini) supaya kalau admin mengedit program_id/nama
+ * transaksi (mis. betulkan salah ketik), realisasi otomatis re-sync tanpa
+ * perlu rekonsiliasi manual.
  */
-function sumRealisasiFromTransactions(namaPekerjaan: string, transactions: Pick<Transaction, 'nama_pekerjaan' | 'jenis_transaksi' | 'nominal'>[]): number {
+function sumRealisasiFromTransactions(
+  programId: string,
+  namaPekerjaan: string,
+  transactions: Pick<Transaction, 'nama_pekerjaan' | 'program_id' | 'jenis_transaksi' | 'nominal'>[],
+): number {
   return transactions
-    .filter(t => t.nama_pekerjaan === namaPekerjaan && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB'))
+    .filter(t => {
+      const matches = t.program_id ? t.program_id === programId : t.nama_pekerjaan === namaPekerjaan
+      return matches && (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB')
+    })
     .reduce((s, t) => s + (t.nominal || 0), 0)
 }
 
 export function deriveProgramTotals(
-  program: Pick<Program, 'jenis_pekerjaan' | 'progress_percent' | 'total_anggaran' | 'realisasi_terkini' | 'sisa_anggaran' | 'nama_pekerjaan'>,
+  program: Pick<Program, 'id' | 'jenis_pekerjaan' | 'progress_percent' | 'total_anggaran' | 'realisasi_terkini' | 'sisa_anggaran' | 'nama_pekerjaan'>,
   subs: Pick<SubProgram, 'progress_percent' | 'total_anggaran' | 'realisasi_terkini'>[],
-  transactions?: Pick<Transaction, 'nama_pekerjaan' | 'jenis_transaksi' | 'nominal'>[],
+  transactions?: Pick<Transaction, 'nama_pekerjaan' | 'program_id' | 'jenis_transaksi' | 'nominal'>[],
 ): DerivedTotals {
   if (subs.length === 0) {
     const total_anggaran = program.total_anggaran || 0
     const realisasi_terkini = transactions
-      ? sumRealisasiFromTransactions(program.nama_pekerjaan, transactions)
+      ? sumRealisasiFromTransactions(program.id, program.nama_pekerjaan, transactions)
       : (program.realisasi_terkini || 0)
     return {
       total_anggaran,
@@ -173,7 +183,7 @@ export function deriveProgramTotals(
   // uang yang sudah benar-benar keluar — jadi bukan acuan buat total.
   const realisasiFromSubs = subs.some(x => (Number(x.realisasi_terkini) || 0) > 0)
   const realisasi_terkini = transactions
-    ? sumRealisasiFromTransactions(program.nama_pekerjaan, transactions)
+    ? sumRealisasiFromTransactions(program.id, program.nama_pekerjaan, transactions)
     : (program.realisasi_terkini || 0)
 
   const weightBase = subs.reduce((s, x) => s + (Number(x.total_anggaran) || 0), 0)
