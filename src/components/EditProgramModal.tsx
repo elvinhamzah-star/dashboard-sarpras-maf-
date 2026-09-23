@@ -50,6 +50,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   const [jenisCustom, setJenisCustom] = useState(!JENIS_OPTIONS.includes(program.jenis_pekerjaan) ? program.jenis_pekerjaan : '')
   const [status, setStatus] = useState(program.status)
   const [vendor, setVendor] = useState(program.vendor || '')
+  const [autoProgress, setAutoProgress] = useState(program.auto_progress_from_realisasi ?? false)
   const [anggaran, setAnggaran] = useState(String(program.total_anggaran || ''))
   const [tanggalMulai, setTanggalMulai] = useState(program.tanggal_mulai || '')
   const [tanggalSelesai, setTanggalSelesai] = useState(program.tanggal_selesai || '')
@@ -91,6 +92,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
       total_anggaran: anggaranNum,
       tanggal_mulai: tanggalMulai || null,
       tanggal_selesai: tanggalSelesai || null,
+      auto_progress_from_realisasi: autoProgress,
     }, program.id)
     setSaving(false)
     if (err) {
@@ -155,6 +157,15 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
           <Field label="Vendor">
             <input value={vendor} onChange={e => setVendor(e.target.value)} style={inputStyle} placeholder="Nama vendor..." />
           </Field>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={autoProgress} onChange={e => setAutoProgress(e.target.checked)} />
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Progress otomatis dari realisasi anggaran (khusus pengadaan barang tanpa tahap instalasi)
+              </span>
+            </label>
+          </div>
 
           <Field label="Total Anggaran (Rp)">
             <input
