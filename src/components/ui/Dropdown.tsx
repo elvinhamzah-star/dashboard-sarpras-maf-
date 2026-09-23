@@ -16,6 +16,10 @@ interface Props {
   fontSize?: number
   /** z-index for the portaled panel (default 600; raise inside high-z modals). */
   zIndex?: number
+  /** Show a search box in the panel to filter long option lists (e.g. 25+ programs). */
+  searchable?: boolean
+  /** Placeholder for the search box (default "Cari..."). */
+  searchPlaceholder?: string
 }
 
 /**
@@ -34,17 +38,26 @@ export default function Dropdown({
   disabled = false,
   fontSize = 14,
   zIndex = 600,
+  searchable = false,
+  searchPlaceholder = 'Cari...',
 }: Props) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const [search, setSearch] = useState('')
   const wrapRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const filteredOptions = searchable && search.trim()
+    ? options.filter(o => o.label.toLowerCase().includes(search.trim().toLowerCase()))
+    : options
 
   const reposition = () => {
     if (!triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
-    const panelHeight = Math.min(240, options.length * 38 + 12)
+    const searchBarHeight = searchable ? 50 : 0
+    const panelHeight = Math.min(240, filteredOptions.length * 38 + 12) + searchBarHeight
     const fitsBelow = rect.bottom + 6 + panelHeight < window.innerHeight
     setPos({
       top: fitsBelow ? rect.bottom + 6 : Math.max(8, rect.top - panelHeight - 6),
@@ -58,6 +71,7 @@ export default function Dropdown({
     const onDown = (e: MouseEvent) => {
       if (!wrapRef.current?.contains(e.target as Node) && !panelRef.current?.contains(e.target as Node)) {
         setOpen(false)
+        setSearch('')
       }
     }
     // Reposition on scroll/resize so the fixed panel stays glued to the trigger.
@@ -72,6 +86,10 @@ export default function Dropdown({
     }
   }, [open])
 
+  useEffect(() => {
+    if (open && searchable) setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 50)
+  }, [open, searchable])
+
   const selected = options.find(o => o.value === value)
 
   return (
@@ -80,7 +98,7 @@ export default function Dropdown({
         ref={triggerRef}
         type="button"
         disabled={disabled}
-        onClick={() => { if (disabled) return; if (open) setOpen(false); else { reposition(); setOpen(true) } }}
+        onClick={() => { if (disabled) return; if (open) { setOpen(false); setSearch('') } else { reposition(); setOpen(true) } }}
         style={{
           width: '100%',
           padding: '10px 14px',
@@ -130,17 +148,52 @@ export default function Dropdown({
             overflow: 'hidden',
           }}
         >
+          {searchable && (
+            <div style={{ padding: '10px 10px 6px', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div style={{ position: 'relative' }}>
+                <svg
+                  width="13" height="13" fill="none" stroke="#9CAABB" strokeWidth="2" viewBox="0 0 24 24"
+                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                >
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px 8px 30px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: 14,
+                    color: 'var(--text-primary)',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    backgroundColor: 'var(--surface-raised)',
+                  }}
+                />
+              </div>
+            </div>
+          )}
           <div style={{ maxHeight: 240, overflowY: 'auto' }}>
-            {options.map((o, i) => (
+            {filteredOptions.length === 0 ? (
+              <div style={{ padding: '16px 14px', fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}>
+                Tidak ada hasil
+              </div>
+            ) : filteredOptions.map((o, i) => (
               <button
                 key={o.value}
                 type="button"
-                onClick={() => { onChange(o.value); setOpen(false) }}
+                onClick={() => { onChange(o.value); setOpen(false); setSearch('') }}
                 style={{
                   width: '100%',
                   padding: '10px 12px',
                   border: 'none',
-                  borderBottom: i < options.length - 1 ? '1px solid var(--surface-min)' : 'none',
+                  borderBottom: i < filteredOptions.length - 1 ? '1px solid var(--surface-min)' : 'none',
                   backgroundColor: o.value === value ? 'rgba(26,111,232,0.06)' : 'transparent',
                   color: o.value === value ? 'var(--blue)' : 'var(--text-primary)',
                   fontSize: 13,
@@ -160,7 +213,7 @@ export default function Dropdown({
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+                <span title={o.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
               </button>
             ))}
           </div>
