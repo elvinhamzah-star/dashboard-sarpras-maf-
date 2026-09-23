@@ -16,7 +16,6 @@ const STATUS_OPTIONS = ['Perencanaan', 'On Going', 'Selesai', 'On Hold']
 
 export default function UpdateProgressModal({ program, onClose, onUpdated }: UpdateProgressModalProps) {
   const [progress, setProgress] = useState(program.progress_percent?.toString() || '0')
-  const [realisasi, setRealisasi] = useState(program.realisasi_terkini?.toString() || '0')
   const [status, setStatus] = useState(program.status || 'On Going')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -25,30 +24,20 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
     setSaving(true)
     setError('')
     const progressNum = parseFloat(progress) || 0
-    const realisasiNum = parseFloat(realisasi) || 0
-    const sisa = (program.total_anggaran || 0) - realisasiNum
     const { error: err } = await adminUpdate('programs', {
       progress_percent: progressNum,
-      realisasi_terkini: realisasiNum,
-      sisa_anggaran: sisa,
       status,
       updated_at: new Date().toISOString(),
     }, program.id)
 
-    if (err) {
-      setSaving(false)
-      setError(err.message)
-      return
-    }
+    if (err) { setSaving(false); setError(err.message); return }
 
-    // Append a history snapshot (non-destructive). Best-effort: the program update
-    // is the source of truth, so a snapshot failure should not block the save.
     const { error: snapErr } = await adminInsert('program_snapshots', {
       program_id: program.id,
       snapshot_date: new Date().toISOString().split('T')[0],
       progress_percent: progressNum,
-      realisasi_terkini: realisasiNum,
-      sisa_anggaran: sisa,
+      realisasi_terkini: program.realisasi_terkini || 0,
+      sisa_anggaran: program.sisa_anggaran || 0,
       total_anggaran: program.total_anggaran || 0,
       status,
     })
@@ -86,26 +75,30 @@ export default function UpdateProgressModal({ program, onClose, onUpdated }: Upd
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Progress: {progress}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={progress}
-              onChange={e => setProgress(e.target.value)}
-              style={{ width: '100%', cursor: 'pointer' }}
-            />
-          </div>
+          {program.auto_progress_from_realisasi ? (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Progress: {progress}%
+              </label>
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                Progress pekerjaan ini otomatis mengikuti persentase realisasi anggaran — gak bisa diubah manual di sini.
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Progress: {progress}%
+              </label>
+              <input type="range" min="0" max="100" value={progress} onChange={e => setProgress(e.target.value)} style={{ width: '100%', cursor: 'pointer' }} />
+            </div>
+          )}
 
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Realisasi Terkini (Rp)
             </label>
             <div style={{ ...inputStyle, backgroundColor: 'var(--surface-2)', color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
-              {formatRupiah(parseFloat(realisasi) || 0)}
+              {formatRupiah(program.realisasi_terkini || 0)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               Dihitung otomatis dari transaksi — lihat <strong>Saldo per Pekerjaan</strong> di halaman Keuangan.
