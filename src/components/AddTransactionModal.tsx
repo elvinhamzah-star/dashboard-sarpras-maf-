@@ -154,6 +154,18 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
 
         {/* Nama Pekerjaan */}
         <div style={{ marginBottom: 16 }}>
+          {/* Dana PBB: satu-satunya transaksi yang boleh tanpa program_id — lihat catatan produk.
+              Checkbox ditaruh persis di atas picker karena ini alternatif buat milih pekerjaan,
+              bukan properti transaksi yang berdiri sendiri — centang/hilangin langsung
+              nampilin/nyembunyiin picker di bawahnya. */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 10 }}>
+            <input
+              type="checkbox"
+              checked={isDanaPBB}
+              onChange={e => { setIsDanaPBB(e.target.checked); if (e.target.checked) { setProgramId(null); setPekerjaan('Dana PBB') } else { setPekerjaan('') } }}
+            />
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Dana PBB (bukan terikat pekerjaan tertentu)</span>
+          </label>
           {isDanaPBB ? (
             <div>
               <label style={labelStyle}>Pekerjaan</label>
@@ -168,15 +180,6 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
               zIndex={Z_DROPDOWN_IN_MODAL}
             />
           )}
-          {/* Dana PBB: satu-satunya transaksi yang boleh tanpa program_id — lihat catatan produk */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 8 }}>
-            <input
-              type="checkbox"
-              checked={isDanaPBB}
-              onChange={e => { setIsDanaPBB(e.target.checked); if (e.target.checked) { setProgramId(null); setPekerjaan('Dana PBB') } else { setPekerjaan('') } }}
-            />
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Dana PBB (bukan terikat pekerjaan tertentu)</span>
-          </label>
         </div>
 
         {/* Keterangan */}
