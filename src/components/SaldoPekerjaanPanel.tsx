@@ -231,7 +231,7 @@ export default function SaldoPekerjaanPanel() {
       </div>
 
       <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)' }}>
-        Klik nominal di kolom Dana Masuk untuk ubah alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Sisa Pengajuan = Total Anggaran − Dana Masuk.
+        Klik nominal di kolom Dana Masuk untuk ubah alokasi per pekerjaan. Dana Keluar otomatis dari transaksi. Saldo = Dana Masuk − Dana Keluar (uang yang sudah dicairkan tapi belum dibelanjakan — bisa beda tipis dari Saldo Kas di Arus Kas karena Dana Masuk diisi manual per pekerjaan, belum tentu presisi ke transaksi Masuk asli). Sisa Pengajuan = Total Anggaran − Dana Masuk (plafon anggaran yang masih boleh diajukan/dicairkan).
       </div>
 
       {editingRow && (
