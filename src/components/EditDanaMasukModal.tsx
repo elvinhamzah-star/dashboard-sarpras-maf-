@@ -11,6 +11,9 @@ interface EditDanaMasukModalProps {
   onSuccess: (newValue: number) => void
 }
 
+type Mode = 'set' | 'delta'
+type Sign = '+' | '-'
+
 const labelStyle: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
@@ -22,12 +25,31 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function EditDanaMasukModal({ programId, namaPekerjaan, currentValue, onClose, onSuccess }: EditDanaMasukModalProps) {
+  const [mode, setMode] = useState<Mode>('set')
   const [nilai, setNilai] = useState(String(currentValue || ''))
+  const [deltaStr, setDeltaStr] = useState('')
+  const [sign, setSign] = useState<Sign>('+')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const newValue = parseInt(nilai.replace(/\D/g, ''), 10) || 0
-  const canSave = !saving && nilai.trim() !== ''
+  // Ganti mode harus mereset input — nilai absolut (Set Langsung) dan delta
+  // (Tambah/Kurang) adalah konsep yang beda, jangan sampai kebawa nyasar.
+  const handleModeChange = (m: Mode) => {
+    if (m === mode) return
+    setMode(m)
+    setNilai(String(currentValue || ''))
+    setDeltaStr('')
+    setSign('+')
+    setError('')
+  }
+
+  const setNilaiNum = parseInt(nilai.replace(/\D/g, ''), 10) || 0
+  const deltaNum = parseInt(deltaStr.replace(/\D/g, ''), 10) || 0
+  const newValue = mode === 'set' ? setNilaiNum : (sign === '+' ? currentValue + deltaNum : currentValue - deltaNum)
+
+  const wouldBeNegative = mode === 'delta' && newValue < 0
+  const hasInput = mode === 'set' ? nilai.trim() !== '' : deltaStr.trim() !== ''
+  const canSave = !saving && hasInput && !wouldBeNegative
 
   const handleSave = async () => {
     if (!canSave) return
@@ -66,35 +88,128 @@ export default function EditDanaMasukModal({ programId, namaPekerjaan, currentVa
             </div>
           </div>
 
-          {/* Nilai baru — di-set langsung, bukan ditambahkan */}
+          {/* Mode: Set Langsung vs Tambah/Kurang */}
           <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Dana Masuk (Rp)</label>
-            <input
-              type="number"
-              value={nilai}
-              onChange={e => { setNilai(e.target.value); setError('') }}
-              onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
-              placeholder="0"
-              min={0}
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: `1.5px solid ${newValue !== currentValue ? 'var(--blue)' : 'var(--border)'}`,
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-                textAlign: 'right',
-                fontVariantNumeric: 'tabular-nums',
-                backgroundColor: 'var(--card)',
-                transition: 'border-color 0.15s',
-              }}
-            />
+            <label style={labelStyle}>Mode Edit</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['set', 'delta'] as const).map(m => (
+                <label
+                  key={m}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer',
+                    padding: '8px 14px', borderRadius: 8, flex: 1,
+                    border: `1px solid ${mode === m ? 'var(--blue)' : 'var(--border)'}`,
+                    backgroundColor: mode === m ? 'rgba(26,111,232,0.07)' : 'var(--card)',
+                    transition: 'all 0.12s',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    checked={mode === m}
+                    onChange={() => handleModeChange(m)}
+                    style={{ display: 'none' }}
+                  />
+                  <span style={{ fontSize: 12.5, fontWeight: mode === m ? 600 : 400, color: mode === m ? 'var(--blue)' : 'var(--text-secondary)' }}>
+                    {m === 'set' ? 'Set Langsung' : 'Tambah/Kurang'}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
+
+          {mode === 'set' ? (
+            /* Nilai baru — di-set langsung, bukan ditambahkan */
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Dana Masuk (Rp)</label>
+              <input
+                type="number"
+                value={nilai}
+                onChange={e => { setNilai(e.target.value); setError('') }}
+                onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+                placeholder="0"
+                min={0}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: `1.5px solid ${newValue !== currentValue ? 'var(--blue)' : 'var(--border)'}`,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  textAlign: 'right',
+                  fontVariantNumeric: 'tabular-nums',
+                  backgroundColor: 'var(--card)',
+                  transition: 'border-color 0.15s',
+                }}
+              />
+            </div>
+          ) : (
+            /* Delta — ditambah atau dikurangi dari saldo saat ini */
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Tambah / Kurang (Rp)</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                  {(['+', '-'] as const).map(s => (
+                    <label
+                      key={s}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                        minWidth: 40, padding: '0 12px', borderRadius: 10,
+                        border: `1.5px solid ${sign === s ? 'var(--blue)' : 'var(--border)'}`,
+                        backgroundColor: sign === s ? 'rgba(26,111,232,0.07)' : 'var(--card)',
+                        transition: 'all 0.12s',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        checked={sign === s}
+                        onChange={() => { setSign(s); setError('') }}
+                        style={{ display: 'none' }}
+                      />
+                      <span style={{ fontSize: 16, fontWeight: 700, color: sign === s ? 'var(--blue)' : 'var(--text-secondary)' }}>
+                        {s === '+' ? '+' : '−'}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  value={deltaStr}
+                  onChange={e => { setDeltaStr(e.target.value); setError('') }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+                  placeholder="0"
+                  min={0}
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: `1.5px solid ${wouldBeNegative ? '#E53E3E' : (deltaNum !== 0 ? 'var(--blue)' : 'var(--border)')}`,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                    backgroundColor: 'var(--card)',
+                    transition: 'border-color 0.15s',
+                  }}
+                />
+              </div>
+              {wouldBeNegative && (
+                <div style={{ fontSize: 11, color: '#E53E3E', marginTop: 6, fontWeight: 500 }}>
+                  Dana Masuk tidak boleh menjadi negatif
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Preview nilai yang akan disimpan */}
           <div style={{
@@ -109,7 +224,7 @@ export default function EditDanaMasukModal({ programId, namaPekerjaan, currentVa
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Dana Masuk Baru
               </span>
-              <span style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: newValue !== currentValue ? 'var(--blue)' : 'var(--text-muted)', transition: 'color 0.15s' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: wouldBeNegative ? '#E53E3E' : (newValue !== currentValue ? 'var(--blue)' : 'var(--text-muted)'), transition: 'color 0.15s' }}>
                 {formatRupiah(newValue)}
               </span>
             </div>
