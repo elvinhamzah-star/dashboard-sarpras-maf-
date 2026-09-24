@@ -85,7 +85,13 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
     setSaving(true)
     setError('')
-    const progressNum = parseFloat(progress) || 0
+    // Kalau auto-progress nyala, jangan pakai state `progress` (bisa basi —
+    // cuma keupdate lewat trigger tiap ada transaksi baru) — hitung ulang
+    // langsung dari realisasi/anggaran saat ini, biar toggle-nya kerasa efeknya
+    // seketika begitu disimpan, gak nunggu transaksi berikutnya.
+    const progressNum = autoProgress
+      ? (anggaranNum > 0 ? Math.min(100, Math.round(((program.realisasi_terkini || 0) / anggaranNum) * 100)) : 0)
+      : (parseFloat(progress) || 0)
     const { error: err } = await adminUpdate('programs', {
       nama_pekerjaan: nama.trim(),
       program: kategori.trim(),
