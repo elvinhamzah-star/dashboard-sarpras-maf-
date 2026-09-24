@@ -19,7 +19,6 @@ import { adminInsert, adminDelete, adminUpdate } from '../lib/adminApi'
 import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
-import UpdateProgressModal from './UpdateProgressModal'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
 import AddSubPekerjaanModal from './AddSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
@@ -56,7 +55,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('Ringkasan')
   const [programDocs, setProgramDocs] = useState<ProgramDocument[]>([])
-  const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [showEditCatatan, setShowEditCatatan] = useState(false)
   const [showEditProgram, setShowEditProgram] = useState(false)
   const [showHasilForm, setShowHasilForm] = useState(false)
@@ -542,7 +540,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           </div>
           {isAdmin && (
             <button
-              onClick={() => setShowUpdateModal(true)}
+              onClick={() => setShowEditProgram(true)}
               style={{
                 flexShrink: 0,
                 backgroundColor: 'var(--blue)',
@@ -568,7 +566,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
-              Update Progress
+              Edit Pekerjaan
             </button>
           )}
         </div>
@@ -757,18 +755,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
             )}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Ringkasan Pekerjaan</h3>
-              {isAdmin && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button
-                    onClick={() => setShowEditProgram(true)}
-                    style={{ backgroundColor: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1560d4' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--blue)' }}
-                  >
-                    Edit
-                  </button>
-                </div>
-              )}
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -1293,18 +1279,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           </div>
         )}
       </div>
-
-      {showUpdateModal && program && (
-        <UpdateProgressModal
-          program={program}
-          onClose={() => setShowUpdateModal(false)}
-          onUpdated={() => {
-            invalidateCache('programs', 'sub_programs')
-            setShowUpdateModal(false)
-            load()
-          }}
-        />
-      )}
 
       {editingSubProgram && (
         <UpdateSubPekerjaanModal

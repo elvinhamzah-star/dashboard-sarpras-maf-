@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { adminUpdate } from '../lib/adminApi'
+import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
+import { formatRupiah } from '../lib/data'
 import { Z_MODAL_STACKED, Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
@@ -51,6 +52,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
   const [status, setStatus] = useState(program.status)
   const [vendor, setVendor] = useState(program.vendor || '')
   const [autoProgress, setAutoProgress] = useState(program.auto_progress_from_realisasi ?? false)
+  const [progress, setProgress] = useState(program.progress_percent?.toString() || '0')
   const [anggaran, setAnggaran] = useState(String(program.total_anggaran || ''))
   const [tanggalMulai, setTanggalMulai] = useState(program.tanggal_mulai || '')
   const [tanggalSelesai, setTanggalSelesai] = useState(program.tanggal_selesai || '')
@@ -83,6 +85,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
 
     setSaving(true)
     setError('')
+    const progressNum = parseFloat(progress) || 0
     const { error: err } = await adminUpdate('programs', {
       nama_pekerjaan: nama.trim(),
       program: kategori.trim(),
@@ -93,13 +96,30 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
       tanggal_mulai: tanggalMulai || null,
       tanggal_selesai: tanggalSelesai || null,
       auto_progress_from_realisasi: autoProgress,
+      progress_percent: progressNum,
+      updated_at: new Date().toISOString(),
     }, program.id)
-    setSaving(false)
+
     if (err) {
+      setSaving(false)
       setError(err.message || 'Gagal menyimpan')
-    } else {
-      onSuccess()
+      return
     }
+
+    // Best-effort history snapshot — never blocks the save on failure.
+    const { error: snapErr } = await adminInsert('program_snapshots', {
+      program_id: program.id,
+      snapshot_date: new Date().toISOString().split('T')[0],
+      progress_percent: progressNum,
+      realisasi_terkini: program.realisasi_terkini || 0,
+      sisa_anggaran: program.sisa_anggaran || 0,
+      total_anggaran: anggaranNum,
+      status,
+    })
+    if (snapErr) console.warn('Gagal menyimpan snapshot riwayat:', snapErr.message)
+
+    setSaving(false)
+    onSuccess()
   }
 
   return (
@@ -166,6 +186,25 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
               </span>
             </label>
           </div>
+
+          <Field label={`Progress: ${progress}%`}>
+            {autoProgress ? (
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                Progress pekerjaan ini otomatis mengikuti persentase realisasi anggaran — gak bisa diubah manual di sini.
+              </div>
+            ) : (
+              <input type="range" min="0" max="100" value={progress} onChange={e => setProgress(e.target.value)} style={{ width: '100%', cursor: 'pointer' }} />
+            )}
+          </Field>
+
+          <Field label="Realisasi Terkini (Rp)">
+            <div style={{ ...inputStyle, backgroundColor: 'var(--surface-2)', color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+              {formatRupiah(program.realisasi_terkini || 0)}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              Dihitung otomatis dari transaksi — lihat <strong>Saldo per Pekerjaan</strong> di halaman Keuangan.
+            </div>
+          </Field>
 
           <Field label="Total Anggaran (Rp)">
             <input
