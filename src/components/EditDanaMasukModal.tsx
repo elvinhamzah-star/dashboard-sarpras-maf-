@@ -53,6 +53,10 @@ export default function EditDanaMasukModal({ programId, namaPekerjaan, currentVa
 
   const handleSave = async () => {
     if (!canSave) return
+    const confirmed = window.confirm(
+      `Ubah Dana Masuk "${namaPekerjaan}"?\n\nSemula: ${formatRupiah(currentValue)}\nMenjadi: ${formatRupiah(newValue)}`
+    )
+    if (!confirmed) return
     setSaving(true)
     setError('')
     const { error: err } = await adminUpdate('programs', { dana_masuk: newValue }, programId)
