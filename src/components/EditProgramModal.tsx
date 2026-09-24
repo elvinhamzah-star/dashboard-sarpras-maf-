@@ -9,6 +9,7 @@ import DatePicker from './ui/DatePicker'
 
 interface Props {
   program: Program
+  hasSubPrograms?: boolean
   onClose: () => void
   onSuccess: () => void
 }
@@ -43,7 +44,7 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
-export default function EditProgramModal({ program, onClose, onSuccess }: Props) {
+export default function EditProgramModal({ program, hasSubPrograms = false, onClose, onSuccess }: Props) {
 
   const [nama, setNama] = useState(program.nama_pekerjaan)
   const [kategori, setKategori] = useState(program.program)
@@ -89,7 +90,12 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
     // cuma keupdate lewat trigger tiap ada transaksi baru) — hitung ulang
     // langsung dari realisasi/anggaran saat ini, biar toggle-nya kerasa efeknya
     // seketika begitu disimpan, gak nunggu transaksi berikutnya.
-    const progressNum = autoProgress
+    // Sub-pekerjaan-driven progress gak pernah pakai auto_progress_from_realisasi
+    // (deriveProgramTotals selalu ambil rata-rata tertimbang gedung buat pekerjaan
+    // yang punya subs) — checkbox-nya disembunyikan di UI, dan di sini dipaksa
+    // false juga biar gak ada kondisi state basi yang kebawa nyimpen true.
+    const effectiveAutoProgress = hasSubPrograms ? false : autoProgress
+    const progressNum = effectiveAutoProgress
       ? (anggaranNum > 0 ? Math.min(100, Math.round(((program.realisasi_terkini || 0) / anggaranNum) * 100)) : 0)
       : (parseFloat(progress) || 0)
     const { error: err } = await adminUpdate('programs', {
@@ -101,7 +107,7 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
       total_anggaran: anggaranNum,
       tanggal_mulai: tanggalMulai || null,
       tanggal_selesai: tanggalSelesai || null,
-      auto_progress_from_realisasi: autoProgress,
+      auto_progress_from_realisasi: effectiveAutoProgress,
       progress_percent: progressNum,
       updated_at: new Date().toISOString(),
     }, program.id)
@@ -184,17 +190,23 @@ export default function EditProgramModal({ program, onClose, onSuccess }: Props)
             <input value={vendor} onChange={e => setVendor(e.target.value)} style={inputStyle} placeholder="Nama vendor..." />
           </Field>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={autoProgress} onChange={e => setAutoProgress(e.target.checked)} />
-              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Progress otomatis dari realisasi anggaran (khusus pengadaan barang tanpa tahap instalasi)
-              </span>
-            </label>
-          </div>
+          {!hasSubPrograms && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={autoProgress} onChange={e => setAutoProgress(e.target.checked)} />
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  Progress otomatis dari realisasi anggaran (khusus pengadaan barang tanpa tahap instalasi)
+                </span>
+              </label>
+            </div>
+          )}
 
           <Field label={`Progress: ${progress}%`}>
-            {autoProgress ? (
+            {hasSubPrograms ? (
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                Pekerjaan ini punya sub-pekerjaan (gedung) — progress otomatis dihitung dari rata-rata tertimbang progress tiap gedung, bukan dari sini. Edit progress lewat tab Sub Pekerjaan.
+              </div>
+            ) : autoProgress ? (
               <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
                 Progress pekerjaan ini otomatis mengikuti persentase realisasi anggaran — gak bisa diubah manual di sini.
               </div>

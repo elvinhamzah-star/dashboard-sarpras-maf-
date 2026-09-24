@@ -1320,6 +1320,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       {showEditProgram && program && (
         <EditProgramModal
           program={program}
+          hasSubPrograms={subPrograms.length > 0}
           onClose={() => setShowEditProgram(false)}
           onSuccess={() => {
             invalidateCache('programs', 'sub_programs')
