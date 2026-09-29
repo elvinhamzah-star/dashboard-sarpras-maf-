@@ -27,7 +27,7 @@ import HasilFormModal from './HasilFormModal'
 import HasilRingkasan from './HasilRingkasan'
 import HasilRincianCard from './HasilRincianCard'
 import FilterSummaryBar from './FilterSummaryBar'
-import { deriveProgramTotals, deriveNilaiAset, withChecklistProgress, computeSubProgramEta, deriveHasilRincianFromChecklist } from '../lib/deriveTotals'
+import { deriveProgramTotals, deriveNilaiAset, withChecklistProgress, computeSubProgramEta, deriveHasilRincianFromSubPrograms } from '../lib/deriveTotals'
 import { isRestrictedForRole } from '../lib/access'
 import { Z_MODAL_DEEPER } from '../lib/zIndex'
 import { useEdgeSwipeBack } from '../lib/useEdgeSwipeBack'
@@ -378,14 +378,15 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     }
   }, [isAdmin, program?.status, program?.hasil_filled_at, hasilDismissed])
 
-  // "Detail Realisasi" untuk pekerjaan yang punya checklist (sub_program_tasks)
-  // diturunkan langsung dari situ, bukan dari input manual hasil_rincian —
-  // supaya statusnya gak pernah nyimpang lagi dari checklist yang jadi acuan.
+  // "Detail Realisasi" untuk pekerjaan yang punya sub-pekerjaan diturunkan
+  // dari realisasi_terkini manual tiap gedung (bukan dari checklist/RAB —
+  // lihat deriveHasilRincianFromSubPrograms), supaya selalu cocok sama
+  // Realisasi Terkini di ringkasan.
   const checklistRincian = program
-    ? deriveHasilRincianFromChecklist(subPrograms.filter(s => s.program_id === program.id), subProgramTasks)
+    ? deriveHasilRincianFromSubPrograms(subPrograms.filter(s => s.program_id === program.id))
     : []
-  // Sakan Asfahan sengaja gak dibikinin checklist/sub-pekerjaan sendiri (outscope
-  // dari tracking progress P-001, sudah diketahui atasan) — tapi nilainya tetap
+  // Sakan Asfahan sengaja gak dibikinin sub-pekerjaan sendiri (outscope dari
+  // tracking progress P-001, sudah diketahui atasan) — tapi nilainya tetap
   // masuk vendor payment Periode 1 (Invoice 1 & 2), jadi tetap dihitung di sini
   // supaya Total Realisasi cocok sama total yang benar-benar dibayar ke vendor.
   if (program?.id === 'P-001' && checklistRincian.length > 0) {

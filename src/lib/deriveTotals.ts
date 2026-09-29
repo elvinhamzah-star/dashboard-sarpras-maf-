@@ -19,18 +19,24 @@ export function computeChecklistProgress(tasks: Pick<SubProgramTask, 'nilai' | '
 }
 
 /**
- * Timpa progress_percent, realisasi_terkini, dan sisa_anggaran tiap
- * sub-pekerjaan yang sudah punya checklist dengan angka hasil hitung
- * otomatis — supaya deriveProgramTotals (rollup ke level program) dan
- * kolom REALISASI/SISA di tabel Sub Pekerjaan ikut kebawa otomatis, tanpa
- * perlu diubah sama sekali di caller.
+ * Timpa progress_percent tiap sub-pekerjaan yang sudah punya checklist,
+ * dari status item-nya (Selesai/On Progress/Belum Mulai) — supaya
+ * deriveProgramTotals (rollup ke level program) dan kolom PROGRES di tabel
+ * Sub Pekerjaan ikut kebawa otomatis, tanpa perlu diubah sama sekali di
+ * caller.
  *
- * realisasi_terkini manual per gedung sering telat/gak sinkron begitu
- * checklist mulai jalan (ditemukan langsung: Sakan Sijistan manual masih
- * Rp 421rb padahal checklist-nya sudah Rp 46,9jt/91% selesai) — begitu
- * checklist ada, dia jadi satu-satunya acuan, bukan cuma buat progress_percent.
+ * SENGAJA tidak menyentuh realisasi_terkini/sisa_anggaran. Checklist cuma
+ * nunjukin progres fisik (kerjaan sudah dikerjakan atau belum) — nilai
+ * item-nya adalah estimasi RAB, bukan bukti uang sudah keluar. Realisasi
+ * per gedung tetap murni input manual (UpdateSubPekerjaanModal), diisi user
+ * dari data vendor/invoice asli. Sebelumnya fungsi ini ikut menimpa
+ * realisasi_terkini pakai nilai RAB checklist yang "Selesai" — itu keliru:
+ * ceklis status jadi otomatis mengubah angka Realisasi padahal user cuma
+ * bermaksud update progres fisik, dan RAB periode 2 P-001 sendiri eksplisit
+ * bukan pagu per-item/per-gedung (pagu gabungan, termin gak nempel ke satu
+ * item). Lihat percakapan 2026-09-28.
  */
-export function withChecklistProgress<T extends Pick<SubProgram, 'id' | 'progress_percent' | 'realisasi_terkini' | 'sisa_anggaran' | 'total_anggaran'>>(
+export function withChecklistProgress<T extends Pick<SubProgram, 'id' | 'progress_percent'>>(
   subs: T[],
   tasks: Pick<SubProgramTask, 'sub_program_id' | 'nilai' | 'status'>[],
 ): T[] {
@@ -46,15 +52,7 @@ export function withChecklistProgress<T extends Pick<SubProgram, 'id' | 'progres
     if (!subTasks) return s
     const computed = computeChecklistProgress(subTasks)
     if (computed === null) return s
-    const realisasi = subTasks
-      .filter(t => t.status === 'Selesai')
-      .reduce((sum, t) => sum + (t.nilai || 0), 0)
-    return {
-      ...s,
-      progress_percent: computed,
-      realisasi_terkini: realisasi,
-      sisa_anggaran: (Number(s.total_anggaran) || 0) - realisasi,
-    }
+    return { ...s, progress_percent: computed }
   })
 }
 
@@ -89,37 +87,30 @@ export function computeSubProgramEta(
 }
 
 /**
- * "Detail Realisasi" (hasil_rincian) per gedung, diturunkan langsung dari
- * checklist — bukan dari input manual — supaya gak pernah nyimpang lagi dari
- * status/nilai checklist yang sebenarnya (kejadian sebelumnya: entry manual
- * P-001 nyantel apa adanya sejak diisi sekali 25 Agustus, gak pernah ikut
- * update seiring checklist berjalan, sampai semua kebaca "Selesai" padahal
- * banyak yang masih di bawah 100%).
+ * "Detail Realisasi" (hasil_rincian) per gedung, diturunkan dari
+ * realisasi_terkini manual tiap sub-pekerjaan (diisi user dari data
+ * vendor/invoice lewat form Edit Sub Pekerjaan) — BUKAN dari nilai RAB
+ * checklist. Checklist (lihat withChecklistProgress) cuma acuan progres
+ * fisik; nilai Rupiah yang beneran keluar tetap murni input manual, supaya
+ * "Detail Realisasi" gak pernah nunjukin angka yang beda dari REALISASI
+ * TERKINI di ringkasan (dua-duanya sekarang sama-sama gak bersumber dari
+ * RAB). Lihat percakapan 2026-09-28/29.
  *
- * Cuma gedung yang sudah punya nilai selesai (>0) yang dimasukkan — gedung
- * yang belum digarap sama sekali gak nambah value ke "realisasi", jadi gak
- * perlu numpuk daftar dengan baris Rp 0.
+ * Cuma gedung yang realisasinya sudah > 0 yang dimasukkan — gedung yang
+ * belum ada uang keluar sama sekali gak nambah baris Rp 0.
  */
-export function deriveHasilRincianFromChecklist(
-  subs: Pick<SubProgram, 'id' | 'nama_gedung'>[],
-  tasks: Pick<SubProgramTask, 'sub_program_id' | 'nilai' | 'status'>[],
+export function deriveHasilRincianFromSubPrograms(
+  subs: Pick<SubProgram, 'nama_gedung' | 'realisasi_terkini' | 'status'>[],
 ): HasilRincianItem[] {
-  const bySubId = new Map<string, Pick<SubProgramTask, 'sub_program_id' | 'nilai' | 'status'>[]>()
-  for (const t of tasks) {
-    const arr = bySubId.get(t.sub_program_id)
-    if (arr) arr.push(t)
-    else bySubId.set(t.sub_program_id, [t])
+  const STATUS_LABEL: Record<string, HasilRincianItem['status']> = {
+    'Selesai': 'Selesai',
+    'Perencanaan': 'Rencana',
   }
   const result: HasilRincianItem[] = []
   for (const s of subs) {
-    const subTasks = bySubId.get(s.id)
-    if (!subTasks || subTasks.length === 0) continue
-    const nilaiSelesai = subTasks
-      .filter(t => t.status === 'Selesai')
-      .reduce((sum, t) => sum + (t.nilai || 0), 0)
-    if (nilaiSelesai <= 0) continue
-    const semuaSelesai = subTasks.every(t => t.status === 'Selesai')
-    result.push({ nama: s.nama_gedung, biaya: nilaiSelesai, satuan: 'gedung', ukuran: 1, status: semuaSelesai ? 'Selesai' : 'Berjalan' })
+    const realisasi = Number(s.realisasi_terkini) || 0
+    if (realisasi <= 0) continue
+    result.push({ nama: s.nama_gedung, biaya: realisasi, satuan: 'gedung', ukuran: 1, status: STATUS_LABEL[s.status] ?? 'Berjalan' })
   }
   return result.sort((a, b) => b.biaya - a.biaya)
 }
