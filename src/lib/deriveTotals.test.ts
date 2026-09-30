@@ -37,18 +37,18 @@ describe('withChecklistProgress', () => {
   ]
 
   it('recomputes progress_percent from checklist status', () => {
-    expect(withChecklistProgress([bukhoro], tasks)[0].progress_percent).toBe(62)
+    expect(withChecklistProgress([bukhoro] as never, tasks as never)[0].progress_percent).toBe(62)
   })
 
   it('does NOT touch realisasi_terkini/sisa_anggaran — itu murni input manual, bukan nilai RAB checklist', () => {
-    const result = withChecklistProgress([bukhoro], tasks)[0] as typeof bukhoro
+    const result = withChecklistProgress([bukhoro] as never, tasks as never)[0] as unknown as typeof bukhoro
     expect(result.realisasi_terkini).toBe(0)
     expect(result.sisa_anggaran).toBe(78203240)
   })
 
   it('leaves subs without any checklist task untouched', () => {
     const other = { id: 99, progress_percent: 40, realisasi_terkini: 503767470, sisa_anggaran: 698642920, total_anggaran: 1202410390 }
-    expect(withChecklistProgress([other], tasks)[0]).toEqual(other)
+    expect(withChecklistProgress([other] as never, tasks as never)[0]).toEqual(other)
   })
 })
 
