@@ -20,6 +20,7 @@ import PdfViewerModal from './PdfViewerModal'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import UpdateSubPekerjaanModal from './UpdateSubPekerjaanModal'
+import ChecklistItemModal from './ChecklistItemModal'
 import AddSubPekerjaanModal from './AddSubPekerjaanModal'
 import EditCatatanPekerjaanModal from './EditCatatanPekerjaanModal'
 import EditProgramModal from './EditProgramModal'
@@ -66,6 +67,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   // harus mencakup semua transaksi Keluar, bukan cuma yang ada buktinya.
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
   const [editingSubProgram, setEditingSubProgram] = useState<SubProgram | null>(null)
+  const [checklistModal, setChecklistModal] = useState<{ subProgramId: string; task?: SubProgramTask } | null>(null)
   const [deletingSubProgramIds, setDeletingSubProgramIds] = useState<Set<string>>(new Set())
   const [addingSubProgram, setAddingSubProgram] = useState(false)
   const [buktiExpanded, setBuktiExpanded] = useState(false)
@@ -206,7 +208,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
 
   const renderChecklistPanel = (sp: SubProgram) => {
     const tasks = subProgramTasks.filter(t => t.sub_program_id === sp.id)
-    if (tasks.length === 0) return null
+    if (tasks.length === 0 && !isAdmin) return null
     const eta = computeSubProgramEta(sp.tanggal_mulai_aktual, tasks)
     return (
       <div style={{ padding: '12px 14px', backgroundColor: 'var(--surface-raised)', borderRadius: 10, marginTop: 8 }}>
@@ -218,6 +220,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
             )}
           </div>
         )}
+        {tasks.length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 0 8px' }}>
+            Belum ada item checklist untuk gedung ini.
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {tasks.map(t => (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -239,12 +246,38 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                   {t.item}
                 </span>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {formatRupiah(t.nilai)}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  {formatRupiah(t.nilai)}
+                </span>
+                {isAdmin && (
+                  <button
+                    onClick={() => setChecklistModal({ subProgramId: sp.id, task: t })}
+                    title="Edit item"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, display: 'flex' }}
+                  >
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4Z" /></svg>
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
+        )}
+        {isAdmin && (
+          <button
+            onClick={() => setChecklistModal({ subProgramId: sp.id })}
+            style={{
+              marginTop: 10, display: 'flex', alignItems: 'center', gap: 6,
+              background: 'none', border: '1px dashed var(--border)', borderRadius: 8,
+              padding: '6px 10px', cursor: 'pointer', color: 'var(--blue)',
+              fontSize: 11.5, fontWeight: 600, fontFamily: 'inherit',
+            }}
+          >
+            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+            Tambah Item
+          </button>
+        )}
       </div>
     )
   }
@@ -1060,8 +1093,8 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </div>
                         </div>
                         <div
-                          onClick={subProgramTasks.some(t => t.sub_program_id === sp.id) ? () => toggleGedung(sp.id) : undefined}
-                          style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, cursor: subProgramTasks.some(t => t.sub_program_id === sp.id) ? 'pointer' : 'default' }}
+                          onClick={(subProgramTasks.some(t => t.sub_program_id === sp.id) || isAdmin) ? () => toggleGedung(sp.id) : undefined}
+                          style={{ paddingLeft: 29, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, cursor: (subProgramTasks.some(t => t.sub_program_id === sp.id) || isAdmin) ? 'pointer' : 'default' }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{
@@ -1076,7 +1109,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             <span style={{ fontSize: 10.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
                               Progres {sp.progress_percent || 0}%
                             </span>
-                            {subProgramTasks.some(t => t.sub_program_id === sp.id) && (
+                            {(subProgramTasks.some(t => t.sub_program_id === sp.id) || isAdmin) && (
                               <svg width="10" height="10" fill="none" stroke="var(--blue)" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
                                 <polyline points="6 9 12 15 18 9" />
                               </svg>
@@ -1162,18 +1195,19 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                     {subPrograms.map((sp, i) => {
                     const showFinancial = role !== 'maf' || program.status !== 'Perencanaan'
                     const hasTasks = subProgramTasks.some(t => t.sub_program_id === sp.id)
+                    const expandable = hasTasks || isAdmin
                     return (
                       <Fragment key={sp.id}>
                       <tr
                         data-gedung-id={sp.id}
-                        onClick={hasTasks ? () => toggleGedung(sp.id) : undefined}
-                        style={{ borderBottom: (i < subPrograms.length - 1 && expandedGedung !== sp.id) ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: hasTasks ? 'pointer' : 'default' }}
+                        onClick={expandable ? () => toggleGedung(sp.id) : undefined}
+                        style={{ borderBottom: (i < subPrograms.length - 1 && expandedGedung !== sp.id) ? '1px solid var(--surface-min)' : 'none', backgroundColor: 'var(--card)', transition: 'background 0.1s', cursor: expandable ? 'pointer' : 'default' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--surface-min)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'var(--card)' }}
                       >
                         <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</td>
                         <td style={{ padding: '11px 14px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                          {hasTasks ? (
+                          {expandable ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: 'var(--blue)', flexShrink: 0, transform: expandedGedung === sp.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
                                 <polyline points="6 9 12 15 18 9" />
@@ -1257,7 +1291,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                           </td>
                         )}
                       </tr>
-                      {expandedGedung === sp.id && hasTasks && (
+                      {expandedGedung === sp.id && expandable && (
                         <tr style={{ borderBottom: i < subPrograms.length - 1 ? '1px solid var(--surface-min)' : 'none' }}>
                           <td colSpan={isAdmin ? 9 : 8} style={{ padding: '0 14px 14px' }}>
                             {renderChecklistPanel(sp)}
@@ -1294,6 +1328,19 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
           onSuccess={() => {
             invalidateCache('sub_programs', 'programs')
             setAddingSubProgram(false)
+            load()
+          }}
+        />
+      )}
+
+      {checklistModal && (
+        <ChecklistItemModal
+          subProgramId={checklistModal.subProgramId}
+          task={checklistModal.task}
+          onClose={() => setChecklistModal(null)}
+          onSuccess={() => {
+            invalidateCache('sub_program_tasks', 'sub_programs')
+            setChecklistModal(null)
             load()
           }}
         />
