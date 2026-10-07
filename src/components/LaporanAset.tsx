@@ -8,12 +8,13 @@
 
 import { useEffect, useState } from 'react'
 import ExcelJS from 'exceljs'
-import { fetchPrograms } from '../lib/supabase'
-import { Program, HasilKategori, HasilRincianItem } from '../lib/supabase'
+import { fetchPrograms, fetchSubPrograms } from '../lib/supabase'
+import { Program, SubProgram, HasilKategori, HasilRincianItem } from '../lib/supabase'
 import { formatRupiah, STATUS_COLORS, STATUS_BG } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import { isRestrictedForRole } from '../lib/access'
+import { deriveEffectiveHasilRincian } from '../lib/deriveTotals'
 import { katFromJenis, rincianMode, RincianMode } from './HasilFormModal'
 
 type KatFilter = 'semua' | HasilKategori
@@ -112,15 +113,29 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
   const isMobile = width < MOBILE_BREAKPOINT
 
   const [programs, setPrograms] = useState<Program[]>([])
+  const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<KatFilter>('semua')
 
   useEffect(() => {
-    fetchPrograms().then(({ data }) => {
-      if (data) setPrograms(data as Program[])
+    Promise.all([fetchPrograms(), fetchSubPrograms()]).then(([pRes, sRes]) => {
+      if (pRes.data) setPrograms(pRes.data as Program[])
+      if (sRes.data) setSubPrograms(sRes.data as SubProgram[])
       setLoading(false)
     })
   }, [])
+
+  // Rincian efektif per pekerjaan: untuk pekerjaan yang punya sub-pekerjaan
+  // (gedung) dengan realisasi > 0 (mis. P-001, P-019), pakai itu — SAMA
+  // seperti tab Detail Realisasi di Detail Pekerjaan. Sebelumnya di sini
+  // langsung baca p.hasil_rincian mentah, yang untuk pekerjaan beginian gak
+  // pernah terisi (tombol "Catat Realisasi"-nya memang disembunyikan kalau
+  // sudah ada data dari gedung) — akibatnya P-001/P-019 gak pernah muncul di
+  // laporan ini walau datanya lengkap di Detail Pekerjaan. Lihat percakapan
+  // 2026-10-07 dan deriveEffectiveHasilRincian di lib/deriveTotals.ts.
+  const effectiveRincian = (p: Program) =>
+    deriveEffectiveHasilRincian(p, subPrograms.filter(s => s.program_id === p.id))
+  const effectiveKat = (p: Program): HasilKategori => p.hasil_kategori || katFromJenis(p.jenis_pekerjaan)
 
   // withData: SEMUA pekerjaan yang sudah punya hasil_rincian, apa pun statusnya —
   // Detail Realisasi bisa mulai diisi sejak On Going ("Catat Realisasi"), tidak
@@ -129,22 +144,22 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
   // muncul di laporan. noData tetap khusus pekerjaan Selesai yang BELUM diisi —
   // itu satu-satunya kondisi yang benar-benar butuh reminder "belum diisi".
   const eligible = programs.filter(p => !isRestrictedForRole(p, role, isAdmin))
-  const withData  = eligible.filter(p => (p.hasil_rincian?.length ?? 0) > 0)
-  const noData    = eligible.filter(p => p.status === 'Selesai' && (p.hasil_rincian?.length ?? 0) === 0)
+  const withData  = eligible.filter(p => effectiveRincian(p).length > 0)
+  const noData    = eligible.filter(p => p.status === 'Selesai' && effectiveRincian(p).length === 0)
 
   // Count per kategori
   const counts: Record<KatFilter, number> = {
     semua:  withData.length,
-    fisik:  withData.filter(p => p.hasil_kategori === 'fisik').length,
-    barang: withData.filter(p => p.hasil_kategori === 'barang').length,
-    jasa:   withData.filter(p => p.hasil_kategori === 'jasa').length,
+    fisik:  withData.filter(p => effectiveKat(p) === 'fisik').length,
+    barang: withData.filter(p => effectiveKat(p) === 'barang').length,
+    jasa:   withData.filter(p => effectiveKat(p) === 'jasa').length,
   }
 
   // Apply filter
   const filtered: ProgramRow[] = withData
-    .filter(p => filter === 'semua' || p.hasil_kategori === filter)
+    .filter(p => filter === 'semua' || effectiveKat(p) === filter)
     .map(p => {
-      const rincian = p.hasil_rincian ?? []
+      const rincian = effectiveRincian(p)
       return {
         program: p,
         rincian,
@@ -197,7 +212,7 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
 
     let no = 1
     filtered.forEach(({ program: p, rincian, totalBiaya }) => {
-      const katLabel = p.hasil_kategori ? KAT_LABELS[p.hasil_kategori as HasilKategori] : null
+      const katLabel = KAT_LABELS[effectiveKat(p)]
 
       const secRow = ws.addRow([p.nama_pekerjaan])
       ws.mergeCells(`A${secRow.number}:F${secRow.number}`)
@@ -466,8 +481,8 @@ export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 
             {(() => {
               let no = 1
               return filtered.map(({ program: p, rincian, totalBiaya }) => {
-                const katLabel = p.hasil_kategori ? KAT_LABELS[p.hasil_kategori as HasilKategori] : null
-                const kat: HasilKategori = (p.hasil_kategori as HasilKategori) || katFromJenis(p.jenis_pekerjaan)
+                const kat: HasilKategori = effectiveKat(p)
+                const katLabel = KAT_LABELS[kat]
                 const mode = rincianMode(kat, p.jenis_pekerjaan)
                 const cols = columnsForMode(mode)
                 return (

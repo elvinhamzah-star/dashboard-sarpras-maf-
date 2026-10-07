@@ -5,24 +5,36 @@ import { formatRupiah } from '../lib/data'
 import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface UpdateSubPekerjaanModalProps {
   subProgram: SubProgram
+  /** True kalau gedung ini sudah punya checklist item (tab Detail Pekerjaan) —
+   *  kalau iya, progress fisiknya dihitung otomatis dari situ, jadi slider
+   *  Progress di sini disembunyikan (nulis ke sini gak akan kelihatan di
+   *  tampilan manapun). Lihat withChecklistProgress di lib/deriveTotals.ts. */
+  hasChecklist?: boolean
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess }: UpdateSubPekerjaanModalProps) {
+export default function UpdateSubPekerjaanModal({ subProgram, hasChecklist = false, onClose, onSuccess }: UpdateSubPekerjaanModalProps) {
+  const [namaGedung, setNamaGedung] = useState(subProgram.nama_gedung)
   const [progress, setProgress] = useState(subProgram.progress_percent || 0)
   const [anggaran, setAnggaran] = useState(subProgram.total_anggaran || 0)
   const [realisasi, setRealisasi] = useState(subProgram.realisasi_terkini || 0)
   const [status, setStatus] = useState(subProgram.status)
   const [vendor, setVendor] = useState(subProgram.vendor || '')
   const [linkDokumentasi, setLinkDokumentasi] = useState(subProgram.link_dokumentasi || '')
+  const [tanggalMulaiAktual, setTanggalMulaiAktual] = useState(subProgram.tanggal_mulai_aktual || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const handleSave = async () => {
+    if (!namaGedung.trim()) {
+      setError('Nama gedung / lokasi tidak boleh kosong')
+      return
+    }
     if (progress < 0 || progress > 100) {
       setError('Progress harus antara 0-100')
       return
@@ -31,6 +43,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
     setSaving(true)
     const sisa = anggaran - realisasi
     const { error: err } = await adminUpdate('sub_programs', {
+      nama_gedung: namaGedung.trim(),
       progress_percent: progress,
       total_anggaran: anggaran,
       realisasi_terkini: realisasi,
@@ -38,6 +51,7 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
       status,
       vendor,
       link_dokumentasi: linkDokumentasi || null,
+      tanggal_mulai_aktual: tanggalMulaiAktual || null,
     }, subProgram.id)
 
     setSaving(false)
@@ -57,7 +71,6 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
       <div style={{ padding: '28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>Update Progress</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{subProgram.nama_gedung}</div>
         </div>
 
         {error && (
@@ -65,6 +78,29 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
             {error}
           </div>
         )}
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+            Nama Gedung / Lokasi
+          </label>
+          <input
+            type="text"
+            value={namaGedung}
+            onChange={e => setNamaGedung(e.target.value)}
+            placeholder='Contoh: "Gedung A", "Titik 1"'
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: '1px solid var(--border)',
+              fontSize: 14,
+              color: 'var(--text-primary)',
+              fontFamily: 'inherit',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
 
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
@@ -93,14 +129,20 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>
             Progress: {progress}%
           </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={progress}
-            onChange={e => setProgress(parseInt(e.target.value))}
-            style={{ width: '100%', cursor: 'pointer' }}
-          />
+          {hasChecklist ? (
+            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+              Gedung ini sudah punya checklist item — progress otomatis dihitung dari situ (tab Detail Pekerjaan), tidak bisa diubah manual di sini.
+            </div>
+          ) : (
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={progress}
+              onChange={e => setProgress(parseInt(e.target.value))}
+              style={{ width: '100%', cursor: 'pointer' }}
+            />
+          )}
         </div>
 
         <div style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -161,6 +203,16 @@ export default function UpdateSubPekerjaanModal({ subProgram, onClose, onSuccess
           <Dropdown value={status} onChange={setStatus} zIndex={Z_DROPDOWN_IN_MODAL}
             options={['Perencanaan', 'On Going', 'Selesai', 'On Hold'].map(s => ({ value: s, label: s }))} />
 
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+            Tanggal Mulai Aktual
+          </label>
+          <DatePicker value={tanggalMulaiAktual} onChange={setTanggalMulaiAktual} zIndex={Z_DROPDOWN_IN_MODAL} />
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+            Dipakai untuk estimasi tanggal selesai (ETA) gedung ini.
+          </div>
         </div>
 
         <div style={{ marginBottom: 24 }}>

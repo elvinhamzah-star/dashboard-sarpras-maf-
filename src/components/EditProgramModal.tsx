@@ -58,6 +58,10 @@ export default function EditProgramModal({ program, hasSubPrograms = false, onCl
   const [anggaran, setAnggaran] = useState(String(program.total_anggaran || ''))
   const [tanggalMulai, setTanggalMulai] = useState(program.tanggal_mulai || '')
   const [tanggalSelesai, setTanggalSelesai] = useState(program.tanggal_selesai || '')
+  const [targetSelesai, setTargetSelesai] = useState(program.target_selesai || '')
+  const [linkRabDetail, setLinkRabDetail] = useState(program.link_rab_detail || '')
+  const [linkDokumentasi, setLinkDokumentasi] = useState(program.link_dokumentasi || '')
+  const [linkBuktiTransaksi, setLinkBuktiTransaksi] = useState(program.link_bukti_transaksi || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   // Realisasi Terkini is matched to transactions by exact nama_pekerjaan string
@@ -108,6 +112,10 @@ export default function EditProgramModal({ program, hasSubPrograms = false, onCl
       total_anggaran: anggaranNum,
       tanggal_mulai: tanggalMulai || null,
       tanggal_selesai: tanggalSelesai || null,
+      target_selesai: targetSelesai || null,
+      link_rab_detail: linkRabDetail.trim() || null,
+      link_dokumentasi: linkDokumentasi.trim() || null,
+      link_bukti_transaksi: linkBuktiTransaksi.trim() || null,
       auto_progress_from_realisasi: effectiveAutoProgress,
       progress_percent: progressNum,
       updated_at: new Date().toISOString(),
@@ -245,6 +253,25 @@ export default function EditProgramModal({ program, hasSubPrograms = false, onCl
               <DatePicker value={tanggalSelesai} onChange={setTanggalSelesai} zIndex={Z_DROPDOWN_IN_MODAL} />
             </Field>
           </div>
+
+          <Field label="Target Selesai">
+            <DatePicker value={targetSelesai} onChange={setTargetSelesai} zIndex={Z_DROPDOWN_IN_MODAL} />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              Dipakai untuk peringatan "melewati target" di Beranda. Beda dari Tanggal Selesai di atas (itu tanggal aktual pekerjaan selesai).
+            </div>
+          </Field>
+
+          <Field label="Link RAB (opsional)">
+            <input value={linkRabDetail} onChange={e => setLinkRabDetail(e.target.value)} style={inputStyle} placeholder="https://..." />
+          </Field>
+
+          <Field label="Link Dokumentasi (opsional)">
+            <input value={linkDokumentasi} onChange={e => setLinkDokumentasi(e.target.value)} style={inputStyle} placeholder="https://..." />
+          </Field>
+
+          <Field label="Link Bukti Transaksi (opsional)">
+            <input value={linkBuktiTransaksi} onChange={e => setLinkBuktiTransaksi(e.target.value)} style={inputStyle} placeholder="https://..." />
+          </Field>
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

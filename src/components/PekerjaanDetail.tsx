@@ -385,13 +385,6 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
   const checklistRincian = program
     ? deriveHasilRincianFromSubPrograms(subPrograms.filter(s => s.program_id === program.id))
     : []
-  // Sakan Asfahan sengaja gak dibikinin sub-pekerjaan sendiri (outscope dari
-  // tracking progress P-001, sudah diketahui atasan) — tapi nilainya tetap
-  // masuk vendor payment Periode 1 (Invoice 1 & 2), jadi tetap dihitung di sini
-  // supaya Total Realisasi cocok sama total yang benar-benar dibayar ke vendor.
-  if (program?.id === 'P-001' && checklistRincian.length > 0) {
-    checklistRincian.push({ nama: 'Sakan Asfahan', biaya: 8850550, satuan: 'gedung', ukuran: 1, status: 'Selesai' })
-  }
   const hasRincian = checklistRincian.length > 0 || (program?.hasil_rincian?.length ?? 0) > 0
   const tabs: Tab[] = [
     'Ringkasan',
@@ -1284,6 +1277,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       {editingSubProgram && (
         <UpdateSubPekerjaanModal
           subProgram={editingSubProgram}
+          hasChecklist={subProgramTasks.some(t => t.sub_program_id === editingSubProgram.id)}
           onClose={() => setEditingSubProgram(null)}
           onSuccess={() => {
             invalidateCache('sub_programs', 'programs')

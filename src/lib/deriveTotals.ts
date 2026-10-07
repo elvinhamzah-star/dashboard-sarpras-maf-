@@ -115,6 +115,21 @@ export function deriveHasilRincianFromSubPrograms(
   return result.sort((a, b) => b.biaya - a.biaya)
 }
 
+/**
+ * Rincian realisasi yang SEHARUSNYA tampil untuk satu pekerjaan — dipakai
+ * bareng di Detail Pekerjaan dan Laporan Aset, supaya dua halaman itu gak
+ * pernah berbeda. Prioritas: kalau pekerjaan punya sub-pekerjaan (gedung)
+ * dengan realisasi > 0, pakai itu; kalau tidak, pakai hasil_rincian yang
+ * diisi manual lewat tombol "Catat Realisasi" / "Lengkapi Data Hasil".
+ */
+export function deriveEffectiveHasilRincian(
+  program: Pick<Program, 'id' | 'hasil_rincian'>,
+  subs: Pick<SubProgram, 'nama_gedung' | 'realisasi_terkini' | 'status'>[],
+): HasilRincianItem[] {
+  const fromSubs = deriveHasilRincianFromSubPrograms(subs)
+  return fromSubs.length > 0 ? fromSubs : (program.hasil_rincian ?? [])
+}
+
 export interface DerivedTotals {
   total_anggaran: number
   realisasi_terkini: number

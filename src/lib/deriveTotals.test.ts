@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveProgramTotals, withChecklistProgress, deriveHasilRincianFromSubPrograms } from './deriveTotals'
+import { deriveProgramTotals, withChecklistProgress, deriveHasilRincianFromSubPrograms, deriveEffectiveHasilRincian } from './deriveTotals'
 
 describe('deriveProgramTotals realisasi matching', () => {
   const program = { id: 'P-019', jenis_pekerjaan: 'Pengadaan', progress_percent: 0, total_anggaran: 1000000, realisasi_terkini: 0, sisa_anggaran: 0, nama_pekerjaan: 'Pengadaan Depot Air Minum' }
@@ -68,6 +68,22 @@ describe('deriveHasilRincianFromSubPrograms', () => {
       { nama: 'Sakan Qozvin', biaya: 160171350, satuan: 'gedung', ukuran: 1, status: 'Selesai' },
       { nama: 'Sakan Tirmidz', biaya: 43726900, satuan: 'gedung', ukuran: 1, status: 'Berjalan' },
     ])
+  })
+})
+
+describe('deriveEffectiveHasilRincian', () => {
+  it('pekerjaan dengan sub-pekerjaan & realisasi > 0 pakai data gedung, bukan hasil_rincian tersimpan', () => {
+    const program = { id: 'P-019', hasil_rincian: [{ nama: 'Data lama dari HasilFormModal', biaya: 1, satuan: 'unit', ukuran: 1 }] }
+    const subs = [{ nama_gedung: 'Mesin & Instalasi Air Minum', realisasi_terkini: 14350000, status: 'On Hold' }]
+    expect(deriveEffectiveHasilRincian(program as never, subs as never)).toEqual([
+      { nama: 'Mesin & Instalasi Air Minum', biaya: 14350000, satuan: 'gedung', ukuran: 1, status: 'Berjalan' },
+    ])
+  })
+
+  it('pekerjaan tanpa sub (atau subnya belum ada realisasi) fallback ke hasil_rincian tersimpan', () => {
+    const rincianTersimpan = [{ nama: 'Lemari arsip', biaya: 2500000, satuan: 'unit', ukuran: 2 }]
+    const program = { id: 'P-008', hasil_rincian: rincianTersimpan }
+    expect(deriveEffectiveHasilRincian(program as never, [])).toEqual(rincianTersimpan)
   })
 })
 

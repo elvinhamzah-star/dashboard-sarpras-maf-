@@ -4,6 +4,7 @@ import { formatRupiah } from '../lib/data'
 import { Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
+import DatePicker from './ui/DatePicker'
 
 interface AddSubPekerjaanModalProps {
   programId: string
@@ -44,6 +45,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
   const [realisasi, setRealisasi] = useState(0)
   const [status, setStatus] = useState('Perencanaan')
   const [linkDokumentasi, setLinkDokumentasi] = useState('')
+  const [tanggalMulaiAktual, setTanggalMulaiAktual] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -60,8 +62,11 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
     setSaving(true)
     setError('')
     const sisa = anggaran - realisasi
+    // id BUKAN dikirim di sini — kolomnya bertipe integer dan terisi otomatis
+    // lewat sequence (sub_programs_id_seq). Sebelumnya di sini dikirim
+    // crypto.randomUUID() (teks), yang gagal disimpan karena tidak cocok tipe
+    // datanya. Lihat percakapan 2026-10-07.
     const { error: err } = await adminInsert('sub_programs', {
-      id: crypto.randomUUID(),
       program_id: programId,
       nama_gedung: namaGedung.trim(),
       vendor: vendor.trim() || null,
@@ -71,6 +76,7 @@ export default function AddSubPekerjaanModal({ programId, onClose, onSuccess }: 
       sisa_anggaran: sisa,
       status,
       link_dokumentasi: linkDokumentasi.trim() || null,
+      tanggal_mulai_aktual: tanggalMulaiAktual || null,
     })
     setSaving(false)
 
