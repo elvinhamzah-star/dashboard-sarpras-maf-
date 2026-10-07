@@ -147,6 +147,14 @@ function sumRealisasiFromTransactions(
     .reduce((s, t) => s + (t.nominal || 0), 0)
 }
 
+/**
+ * Pekerjaan yang progresnya dihitung dari checklist per gedung (rata-rata
+ * tertimbang progress gedung, dibobot anggaran gedung). Pekerjaan lain yang
+ * punya sub-pekerjaan memakai realisasi ÷ anggaran, sama seperti pekerjaan
+ * tanpa sub-pekerjaan yang flag auto-progres-nya aktif.
+ */
+export const CHECKLIST_PROGRESS_PROGRAM_IDS: ReadonlySet<string> = new Set(['P-001'])
+
 export function deriveProgramTotals(
   program: Pick<Program, 'id' | 'jenis_pekerjaan' | 'progress_percent' | 'total_anggaran' | 'realisasi_terkini' | 'sisa_anggaran' | 'nama_pekerjaan'>,
   subs: Pick<SubProgram, 'progress_percent' | 'total_anggaran' | 'realisasi_terkini'>[],
@@ -177,17 +185,21 @@ export function deriveProgramTotals(
     ? sumRealisasiFromTransactions(program.id, program.nama_pekerjaan, transactions)
     : (program.realisasi_terkini || 0)
 
-  const weightBase = subs.reduce((s, x) => s + (Number(x.total_anggaran) || 0), 0)
   let progress_percent: number
-  if (weightBase > 0) {
-    const weighted = subs.reduce(
-      (s, x) => s + (Number(x.progress_percent) || 0) * (Number(x.total_anggaran) || 0),
-      0,
-    )
-    progress_percent = Math.round(weighted / weightBase)
+  if (!CHECKLIST_PROGRESS_PROGRAM_IDS.has(program.id)) {
+    progress_percent = total_anggaran > 0 ? Math.min(100, Math.round((realisasi_terkini / total_anggaran) * 100)) : 0
   } else {
-    const mean = subs.reduce((s, x) => s + (Number(x.progress_percent) || 0), 0) / subs.length
-    progress_percent = Math.round(mean)
+    const weightBase = subs.reduce((s, x) => s + (Number(x.total_anggaran) || 0), 0)
+    if (weightBase > 0) {
+      const weighted = subs.reduce(
+        (s, x) => s + (Number(x.progress_percent) || 0) * (Number(x.total_anggaran) || 0),
+        0,
+      )
+      progress_percent = Math.round(weighted / weightBase)
+    } else {
+      const mean = subs.reduce((s, x) => s + (Number(x.progress_percent) || 0), 0) / subs.length
+      progress_percent = Math.round(mean)
+    }
   }
 
   return {

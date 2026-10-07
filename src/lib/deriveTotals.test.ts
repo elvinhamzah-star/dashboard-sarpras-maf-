@@ -70,3 +70,25 @@ describe('deriveHasilRincianFromSubPrograms', () => {
     ])
   })
 })
+
+describe('deriveProgramTotals progres per jenis perhitungan', () => {
+  const subs = [
+    { progress_percent: 12, total_anggaran: 55438772, realisasi_terkini: 14350000 },
+    { progress_percent: 50, total_anggaran: 9000000, realisasi_terkini: 4800000 },
+  ]
+
+  it('P-019 (sub-pekerjaan, bukan P-001) pakai realisasi ÷ anggaran, bukan rata-rata sub', () => {
+    const program = { id: 'P-019', jenis_pekerjaan: 'Pengadaan', progress_percent: 12, total_anggaran: 64438772, realisasi_terkini: 0, sisa_anggaran: 0, nama_pekerjaan: 'Pengadaan Depot Air Minum' }
+    const transactions = [{ nama_pekerjaan: 'Pengadaan Depot Air Minum', program_id: 'P-019', jenis_transaksi: 'Keluar', nominal: 19590100 }]
+    expect(deriveProgramTotals(program as never, subs as never, transactions as never).progress_percent).toBe(30)
+  })
+
+  it('P-001 pakai rata-rata tertimbang checklist gedung', () => {
+    const program = { id: 'P-001', jenis_pekerjaan: 'Proyek', progress_percent: 40, total_anggaran: 1202410390, realisasi_terkini: 0, sisa_anggaran: 0, nama_pekerjaan: 'Pengecatan dan Perbaikan Eksterior Gedung MAF' }
+    const gedung = [
+      { progress_percent: 100, total_anggaran: 283611090 },
+      { progress_percent: 0, total_anggaran: 918799300 },
+    ]
+    expect(deriveProgramTotals(program as never, gedung as never).progress_percent).toBe(24)
+  })
+})

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { adminUpdate, adminInsert } from '../lib/adminApi'
 import { Program } from '../lib/supabase'
 import { formatRupiah } from '../lib/data'
+import { CHECKLIST_PROGRESS_PROGRAM_IDS } from '../lib/deriveTotals'
 import { Z_MODAL_STACKED, Z_DROPDOWN_IN_MODAL } from '../lib/zIndex'
 import ModalShell from './ModalShell'
 import Dropdown from './ui/Dropdown'
@@ -90,11 +91,11 @@ export default function EditProgramModal({ program, hasSubPrograms = false, onCl
     // cuma keupdate lewat trigger tiap ada transaksi baru) — hitung ulang
     // langsung dari realisasi/anggaran saat ini, biar toggle-nya kerasa efeknya
     // seketika begitu disimpan, gak nunggu transaksi berikutnya.
-    // Sub-pekerjaan-driven progress gak pernah pakai auto_progress_from_realisasi
-    // (deriveProgramTotals selalu ambil rata-rata tertimbang gedung buat pekerjaan
-    // yang punya subs) — checkbox-nya disembunyikan di UI, dan di sini dipaksa
-    // false juga biar gak ada kondisi state basi yang kebawa nyimpen true.
-    const effectiveAutoProgress = hasSubPrograms ? false : autoProgress
+    // Pekerjaan dengan subs: P-001 pakai rata-rata checklist gedung (flag auto
+    // dipaksa false), pekerjaan lain dengan subs pakai realisasi ÷ anggaran
+    // (flag auto dipaksa true). Checkbox-nya disembunyikan di UI, jadi state
+    // basi gak ikut kebawa.
+    const effectiveAutoProgress = hasSubPrograms ? !CHECKLIST_PROGRESS_PROGRAM_IDS.has(program.id) : autoProgress
     const progressNum = effectiveAutoProgress
       ? (anggaranNum > 0 ? Math.min(100, Math.round(((program.realisasi_terkini || 0) / anggaranNum) * 100)) : 0)
       : (parseFloat(progress) || 0)
@@ -204,7 +205,9 @@ export default function EditProgramModal({ program, hasSubPrograms = false, onCl
           <Field label={`Progress: ${progress}%`}>
             {hasSubPrograms ? (
               <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                Pekerjaan ini punya sub-pekerjaan (gedung) — progress otomatis dihitung dari rata-rata tertimbang progress tiap gedung, bukan dari sini. Edit progress lewat tab Sub Pekerjaan.
+                {CHECKLIST_PROGRESS_PROGRAM_IDS.has(program.id)
+                  ? 'Pekerjaan ini punya sub-pekerjaan (gedung) — progress otomatis dihitung dari rata-rata tertimbang progress tiap gedung, bukan dari sini. Edit progress lewat tab Sub Pekerjaan.'
+                  : 'Pekerjaan ini punya sub-pekerjaan (gedung) — progress otomatis mengikuti persentase realisasi anggaran, bukan dari sini.'}
               </div>
             ) : autoProgress ? (
               <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
