@@ -28,6 +28,19 @@ export async function verifyLogin(
   return { ok: true, role: row.role as 'pbb' | 'maf' }
 }
 
+// Revocable/expiring auto-login token (?t=<uuid> in the URL) — bypasses the
+// username+PIN form but is independent of it: can be revoked or left to
+// expire without touching the shared credentials everyone else logs in with.
+export async function verifyLoginLink(
+  token: string,
+): Promise<{ ok: boolean; role: 'pbb' | 'maf' | null }> {
+  const { data, error } = await supabase.rpc('verify_login_link', { p_token: token })
+  if (error || !data) return { ok: false, role: null }
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row || row.ok !== true) return { ok: false, role: null }
+  return { ok: true, role: row.role as 'pbb' | 'maf' }
+}
+
 // Verify a PIN against the server (bcrypt hash stored in a locked table).
 export async function verifyPin(pin: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('verify_admin_pin', { p_pin: pin })

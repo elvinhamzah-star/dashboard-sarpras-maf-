@@ -20,7 +20,7 @@ const LaporanAset = lazy(() => import('./components/LaporanAset'))
 const InventarisBarang = lazy(() => import('./components/InventarisBarang'))
 const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
 const PresentationMode = lazy(() => import('./components/PresentationMode'))
-import { clearAdminPin, adminUpsertConfig } from './lib/adminApi'
+import { clearAdminPin, adminUpsertConfig, verifyLoginLink } from './lib/adminApi'
 import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
 import { prefetchAll } from './lib/prefetch'
 import { MOBILE_BREAKPOINT } from './lib/breakpoint'
@@ -547,6 +547,50 @@ function DashboardApp() {
   )
 }
 
+// ?t=<token> is a revocable/expiring auto-login link (see login_links table +
+// verify_login_link RPC) -- independent of the shared username+PIN credentials,
+// so a single link can be handed out and cut off without touching the PIN
+// everyone else uses. Gates DashboardApp's mount so its sessionStorage-based
+// auth state (read synchronously on first render) already reflects the token
+// by the time it mounts, instead of racing the async verify call.
+function AutoLoginGate() {
+  const [checking, setChecking] = useState(() => new URLSearchParams(window.location.search).has('t'))
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('t')
+    if (!token) return
+    verifyLoginLink(token).then(({ ok, role }) => {
+      if (ok && role) {
+        sessionStorage.setItem('dashboard_auth', '1')
+        sessionStorage.setItem('dashboard_role', role)
+      }
+      // Strip the token from the address bar either way -- it's single-purpose
+      // and shouldn't linger in history/bookmarks.
+      const url = new URL(window.location.href)
+      url.searchParams.delete('t')
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+      setChecking(false)
+    })
+  }, [])
+
+  if (checking) {
+    return (
+      <div style={{
+        minHeight: '100dvh', backgroundColor: 'var(--bg)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: '50%',
+          border: '3px solid var(--border)', borderTopColor: 'var(--accent, #0958B1)',
+          animation: 'spin 0.7s linear infinite',
+        }} />
+        <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      </div>
+    )
+  }
+  return <DashboardApp />
+}
+
 // /aset/:kode is a public, unauthenticated QR-scan target -- checked before any
 // of DashboardApp's auth/maintenance state, so scanning a sticker never hits
 // the login screen. Path-based (not query param) so it reads as a proper URL;
@@ -554,5 +598,5 @@ function DashboardApp() {
 export default function App() {
   const match = window.location.pathname.match(/^\/aset\/([^/]+)\/?$/)
   if (match) return <InventarisPublicPage kode={decodeURIComponent(match[1])} />
-  return <DashboardApp />
+  return <AutoLoginGate />
 }
