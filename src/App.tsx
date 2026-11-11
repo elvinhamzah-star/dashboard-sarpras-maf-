@@ -8,6 +8,7 @@ import PinModal from './components/PinModal'
 import ChangePinModal from './components/ChangePinModal'
 import LoginPage from './components/LoginPage'
 import InventarisPublicPage from './components/InventarisPublicPage'
+import BerandaPublik from './components/BerandaPublik'
 
 // Lazy-loaded pages/modals — split out of the initial bundle so first paint
 // (Login + Beranda) doesn't ship react-pdf, the gallery, or other heavy views.
@@ -598,5 +599,6 @@ function AutoLoginGate() {
 export default function App() {
   const match = window.location.pathname.match(/^\/aset\/([^/]+)\/?$/)
   if (match) return <InventarisPublicPage kode={decodeURIComponent(match[1])} />
+  if (window.location.pathname === '/publik') return <BerandaPublik />
   return <AutoLoginGate />
 }
