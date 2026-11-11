@@ -79,6 +79,7 @@ function getVendorDisplay(program: Program, subPrograms: SubProgram[]): string {
 
 export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, transactions, rencanaMap, progressLapangan, freshnessDays, lastUpdated, onProgramClick, hideHeader, externalTab, onExternalTabChange, spacious, role, isAdmin }: Props) {
   const isMaf = role === 'maf'
+  const hideFinance = role === 'publik'
   const [internalTab, setInternalTab] = useState(isMaf ? 'Selesai' : 'On Going')
   const activeTab = externalTab ?? internalTab
   const setActiveTab = (tab: string) => {
@@ -132,7 +133,8 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
     })
 
   // Man Power tampil di list untuk semua user — click diblokir via onProgramClick.
-  const visiblePrograms = programs
+  // Role publik: disembunyikan total (bukan terkunci).
+  const visiblePrograms = hideFinance ? programs.filter(p => !isRestrictedForRole(p, role, isAdmin)) : programs
 
   const countByStatus: Record<string, number> = {}
   visiblePrograms.forEach(p => {
@@ -329,6 +331,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{getVendorDisplay(p, subPrograms)}</div>
                     )}
                   </div>
+                  {!hideFinance && (
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatRupiah(d.realisasi_terkini)}
@@ -337,8 +340,9 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       dari {formatRupiah(d.total_anggaran)}
                     </div>
                   </div>
+                  )}
                 </div>
-                {(isEfficient || isOver) && (
+                {!hideFinance && (isEfficient || isOver) && (
                   <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                     {isEfficient && (
                       <span style={{
@@ -514,6 +518,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       </div>
                     )}
                   </div>
+                  {!hideFinance && (
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatRupiah(realisasi)}
@@ -532,6 +537,7 @@ export default function BerandaWeekOverWeek({ programs, snapshots, subPrograms, 
                       {isOver ? `Lebih ${formatRupiah(Math.abs(sisa))}` : `Sisa ${formatRupiah(sisa)}`}
                     </span>
                   </div>
+                  )}
                 </div>
               </div>
             )

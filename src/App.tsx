@@ -235,6 +235,9 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
       : childBack
 
   const renderPage = () => {
+    if (role === 'publik' && (currentPage === 'keuangan' || currentPage === 'laporan-aset')) {
+      return <Beranda isAdmin={isAdmin} role={role} />
+    }
     if (currentPage === 'pekerjaan' && selectedProgramId) {
       return (
         <PekerjaanDetail
@@ -325,7 +328,7 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
   // Sidebar TIDAK memakai map ini — label sidebar tetap pendek.
   const pageTitles: Record<Page, string> = {
     beranda: 'Dashboard Sarpras MAF',
-    pekerjaan: 'Daftar 25 Pekerjaan',
+    pekerjaan: role === 'publik' ? 'Daftar Pekerjaan' : 'Daftar 25 Pekerjaan',
     keuangan: 'Riwayat Keuangan',
     galeri: 'Galeri Dokumentasi',
     riwayat: 'Laporan Progress',
@@ -456,7 +459,7 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
               {childTitle ?? pageTitles[currentPage]}
             </span>
             <div style={{ flex: 1 }} />
-            <MobileAccountMenu
+            {role !== 'publik' && <MobileAccountMenu
               isAdmin={isAdmin}
               role={role}
               isMaintenance={isMaintenance ?? false}
@@ -471,7 +474,7 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
               onLogoutDashboard={handleLogoutDashboard}
               onToggleMaintenance={isAdmin ? handleToggleMaintenance : undefined}
               onPresentasi={isAdmin ? () => setShowPresentation(true) : undefined}
-            />
+            />}
           </header>
         )}
 
@@ -509,7 +512,7 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
         </div>
 
         {/* Mobile bottom navigation */}
-        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
+        {isMobile && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} role={role} />}
       </div>
 
 

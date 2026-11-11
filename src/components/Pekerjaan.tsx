@@ -23,6 +23,7 @@ const STATUS_TABS = ['Selesai', 'On Going', 'On Hold', 'Perencanaan']
 
 // Grid kolom desktop — dipakai sama-sama oleh header dan tiap baris biar sejajar persis.
 const DESKTOP_COLS = 'minmax(0,1fr) 130px 130px 80px 110px'
+const DESKTOP_COLS_PUBLIK = 'minmax(0,1fr) 80px 110px'
 
 
 const TAB_ICONS: Record<string, JSX.Element> = {
@@ -76,7 +77,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
     const load = async () => {
       setLoading(true)
       const [{ data }, { data: subData }, { data: taskData }, { data: txData }] = await Promise.all([fetchPrograms(), fetchSubPrograms(), fetchSubProgramTasks(), fetchTransactions()])
-      if (data) setPrograms(data)
+      if (data) setPrograms(role === 'publik' ? data.filter(p => !isRestrictedForRole(p, role, isAdmin)) : data)
       if (subData) setSubPrograms(taskData ? withChecklistProgress(subData, taskData) : subData)
       if (txData) setTransactions(txData)
       setLoading(false)
@@ -226,7 +227,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
       </div>
 
       {/* Filter Summary Bar — tampil untuk semua status aktif */}
-      {!loading && !!activeStatus && (
+      {!loading && !!activeStatus && role !== 'publik' && (
         <FilterSummaryBar
           status={activeStatus}
           programs={filtered}
@@ -247,10 +248,10 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
         <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 6 }}>
           {/* Desktop column header — kolom sejajar sama persis dengan tiap baris di bawah */}
           {!isMobile && (
-            <div style={{ display: 'grid', gridTemplateColumns: DESKTOP_COLS, gap: 12, padding: '0 16px 6px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: role === 'publik' ? DESKTOP_COLS_PUBLIK : DESKTOP_COLS, gap: 12, padding: '0 16px 6px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               <span>Pekerjaan</span>
-              <span style={{ textAlign: 'right' }}>Anggaran</span>
-              <span style={{ textAlign: 'right' }}>Realisasi</span>
+              {role !== 'publik' && <span style={{ textAlign: 'right' }}>Anggaran</span>}
+              {role !== 'publik' && <span style={{ textAlign: 'right' }}>Realisasi</span>}
               <span style={{ textAlign: 'right' }}>Progress</span>
               <span style={{ textAlign: 'right' }}>Status</span>
             </div>
@@ -319,7 +320,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                             Progres {pct}%
                           </span>
                         )}
-                        {p.status === 'Selesai' && !isLocked && (
+                        {p.status === 'Selesai' && !isLocked && role !== 'publik' && (
                           <div style={{ fontSize: 11, fontWeight: 700, color: d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                             {formatRupiah(d.realisasi_terkini)}
                           </div>
@@ -334,7 +335,7 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                       {p.id}
                     </span>
                     {/* Kolom sejajar dengan header di atas — gak numpuk lagi di kanan */}
-                    <div style={{ display: 'grid', gridTemplateColumns: DESKTOP_COLS, gap: 12, alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: role === 'publik' ? DESKTOP_COLS_PUBLIK : DESKTOP_COLS, gap: 12, alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                         {avatar}
                         <div style={{ minWidth: 0 }}>
@@ -344,12 +345,16 @@ export default function Pekerjaan({ isAdmin, role, activeStatus: activeStatusPro
                           {vendor && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vendor}</div>}
                         </div>
                       </div>
+                      {role !== 'publik' && (
                       <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 500, color: isLocked ? 'var(--text-muted)' : 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                         {isLocked ? '—' : formatRupiah(d.total_anggaran)}
                       </div>
+                      )}
+                      {role !== 'publik' && (
                       <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : (d.realisasi_terkini > 0 ? '#1B5E2B' : 'var(--text-muted)'), fontVariantNumeric: 'tabular-nums' }}>
                         {isLocked ? '—' : formatRupiah(d.realisasi_terkini)}
                       </div>
+                      )}
                       <div style={{ textAlign: 'right', fontSize: 12.5, fontWeight: 700, color: isLocked ? 'var(--text-muted)' : color, fontVariantNumeric: 'tabular-nums' }}>
                         {isLocked ? '—' : `${pct}%`}
                       </div>

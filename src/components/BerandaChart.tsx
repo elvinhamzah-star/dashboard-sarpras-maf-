@@ -99,7 +99,7 @@ function interpolateProgress(prog: Program, yearMonth: string): number {
  * filter On Going/On Hold/Selesai, weighted by total_anggaran, termasuk
  * Operasional) supaya angkanya match persis, bukan cuma mirip.
  */
-function calcMonthProgress(programs: Program[], yearMonth: string, live = false, subPrograms: SubProgram[] = []): number | null {
+export function calcMonthProgress(programs: Program[], yearMonth: string, live = false, subPrograms: SubProgram[] = []): number | null {
   const relevant = live
     ? programs.filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
     : programs.filter(p => p.status !== 'Perencanaan' && p.jenis_pekerjaan !== 'Operasional')

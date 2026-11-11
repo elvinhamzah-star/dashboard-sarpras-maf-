@@ -67,10 +67,13 @@ const TABS_SARPRAS: Tab[] = [
 interface BottomNavProps {
   currentPage: string
   onNavigate: (page: string) => void
+  role?: 'pbb' | 'maf' | 'publik' | null
 }
 
-export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
-  const visibleTabs = TABS_SARPRAS
+const FINANCE_TAB_IDS = ['keuangan', 'laporan-aset']
+
+export default function BottomNav({ currentPage, onNavigate, role }: BottomNavProps) {
+  const visibleTabs = role === 'publik' ? TABS_SARPRAS.filter(t => !FINANCE_TAB_IDS.includes(t.id)) : TABS_SARPRAS
   return (
     <nav
       style={{

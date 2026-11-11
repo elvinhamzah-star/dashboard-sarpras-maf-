@@ -247,9 +247,11 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                {!hideFinance && (
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                   {formatRupiah(t.nilai)}
                 </span>
+                )}
                 {isAdmin && (
                   <button
                     onClick={() => setChecklistModal({ subProgramId: sp.id, task: t })}
@@ -419,9 +421,10 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
     ? deriveHasilRincianFromSubPrograms(subPrograms.filter(s => s.program_id === program.id))
     : []
   const hasRincian = checklistRincian.length > 0 || (program?.hasil_rincian?.length ?? 0) > 0
+  const hideFinance = role === 'publik'
   const tabs: Tab[] = [
     'Ringkasan',
-    ...(hasRincian || isAdmin ? ['Detail Realisasi' as Tab] : []),
+    ...(!hideFinance && (hasRincian || isAdmin) ? ['Detail Realisasi' as Tab] : []),
     ...(subPrograms.length > 0 ? ['Sub Pekerjaan' as Tab] : []),
     'Dokumen',
   ]
@@ -707,7 +710,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       )}
 
       {/* Metric summary bar for non-Selesai statuses */}
-      {program.status !== 'Selesai' && role !== 'maf' && (
+      {program.status !== 'Selesai' && role !== 'maf' && !hideFinance && (
         <FilterSummaryBar
           status={program.status}
           programs={[program]}
@@ -759,21 +762,21 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
       >
         {activeTab === 'Ringkasan' && isSelesai && (
           <div>
-            {nilaiInfo.mismatch && (
+            {nilaiInfo.mismatch && !hideFinance && (
               <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
                 <div style={{ fontSize: 12, color: 'var(--color-danger)', lineHeight: 1.45 }}>
                   Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
                 </div>
               </div>
             )}
-            <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} role={role} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} subPrograms={subPrograms} transactions={allTransactions} />
+            {!hideFinance && <HasilRingkasan program={program} isMobile={isMobile} isAdmin={isAdmin} role={role} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} subPrograms={subPrograms} transactions={allTransactions} />}
             <FeaturedDocsSection galleryDocs={galleryDocs} setGalleryDocs={setGalleryDocs} isAdmin={isAdmin} isMobile={isMobile} savingDocId={savingDocId} setSavingDocId={setSavingDocId} onManage={() => setShowManageDocs(true)} onNavigateGaleri={() => onNavigate?.('galeri', program.id)} />
           </div>
         )}
 
         {activeTab === 'Ringkasan' && !isSelesai && (
           <div>
-            {nilaiInfo.mismatch && (
+            {nilaiInfo.mismatch && !hideFinance && (
               <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--card)', border: '1px solid rgba(102,0,0,0.28)', marginBottom: 14 }}>
                 <div style={{ fontSize: 12, color: 'var(--color-danger)', lineHeight: 1.45 }}>
                   Nilai Aset manual (<b>{formatRupiah(nilaiInfo.stored ?? 0)}</b>) berbeda dari total rincian (<b>{formatRupiah(nilaiInfo.derived)}</b>). Perbarui salah satunya via <b>Edit</b> agar sinkron.
@@ -871,6 +874,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {/* RAB — flat rows, satu baris per file */}
                   {(() => {
+                    if (hideFinance) return null
                     const files = programDocs.filter(d => d.folder === 'rab')
                     const autoUrl = program.link_rab_detail
                     const allFiles: { key: string; name: string; url: string | null; doc?: ProgramDocument }[] = [
@@ -908,6 +912,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                   })()}
                   {/* Kontrak — flat rows */}
                   {(() => {
+                    if (hideFinance) return null
                     const allFiles = programDocs.filter(d => d.folder === 'kontrak')
                     return (
                       <>
@@ -957,6 +962,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                   {/* Bukti Transaksi — program_documents + transactions */}
                   {(() => {
                     const txDocs = programDocs.filter(d => d.folder === 'bukti_transaksi')
+                    if (hideFinance) return null
                     const has = txDocs.length > 0 || transactions.length > 0
                     return (
                       <div onClick={has ? () => setBuktiExpanded(true) : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, backgroundColor: 'var(--bg)', border: '1px solid var(--border-subtle)', cursor: has ? 'pointer' : 'default' }}>
@@ -1133,7 +1139,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                         </div>
                       </div>
                       {/* Kanan: anggaran / realisasi / sisa */}
-                      {(role !== 'maf' || program.status !== 'Perencanaan') && (
+                      {!hideFinance && (role !== 'maf' || program.status !== 'Perencanaan') && (
                       <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>Anggaran</div>
@@ -1170,7 +1176,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                   <thead>
                     <tr>
-                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa / Efisiensi', 'Status', ''].map(h => (
+                      {['No', 'Nama Gedung', 'Vendor', 'Progress', 'Anggaran', 'Realisasi', 'Sisa / Efisiensi', 'Status', ''].filter(h => !(hideFinance && ['Anggaran', 'Realisasi', 'Sisa / Efisiensi'].includes(h))).map(h => (
                         <th
                           key={h}
                           style={{
@@ -1232,6 +1238,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             <span style={{ fontSize: 11.5, fontWeight: 600, color: STATUS_COLORS[sp.status] || 'var(--blue)', minWidth: 32 }}>{sp.progress_percent || 0}%</span>
                           </div>
                         </td>
+                        {!hideFinance && (<>
                         <td style={{ padding: '11px 14px', fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                           {showFinancial ? formatRupiah(sp.total_anggaran || 0) : '—'}
                         </td>
@@ -1243,6 +1250,7 @@ export default function PekerjaanDetail({ programId, isAdmin, role, onBack, onNa
                             ? `−${formatRupiah(Math.abs(sp.sisa_anggaran || 0))}`
                             : formatRupiah(sp.sisa_anggaran || 0)}
                         </td>
+                        </>)}
                         <td style={{ padding: '11px 14px' }}>
                           <span
                             style={{

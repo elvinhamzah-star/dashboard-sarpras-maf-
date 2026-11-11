@@ -437,7 +437,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {menuItems.filter(item => (!item.adminOnly || isAdmin) && !(item.id === 'keuangan' && (role === 'maf' || role === 'publik'))).map(item => {
+        {menuItems.filter(item => (!item.adminOnly || isAdmin) && !(item.id === 'keuangan' && (role === 'maf' || role === 'publik')) && !(item.id === 'laporan-aset' && role === 'publik')).map(item => {
           const isActive = currentPage === item.id
           return (
             <button
@@ -556,6 +556,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 Admin
               </button>
             )}
+            {role !== 'publik' && (
             <button
               onClick={onLogoutDashboard}
               style={{
@@ -581,6 +582,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
               </svg>
               Keluar
             </button>
+            )}
           </div>
         ) : expanded ? (
           <div>
@@ -640,6 +642,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 Admin
               </button>
             )}
+            {role !== 'publik' && (
             <button
               onClick={onLogoutDashboard}
               style={{
@@ -665,6 +668,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
               </svg>
               Keluar
             </button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -693,6 +697,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 </svg>
               </button>
             )}
+            {role !== 'publik' && (
             <button
               onClick={onLogoutDashboard}
               title="Keluar Dashboard"
@@ -727,6 +732,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             </button>
+            )}
           </div>
         )}
       </div>

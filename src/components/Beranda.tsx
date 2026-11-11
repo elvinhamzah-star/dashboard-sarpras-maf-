@@ -16,6 +16,7 @@ import ModalHeader from './ModalHeader'
 import AksesDibatasiModal from './AksesDibatasiModal'
 import ManPowerGateModal from './ManPowerGateModal'
 import FilterSummaryBar from './FilterSummaryBar'
+import BerandaProgresDurasi from './BerandaProgresDurasi'
 
 interface BerandaProps {
   isAdmin: boolean
@@ -466,7 +467,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                 Dashboard Sarpras MAF
               </h1>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
-                Ringkasan anggaran, realisasi &amp; progres pekerjaan
+                {role === 'publik' ? 'Ringkasan progres pekerjaan' : 'Ringkasan anggaran, realisasi & progres pekerjaan'}
               </p>
             </div>
             <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 400, flexShrink: 0, whiteSpace: 'nowrap', marginTop: 4 }}>
@@ -475,11 +476,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           </div>
         )}
 
-        <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+        {role !== 'publik' && <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
             {[0, 1, 2, 3].map(skelCard)}
           </div>
-        </SectionPanel>
+        </SectionPanel>}
 
         <SectionPanel label="Progress Pekerjaan" isMobile={isMobile}>
           <div style={{ backgroundColor: 'var(--surface-raised)', borderRadius: 12, padding: isMobile ? '14px 16px' : '18px 24px', border: '1px solid var(--border-subtle)', marginBottom: isMobile ? 10 : 14 }}>
@@ -496,9 +497,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
           </div>
         </SectionPanel>
 
-        <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+        {role !== 'publik' && <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
           <div style={{ height: isMobile ? 180 : 240, borderRadius: 10, backgroundColor: 'var(--surface-subtle)' }} />
-        </SectionPanel>
+        </SectionPanel>}
       </div>
     )
   }
@@ -524,7 +525,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
               Dashboard Sarpras MAF
             </h1>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '5px 0 0' }}>
-              Ringkasan anggaran, realisasi & progres pekerjaan
+              {role === 'publik' ? 'Ringkasan progres pekerjaan' : 'Ringkasan anggaran, realisasi & progres pekerjaan'}
             </p>
             {formattedLastUpdated && (
               <div style={{ marginTop: 6 }}>
@@ -637,7 +638,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                 </div>
               </div>
               <div style={{ fontSize: isMobile ? 9.5 : 10.5, color: 'var(--text-muted)', marginTop: 6 }}>
-                Dari Total {programs.length} Pekerjaan
+                Dari Total {role === 'publik' ? visiblePrograms.length : programs.length} Pekerjaan
               </div>
             </div>
           </div>
@@ -687,9 +688,15 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       </SectionPanel>}
 
       {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
-      <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
-        <BerandaChart transactions={visibleTransactions} snapshots={snapshots} programs={visiblePrograms} subPrograms={subPrograms} bare />
-      </SectionPanel>
+      {role === 'publik' ? (
+        <SectionPanel label="Progres Bulanan" isMobile={isMobile}>
+          <BerandaProgresDurasi programs={visiblePrograms} subPrograms={subPrograms} liveProgress={progressLapangan ? Number(progressLapangan) : null} isMobile={isMobile} />
+        </SectionPanel>
+      ) : (
+        <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>
+          <BerandaChart transactions={visibleTransactions} snapshots={snapshots} programs={visiblePrograms} subPrograms={subPrograms} bare />
+        </SectionPanel>
+      )}
 
       {/* ── POPUP: Progres Pekerjaan ── */}
       {showProgressModal && (
@@ -732,9 +739,11 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, color: color, minWidth: 32, textAlign: 'right' }}>{pct}%</span>
                   </div>
-                  <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 5 }}>
-                    Bobot anggaran: {bobotPct}% dari total
-                  </div>
+                  {role !== 'publik' && (
+                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 5 }}>
+                      Bobot anggaran: {bobotPct}% dari total
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -831,7 +840,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       padding={isMobile ? '18px 16px 16px' : '22px 28px 18px'}
                     />
                     {/* Summary bar — non-scrollable, always visible at top */}
-                    <FilterSummaryBar
+                    {role !== 'publik' && <FilterSummaryBar
                       status={pekerjaanTab}
                       programs={displayPrograms.filter(p => p.status === pekerjaanTab)}
                       subPrograms={subPrograms}
@@ -839,7 +848,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
                       compact
                       isMobile={isMobile}
                       isAdmin={isAdmin}
-                    />
+                    />}
 
                     {/* Scrollable program list */}
                     <div style={{ overflowY: 'auto', flex: 1, overscrollBehavior: 'contain' }}>
