@@ -21,7 +21,8 @@ const InventarisBarang = lazy(() => import('./components/InventarisBarang'))
 const AddPekerjaanModal = lazy(() => import('./components/AddPekerjaanModal'))
 const PresentationMode = lazy(() => import('./components/PresentationMode'))
 import { clearAdminPin, adminUpsertConfig, verifyLoginLink } from './lib/adminApi'
-import { clearMafCredentials, invalidateCache, fetchAppConfig } from './lib/supabase'
+import { clearAppSession, hasAppSession, invalidateCache, fetchAppConfig } from './lib/supabase'
+import { setPublicMode } from './lib/accessMode'
 import { prefetchAll } from './lib/prefetch'
 import { MOBILE_BREAKPOINT } from './lib/breakpoint'
 import { useEdgeSwipeBack } from './lib/useEdgeSwipeBack'
@@ -50,9 +51,11 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
   // — role 'pbb' (akses penuh) supaya testing lokal gak kejegal 2 gerbang login
   // sekaligus. Sama seperti isAdmin di bawah: cuma aktif kalau import.meta.env.DEV,
   // dead-code-eliminated total di build produksi.
-  const [isLoggedIn, setIsLoggedIn] = useState(() => skipLogin || import.meta.env.DEV || sessionStorage.getItem('dashboard_auth') === '1')
+  // Login butuh sesi server (token dari start_session). Flag sessionStorage saja
+  // tidak cukup: tanpa token, semua baca data ditolak server.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => skipLogin || (sessionStorage.getItem('dashboard_auth') === '1' && hasAppSession()))
   const [role, setRole] = useState<'pbb' | 'maf' | 'publik' | null>(
-    () => initialRole ?? (import.meta.env.DEV ? 'pbb' : (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null),
+    () => initialRole ?? (hasAppSession() ? (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) : null) ?? null,
   )
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   // Dev-only: mode admin otomatis kebuka pas `npm run dev` (import.meta.env.DEV),
@@ -61,7 +64,7 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
   // situs asli tetap butuh PIN seperti biasa. Ini CUMA buka tampilan admin —
   // operasi simpan/hapus tetap ditolak server kalau PIN aslinya belum diverifikasi
   // (adminPin di adminApi.ts tetap null sampai PinModal benar-benar sukses).
-  const [isAdmin, setIsAdmin] = useState(() => import.meta.env.DEV)
+  const [isAdmin, setIsAdmin] = useState(() => import.meta.env.DEV && initialRole !== 'publik')
   const [showPinModal, setShowPinModal] = useState(false)
   const [showChangePinModal, setShowChangePinModal] = useState(false)
   const [backingUp, setBackingUp] = useState(false)
@@ -216,12 +219,21 @@ function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' 
     sessionStorage.removeItem('dashboard_auth')
     sessionStorage.removeItem('dashboard_role')
     clearAdminPin()
-    clearMafCredentials()
+    clearAppSession()
     invalidateCache() // clear all cached data on logout
     setIsAdmin(false)
     setIsLoggedIn(false)
     setRole(null)
   }
+
+  // Sesi server kedaluwarsa/ditolak -> kembali ke halaman login.
+  useEffect(() => {
+    if (role === 'publik') return
+    const onUnauthorized = () => handleLogoutDashboard()
+    window.addEventListener('app-unauthorized', onUnauthorized)
+    return () => window.removeEventListener('app-unauthorized', onUnauthorized)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role])
 
   const sidebarWidth = isMobile ? 0 : sidebarOpen ? 248 : 68
 
@@ -601,6 +613,9 @@ function AutoLoginGate() {
 export default function App() {
   const match = window.location.pathname.match(/^\/aset\/([^/]+)\/?$/)
   if (match) return <InventarisPublicPage kode={decodeURIComponent(match[1])} />
-  if (window.location.pathname === '/publik') return <DashboardApp initialRole="publik" skipLogin />
+  if (window.location.pathname === '/publik') {
+    setPublicMode(true)
+    return <DashboardApp initialRole="publik" skipLogin />
+  }
   return <AutoLoginGate />
 }

@@ -1,4 +1,4 @@
-import { supabase, Talangan } from './supabase'
+import { supabase, Talangan, setAppSession } from './supabase'
 
 // The admin PIN is held in memory only after a successful server-side verification.
 // It is never persisted and is required for every write (insert/update/delete),
@@ -21,10 +21,11 @@ export async function verifyLogin(
   username: string,
   pin: string,
 ): Promise<{ ok: boolean; role: 'pbb' | 'maf' | null }> {
-  const { data, error } = await supabase.rpc('verify_login', { p_username: username, p_pin: pin })
+  const { data, error } = await supabase.rpc('start_session', { p_username: username, p_pin: pin })
   if (error || !data) return { ok: false, role: null }
   const row = Array.isArray(data) ? data[0] : data
-  if (!row || row.ok !== true) return { ok: false, role: null }
+  if (!row || row.ok !== true || !row.token) return { ok: false, role: null }
+  setAppSession(row.token as string)
   return { ok: true, role: row.role as 'pbb' | 'maf' }
 }
 
@@ -34,10 +35,11 @@ export async function verifyLogin(
 export async function verifyLoginLink(
   token: string,
 ): Promise<{ ok: boolean; role: 'pbb' | 'maf' | null }> {
-  const { data, error } = await supabase.rpc('verify_login_link', { p_token: token })
+  const { data, error } = await supabase.rpc('start_session_link', { p_token: token })
   if (error || !data) return { ok: false, role: null }
   const row = Array.isArray(data) ? data[0] : data
-  if (!row || row.ok !== true) return { ok: false, role: null }
+  if (!row || row.ok !== true || !row.token) return { ok: false, role: null }
+  setAppSession(row.token as string)
   return { ok: true, role: row.role as 'pbb' | 'maf' }
 }
 
@@ -139,4 +141,12 @@ export async function adminUploadBukti(file: File): Promise<{ url: string | null
 export async function getTalangan(): Promise<{ data: Talangan[] | null; error: unknown }> {
   const { data, error } = await supabase.rpc('get_talangan', { p_pin: adminPin })
   return { data: (data as Talangan[]) ?? null, error }
+}
+
+// Full-table read for backups, gated by the admin PIN on the server.
+export async function adminRead(table: string): Promise<unknown[]> {
+  if (!adminPin) return []
+  const { data, error } = await supabase.rpc('admin_read', { p_pin: adminPin, p_table: table })
+  if (error || !Array.isArray(data)) return []
+  return data
 }

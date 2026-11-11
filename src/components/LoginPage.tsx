@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { verifyLogin } from '../lib/adminApi'
-import { setMafCredentials } from '../lib/supabase'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
 interface LoginPageProps {
@@ -41,7 +40,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(false)
     if (ok && role) {
       resetViewportZoom()          // Undo any zoom before entering the app
-      if (role === 'maf') setMafCredentials(username.trim().toLowerCase(), pin)
       sessionStorage.setItem('dashboard_auth', '1')
       sessionStorage.setItem('dashboard_role', role)
       onLogin(role)

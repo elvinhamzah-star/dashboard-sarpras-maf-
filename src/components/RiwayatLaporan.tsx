@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { fetchWeeklyNotes, fetchPrograms } from '../lib/supabase'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 
 interface LaporanPerProgram {
@@ -297,11 +297,8 @@ export default function RiwayatLaporan() {
 
   useEffect(() => {
     const load = async () => {
-      const [notesRes, programsRes] = await Promise.all([
-        supabase.from('weekly_notes').select('*').order('week_start', { ascending: false }),
-        supabase.from('programs').select('id, nama_pekerjaan, vendor, link_dokumentasi, progress_percent'),
-      ])
-      const fetchedNotes = (notesRes.data || []) as WeeklyNote[]
+      const [notesRes, programsRes] = await Promise.all([fetchWeeklyNotes(), fetchPrograms()])
+      const fetchedNotes = ([...((notesRes.data || []) as WeeklyNote[])]).sort((a, b) => b.week_start.localeCompare(a.week_start))
       setNotes(fetchedNotes)
       setPrograms((programsRes.data || []) as LiveProgram[])
       if (fetchedNotes.length > 0) setSelectedId(fetchedNotes[0].id)

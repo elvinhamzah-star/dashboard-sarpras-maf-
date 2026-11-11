@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { isPublicMode } from './accessMode'
 
 const supabaseUrl = 'https://sgslsiyoompzuhuwzgyi.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnc2xzaXlvb21wenVodXd6Z3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTk3MDQsImV4cCI6MjA5Njc5NTcwNH0.DjPItl9oump1FH75v8JayuAeVW1mRmORAgppa9Nna0I'
@@ -206,42 +207,63 @@ export interface InventarisUnit {
   created_at: string
 }
 
-// MAF management role credentials. Mirrors the sessionStorage-backed
-// dashboard_role flag in App.tsx: that flag survives a page reload, so these
-// credentials must too, or a reload would leave the UI rendering in MAF mode
-// while silently falling back to unfiltered direct table queries (the
-// Man Power exclusion would be bypassed entirely). Cleared on logout, same
-// as dashboard_auth/dashboard_role.
-let mafUsername: string | null = sessionStorage.getItem('maf_username')
-let mafPin: string | null = sessionStorage.getItem('maf_pin')
+// Server-side login session. The token is issued by start_session /
+// start_session_link after the username+PIN (or login link) is verified in the
+// database, and is required by app_read for every read of business data. Tab-scoped
+// (sessionStorage), cleared on logout. Base tables are no longer readable with the
+// anon key at all, so flipping a UI flag no longer exposes data.
+let appSession: string | null = sessionStorage.getItem('app_session')
 
-export function setMafCredentials(username: string, pin: string) {
-  mafUsername = username
-  mafPin = pin
-  sessionStorage.setItem('maf_username', username)
-  sessionStorage.setItem('maf_pin', pin)
+export function setAppSession(token: string) {
+  appSession = token
+  sessionStorage.setItem('app_session', token)
 }
 
-export function clearMafCredentials() {
-  mafUsername = null
-  mafPin = null
+export function clearAppSession() {
+  const token = appSession
+  appSession = null
+  sessionStorage.removeItem('app_session')
   sessionStorage.removeItem('maf_username')
   sessionStorage.removeItem('maf_pin')
+  if (token) void supabase.rpc('end_session', { p_session: token })
 }
 
-export function hasMafCredentials() {
-  return !!(mafUsername && mafPin)
+export function hasAppSession() {
+  return !!appSession
 }
 
-async function fetchMafData<T>(resource: 'programs' | 'sub_programs' | 'transactions') {
-  if (!mafUsername || !mafPin) {
-    return { data: null as T[] | null, error: new Error('MAF credentials not set') }
+type ReadResult<T> = { data: T[] | null; error: unknown }
+
+/** Authenticated read (RPC, role-filtered server-side) or sanitized public view. */
+async function readData<T>(
+  table: string,
+  publicSource: { view: string; orderBy: string; ascending: boolean } | 'empty',
+): Promise<ReadResult<T>> {
+  // Public mode (/publik): reads come from sanitized views with no Rupiah amounts
+  // and no Operasional/Man Power rows. No session needed.
+  if (isPublicMode()) {
+    if (publicSource === 'empty') return { data: [], error: null }
+    const { data, error } = await supabase
+      .from(publicSource.view).select('*')
+      .order(publicSource.orderBy, { ascending: publicSource.ascending })
+    return { data: (data as T[] | null), error }
   }
-  const { data, error } = await supabase.functions.invoke('maf-data', {
-    body: { resource, username: mafUsername, pin: mafPin },
-  })
-  if (error) return { data: null as T[] | null, error }
-  return { data: (data as { data: T[] }).data, error: null }
+  if (!appSession) return { data: null, error: new Error('Belum login') }
+  const { data, error } = await supabase.rpc('app_read', { p_session: appSession, p_table: table })
+  if (error) {
+    if ((error as { code?: string }).code === '28000') {
+      window.dispatchEvent(new Event('app-unauthorized'))
+    }
+    return { data: null, error }
+  }
+  return { data: (data as T[]) ?? [], error: null }
+}
+
+export async function fetchPublicOverview(): Promise<{ overall: number | null; monthly: { ym: string; progress: number }[] }> {
+  const { data, error } = await supabase.rpc('get_public_overview')
+  if (error || !data) return { overall: null, monthly: [] }
+  const d = data as { overall: number | null; monthly: { ym: string; progress: number }[] }
+  return { overall: d.overall ?? null, monthly: d.monthly ?? [] }
 }
 
 export const fetchAppConfig = (key: string) =>
@@ -250,38 +272,37 @@ export const fetchAppConfig = (key: string) =>
 export async function fetchPrograms() {
   const cached = fromCache<Program[]>('programs')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('programs').select('*').order('id', { ascending: true })
+  const { data, error } = await readData<Program>('programs', { view: 'public_programs', orderBy: 'id', ascending: true })
   if (data) toCache('programs', data)
   return { data, error }
 }
 
 export async function fetchTransactions() {
-  // Always fetch directly so totals include Man Power regardless of role.
-  // Keuangan display filters Man Power rows for the maf role on the frontend.
   const cached = fromCache<Transaction[]>('transactions')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('transactions').select('*').order('tanggal', { ascending: false })
+  const { data, error } = await readData<Transaction>('transactions', 'empty')
   if (data) toCache('transactions', data)
   return { data, error }
 }
 export async function fetchDocumentation() {
   const cached = fromCache<Documentation[]>('documentation')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('documentation').select('*').order('tanggal', { ascending: false })
+  const { data, error } = await readData<Documentation>('documentation', { view: 'public_documentation', orderBy: 'tanggal', ascending: false })
   if (data) toCache('documentation', data)
   return { data, error }
 }
 export async function fetchDocumentationProgramIds() {
   const cached = fromCache<{ program_id: string }[]>('documentation_program_ids')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('documentation').select('program_id')
+  const { data: docs, error } = await fetchDocumentation()
+  const data = docs ? docs.map(d => ({ program_id: d.program_id })) : null
   if (data) toCache('documentation_program_ids', data)
   return { data, error }
 }
 export async function fetchBeforeAfterPairs() {
   const cached = fromCache<BeforeAfterPair[]>('before_after_pairs')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('before_after_pairs').select('*').order('urutan', { ascending: true })
+  const { data, error } = await readData<BeforeAfterPair>('before_after_pairs', { view: 'public_before_after_pairs', orderBy: 'urutan', ascending: true })
   if (data) toCache('before_after_pairs', data)
   return { data, error }
 }
@@ -310,34 +331,43 @@ export async function fetchInventarisItemByKode(kode: string) {
 export async function fetchSnapshots() {
   const cached = fromCache<ProgramSnapshot[]>('snapshots')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('program_snapshots').select('*').order('snapshot_date', { ascending: true })
+  const { data, error } = await readData<ProgramSnapshot>('program_snapshots', 'empty')
   if (data) toCache('snapshots', data)
   return { data, error }
 }
 export async function fetchSubPrograms() {
-  // MAF role uses Edge Function — don't cache (different data per role)
-  if (hasMafCredentials()) return fetchMafData<SubProgram>('sub_programs')
   const cached = fromCache<SubProgram[]>('sub_programs')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('sub_programs').select('*').order('id', { ascending: true })
+  const { data, error } = await readData<SubProgram>('sub_programs', { view: 'public_sub_programs', orderBy: 'id', ascending: true })
   if (data) toCache('sub_programs', data)
   return { data, error }
 }
-export const fetchProgramSnapshots = (programId: string) =>
-  supabase.from('program_snapshots').select('*').eq('program_id', programId).order('snapshot_date', { ascending: true })
+export async function fetchProgramSnapshots(programId: string) {
+  const { data, error } = await fetchSnapshots()
+  return { data: data ? data.filter(s => s.program_id === programId) : null, error }
+}
 
 export async function fetchSubProgramTasks() {
   const cached = fromCache<SubProgramTask[]>('sub_program_tasks')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('sub_program_tasks').select('*').order('id', { ascending: true })
+  const { data, error } = await readData<SubProgramTask>('sub_program_tasks', { view: 'public_sub_program_tasks', orderBy: 'id', ascending: true })
   if (data) toCache('sub_program_tasks', data)
   return { data, error }
 }
 
+export interface WeeklyNoteRow {
+  id: string
+  week_start: string
+  week_end: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
 export async function fetchWeeklyNotes() {
-  const cached = fromCache<unknown[]>('weekly_notes')
+  const cached = fromCache<WeeklyNoteRow[]>('weekly_notes')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('weekly_notes').select('*').order('week_start', { ascending: true })
+  const { data, error } = await readData<WeeklyNoteRow>('weekly_notes', 'empty')
   if (data) toCache('weekly_notes', data)
   return { data, error }
 }
@@ -357,7 +387,7 @@ export interface ProgramDocument {
 export async function fetchProgramDocuments() {
   const cached = fromCache<ProgramDocument[]>('program_documents')
   if (cached) return { data: cached, error: null }
-  const { data, error } = await supabase.from('program_documents').select('*').order('created_at', { ascending: true })
+  const { data, error } = await readData<ProgramDocument>('program_documents', { view: 'public_program_documents', orderBy: 'created_at', ascending: true })
   if (data) toCache('program_documents', data)
   return { data, error }
 }

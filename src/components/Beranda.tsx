@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchSubProgramTasks, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
+import { fetchPublicOverview, fetchPrograms, fetchTransactions, fetchSnapshots, fetchSubPrograms, fetchSubProgramTasks, fetchWeeklyNotes, Program, ProgramSnapshot, Transaction, SubProgram } from '../lib/supabase'
 import { withChecklistProgress, deriveProgramTotals } from '../lib/deriveTotals'
 import { STATUS_COLORS, STATUS_BG, formatRupiah, formatRupiahShort, getTodayFormatted, getEffectiveProgress } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
@@ -145,6 +145,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const [subPrograms, setSubPrograms] = useState<SubProgram[]>([])
   const [rencanaMap, setRencanaMap] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
+  const [publicOverview, setPublicOverview] = useState<{ overall: number | null; monthly: { ym: string; progress: number }[] } | null>(null)
   const [activeModal, setActiveModal] = useState<MetricModalType | null>(null)
   const [detailProgramId, setDetailProgramId] = useState<string | null>(null)
   const [pekerjaanTab, setPekerjaanTab] = useState('On Going')
@@ -183,6 +184,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   useEffect(() => {
     const load = async () => {
       setLoading(true)
+      if (role === 'publik') fetchPublicOverview().then(setPublicOverview)
       const [{ data: progData }, { data: txData }, { data: snapData }, { data: subData }, { data: taskData }, { data: notesData }] = await Promise.all([
         fetchPrograms(),
         fetchTransactions(),
@@ -310,7 +312,9 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
   const progressPrograms = visiblePrograms
     .filter(p => p.status === 'On Going' || p.status === 'On Hold' || p.status === 'Selesai')
   const progressAnggaranTotal = progressPrograms.reduce((s, p) => s + (p.total_anggaran || 0), 0)
-  const progressLapangan = progressAnggaranTotal > 0
+  const progressLapangan = role === 'publik'
+    ? (publicOverview?.overall != null ? publicOverview.overall.toFixed(1) : null)
+    : progressAnggaranTotal > 0
     ? (progressPrograms.reduce((s, p) => s + getProgramProgress(p) * (p.total_anggaran || 0), 0) / progressAnggaranTotal).toFixed(1)
     : null
 
@@ -690,7 +694,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       {/* ── SECTION 3: Realisasi & Progress (chart) ── */}
       {role === 'publik' ? (
         <SectionPanel label="Progres Bulanan" isMobile={isMobile}>
-          <BerandaProgresDurasi programs={visiblePrograms} subPrograms={subPrograms} liveProgress={progressLapangan ? Number(progressLapangan) : null} isMobile={isMobile} />
+          <BerandaProgresDurasi liveProgress={progressLapangan ? Number(progressLapangan) : null} monthly={publicOverview?.monthly ?? []} isMobile={isMobile} />
         </SectionPanel>
       ) : (
         <SectionPanel label="Realisasi & Progress" isMobile={isMobile}>

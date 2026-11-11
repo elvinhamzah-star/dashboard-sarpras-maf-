@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react'
-import type { Program, SubProgram } from '../lib/supabase'
-import { calcMonthProgress } from './BerandaChart'
 
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 const YEAR = 2026
@@ -8,25 +6,31 @@ const PROJECT_START = new Date(YEAR, 0, 20)
 const TOTAL_DAYS = 365
 const DAY_MS = 86_400_000
 
+// Ukuran & gaya mengikuti chart "Realisasi & Progress" di dashboard utama (BerandaChart).
+const BAR_H = 180
+const MONTH_W = 62
+const BAR_W = 18
+const BAR_GAP = 4
 const C_PROGRESS = '#1A6FE8'
 const C_DURASI = '#64748B'
 
 interface Props {
-  programs: Program[]
-  subPrograms: SubProgram[]
-  /** Progres terkini (sama dengan kartu Progress Pekerjaan) — dipakai untuk titik terakhir. */
+  /** Deret bulanan (bulan lampau) yang dihitung server — bobot anggaran tidak dikirim ke klien. */
+  monthly: { ym: string; progress: number }[]
+  /** Progres terkini (sama dengan kartu Progress Pekerjaan) — dipakai untuk bulan terakhir. */
   liveProgress: number | null
   isMobile: boolean
 }
 
 interface Point {
+  ym: string
   label: string
   hari: number
   durasiPct: number
   progress: number
 }
 
-function buildPoints(programs: Program[], subPrograms: SubProgram[], liveProgress: number | null): Point[] {
+function buildPoints(monthly: { ym: string; progress: number }[], liveProgress: number | null): Point[] {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   const lastMonth = now.getFullYear() > YEAR ? 11 : now.getFullYear() < YEAR ? 0 : now.getMonth()
@@ -37,8 +41,9 @@ function buildPoints(programs: Program[], subPrograms: SubProgram[], liveProgres
     const date = isLast && now.getFullYear() === YEAR ? now : new Date(YEAR, m, 15)
     const hari = Math.max(0, Math.min(TOTAL_DAYS, Math.round((date.getTime() - PROJECT_START.getTime()) / DAY_MS)))
     const ym = `${YEAR}-${String(m + 1).padStart(2, '0')}`
-    const estimated = calcMonthProgress(programs, ym, false, subPrograms) ?? 0
+    const estimated = monthly.find(x => x.ym === ym)?.progress ?? 0
     return {
+      ym,
       label: MONTHS_ID[m],
       hari,
       durasiPct: (hari / TOTAL_DAYS) * 100,
@@ -47,113 +52,185 @@ function buildPoints(programs: Program[], subPrograms: SubProgram[], liveProgres
   })
 }
 
-export default function BerandaProgresDurasi({ programs, subPrograms, liveProgress, isMobile }: Props) {
-  const points = buildPoints(programs, subPrograms, liveProgress)
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(320)
+const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1))
 
+export default function BerandaProgresDurasi({ monthly, liveProgress, isMobile }: Props) {
+  const points = buildPoints(monthly, liveProgress)
+  const n = points.length
+
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const [pinnedIdx, setPinnedIdx] = useState<number | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Bulan terbaru selalu terlihat saat grafik harus di-scroll (mobile).
   useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
-    const update = () => setWidth(el.clientWidth)
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    return () => ro.disconnect()
+    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+  }, [n])
+
+  // Ketuk di luar grafik melepas bulan yang disematkan.
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setPinnedIdx(null)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
   }, [])
 
-  const n = points.length
-  const svgH = isMobile ? 150 : 190
-  const PAD_L = isMobile ? 32 : 36
-  const PAD_R = isMobile ? 38 : 46
-  const svgW = Math.max(240, width)
-  const chartW = svgW - PAD_L - PAD_R
-  const slotW = chartW / n
-  const barW = Math.max(6, Math.min(18, slotW * 0.3))
-  const getX = (i: number) => PAD_L + (i + 0.5) * slotW
-  const getY = (pct: number) => svgH * 0.06 + (1 - pct / 100) * svgH * 0.88
-  const guides = [0, 25, 50, 75, 100]
-
-  const lastIdx = n - 1
-  const hovered = hoveredIdx !== null ? points[hoveredIdx] : null
-  const tipRatio = hoveredIdx !== null ? (hoveredIdx + 0.5) / n : 0.5
+  const activeIdx = hoveredIdx ?? pinnedIdx
+  const active = activeIdx !== null ? points[activeIdx] : null
+  const tipRatio = activeIdx !== null ? (activeIdx + 0.5) / n : 0.5
   const tipPos: CSSProperties = tipRatio > 0.66
-    ? { right: 0 }
+    ? { right: 0, transform: 'none' }
     : tipRatio < 0.34
-      ? { left: 0 }
+      ? { left: 0, transform: 'none' }
       : { left: `${tipRatio * 100}%`, transform: 'translateX(-50%)' }
 
-  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1))
+  const guides = [25, 50, 75, 100]
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
-      <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
-        Progres aktual dan durasi berjalan dari {TOTAL_DAYS} hari
-      </div>
-
-      {hovered && (
-        <div style={{
-          position: 'absolute', top: 22, ...tipPos, zIndex: 5, pointerEvents: 'none',
-          backgroundColor: '#1E293B', color: '#fff', borderRadius: 8, padding: '7px 12px',
-          fontSize: 11, lineHeight: 1.5, whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
-        }}>
-          <div style={{ fontWeight: 700 }}>{hovered.label} {YEAR}</div>
-          <div>Progres aktual {fmt(hovered.progress)}%</div>
-          <div>Durasi {hovered.hari} hari ({fmt(Math.round(hovered.durasiPct * 10) / 10)}%)</div>
+    <div ref={wrapRef}>
+      <div style={{ textAlign: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          Perkembangan {n} bulan
         </div>
-      )}
-
-      <svg width={svgW} height={svgH + 22} style={{ display: 'block', overflow: 'visible' }} onMouseLeave={() => setHoveredIdx(null)} role="img" aria-label="Grafik progres aktual dan durasi hari per bulan">
-        {guides.map(pct => (
-          <g key={pct}>
-            <line x1={PAD_L} y1={getY(pct)} x2={svgW - PAD_R} y2={getY(pct)} stroke="var(--border-subtle)" strokeWidth="1" />
-            <text x={PAD_L - 5} y={getY(pct) + 3} fontSize="9" fill={C_PROGRESS} opacity="0.85" textAnchor="end">{pct}%</text>
-            <text x={svgW - PAD_R + 5} y={getY(pct) + 3} fontSize="9" fill={C_DURASI} opacity="0.9" textAnchor="start">{Math.round(TOTAL_DAYS * pct / 100)} hr</text>
-          </g>
-        ))}
-
-        {points.map((p, i) => {
-          const cx = getX(i)
-          const isLast = i === lastIdx
-          const isHov = hoveredIdx === i
-          const showLabels = hoveredIdx === null ? isLast : isHov
-          const yBase = getY(0)
-          const xDur = cx - barW - 1
-          const xProg = cx + 1
-          return (
-            <g key={p.label}>
-              <rect
-                x={PAD_L + i * slotW} y={0} width={slotW} height={svgH}
-                fill={isHov ? 'var(--surface-subtle)' : 'transparent'} opacity={isHov ? 0.6 : 1}
-                onMouseEnter={() => setHoveredIdx(i)} onClick={() => setHoveredIdx(i)}
-              />
-              <rect x={xDur} y={getY(p.durasiPct)} width={barW} height={Math.max(0, yBase - getY(p.durasiPct))} rx="2" fill={C_DURASI} opacity="0.55" />
-              <rect x={xProg} y={getY(p.progress)} width={barW} height={Math.max(0, yBase - getY(p.progress))} rx="2" fill={C_PROGRESS} />
-              {showLabels && (
-                <>
-                  <text x={xDur + barW / 2} y={getY(p.durasiPct) - 5} textAnchor="middle" stroke="var(--card)" strokeWidth="3" paintOrder="stroke" fontSize="10" fontWeight="700" fill={C_DURASI}>{p.hari} hr</text>
-                  <text x={xProg + barW / 2} y={getY(p.progress) - 5} textAnchor="middle" stroke="var(--card)" strokeWidth="3" paintOrder="stroke" fontSize="10" fontWeight="700" fill={C_PROGRESS}>{fmt(p.progress)}%</text>
-                </>
-              )}
-              <text x={cx} y={svgH + 16} textAnchor="middle" fontSize="9" fill={showLabels ? C_PROGRESS : 'var(--text-muted)'} fontWeight={showLabels ? 700 : 400}>{p.label}</text>
-            </g>
-          )
-        })}
-      </svg>
-
-      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 20px', marginTop: 12, fontSize: 11, color: 'var(--text-secondary)' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" rx="2" fill={C_PROGRESS} /></svg>
-          Progres Aktual (skala kiri)
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" rx="2" fill={C_DURASI} opacity="0.55" /></svg>
-          Durasi Berjalan (skala kanan, hari)
-        </span>
       </div>
-      <div style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
-        Titik bulan lampau adalah estimasi dari tanggal mulai tiap pekerjaan; titik terakhir adalah data terkini.
+
+      <div style={{ position: 'relative' }}>
+        {/* Tooltip — hover (desktop) atau klik/ketuk (mobile) */}
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'absolute', top: 0,
+            ...tipPos,
+            backgroundColor: '#1E293B', color: '#fff',
+            borderRadius: 8, padding: '7px 12px',
+            pointerEvents: 'none', zIndex: 10,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            opacity: active ? 1 : 0, transition: 'opacity 0.12s ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 5, fontWeight: 600 }}>{active ? `${active.label} ${YEAR}` : ''}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {active && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: C_DURASI, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>Durasi {active.hari} hari ({fmt(Math.round(active.durasiPct * 10) / 10)}%)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: C_PROGRESS, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>Progres {fmt(active.progress)}%</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+          {/* Sumbu kiri — durasi (hari) */}
+          <div style={{ width: 44, flexShrink: 0, position: 'relative', height: BAR_H }}>
+            {guides.map(pct => (
+              <div key={pct} style={{
+                position: 'absolute', top: BAR_H - (pct / 100) * BAR_H, right: 6,
+                transform: 'translateY(-50%)', fontSize: 9, color: 'var(--text-muted)',
+                textAlign: 'right', whiteSpace: 'nowrap', lineHeight: 1,
+              }}>
+                {Math.round((TOTAL_DAYS * pct) / 100)} hr
+              </div>
+            ))}
+          </div>
+
+          {/* Area bar — bisa di-scroll horizontal kalau bulan banyak */}
+          <div ref={scrollRef} style={{ overflowX: 'auto', paddingBottom: 2, flex: 1, minWidth: 0 }}>
+            <div style={{ position: 'relative', minWidth: n * MONTH_W, width: '100%' }}>
+              {guides.map(pct => (
+                <div key={pct} style={{
+                  position: 'absolute', top: BAR_H - (pct / 100) * BAR_H, left: 0, right: 0,
+                  height: 1, backgroundColor: 'var(--border-subtle)', opacity: 0.5,
+                }} />
+              ))}
+
+              <div style={{ display: 'flex', width: '100%', position: 'relative', zIndex: 1 }}>
+                {points.map((p, i) => {
+                  const isActive = activeIdx === i
+                  const durH = p.hari > 0 ? Math.max(4, (p.durasiPct / 100) * BAR_H) : 3
+                  const progH = p.progress > 0 ? Math.max(4, (p.progress / 100) * BAR_H) : 3
+                  return (
+                    <div
+                      key={p.ym}
+                      style={{ flex: 1, minWidth: MONTH_W, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
+                      onPointerEnter={e => { if (e.pointerType === 'mouse') setHoveredIdx(i) }}
+                      onPointerLeave={e => { if (e.pointerType === 'mouse') setHoveredIdx(null) }}
+                      onClick={() => setPinnedIdx(prev => (prev === i ? null : i))}
+                    >
+                      <div style={{ display: 'flex', gap: BAR_GAP, height: BAR_H, alignItems: 'flex-end' }}>
+                        <div style={{
+                          width: BAR_W, height: durH,
+                          backgroundColor: p.hari > 0 ? C_DURASI : 'var(--border-subtle)',
+                          opacity: isActive ? 1 : p.hari > 0 ? 0.8 : 0.3,
+                          transition: 'opacity 0.15s, height 0.3s ease',
+                        }} />
+                        <div style={{
+                          width: BAR_W, height: progH,
+                          backgroundColor: p.progress > 0 ? C_PROGRESS : 'var(--border-subtle)',
+                          opacity: isActive ? 1 : p.progress > 0 ? 0.8 : 0.3,
+                          transition: 'opacity 0.15s, height 0.3s ease',
+                        }} />
+                      </div>
+                      <div style={{
+                        fontSize: 10, marginTop: 6,
+                        color: isActive ? C_PROGRESS : 'var(--text-muted)',
+                        fontWeight: isActive ? 700 : 400,
+                        transition: 'color 0.12s', userSelect: 'none',
+                      }}>
+                        {p.label}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Sumbu kanan — progres (%) */}
+          <div style={{ width: 30, flexShrink: 0, position: 'relative', height: BAR_H }}>
+            {guides.map(pct => (
+              <div key={pct} style={{
+                position: 'absolute', top: BAR_H - (pct / 100) * BAR_H, left: 6,
+                transform: 'translateY(-50%)', fontSize: 9, color: C_PROGRESS,
+                opacity: 0.8, whiteSpace: 'nowrap', lineHeight: 1,
+              }}>
+                {pct}%
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Legenda — urutan sama dengan urutan bar dan sumbu (kiri → kanan) */}
+      <div style={{
+        display: 'flex',
+        gap: isMobile ? 16 : 28,
+        flexWrap: 'nowrap',
+        justifyContent: isMobile ? 'center' : 'flex-start',
+        marginTop: 14, paddingTop: 12,
+        borderTop: '1px solid var(--border-subtle)',
+      }}>
+        {[
+          { color: C_DURASI, label: 'Durasi', desc: `Hari berjalan dari ${TOTAL_DAYS} hari`, descShort: 'Hari berjalan' },
+          { color: C_PROGRESS, label: 'Progres', desc: 'Progres aktual pekerjaan', descShort: 'Progres aktual' },
+        ].map(it => (
+          <div key={it.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, flexShrink: 0 }}>
+            <div style={{ width: 10, height: 10, backgroundColor: it.color, marginTop: 2, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>{it.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, whiteSpace: 'nowrap' }}>{isMobile ? it.descShort : it.desc}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

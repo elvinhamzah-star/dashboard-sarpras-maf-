@@ -1,5 +1,4 @@
-import { supabase } from './supabase'
-import { getTalangan, hasAdminPin } from './adminApi'
+import { getTalangan, hasAdminPin, adminRead } from './adminApi'
 
 // Business-data tables only. Deliberately excludes `app_config` (holds bcrypt
 // PIN/login hashes) and `admin_pin_attempts` (rate-limit log, no business
@@ -7,6 +6,7 @@ import { getTalangan, hasAdminPin } from './adminApi'
 const BACKUP_TABLES = [
   'programs',
   'sub_programs',
+  'sub_program_tasks',
   'issues',
   'documentation',
   'transactions',
@@ -19,10 +19,10 @@ const BACKUP_TABLES = [
 ] as const
 
 export async function downloadBackup(): Promise<{ ok: boolean; error?: string }> {
+  if (!hasAdminPin()) return { ok: false, error: 'Masuk Mode Admin dulu untuk membuat backup' }
   const results = await Promise.all(
     BACKUP_TABLES.map(async table => {
-      const { data, error } = await supabase.from(table).select('*')
-      return [table, error ? [] : (data ?? [])] as const
+      return [table, await adminRead(table)] as const
     })
   )
   const tables: Record<string, unknown[]> = Object.fromEntries(results)

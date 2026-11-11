@@ -1,4 +1,5 @@
 import { Program, SubProgram, SubProgramTask, HasilRincianItem } from './supabase'
+import { isPublicMode } from './accessMode'
 import type { Transaction } from './supabase'
 import { getEffectiveProgress } from './data'
 
@@ -175,6 +176,18 @@ export function deriveProgramTotals(
   subs: Pick<SubProgram, 'progress_percent' | 'total_anggaran' | 'realisasi_terkini'>[],
   transactions?: Pick<Transaction, 'nama_pekerjaan' | 'program_id' | 'jenis_transaksi' | 'nominal'>[],
 ): DerivedTotals {
+  // Mode publik: progres sudah dihitung server (public_programs) — bobot anggaran
+  // dan realisasi tidak pernah dikirim ke klien publik.
+  if (isPublicMode()) {
+    return {
+      total_anggaran: 0,
+      realisasi_terkini: 0,
+      sisa_anggaran: 0,
+      progress_percent: Number(program.progress_percent) || 0,
+      hasSubs: subs.length > 0,
+      realisasiFromSubs: false,
+    }
+  }
   if (subs.length === 0) {
     const total_anggaran = program.total_anggaran || 0
     const realisasi_terkini = transactions
