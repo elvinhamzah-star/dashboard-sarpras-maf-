@@ -9,7 +9,7 @@ import { Program } from './supabase'
  */
 export function isRestrictedForRole(
   program: Pick<Program, 'jenis_pekerjaan'>,
-  role: 'pbb' | 'maf' | null | undefined,
+  role: 'pbb' | 'maf' | 'publik' | null | undefined,
   isAdmin?: boolean,
 ): boolean {
   if (isAdmin) return false

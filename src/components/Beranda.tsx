@@ -19,7 +19,7 @@ import FilterSummaryBar from './FilterSummaryBar'
 
 interface BerandaProps {
   isAdmin: boolean
-  role: 'pbb' | 'maf' | null
+  role: 'pbb' | 'maf' | 'publik' | null
   onAdminUnlock?: () => void
   onNavigate?: (page: string, programId?: string, category?: string) => void
   initialDetailId?: string | null
@@ -544,7 +544,7 @@ export default function Beranda({ isAdmin, role, onNavigate, initialDetailId, on
       )}
 
       {/* ── RINGKASAN: Keuangan ── */}
-      {<SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
+      {role !== 'publik' && <SectionPanel label="Ringkasan Keuangan" isMobile={isMobile}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14 }}>
         {summaryCards.map((card, idx) => (
           <div

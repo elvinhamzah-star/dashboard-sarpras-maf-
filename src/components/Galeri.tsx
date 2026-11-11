@@ -20,7 +20,7 @@ const FASE_BA = '__ba__'
 
 interface GaleriProps {
   isAdmin?: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   initialProgramId?: string | null
   /** When set, "Kembali ke Daftar" exits to the caller (e.g. Dokumen) instead of Galeri's own program list. */
   onExit?: () => void

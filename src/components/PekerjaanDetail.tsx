@@ -36,7 +36,7 @@ import { useEdgeSwipeBack } from '../lib/useEdgeSwipeBack'
 interface PekerjaanDetailProps {
   programId: string
   isAdmin: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   onBack: () => void
   onNavigate?: (page: string, programId?: string, category?: string) => void
   /** true when rendered inside a modal/bottom-sheet: hides the back button & edge-swipe (the shell owns closing) */

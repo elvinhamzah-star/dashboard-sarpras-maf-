@@ -19,7 +19,7 @@ interface Props {
   program: Program
   isMobile: boolean
   isAdmin?: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   onNavigateGaleri?: () => void
   /** Dipakai bareng transactions buat hitung anggaran/realisasi lewat
    *  deriveProgramTotals, bukan kolom program.total_anggaran/realisasi_terkini

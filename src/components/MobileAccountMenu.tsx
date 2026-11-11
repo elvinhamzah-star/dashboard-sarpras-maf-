@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 
 interface MobileAccountMenuProps {
   isAdmin: boolean
-  role: 'pbb' | 'maf' | null
+  role: 'pbb' | 'maf' | 'publik' | null
   isMaintenance: boolean
   togglingMaintenance: boolean
   onRiwayat: () => void

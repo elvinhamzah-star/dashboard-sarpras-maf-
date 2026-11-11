@@ -108,7 +108,7 @@ interface ProgramRow {
   totalBiaya: number
 }
 
-export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | null; isAdmin?: boolean }) {
+export default function LaporanAset({ role, isAdmin }: { role?: 'pbb' | 'maf' | 'publik' | null; isAdmin?: boolean }) {
   const width = useWindowWidth()
   const isMobile = width < MOBILE_BREAKPOINT
 

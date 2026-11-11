@@ -31,7 +31,7 @@ interface Props {
   onExternalTabChange?: (tab: string) => void
   /** Spacious mode: lebih banyak padding & gap untuk tampilan dalam popup lebar */
   spacious?: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   isAdmin?: boolean
 }
 

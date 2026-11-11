@@ -11,7 +11,7 @@ import ManPowerGateModal from './ManPowerGateModal'
 
 interface PekerjaanProps {
   isAdmin: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   activeStatus?: string
   onFilterChange?: (status: string) => void
   onSelectProgram: (id: string) => void

@@ -31,7 +31,7 @@ interface Props {
   /** compact=true → smaller padding/font, used inside popups */
   compact?: boolean
   isMobile?: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   isAdmin?: boolean
 }
 

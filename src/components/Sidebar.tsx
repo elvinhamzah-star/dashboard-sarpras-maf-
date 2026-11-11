@@ -7,7 +7,7 @@ interface SidebarProps {
   isMobile?: boolean
   onToggle: () => void
   isAdmin: boolean
-  role: 'pbb' | 'maf' | null
+  role: 'pbb' | 'maf' | 'publik' | null
   onLogout: () => void
   onShowPinModal: () => void
   onShowChangePinModal?: () => void
@@ -437,7 +437,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '6px 8px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {menuItems.filter(item => (!item.adminOnly || isAdmin)).map(item => {
+        {menuItems.filter(item => (!item.adminOnly || isAdmin) && !(item.id === 'keuangan' && (role === 'maf' || role === 'publik'))).map(item => {
           const isActive = currentPage === item.id
           return (
             <button
@@ -502,7 +502,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           <div>
             {adminToolsToggle}
             {adminToolsPanel}
-            {role === 'maf' ? null : isAdmin ? (
+            {(role === 'maf' || role === 'publik') ? null : isAdmin ? (
               <button
                 onClick={onLogout}
                 style={{
@@ -586,7 +586,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
           <div>
             {adminToolsToggle}
             {adminToolsPanel}
-            {role === 'maf' ? null : isAdmin ? (
+            {(role === 'maf' || role === 'publik') ? null : isAdmin ? (
               <button
                 onClick={onLogout}
                 style={{
@@ -669,7 +669,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, isMobile = fa
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             {adminToolsToggleCollapsed}
-            {role !== 'maf' && (
+            {role !== 'maf' && role !== 'publik' && (
               <button
                 onClick={isAdmin ? onLogout : onShowPinModal}
                 title={isAdmin ? 'Keluar Mode Admin' : 'Masuk Mode Admin'}

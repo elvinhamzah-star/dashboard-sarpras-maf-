@@ -8,7 +8,6 @@ import PinModal from './components/PinModal'
 import ChangePinModal from './components/ChangePinModal'
 import LoginPage from './components/LoginPage'
 import InventarisPublicPage from './components/InventarisPublicPage'
-import BerandaPublik from './components/BerandaPublik'
 
 // Lazy-loaded pages/modals — split out of the initial bundle so first paint
 // (Login + Beranda) doesn't ship react-pdf, the gallery, or other heavy views.
@@ -46,14 +45,14 @@ function PageFallback() {
   )
 }
 
-function DashboardApp() {
+function DashboardApp({ initialRole, skipLogin }: { initialRole?: 'pbb' | 'maf' | 'publik', skipLogin?: boolean } = {}) {
   // Dev-only: login viewer (username/PIN) juga di-skip otomatis di `npm run dev`
   // — role 'pbb' (akses penuh) supaya testing lokal gak kejegal 2 gerbang login
   // sekaligus. Sama seperti isAdmin di bawah: cuma aktif kalau import.meta.env.DEV,
   // dead-code-eliminated total di build produksi.
-  const [isLoggedIn, setIsLoggedIn] = useState(() => import.meta.env.DEV || sessionStorage.getItem('dashboard_auth') === '1')
-  const [role, setRole] = useState<'pbb' | 'maf' | null>(
-    () => import.meta.env.DEV ? 'pbb' : (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null,
+  const [isLoggedIn, setIsLoggedIn] = useState(() => skipLogin || import.meta.env.DEV || sessionStorage.getItem('dashboard_auth') === '1')
+  const [role, setRole] = useState<'pbb' | 'maf' | 'publik' | null>(
+    () => initialRole ?? (import.meta.env.DEV ? 'pbb' : (sessionStorage.getItem('dashboard_role') as 'pbb' | 'maf' | null) ?? null),
   )
   const [currentPage, setCurrentPage] = useState<Page>('beranda')
   // Dev-only: mode admin otomatis kebuka pas `npm run dev` (import.meta.env.DEV),
@@ -599,6 +598,6 @@ function AutoLoginGate() {
 export default function App() {
   const match = window.location.pathname.match(/^\/aset\/([^/]+)\/?$/)
   if (match) return <InventarisPublicPage kode={decodeURIComponent(match[1])} />
-  if (window.location.pathname === '/publik') return <BerandaPublik />
+  if (window.location.pathname === '/publik') return <DashboardApp initialRole="publik" skipLogin />
   return <AutoLoginGate />
 }

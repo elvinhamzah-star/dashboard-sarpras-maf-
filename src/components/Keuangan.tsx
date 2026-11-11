@@ -18,7 +18,7 @@ import Dropdown from './ui/Dropdown'
 
 interface KeuanganProps {
   isAdmin?: boolean
-  role?: 'pbb' | 'maf' | null
+  role?: 'pbb' | 'maf' | 'publik' | null
   onAdminUnlock?: () => void
 }
 
@@ -27,6 +27,8 @@ const MONTH_ABBR: Record<string, string> = {
   Mei: 'Mei', Juni: 'Jun', Juli: 'Jul', Agustus: 'Agt',
   September: 'Sep', Oktober: 'Okt', November: 'Nov', Desember: 'Des',
 }
+
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
 // Grid kolom desktop Riwayat Transaksi — konsep sama seperti DESKTOP_COLS di Pekerjaan.tsx.
 const KEUANGAN_DESKTOP_COLS = 'minmax(0,1fr) 110px 130px 150px 130px'
@@ -38,6 +40,7 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
   const [loading, setLoading] = useState(true)
   const [filterJenis, setFilterJenis] = useState<string>('Masuk')
   const [filterPekerjaan, setFilterPekerjaan] = useState<string>('Semua')
+  const [filterBulan, setFilterBulan] = useState<string>('Semua')
   const [showPengeluaranModal, setShowPengeluaranModal] = useState(false)
   const [page, setPage] = useState(1)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -103,7 +106,8 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
 
   const filtered = visibleTx.filter(t =>
     (filterJenis === 'Semua' || t.jenis_transaksi === filterJenis) &&
-    (filterPekerjaan === 'Semua' || t.nama_pekerjaan === filterPekerjaan)
+    (filterPekerjaan === 'Semua' || t.nama_pekerjaan === filterPekerjaan) &&
+    (filterBulan === 'Semua' || t.tanggal?.slice(0, 7) === filterBulan)
   )
 
   // Opsi dropdown "Pekerjaan" — cuma nama yang beneran ada transaksinya, biar
@@ -113,6 +117,18 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
     ...Array.from(new Set(visibleTx.map(t => t.nama_pekerjaan).filter(Boolean)))
       .sort((a, b) => a.localeCompare(b))
       .map(nama => ({ value: nama, label: nama })),
+  ]
+
+  // Opsi dropdown "Bulan" — sama konsepnya, cuma bulan yang beneran ada transaksinya,
+  // diurut dari yang terbaru.
+  const bulanOptions = [
+    { value: 'Semua', label: 'Semua Bulan' },
+    ...Array.from(new Set(visibleTx.map(t => t.tanggal?.slice(0, 7)).filter(Boolean) as string[]))
+      .sort((a, b) => b.localeCompare(a))
+      .map(ym => {
+        const [y, m] = ym.split('-')
+        return { value: ym, label: `${MONTHS[parseInt(m, 10) - 1]} ${y}` }
+      }),
   ]
 
   const itemsPerPage = 20
@@ -130,7 +146,6 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
       if (t.jenis_transaksi === 'Masuk') map[ym].masuk += t.nominal || 0
       else if (t.jenis_transaksi === 'Keluar' || t.jenis_transaksi === 'Keluar PBB') map[ym].keluar += t.nominal || 0
     })
-    const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([ym, v]) => {
@@ -515,6 +530,15 @@ export default function Keuangan({ isAdmin = false, role, onAdminUnlock }: Keuan
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ width: isMobile ? 130 : 160 }}>
+                <Dropdown
+                  value={filterBulan}
+                  options={bulanOptions}
+                  onChange={v => { setFilterBulan(v); setPage(1) }}
+                  fontSize={12}
+                />
+              </div>
+
               <div style={{ width: isMobile ? 150 : 190 }}>
                 <Dropdown
                   value={filterPekerjaan}
