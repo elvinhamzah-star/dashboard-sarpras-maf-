@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchInventarisItemByKode, InventarisItem, InventarisUnit } from '../lib/supabase'
-import { KONDISI_COLORS, KONDISI_BG, getDriveThumbnailUrl } from '../lib/data'
+import { KONDISI_COLORS, KONDISI_BG, getDriveThumbnailUrl, formatTanggalDMY } from '../lib/data'
 
 interface InventarisPublicPageProps {
   kode: string
@@ -100,7 +100,7 @@ export default function InventarisPublicPage({ kode }: InventarisPublicPageProps
               {singleUnit && <Row label="Kondisi" value={<KondisiPill kondisi={singleUnit.kondisi} />} />}
               <Divider />
               <Row icon={ICON_TEAM} label="Penanggung jawab" value={item.tim || 'Belum ada tim'} muted={!item.tim} />
-              <Row icon={ICON_CLOCK} label="Pengecekan terakhir" value={`${daysSince(item.last_checked_at)} hari lalu`} last />
+              <Row icon={ICON_CLOCK} label="Pengecekan terakhir" value={`${formatTanggalDMY(item.last_checked_at)} (${daysSince(item.last_checked_at) === 0 ? 'hari ini' : `${daysSince(item.last_checked_at)} hari lalu`})`} last />
             </div>
 
             {/* List per-unit -- cuma kalau lebih dari 1 unit (lokasi & kondisi beda-beda

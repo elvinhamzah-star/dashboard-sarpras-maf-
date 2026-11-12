@@ -5,13 +5,14 @@ import {
   InventarisItem, InventarisUnit, KondisiUnit,
 } from '../lib/supabase'
 import { adminInsert, adminUpdate, adminDelete } from '../lib/adminApi'
-import { KONDISI_COLORS, KONDISI_BG, getDriveThumbnailUrl } from '../lib/data'
+import { KONDISI_COLORS, KONDISI_BG, getDriveThumbnailUrl, formatTanggalDMY } from '../lib/data'
 import { useWindowWidth } from '../lib/useWindowWidth'
 import { MOBILE_BREAKPOINT } from '../lib/breakpoint'
 import Dropdown from './ui/Dropdown'
 import AddInventarisItemModal from './AddInventarisItemModal'
 
 const REMINDER_DAYS = 30
+const ROW_COLS = 'minmax(0,2fr) minmax(0,1fr) 48px minmax(0,1.3fr) minmax(0,1.3fr) 16px'
 const KONDISI_OPTIONS: { value: KondisiUnit; label: string }[] = [
   { value: 'Baik', label: 'Baik' },
   { value: 'Rusak Ringan', label: 'Rusak Ringan' },
@@ -76,6 +77,16 @@ export default function InventarisBarang() {
       .sort((a, b) => b.days - a.days)
   }, [items])
 
+  const summary = useMemo(() => {
+    const kondisi: Record<string, number> = {}
+    units.forEach(u => { kondisi[u.kondisi] = (kondisi[u.kondisi] ?? 0) + 1 })
+    return {
+      baik: kondisi['Baik'] ?? 0,
+      ringan: kondisi['Rusak Ringan'] ?? 0,
+      berat: kondisi['Rusak Berat'] ?? 0,
+    }
+  }, [units])
+
   const selectedItem = items.find(i => i.id === selectedItemId) ?? null
 
   if (loading) {
@@ -138,6 +149,27 @@ export default function InventarisBarang() {
         </div>
       </div>
 
+      {/* Ringkasan inventaris */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 12 }}>
+          {[
+            { label: 'Total Unit', value: units.length, color: 'var(--text-primary)' },
+            { label: 'Kondisi Baik', value: summary.baik, color: KONDISI_COLORS['Baik'] },
+            { label: 'Perlu Perhatian', value: summary.ringan + summary.berat, color: summary.ringan + summary.berat > 0 ? '#B45309' : 'var(--text-primary)' },
+            { label: 'Belum Diperiksa', value: overdue.length, color: overdue.length > 0 ? '#B45309' : 'var(--text-primary)' },
+          ].map(card => (
+            <div key={card.label} style={{
+              backgroundColor: 'var(--card)', border: '1px solid var(--border-subtle)', borderRadius: 12,
+              padding: isMobile ? '12px 13px' : '18px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 5 : 6, textAlign: 'center',
+            }}>
+              <div style={{ fontSize: isMobile ? 9.5 : 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{card.label}</div>
+              <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 700, color: card.color, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{card.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Reminder banner */}
       {overdue.length > 0 && (
         <div style={{ marginBottom: 20, borderRadius: 14, border: '1px solid rgba(217,119,6,0.3)', backgroundColor: 'rgba(217,119,6,0.06)', overflow: 'hidden' }}>
@@ -185,58 +217,110 @@ export default function InventarisBarang() {
         </div>
       )}
 
-      {/* Grid item */}
+      {/* Daftar barang — satu baris per barang */}
       {items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: 13 }}>
           Belum ada barang. Klik "Tambah Barang" untuk mulai.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
-          {items.map(item => {
+        <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 14, backgroundColor: 'var(--card)', overflow: 'hidden' }}>
+          {!isMobile && (
+            <div style={{
+              display: 'grid', gridTemplateColumns: ROW_COLS, gap: 14, padding: '10px 16px',
+              fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em',
+              borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-raised)',
+            }}>
+              <span>Barang</span>
+              <span>Penanggung Jawab</span>
+              <span style={{ textAlign: 'right' }}>Unit</span>
+              <span>Kondisi</span>
+              <span>Pengecekan Terakhir</span>
+              <span />
+            </div>
+          )}
+          {items.map((item, idx) => {
             const itemUnits = unitsByItem[item.id] ?? []
             const kondisiCounts: Record<string, number> = {}
             itemUnits.forEach(u => { kondisiCounts[u.kondisi] = (kondisiCounts[u.kondisi] ?? 0) + 1 })
             const thumb = item.foto ? getDriveThumbnailUrl(item.foto) : null
-            return (
-              <button
-                key={item.id}
-                onClick={() => setSelectedItemId(item.id)}
-                style={{
-                  display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left',
-                  padding: 14, borderRadius: 14, border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card)', cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--blue)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)' }}
-              >
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  {thumb ? (
-                    <img src={thumb} alt="" loading="lazy" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0, backgroundColor: 'var(--surface-min)' }} />
-                  ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: 'var(--surface-min)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="20" height="20" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-                    </div>
+            const days = daysSince(item.last_checked_at)
+            const isOverdue = days >= REMINDER_DAYS
+            const checkedLabel = `${formatTanggalDMY(item.last_checked_at)} (${days === 0 ? 'hari ini' : `${days} hari lalu`})`
+            const kondisiPills = itemUnits.length === 0 ? (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ada unit</span>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {Object.entries(kondisiCounts).map(([k, count]) => (
+                  <span key={k} style={{
+                    fontSize: 10.5, fontWeight: 600, padding: '3px 8px', borderRadius: 99,
+                    color: KONDISI_COLORS[k], backgroundColor: KONDISI_BG[k], whiteSpace: 'nowrap',
+                  }}>
+                    {count} {k}
+                  </span>
+                ))}
+              </div>
+            )
+            const thumbEl = thumb ? (
+              <img src={thumb} alt="" loading="lazy" style={{ width: 40, height: 40, borderRadius: 9, objectFit: 'cover', flexShrink: 0, backgroundColor: 'var(--surface-min)' }} />
+            ) : (
+              <div style={{ width: 40, height: 40, borderRadius: 9, backgroundColor: 'var(--surface-min)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="18" height="18" fill="none" stroke="var(--text-muted)" strokeWidth="1.75" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+              </div>
+            )
+            const nameBlock = (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
+                {thumbEl}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--blue)', letterSpacing: '0.03em' }}>{item.kode}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap' }}>{item.nama_barang}</div>
+                  {item.spesifikasi && !isMobile && (
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{item.spesifikasi}</div>
                   )}
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--blue)', letterSpacing: '0.03em' }}>{item.kode}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nama_barang}</div>
+                </div>
+              </div>
+            )
+            const hoverOn = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.backgroundColor = 'var(--surface-subtle)' }
+            const hoverOff = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.backgroundColor = 'transparent' }
+            const rowBase: React.CSSProperties = {
+              width: '100%', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer',
+              fontFamily: 'inherit', borderTop: idx === 0 ? 'none' : '1px solid var(--border-subtle)',
+              transition: 'background-color 0.12s',
+            }
+            const chevron = (
+              <svg width="14" height="14" fill="none" stroke="var(--text-muted)" strokeWidth="2.2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
+            )
+
+            if (isMobile) {
+              return (
+                <button key={item.id} onClick={() => setSelectedItemId(item.id)} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
+                  style={{ ...rowBase, display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>{nameBlock}</div>
+                    {chevron}
                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {itemUnits.length === 0 ? (
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Belum ada unit</span>
-                  ) : (
-                    Object.entries(kondisiCounts).map(([k, count]) => (
-                      <span key={k} style={{
-                        fontSize: 10.5, fontWeight: 600, padding: '3px 8px', borderRadius: 99,
-                        color: KONDISI_COLORS[k], backgroundColor: KONDISI_BG[k],
-                      }}>
-                        {count} {k}
-                      </span>
-                    ))
-                  )}
-                </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span>{item.tim || 'Belum ada tim'} · {itemUnits.length} unit</span>
+                  </div>
+                  {kondisiPills}
+                  <div style={{ fontSize: 11.5, color: isOverdue ? '#B45309' : 'var(--text-muted)', fontWeight: isOverdue ? 600 : 400 }}>
+                    Pengecekan terakhir: {checkedLabel}
+                  </div>
+                </button>
+              )
+            }
+            return (
+              <button key={item.id} onClick={() => setSelectedItemId(item.id)} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
+                style={{ ...rowBase, display: 'grid', gridTemplateColumns: ROW_COLS, gap: 14, alignItems: 'center', padding: '11px 16px' }}>
+                {nameBlock}
+                <span style={{ fontSize: 13, color: item.tim ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: item.tim ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.tim || 'Belum ada tim'}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{itemUnits.length}</span>
+                {kondisiPills}
+                <span style={{ fontSize: 12.5, color: isOverdue ? '#B45309' : 'var(--text-secondary)', fontWeight: isOverdue ? 600 : 400 }}>
+                  {checkedLabel}
+                </span>
+                {chevron}
               </button>
             )
           })}
@@ -450,7 +534,7 @@ function ItemDetailView({
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pengecekan Terakhir</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: checkedDays >= REMINDER_DAYS ? '#B45309' : 'var(--text-primary)' }}>
-                {checkedDays} hari lalu
+                {formatTanggalDMY(item.last_checked_at)} ({checkedDays === 0 ? 'hari ini' : `${checkedDays} hari lalu`})
               </span>
               <button onClick={confirmPengecekan} disabled={confirmingChecked}
                 style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--text-secondary)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: confirmingChecked ? 0.7 : 1, whiteSpace: 'nowrap' }}>

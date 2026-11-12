@@ -57,6 +57,17 @@ export function formatTanggal(dateStr: string): string {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 
+// 'dd-Bulan-yyyy' (mis. 12-November-2026), zona waktu WIB supaya tanggalnya sama
+// dengan yang dilihat tim di lapangan.
+export function formatTanggalDMY(dateStr: string | null | undefined): string {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return '-'
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'numeric', year: 'numeric' }).formatToParts(d)
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? ''
+  return `${get('day')}-${MONTH_NAMES_FULL[parseInt(get('month')) - 1]}-${get('year')}`
+}
+
 export function getTodayFormatted(): string {
   const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
   const d = new Date()
